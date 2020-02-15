@@ -83,6 +83,7 @@ class CLI:
                 Examples:
                  - ["port=5000", "host=local", "config=dev"]
                  The function parses these strings into key value pairs (key=value)
+                 It also attempts to convert them to the specified type
 
             :returns - arguement dictionary
         '''
@@ -99,7 +100,11 @@ class CLI:
                 converter = list(filter(lambda option: option["name"] ==
                     switch, script['options']))[0]["converter"]
 
-                value = converter(value)
+                try:
+                    value = converter(value)
+                except ValueError:
+                    print(f"'{value}' could not be converted to type '{converter}'")
+                    sys.exit(1)
                 arguements[switch] = value
 
         return arguements
