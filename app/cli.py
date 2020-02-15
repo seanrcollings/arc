@@ -1,6 +1,9 @@
 '''
 Add the options to provide arbitrary arguements to a function with *args and **kwargs
 Utility integrations
+Add type conversions
+    - convert from string to specified type - <int:number>
+    - Allow it to be recursive?? - <array:<int:number>>
 '''
 
 import sys
@@ -103,7 +106,7 @@ class CLI:
                 try:
                     value = converter(value)
                 except ValueError:
-                    print(f"'{value}' could not be converted to type '{converter}'")
+                    print(f"'{value}' could not be converted to type '{converter.convert_to}'")
                     sys.exit(1)
                 arguements[switch] = value
 
