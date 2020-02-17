@@ -1,5 +1,5 @@
-from app import CLI
-from app import Utility
+from cli import CLI
+from cli import Utility
 
 utility = Utility("utility")
 cli = CLI(utilities=[utility], context_manager=open("test.txt"))

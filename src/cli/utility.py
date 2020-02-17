@@ -1,4 +1,4 @@
-from app.cli import CLI
+from cli import CLI
 
 
 class Utility(CLI):

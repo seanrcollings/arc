@@ -1,7 +1,7 @@
 import sys
 import re
-from app.config import Config
-from app.converter import ConversionError
+from cli.config import Config
+from cli.converter import ConversionError
 # sys.tracebacklimit = 0
 
 
@@ -104,11 +104,11 @@ class CLI:
             :param script - the utility script being rna by the user
             :param options - list of strings that the user typed in
                 Examples:
-                 - ["port=5000", "host=local", "config=dev"]
+                 - ["port=5000","config=dev"]
                  The function parses these strings into key value pairs (key=value)
                  It also attempts to convert them to the specified type
 
-            :returns - arguement dictionary
+            :returns - arguement dictionary to be unpacked with **
         '''
         arguements = {}
         for option in options:

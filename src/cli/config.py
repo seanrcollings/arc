@@ -1,4 +1,4 @@
-from app.converter import *
+from cli.converter import *
 
 
 class Config:
