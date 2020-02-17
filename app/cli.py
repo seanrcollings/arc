@@ -1,11 +1,3 @@
-'''
-Add the options to provide arbitrary arguements to a function with *args and **kwargs
-Utility integrations
-Add type conversions
-    - convert from string to specified type - <int:number>
-    - Allow it to be recursive?? - <array:<int:number>>
-'''
-
 import sys
 import re
 from app.config import Config
@@ -17,56 +9,77 @@ class CLI:
     '''CLI Class Info Here'''
     config = Config
 
-    def __init__(self, scripts={}, utilities=[], config=Config):
+    def __init__(self, scripts={}, utilities=[], config=Config, context_manager=None):
 
         self.scripts = scripts
-        self.scripts["help"] = {"function": self.helper, "options": None, "verbose_arguements": True}
-        self.utilities = {}
+        self.scripts["help"] = {"function": self.helper, "options": None, "named_arguements": True}
 
+        self.utilities = {}
         self.register_utilities(*utilities)
+
+        self.context_manger = context_manager
+
 
     def __call__(self):
         if len(sys.argv) >= 2:
-            self.__execute(sys.argv[1], sys.argv[2:])
+            self.__parse_command(sys.argv[1], sys.argv[2:])
         else:
             print("You didn't provide any options.",
                   "Check help for more information")
 
-    def __execute(self, command, options):
-        '''
-        Executes the script from the user's command
-            :param command - the user typed in i.e: server:run
-            :param options - various options that the user passed in i.e: port=4321
-        '''
-        utility, command = self.parse_command(command)
+    def __parse_command(self, command, options):
+        if ":" in command:
+            utility, command = command.split(":")
+        else:
+            utility = None
+
         if utility is not None:
             if utility not in self.utilities:
                 print("That command does not exist")
                 return
             self.utilities[utility](command, options)
-
         else:
-            if command not in self.scripts:
-                print("That command does not exist")
-                return
+            self.execute(command, options)
 
+    def execute(self, command, options):
+        '''
+        Executes the script from the user's command
+            :param command - the user typed in i.e: server:run
+            :param options - various options that the user passed in i.e: port=4321
+
+        '''
+        if command not in self.scripts:
+            print("That command does not exist")
+            return
+
+        if self.context_manger is None:
             script = self.scripts[command]
-            if script['options'] is None or len(script['options']) == 0:
+            if script['options'] is None:
                 self.scripts[command]['function']()
-            elif script['verbose_arguements'] == False:
+            if script['named_arguements'] == False:
                 self.scripts[command]['function'](*options)
             else:
                 self.scripts[command]['function'](
                     **self.arguements_dict(script, options))
+        else:
+            with self.context_manger as managed_resource:
+                script = self.scripts[command]
+                if script['options'] is None:
+                    self.scripts[command]['function'](managed_resource)
+                if script['named_arguements'] == False:
+                    self.scripts[command]['function'](managed_resource, *options)
+                else:
+                    self.scripts[command]['function'](managed_resource,
+                        **self.arguements_dict(script, options))
 
-    def script(self, function_name, options=None, verbose_arguements=True):
+    def script(self, function_name, options=None, named_arguements=True):
         '''Decorator function to register a script'''
         def decorator(function):
             parsed_options = self.parse_options(options)
             self.scripts[function_name] = {
                 'function': function,
                 'options': parsed_options,
-                'verbose_arguements': verbose_arguements
+                'named_arguements': named_arguements
             }
 
         return decorator
@@ -164,20 +177,11 @@ class CLI:
 
         return parsed
 
-    @staticmethod
-    def parse_command(command):
-        if ":" in command:
-            utility, command = command.split(":")
-        else:
-            utility = None
-        return utility, command
-
-
     def helper(self):
         '''
         Helper List function
         '''
-        print("Usage: python3 manage.py [COMMAND] [ARGUEMENTS ...]\n")
+        print("Usage: python3 FILENAME [COMMAND] [ARGUEMENTS ...]\n")
 
         print("Possible Options: ")
         if len(self.scripts) > 0:

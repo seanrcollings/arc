@@ -1,7 +1,3 @@
-'''
-Add Context manager support for a utility
-every call is within the context manager provided
-'''
 from app.cli import CLI
 
 
@@ -19,26 +15,16 @@ class Utility(CLI):
             db:drop
             db:createuser
     '''
-    def __init__(self, name):
+    def __init__(self, name, context_manager=None):
         self.name = name
         self.scripts = {}
+        self.context_manger = context_manager
 
     def __repr__(self):
         return "Utility"
 
     def __call__(self, command, options):
-        if command not in self.scripts:
-            print("That command does not exist")
-            return
-
-        script = self.scripts[command]
-        if script['options'] is None:
-            self.scripts[command]['function']()
-        if script['verbose_arguements'] == False:
-            self.scripts[command]['function'](*options)
-        else:
-            self.scripts[command]['function'](
-                **self.arguements_dict(script, options))
+        self.execute(command, options)
 
     def helper(self):
         '''

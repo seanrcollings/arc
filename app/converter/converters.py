@@ -1,3 +1,5 @@
+# Allow it to be recursive?? - <array:<int:number>>
+
 import sys
 from app.converter.base_converter import BaseConverter
 from app.converter import ConversionError
