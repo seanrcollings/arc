@@ -1,5 +1,7 @@
+import sys
 from app.converter.base_converter import BaseConverter
 from app.converter import ConversionError
+
 
 class StringConverter(BaseConverter):
     convert_to = "string"
@@ -22,6 +24,16 @@ class ByteConverter(BaseConverter):
 
 
 class BoolConverter(BaseConverter):
+    convert = bool
+    convert_to = "boolean"
+
+
+class StringBoolConverter(BaseConverter):
+    '''
+        Converts a string to a boolean
+        True / true - True
+        False / false - False
+    '''
     convert_to = "boolean"
 
     @classmethod
@@ -32,6 +44,25 @@ class BoolConverter(BaseConverter):
             return False
         else:
             raise ConversionError(
-                f"Error: string {value} coult not be converted to a boolean")
+                f"String '{value}' could not be converted to a boolean")
+
+
+class IntBoolConverter(BaseConverter):
+    '''
+        Converts an int to a boolean.
+        0 - False
+        All other ints / floats - True
+    '''
+    convert_to = "boolean"
+
+    @classmethod
+    def convert(cls, value):
+        try:
+            value = int(value)
+        except ValueError:
+            raise ConversionError(
+                f"The string '{value}' could not be converted to an int")
+        return value != 0
+
 
 # Array conversion, Dictionary Conversion... etc....

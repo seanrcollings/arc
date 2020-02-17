@@ -1,4 +1,9 @@
+'''
+Add Context manager support for a utility
+every call is within the context manager provided
+'''
 from app.cli import CLI
+
 
 class Utility(CLI):
     '''
@@ -29,18 +34,25 @@ class Utility(CLI):
         script = self.scripts[command]
         if script['options'] is None:
             self.scripts[command]['function']()
+        if script['verbose_arguements'] == False:
+            self.scripts[command]['function'](*options)
         else:
             self.scripts[command]['function'](
                 **self.arguements_dict(script, options))
-
 
     def helper(self):
         '''
         Helper function
         '''
-        print(f"Utility {self.name}")
-        for script, value in self.scripts.items():
-            helper = value['function'].__doc__.strip('\n')
-            name = format(script)
-            print(f":{name}")
-            print(helper)
+        print(f"\nUtility {self.name}")
+        if len(self.scripts) > 0:
+            for script, value in self.scripts.items():
+                helper = "\tNo Docstring"
+                if ( doc := value['function'].__doc__) is not None:
+                    helper = doc.strip('\n')
+
+                name = format(script)
+                print(f":{name}")
+                print(helper)
+        else:
+            print("No scripts defined")

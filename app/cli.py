@@ -7,18 +7,23 @@ Add type conversions
 '''
 
 import sys
-from app.utils import parse_options
+import re
+from app.config import Config
+from app.converter import ConversionError
+# sys.tracebacklimit = 0
 
 
 class CLI:
     '''CLI Class Info Here'''
-    def __init__(self, scripts={}, utilities=[]):
+    config = Config
+
+    def __init__(self, scripts={}, utilities=[], config=Config):
+
         self.scripts = scripts
-        self.register_script('help', self.helper, None)
+        self.scripts["help"] = {"function": self.helper, "options": None, "verbose_arguements": True}
         self.utilities = {}
 
-        for utility in utilities:
-            self.register_utility(utility)
+        self.register_utilities(*utilities)
 
     def __call__(self):
         if len(sys.argv) >= 2:
@@ -33,48 +38,50 @@ class CLI:
             :param command - the user typed in i.e: server:run
             :param options - various options that the user passed in i.e: port=4321
         '''
-
-        if ":" in command:
-            utility, command = command.split(":")
-            if utility in self.utilities:
-                self.utilities[utility](command, options)
-            else:
+        utility, command = self.parse_command(command)
+        if utility is not None:
+            if utility not in self.utilities:
                 print("That command does not exist")
-            return
+                return
+            self.utilities[utility](command, options)
 
-        if command not in self.scripts:
-            print("That command does not exist")
-            return
-
-        script = self.scripts[command]
-        if script['options'] is None:
-            self.scripts[command]['function']()
         else:
-            self.scripts[command]['function'](
-                **self.arguements_dict(script, options))
+            if command not in self.scripts:
+                print("That command does not exist")
+                return
 
-    def script(self, function_name, options=None):
+            script = self.scripts[command]
+            if script['options'] is None or len(script['options']) == 0:
+                self.scripts[command]['function']()
+            elif script['verbose_arguements'] == False:
+                self.scripts[command]['function'](*options)
+            else:
+                self.scripts[command]['function'](
+                    **self.arguements_dict(script, options))
+
+    def script(self, function_name, options=None, verbose_arguements=True):
         '''Decorator function to register a script'''
         def decorator(function):
-            self.register_script(function_name, function, options)
+            parsed_options = self.parse_options(options)
+            self.scripts[function_name] = {
+                'function': function,
+                'options': parsed_options,
+                'verbose_arguements': verbose_arguements
+            }
 
         return decorator
 
-    def register_script(self, function_name, function, options):
-        options = parse_options(options)
-        self.scripts[function_name] = {
-            'function': function,
-            'options': options,
-        }
-
-    def register_utility(self, utility):
+    def register_utilities(self, *utilities):
         '''Registers a utility to the CLI'''
-        if repr(utility) == "Utility":
-            self.utilities[utility.name] = utility
-        else:
-            print("Only instances of the 'Utility' class can be registerd to the CLi")
-            sys.exit(1)
+        for utility in utilities:
+            if repr(utility) == "Utility":  # work around for circular import
+                self.utilities[utility.name] = utility
+            else:
+                print("Only instances of the 'Utility'",
+                    "class can be registerd to the CLi")
+                sys.exit(1)
 
+    # TODO: Rewrite
     def arguements_dict(self, script, options):
         '''
         Takes in Command line options, converts them
@@ -99,29 +106,89 @@ class CLI:
                 print("\033[1;37;41m   Options must be given a value,",
                       "ignoring....  \033[0m")
 
-            if switch in [option["name"] for option in  script['options']]:
-                converter = list(filter(lambda option: option["name"] ==
-                    switch, script['options']))[0]["converter"]
+            if switch in [option["name"] for option in script['options']]:
+                converter = list(
+                    filter(lambda option: option["name"] == switch,
+                           script['options']))[0]["converter"]
 
                 try:
                     value = converter(value)
                 except ValueError:
-                    print(f"'{value}' could not be converted to type '{converter.convert_to}'")
+                    print(f"'{value}' could not be converted",
+                          f"to type '{converter.convert_to}'")
                     sys.exit(1)
                 arguements[switch] = value
 
         return arguements
 
+    # TODO: Rewrite
+    def parse_options(self, options):
+        '''
+            Parses provided options, checking for a converter
+            :param options - array of strings. Can have a converter
+                associated with it.
+                - without converter "normal_string"
+                - with converter "<int:number>
+            :return - a new array of dictionaries of the parsed options
+                each option looks like this:
+                    {
+                        "name": "number"
+                        "converter": IntConverter
+                    }
+                StringConverter is default converter
+
+        '''
+        parsed = []
+        if options is not None:
+            for option in options:
+                option_dict = {
+                    "name": option,
+                    "converter": self.config.converters["str"]
+                }
+                # Matches to "<convertername:varname>""
+                match = re.search("<.*:.*>", option)
+                if match is not None:
+                    # turns "<convertername:varname>" into ["convertername", "varname"]
+                    converter, name = option.lstrip("<").rstrip(">").split(":")
+
+                    if converter in self.config.converters:
+                        option_dict["name"], option_dict[
+                            "converter"] = name, self.config.converters[
+                                converter]
+                    else:
+                        raise ConversionError(
+                            f"'{converter}' is not a valid conversion identifier"
+                        )
+
+                parsed.append(option_dict)
+
+        return parsed
+
+    @staticmethod
+    def parse_command(command):
+        if ":" in command:
+            utility, command = command.split(":")
+        else:
+            utility = None
+        return utility, command
+
+
     def helper(self):
         '''
-        Helper function
+        Helper List function
         '''
-        # print("Usage: python3 manage.py [COMMAND] [ARGUEMENTS ...]\n")
+        print("Usage: python3 manage.py [COMMAND] [ARGUEMENTS ...]\n")
+
         print("Possible Options: ")
-        for script, value in self.scripts.items():
-            helper = doc.strip('\n') if ( doc := value['function'].__doc__) is not None else 'No docstring'
-            name = format(script)
-            print(name)
-            print(helper)
+        if len(self.scripts) > 0:
+            for script, value in self.scripts.items():
+                helper_text = "\tNo Docstring"
+                if ( doc := value['function'].__doc__) is not None:
+                    helper_text = doc.strip('\n')
+                name = format(script)
+                print(name)
+                print(helper_text)
+        else:
+            print("No scripts defined")
         for name, utility in self.utilities.items():
             utility.helper()
