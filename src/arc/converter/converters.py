@@ -26,8 +26,8 @@ class ByteConverter(BaseConverter):
 
 
 class BoolConverter(BaseConverter):
-    convert = bool
     convert_to = "boolean"
+    convert = bool
 
 
 class StringBoolConverter(BaseConverter):
@@ -46,7 +46,8 @@ class StringBoolConverter(BaseConverter):
             return False
         else:
             raise ConversionError(
-                f"String '{value}' could not be converted to a 'boolean'")
+                f"String '{value}' could not be converted to a '{cls.convert_to}'"
+            )
 
 
 class IntBoolConverter(BaseConverter):
@@ -59,12 +60,13 @@ class IntBoolConverter(BaseConverter):
 
     @classmethod
     def convert(cls, value):
-        try:
+        if value.isnumeric():
             value = int(value)
-        except ValueError:
-            raise ConversionError(
-                f"The string '{value}' could not be converted to an 'int'")
-        return value != 0
+            return value != 0
+
+        raise ConversionError(
+            f"The string '{value}' could not be converted to an '{cls.convert_to}'"
+        )
 
 
 class ListConverter(BaseConverter):

@@ -13,7 +13,13 @@ class CLI:
                  config=Config,
                  context_manager=None):
 
-        self.scripts = scripts
+        self.scripts = {}
+        for name, value in scripts.items():
+            self.__install_script(value["function"],
+                                  name,
+                                  value["options"],
+                                  value["named_arguements"])
+
         self.scripts["help"] = {
             "function": self.helper,
             "options": None,
@@ -26,6 +32,7 @@ class CLI:
         self.context_manager = context_manager
 
     def __call__(self):
+
         if len(sys.argv) >= 2:
             self.__parse_command(sys.argv[1], sys.argv[2:])
         else:
@@ -86,14 +93,16 @@ class CLI:
     def script(self, function_name, options=None, named_arguements=True):
         '''Decorator function to register a script'''
         def decorator(function):
-            parsed_options = self.parse_options(options)
-            self.scripts[function_name] = {
-                'function': function,
-                'options': parsed_options,
-                'named_arguements': named_arguements
-            }
-
+            self.__install_script(function, function_name, options, named_arguements)
         return decorator
+
+    def __install_script(self, function, function_name, options, named_arguements):
+        parsed_options = self.parse_options(options)
+        self.scripts[function_name] = {
+            'function': function,
+            'options': parsed_options,
+            'named_arguements': named_arguements
+        }
 
     def install_utilities(self, *utilities):
         '''Registers a utility to the CLI'''
@@ -130,18 +139,13 @@ class CLI:
                 print("\033[1;41m   Options must be given a value,",
                       "ignoring....  \033[00m")
                 break
-
             if switch in [option["name"] for option in script['options']]:
                 converter = list(
                     filter(lambda option: option["name"] == switch,
                            script['options']))[0]["converter"]
 
-                try:
-                    value = converter(value)
-                except ValueError:
-                    print(f"'{value}' could not be converted",
-                          f"to type '{converter.convert_to}'")
-                    sys.exit(1)
+                value = converter(value)
+
                 arguements[switch] = value
 
         return arguements
@@ -181,9 +185,7 @@ class CLI:
                             "converter"] = name, self.config.converters[
                                 converter]
                     else:
-                        raise ConversionError(
-                            f"'{converter}' is not a valid conversion identifier"
-                        )
+                        raise ConversionError(f"'{converter}' is not a valid conversion identifier")
 
                 parsed.append(option_dict)
 
@@ -209,6 +211,7 @@ class CLI:
         else:
             print("No scripts defined")
 
-        print("\nInstalled Utilities")
-        for name, utility in self.utilities.items():
-            utility.helper()
+        if len(self.utilities) > 0:
+            print("\nInstalled Utilities")
+            for name, utility in self.utilities.items():
+                utility.helper()
