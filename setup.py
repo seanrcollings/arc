@@ -4,11 +4,11 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="cli-seanrcollings",
+    name="arc-cli",
     version="0.0.1",
     author="Sean Collings",
     author_email="sean@seanrcollings.com",
-    description="Python CLI utility",
+    description="A Regular CLI",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/seanrcollings/cli",

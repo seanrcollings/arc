@@ -1,7 +1,7 @@
 import sys
 import re
-from cli.config import Config
-from cli.converter import ConversionError
+from arc.config import Config
+from arc.converter import ConversionError
 
 class CLI:
     '''CLI Class Info Here'''

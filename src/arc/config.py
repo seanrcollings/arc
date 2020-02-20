@@ -1,4 +1,4 @@
-from cli.converter import *
+from arc.converter import *
 
 
 class Config:

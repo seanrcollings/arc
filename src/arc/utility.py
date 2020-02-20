@@ -1,4 +1,4 @@
-from cli import CLI
+from arc import CLI
 
 
 class Utility(CLI):
@@ -6,9 +6,10 @@ class Utility(CLI):
     CLI Helper class
     Wrapper to create a group of utility functions
 
-    When a utility is registered with the CLI, each of
-    the utility's commands are added to the CLI's commands,
-    with the utility's name preprended to them
+    If the CLI finds that the first section of a command
+    is a installed utility, it will pass control over to the utility
+    which then checks if the command is in it's scripts, then calls
+    execute
     Examlple:
         Utility db
         db:create

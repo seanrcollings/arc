@@ -9,5 +9,5 @@ class ConversionError(Exception):
     pass
 
 
-from cli.converter.base_converter import BaseConverter
-from cli.converter.converters import *
+from arc.converter.base_converter import BaseConverter
+from arc.converter.converters import *

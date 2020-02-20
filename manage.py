@@ -1,6 +1,6 @@
-from cli import CLI
-from cli import Utility
-from cli.utilities import files
+from arc import CLI
+from arc import Utility
+from arc.utilities import files
 
 cli = CLI()
 cli.install_utilities(files)

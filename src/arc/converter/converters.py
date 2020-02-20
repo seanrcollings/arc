@@ -1,8 +1,8 @@
 # Allow it to be recursive?? - <array:<int:number>>
 
 import sys
-from cli.converter.base_converter import BaseConverter
-from cli.converter import ConversionError
+from arc.converter.base_converter import BaseConverter
+from arc.converter import ConversionError
 
 
 class StringConverter(BaseConverter):
