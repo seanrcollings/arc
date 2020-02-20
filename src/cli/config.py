@@ -9,5 +9,6 @@ class Config:
         "byte": ByteConverter,
         "bool": BoolConverter,
         "sbool": StringBoolConverter,
-        "ibool": IntBoolConverter
+        "ibool": IntBoolConverter,
+        "list": ListConverter
     }

@@ -46,7 +46,7 @@ class StringBoolConverter(BaseConverter):
             return False
         else:
             raise ConversionError(
-                f"String '{value}' could not be converted to a boolean")
+                f"String '{value}' could not be converted to a 'boolean'")
 
 
 class IntBoolConverter(BaseConverter):
@@ -63,8 +63,19 @@ class IntBoolConverter(BaseConverter):
             value = int(value)
         except ValueError:
             raise ConversionError(
-                f"The string '{value}' could not be converted to an int")
+                f"The string '{value}' could not be converted to an 'int'")
         return value != 0
 
 
-# Array conversion, Dictionary Conversion... etc....
+class ListConverter(BaseConverter):
+    '''
+        Converts arguement into an array
+        argument: my_list=1,2,3,4,5,6
+        return : ["1", "2", "3", "4", "5", "6"
+    '''
+    @classmethod
+    def convert(cls, value):
+        return value.replace(" ", "").split(",")
+
+
+# Dictionary Conversion... etc....

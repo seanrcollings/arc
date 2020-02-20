@@ -2,23 +2,28 @@ import sys
 import re
 from cli.config import Config
 from cli.converter import ConversionError
-# sys.tracebacklimit = 0
-
 
 class CLI:
     '''CLI Class Info Here'''
     config = Config
 
-    def __init__(self, scripts={}, utilities=[], config=Config, context_manager=None):
+    def __init__(self,
+                 scripts={},
+                 utilities=[],
+                 config=Config,
+                 context_manager=None):
 
         self.scripts = scripts
-        self.scripts["help"] = {"function": self.helper, "options": None, "named_arguements": True}
+        self.scripts["help"] = {
+            "function": self.helper,
+            "options": None,
+            "named_arguements": True
+        }
 
         self.utilities = {}
-        self.register_utilities(*utilities)
+        self.install_utilities(*utilities)
 
-        self.context_manger = context_manager
-
+        self.context_manager = context_manager
 
     def __call__(self):
         if len(sys.argv) >= 2:
@@ -52,25 +57,31 @@ class CLI:
             print("That command does not exist")
             return
 
-        if self.context_manger is None:
-            script = self.scripts[command]
-            if script['options'] is None:
-                self.scripts[command]['function']()
-            if script['named_arguements'] == False:
-                self.scripts[command]['function'](*options)
-            else:
-                self.scripts[command]['function'](
-                    **self.arguements_dict(script, options))
-        else:
-            with self.context_manger as managed_resource:
+        try:
+            if self.context_manager is None:
                 script = self.scripts[command]
                 if script['options'] is None:
-                    self.scripts[command]['function'](managed_resource)
-                if script['named_arguements'] == False:
-                    self.scripts[command]['function'](managed_resource, *options)
+                    self.scripts[command]['function']()
+                elif script['named_arguements'] == False:
+                    self.scripts[command]['function'](*options)
                 else:
-                    self.scripts[command]['function'](managed_resource,
+                    self.scripts[command]['function'](
                         **self.arguements_dict(script, options))
+            else:
+                with self.context_manager as managed_resource:
+                    script = self.scripts[command]
+                    if script['options'] is None:
+                        self.scripts[command]['function'](managed_resource)
+                    if script['named_arguements'] == False:
+                        self.scripts[command]['function'](managed_resource,
+                                                        *options)
+                    else:
+                        self.scripts[command]['function'](managed_resource,
+                                                        **self.arguements_dict(
+                                                            script, options))
+        except TypeError as e:
+            print(e)
+            sys.exit(1)
 
     def script(self, function_name, options=None, named_arguements=True):
         '''Decorator function to register a script'''
@@ -84,14 +95,14 @@ class CLI:
 
         return decorator
 
-    def register_utilities(self, *utilities):
+    def install_utilities(self, *utilities):
         '''Registers a utility to the CLI'''
         for utility in utilities:
             if repr(utility) == "Utility":  # work around for circular import
                 self.utilities[utility.name] = utility
             else:
                 print("Only instances of the 'Utility'",
-                    "class can be registerd to the CLi")
+                      "class can be registerd to the CLi")
                 sys.exit(1)
 
     # TODO: Rewrite
@@ -116,8 +127,9 @@ class CLI:
             try:
                 switch, value = option.split("=")
             except ValueError:
-                print("\033[1;37;41m   Options must be given a value,",
-                      "ignoring....  \033[0m")
+                print("\033[1;41m   Options must be given a value,",
+                      "ignoring....  \033[00m")
+                break
 
             if switch in [option["name"] for option in script['options']]:
                 converter = list(
@@ -180,19 +192,23 @@ class CLI:
     def helper(self):
         '''
         Helper List function
+        Prints out the docstrings for the clis's scripts
         '''
         print("Usage: python3 FILENAME [COMMAND] [ARGUEMENTS ...]\n")
 
         print("Possible Options: ")
         if len(self.scripts) > 0:
             for script, value in self.scripts.items():
-                helper_text = "\tNo Docstring"
+                helper_text = "No Docstring"
                 if ( doc := value['function'].__doc__) is not None:
-                    helper_text = doc.strip('\n')
-                name = format(script)
-                print(name)
-                print(helper_text)
+                    helper_text = doc.strip('\n\t ')
+
+                print(f"\033[92m{script}\033[00m\n    {helper_text}\n")
+
+
         else:
             print("No scripts defined")
+
+        print("\nInstalled Utilities")
         for name, utility in self.utilities.items():
             utility.helper()

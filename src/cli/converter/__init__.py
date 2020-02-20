@@ -1,6 +1,6 @@
 __all__ = [
     "StringConverter", "ByteConverter", "IntConverter", "FloatConverter",
-    "BoolConverter", "StringBoolConverter", "IntBoolConverter"
+    "BoolConverter", "StringBoolConverter", "IntBoolConverter", "ListConverter"
 ]
 
 
