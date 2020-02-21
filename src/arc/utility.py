@@ -17,22 +17,14 @@ class Utility(CLI):
         db:createuser
     '''
     def __init__(self, name, context_manager=None):
+        super().__init__(context_manager)
         self.name = name
-        self.scripts = {}
-
-        self.scripts["help"] = {
-            "function": self.helper,
-            "options": None,
-            "named_arguements": True
-        }
-
-        self.context_manager = context_manager
 
     def __repr__(self):
         return "Utility"
 
     def __call__(self, command, options):
-        self.execute(command, options)
+        self._execute(command, options)
 
     def helper(self):
         '''
@@ -40,11 +32,14 @@ class Utility(CLI):
         Prints out the docstrings for the utilty's scripts
         '''
         print(f"\nUtility \033[93m{self.name}\033[00m")
-        print(f"Execute this utility with \033[93m{self.name}\033[00m\033[92m:subcommand\033[00m")
+        print(f"Execute this utility with",
+              "\033[93m{self.name}\033[00m\033[92m:subcommand\033[00m")
+
         if len(self.scripts) > 0:
             for script, value in self.scripts.items():
                 helper_text = "No Docstring"
-                if ( doc := value['function'].__doc__) is not None:
+                doc = value['function'].__doc__
+                if doc is not None:
                     helper_text = doc.strip('\n\t ')
 
                 print(f"\033[92m:{script}\033[00m\n    {helper_text}\n")

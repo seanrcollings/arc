@@ -1,28 +1,37 @@
-import unittest
+from io import StringIO
 from unittest.mock import patch
+from tests.base_test import BaseTest
 from arc import CLI
 
 
-class TestCLI(unittest.TestCase):
-    def create_cli(self):
-        scripts = {
-            "func": {
-                "function": lambda x: print(x),
-                "options": ["x"],
-                "named_arguements": True
-            }
-        }
-        return CLI(scripts=scripts)
-
+#pylint: disable=missing-function-docstring
+class TestCLI(BaseTest):
     def test_creation(self):
         cli = CLI()
         assert isinstance(cli, CLI)
 
     def test_adding_command(self):
         cli = self.create_cli()
-        assert "func" in cli.scripts.keys()
+        assert "func1" in cli.scripts.keys()
+        assert "func2" in cli.scripts.keys()
 
-    def test_run(self):
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_func1(self, mock_out):
         cli = self.create_cli()
-        with patch('sys.argv', ["garble", 'func', "x=2"]):
+        with patch('sys.argv', new=["dir", 'func1', "x=2"]):
             cli()
+        assert mock_out.getvalue().strip("\n") == "2"
+
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_func2(self, mock_out):
+        cli = self.create_cli()
+        with patch('sys.argv', new=["dir", 'func2', "x=2"]):
+            cli()
+        assert mock_out.getvalue().strip("\n") == "4"
+
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_nonexistant_script(self, mock_out):
+        cli = self.create_cli()
+        with patch('sys.argv', new=["dir", 'doesnotexist']):
+            cli()
+        assert mock_out.getvalue().strip("\n") == "That command does not exist"

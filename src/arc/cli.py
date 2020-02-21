@@ -3,33 +3,23 @@ import re
 from arc.config import Config
 from arc.converter import ConversionError
 
+
 class CLI:
     '''CLI Class Info Here'''
     config = Config
 
-    def __init__(self,
-                 scripts={},
-                 utilities=[],
-                 config=Config,
-                 context_manager=None):
-
+    def __init__(self, utilities: list = None, context_manager=None):
         self.scripts = {}
-        for name, value in scripts.items():
-            self.__install_script(value["function"],
-                                  name,
-                                  value["options"],
-                                  value["named_arguements"])
-
-        self.scripts["help"] = {
-            "function": self.helper,
-            "options": None,
-            "named_arguements": True
-        }
-
-        self.utilities = {}
-        self.install_utilities(*utilities)
-
+        self._install_script(function=self.helper,
+                             function_name="help",
+                             options=None,
+                             named_arguements=True)
         self.context_manager = context_manager
+
+        if self.__class__ is CLI:
+            self.utilities = {}
+            if utilities is not None:
+                self.install_utilities(*utilities)
 
     def __call__(self):
 
@@ -39,7 +29,7 @@ class CLI:
             print("You didn't provide any options.",
                   "Check help for more information")
 
-    def __parse_command(self, command, options):
+    def __parse_command(self, command: str, options: list):
         if ":" in command:
             utility, command = command.split(":")
         else:
@@ -51,9 +41,9 @@ class CLI:
                 return
             self.utilities[utility](command, options)
         else:
-            self.execute(command, options)
+            self._execute(command, options)
 
-    def execute(self, command, options):
+    def _execute(self, command: str, options: list):
         '''
         Executes the script from the user's command
             :param command - the user typed in i.e: server:run
@@ -66,38 +56,41 @@ class CLI:
 
         try:
             if self.context_manager is None:
-                script = self.scripts[command]
+                script: dict = self.scripts[command]
                 if script['options'] is None:
                     self.scripts[command]['function']()
-                elif script['named_arguements'] == False:
+                elif not script['named_arguements']:
                     self.scripts[command]['function'](*options)
                 else:
                     self.scripts[command]['function'](
-                        **self.arguements_dict(script, options))
+                        **self.__arguements_dict(script, options))
             else:
                 with self.context_manager as managed_resource:
                     script = self.scripts[command]
                     if script['options'] is None:
                         self.scripts[command]['function'](managed_resource)
-                    if script['named_arguements'] == False:
+                    if not script['named_arguements']:
                         self.scripts[command]['function'](managed_resource,
-                                                        *options)
+                                                          *options)
                     else:
-                        self.scripts[command]['function'](managed_resource,
-                                                        **self.arguements_dict(
-                                                            script, options))
-        except TypeError as e:
-            print(e)
+                        self.scripts[command]['function'](
+                            managed_resource,
+                            **self.__arguements_dict(script, options))
+        except TypeError as error:
+            print(error)
             sys.exit(1)
 
     def script(self, function_name, options=None, named_arguements=True):
         '''Decorator function to register a script'''
         def decorator(function):
-            self.__install_script(function, function_name, options, named_arguements)
+            self._install_script(function, function_name, options,
+                                 named_arguements)
+
         return decorator
 
-    def __install_script(self, function, function_name, options, named_arguements):
-        parsed_options = self.parse_options(options)
+    def _install_script(self, function, function_name, options,
+                        named_arguements):
+        parsed_options = self.__parse_options(options)
         self.scripts[function_name] = {
             'function': function,
             'options': parsed_options,
@@ -105,7 +98,7 @@ class CLI:
         }
 
     def install_utilities(self, *utilities):
-        '''Registers a utility to the CLI'''
+        '''Installs a series of utilities to the CLI'''
         for utility in utilities:
             if repr(utility) == "Utility":  # work around for circular import
                 self.utilities[utility.name] = utility
@@ -114,8 +107,7 @@ class CLI:
                       "class can be registerd to the CLi")
                 sys.exit(1)
 
-    # TODO: Rewrite
-    def arguements_dict(self, script, options):
+    def __arguements_dict(self, script, options):
         '''
         Takes in Command line options, converts them
         to a dictionary of arguements that can be passed to
@@ -150,22 +142,21 @@ class CLI:
 
         return arguements
 
-    # TODO: Rewrite
-    def parse_options(self, options):
+    def __parse_options(self, options):
         '''
-            Parses provided options, checking for a converter
-            :param options - array of strings. Can have a converter
-                associated with it.
-                - without converter "normal_string"
-                - with converter "<int:number>
-            :return - a new array of dictionaries of the parsed options
-                each option looks like this:
-                    {
-                        "name": "number"
-                        "converter": IntConverter
-                    }
-                StringConverter is default converter
-
+        Parses provided options into a dictionary
+        Checks for a type converter
+        :param options - array of strings. Can have a converter
+            associated with it.
+            - without converter "normal_string"
+            - with converter "<int:number>
+        :return - a new array of dictionaries of the parsed options
+            each option looks like this:
+                {
+                    "name": "number"
+                    "converter": IntConverter
+                }
+            StringConverter is default converter
         '''
         parsed = []
         if options is not None:
@@ -185,7 +176,8 @@ class CLI:
                             "converter"] = name, self.config.converters[
                                 converter]
                     else:
-                        raise ConversionError(f"'{converter}' is not a valid conversion identifier")
+                        raise ConversionError(f"'{converter}' is not a valid",
+                                              "conversion identifier")
 
                 parsed.append(option_dict)
 
@@ -202,16 +194,16 @@ class CLI:
         if len(self.scripts) > 0:
             for script, value in self.scripts.items():
                 helper_text = "No Docstring"
-                if ( doc := value['function'].__doc__) is not None:
+                doc = value['function'].__doc__
+                if doc is not None:
                     helper_text = doc.strip('\n\t ')
 
                 print(f"\033[92m{script}\033[00m\n    {helper_text}\n")
-
 
         else:
             print("No scripts defined")
 
         if len(self.utilities) > 0:
             print("\nInstalled Utilities")
-            for name, utility in self.utilities.items():
+            for _, utility in self.utilities.items():
                 utility.helper()
