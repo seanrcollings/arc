@@ -1,4 +1,5 @@
 # Allow it to be recursive?? - <array:<int:number>>
+# TODO: Swap all converters to raise a Conversion exception if they will fail
 
 import sys
 from arc.converter.base_converter import BaseConverter
@@ -12,7 +13,12 @@ class StringConverter(BaseConverter):
 
 class IntConverter(BaseConverter):
     convert_to = "integer"
-    convert = int
+
+    @classmethod
+    def convert(cls, value):
+        if value.isnumeric():
+            return int(value)
+        raise ConversionError(value, cls.convert_to)
 
 
 class FloatConverter(BaseConverter):
@@ -44,10 +50,8 @@ class StringBoolConverter(BaseConverter):
             return True
         elif value.lower() == "false":
             return False
-        else:
-            raise ConversionError(
-                f"String '{value}' could not be converted to a '{cls.convert_to}'"
-            )
+
+        raise ConversionError(value, cls.convert_to)
 
 
 class IntBoolConverter(BaseConverter):
@@ -63,10 +67,7 @@ class IntBoolConverter(BaseConverter):
         if value.isnumeric():
             value = int(value)
             return value != 0
-
-        raise ConversionError(
-            f"The string '{value}' could not be converted to an '{cls.convert_to}'"
-        )
+        raise ConversionError(value, cls.convert_to)
 
 
 class ListConverter(BaseConverter):
@@ -75,6 +76,8 @@ class ListConverter(BaseConverter):
         argument: my_list=1,2,3,4,5,6
         return : ["1", "2", "3", "4", "5", "6"
     '''
+    convert_to = "list"
+
     @classmethod
     def convert(cls, value):
         return value.replace(" ", "").split(",")

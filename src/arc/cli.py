@@ -6,7 +6,6 @@ from arc.converter import ConversionError
 
 
 class CLI:
-    '''CLI Class Info Here'''
     config = Config
 
     def __init__(self, utilities: list = None, context_manager=None):
@@ -121,9 +120,9 @@ class CLI:
         '''
         Takes in Command line options, converts them
         to a dictionary of arguements that can be passed to
-        the utility function as kwargs
+        the script function as kwargs
 
-            :param script: the utility script being rna by the user
+            :param script: the script script being ran by the user
             :param options: list of strings that the user typed in
                 Examples:
                  - ["port=5000","config=dev"]

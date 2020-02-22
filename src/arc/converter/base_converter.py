@@ -6,8 +6,8 @@ class BaseConverter:
     def __new__(cls, value):
         return cls.try_convert(value)
 
-    @property
-    def convert(self):
+    @classmethod
+    def convert(cls, value):
         raise NotImplementedError(
             "Must Implement convert method in child class")
 
@@ -22,7 +22,7 @@ class BaseConverter:
             value = cls.convert(value)
 
         except ConversionError as e:
-            print(e)
+            print(f"'{e.value}' could not be converted to '{e.convert_to}'")
             sys.exit(1)
 
         return value

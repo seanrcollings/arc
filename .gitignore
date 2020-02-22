@@ -1,8 +1,10 @@
 __pycache__
 .vscode
 env
-*.txt
-!requirements.txt
+build
 dist
 *.egg-info
-build
+
+manage.py
+*.txt
+!requirements.txt
