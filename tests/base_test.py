@@ -6,11 +6,11 @@ from arc import CLI
 class BaseTest(unittest.TestCase):
     def create_cli(self):
         cli = CLI()
-        cli._install_script(function_name="func1",
+        cli._install_script(name="func1",
                             function=lambda x: print(x),
                             options=["x"],
                             named_arguements=True)
-        cli._install_script(function_name="func2",
+        cli._install_script(name="func2",
                             function=lambda x: print(int(x)**2),
                             options=["x"],
                             named_arguements=True)

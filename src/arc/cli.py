@@ -11,7 +11,7 @@ class CLI:
     def __init__(self, utilities: list = None, context_manager=None):
         self.scripts = {}
         self._install_script(function=self.helper,
-                             function_name="help",
+                             name="help",
                              options=None,
                              named_arguements=True)
         self.context_manager = context_manager
@@ -80,18 +80,30 @@ class CLI:
             print(error)
             sys.exit(1)
 
-    def script(self, function_name, options=None, named_arguements=True):
-        '''Decorator function to register a script'''
+    def script(self,
+               name: str,
+               options: list = None,
+               named_arguements: bool = True):
+        '''
+        Register a Script
+        :param name: Name to register the script under, used on the command lin
+        to run the script
+        :param options: available command lines options for the script
+        :named_arguements: Specifies whether or not options require keywords
+            True: All arguements require names, arguement that doesn't match
+            the script's options will be ignored
+            False: Arguements do not require names, all arguements will be
+            passed to the script (*args)
+
+        '''
         def decorator(function):
-            self._install_script(function, function_name, options,
-                                 named_arguements)
+            self._install_script(function, name, options, named_arguements)
 
         return decorator
 
-    def _install_script(self, function, function_name, options,
-                        named_arguements):
+    def _install_script(self, function, name, options, named_arguements):
         parsed_options = self.__parse_options(options)
-        self.scripts[function_name] = {
+        self.scripts[name] = {
             'function': function,
             'options': parsed_options,
             'named_arguements': named_arguements
@@ -107,20 +119,21 @@ class CLI:
                       "class can be registerd to the CLi")
                 sys.exit(1)
 
-    def __arguements_dict(self, script, options):
+    @staticmethod
+    def __arguements_dict(script: str, options: list) -> list:
         '''
         Takes in Command line options, converts them
         to a dictionary of arguements that can be passed to
         the utility function as kwargs
 
-            :param script - the utility script being rna by the user
-            :param options - list of strings that the user typed in
+            :param script: the utility script being rna by the user
+            :param options: list of strings that the user typed in
                 Examples:
                  - ["port=5000","config=dev"]
                  The function parses these strings into key value pairs (key=value)
                  It also attempts to convert them to the specified type
 
-            :returns - arguement dictionary to be unpacked with **
+            :returns: arguement dictionary to be unpacked with **
         '''
         arguements = {}
         for option in options:
@@ -142,7 +155,7 @@ class CLI:
 
         return arguements
 
-    def __parse_options(self, options):
+    def __parse_options(self, options: list):
         '''
         Parses provided options into a dictionary
         Checks for a type converter
