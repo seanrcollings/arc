@@ -17,7 +17,7 @@ class Utility(CLI):
         db:createuser
     '''
     def __init__(self, name, context_manager=None):
-        super().__init__(context_manager)
+        super().__init__(context_manager=context_manager)
         self.name = name
 
     def __repr__(self):

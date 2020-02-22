@@ -10,7 +10,7 @@ class TestCLI(BaseTest):
         cli = CLI()
         assert isinstance(cli, CLI)
 
-    def test_adding_command(self):
+    def test_register(self):
         cli = self.create_cli()
         assert "func1" in cli.scripts.keys()
         assert "func2" in cli.scripts.keys()

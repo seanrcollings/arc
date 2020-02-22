@@ -1,5 +1,6 @@
 import sys
 import re
+
 from arc.config import Config
 from arc.converter import ConversionError
 
@@ -22,23 +23,19 @@ class CLI:
                 self.install_utilities(*utilities)
 
     def __call__(self):
-
-        if len(sys.argv) >= 2:
-            self.__parse_command(sys.argv[1], sys.argv[2:])
-        else:
+        if len(sys.argv) < 2:
             print("You didn't provide any options.",
-                  "Check help for more information")
+                  "Check 'help' for more information")
+            return
 
-    def __parse_command(self, command: str, options: list):
-        if ":" in command:
-            utility, command = command.split(":")
-        else:
-            utility = None
+        utility, command = self.__parse_command(sys.argv[1])
+        options = sys.argv[2:]
 
         if utility is not None:
             if utility not in self.utilities:
                 print("That command does not exist")
                 return
+
             self.utilities[utility](command, options)
         else:
             self._execute(command, options)
@@ -85,7 +82,7 @@ class CLI:
                options: list = None,
                named_arguements: bool = True):
         '''
-        Register a Script
+        Decorator for registering a Script
         :param name: Name to register the script under, used on the command lin
         to run the script
         :param options: available command lines options for the script
@@ -102,7 +99,7 @@ class CLI:
         return decorator
 
     def _install_script(self, function, name, options, named_arguements):
-        parsed_options = self.__parse_options(options)
+        parsed_options = self.__build_options(options)
         self.scripts[name] = {
             'function': function,
             'options': parsed_options,
@@ -116,7 +113,7 @@ class CLI:
                 self.utilities[utility.name] = utility
             else:
                 print("Only instances of the 'Utility'",
-                      "class can be registerd to the CLi")
+                      "class can be registerd to Arc")
                 sys.exit(1)
 
     @staticmethod
@@ -155,10 +152,19 @@ class CLI:
 
         return arguements
 
-    def __parse_options(self, options: list):
+    @staticmethod
+    def __parse_command(command: str):
+        if ":" in command:
+            utility, command = command.split(":")
+        else:
+            utility = None
+
+        return utility, command
+
+    def __build_options(self, options: list):
         '''
-        Parses provided options into a dictionary
-        Checks for a type converter
+        Parses provided options and builds
+        into a dictionary. Checks for a type converter
         :param options - array of strings. Can have a converter
             associated with it.
             - without converter "normal_string"
@@ -171,7 +177,7 @@ class CLI:
                 }
             StringConverter is default converter
         '''
-        parsed = []
+        built = []
         if options is not None:
             for option in options:
                 option_dict = {
@@ -192,9 +198,9 @@ class CLI:
                         raise ConversionError(f"'{converter}' is not a valid",
                                               "conversion identifier")
 
-                parsed.append(option_dict)
+                built.append(option_dict)
 
-        return parsed
+        return built
 
     def helper(self):
         '''
