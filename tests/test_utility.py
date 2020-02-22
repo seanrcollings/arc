@@ -4,6 +4,7 @@ from tests.base_test import BaseTest
 from arc import Utility
 
 
+#pylint: disable=protected-access, missing-function-docstring
 class TestUtility(BaseTest):
     def test_create(self):
         util = self.create_util()

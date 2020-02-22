@@ -4,7 +4,7 @@ from tests.base_test import BaseTest
 from arc import CLI
 
 
-#pylint: disable=missing-function-docstring
+#pylint: disable=protected-access, missing-function-docstring
 class TestCLI(BaseTest):
     def test_creation(self):
         cli = CLI()

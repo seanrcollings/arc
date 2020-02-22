@@ -23,6 +23,8 @@ class BaseConverter:
 
         except ConversionError as e:
             print(f"'{e.value}' could not be converted to '{e.convert_to}'")
+            if e.helper_text is not None:
+                print(e.helper_text)
             sys.exit(1)
 
         return value

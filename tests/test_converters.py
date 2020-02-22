@@ -1,7 +1,9 @@
-from tests.base_test import BaseTest
 from unittest.mock import patch, MagicMock
+from tests.base_test import BaseTest
+from arc.converter import ConversionError
 
 
+#pylint: disable=protected-access, missing-function-docstring
 class TestConverters(BaseTest):
     def test_string(self):
         cli = self.create_cli()
@@ -35,3 +37,70 @@ class TestConverters(BaseTest):
         with patch('sys.argv', new=["dir", 'float', "number=4.5"]):
             cli()
         func.assert_called_with(number=4.5)
+
+    def test_byte(self):
+        cli = self.create_cli()
+        func = MagicMock()
+        cli._install_script(function=func,
+                            name="byte",
+                            options=["<byte:string>"],
+                            named_arguements=True)
+        with patch('sys.argv', new=["dir", 'byte', "string=hello"]):
+            cli()
+        func.assert_called_with(string=b'hello')
+
+    def test_bool(self):
+        cli = self.create_cli()
+        func = MagicMock()
+        cli._install_script(function=func,
+                            name="bool",
+                            options=["<bool:test>"],
+                            named_arguements=True)
+        with patch('sys.argv', new=["dir", 'bool', "test="]):
+            cli()
+        func.assert_called_with(test=False)
+        with patch('sys.argv', new=["dir", 'bool', "test='anything'"]):
+            cli()
+        func.assert_called_with(test=True)
+
+    def test_intbool(self):
+        cli = self.create_cli()
+        func = MagicMock()
+        cli._install_script(function=func,
+                            name="ibool",
+                            options=["<ibool:test>"],
+                            named_arguements=True)
+        with patch('sys.argv', new=["dir", 'ibool', "test=0"]):
+            cli()
+        func.assert_called_with(test=False)
+        with patch('sys.argv', new=["dir", 'ibool', "test=2"]):
+            cli()
+        func.assert_called_with(test=True)
+
+    def test_strbool(self):
+        cli = self.create_cli()
+        func = MagicMock()
+        cli._install_script(function=func,
+                            name="sbool",
+                            options=["<sbool:test>"],
+                            named_arguements=True)
+        with patch('sys.argv', new=["dir", 'sbool', "test=False"]):
+            cli()
+        func.assert_called_with(test=False)
+        with patch('sys.argv', new=["dir", 'sbool', "test=True"]):
+            cli()
+        func.assert_called_with(test=True)
+
+    def test_list(self):
+        cli = self.create_cli()
+        func = MagicMock()
+        cli._install_script(function=func,
+                            name="list",
+                            options=["<list:test>"],
+                            named_arguements=True)
+        with patch('sys.argv', new=["dir", 'list', "test=1,2,3,4"]):
+            cli()
+        func.assert_called_with(test=['1', '2', '3', '4'])
+        with patch('sys.argv', new=["dir", 'list', "test=2"]):
+            cli()
+        func.assert_called_with(test=['2'])

@@ -33,8 +33,8 @@ class CircleConverter(BaseConverter):
             radius = int(value)
             return Circle(radius=radius)
 
-        raise ConversionError((f"'{value}' could not be"
-                               f"converted to a '{cls.convert_to}'"))
+        raise ConversionError(value, cls.convert_to,
+                              "Circle must be an whole number integer")
 
 
 cli = CLI()

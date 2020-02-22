@@ -134,6 +134,7 @@ class CLI:
         arguements = {}
         for option in options:
             switch, value = "", ""
+            # TODO: Change around this try / except block
             try:
                 switch, value = option.split("=")
             except ValueError:

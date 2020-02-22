@@ -2,7 +2,7 @@ import unittest
 from arc import CLI, Utility
 
 
-#pylint: disable=missing-function-docstring
+#pylint: disable=protected-access, missing-function-docstring
 class BaseTest(unittest.TestCase):
     scripts = [
         dict(name="func1",

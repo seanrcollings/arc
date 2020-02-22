@@ -18,17 +18,28 @@ class IntConverter(BaseConverter):
     def convert(cls, value):
         if value.isnumeric():
             return int(value)
-        raise ConversionError(value, cls.convert_to)
+        raise ConversionError(value, cls.convert_to,
+                              "Value must be a whole number integer")
 
 
 class FloatConverter(BaseConverter):
     convert_to = "float"
-    convert = float
+
+    @classmethod
+    def convert(cls, value):
+        try:
+            return float(value)
+        except ValueError:
+            raise ConversionError(value, cls.convert_to,
+                                  "Value must be a number (1.3, 4, 1.7)")
 
 
 class ByteConverter(BaseConverter):
     convert_to = "byte"
-    convert = str.encode
+
+    @classmethod
+    def convert(cls, value):
+        return value.encode()
 
 
 class BoolConverter(BaseConverter):
@@ -51,7 +62,8 @@ class StringBoolConverter(BaseConverter):
         elif value.lower() == "false":
             return False
 
-        raise ConversionError(value, cls.convert_to)
+        raise ConversionError(value, cls.convert_to,
+                              "sbool only accepts true or false")
 
 
 class IntBoolConverter(BaseConverter):
@@ -67,7 +79,8 @@ class IntBoolConverter(BaseConverter):
         if value.isnumeric():
             value = int(value)
             return value != 0
-        raise ConversionError(value, cls.convert_to)
+        raise ConversionError(value, cls.convert_to,
+                              "ibool only accepts whole number integers")
 
 
 class ListConverter(BaseConverter):
