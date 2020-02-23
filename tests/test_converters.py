@@ -1,6 +1,6 @@
 from unittest.mock import patch, MagicMock
 from tests.base_test import BaseTest
-from arc.converter import ConversionError
+from arc.errors import *
 
 
 #pylint: disable=protected-access, missing-function-docstring
@@ -56,9 +56,9 @@ class TestConverters(BaseTest):
                             name="bool",
                             options=["<bool:test>"],
                             named_arguements=True)
-        with patch('sys.argv', new=["dir", 'bool', "test="]):
+        with patch('sys.argv', new=["dir", 'bool', "test=''"]):
             cli()
-        func.assert_called_with(test=False)
+        func.assert_called_with(test=True)
         with patch('sys.argv', new=["dir", 'bool', "test='anything'"]):
             cli()
         func.assert_called_with(test=True)
@@ -104,3 +104,17 @@ class TestConverters(BaseTest):
         with patch('sys.argv', new=["dir", 'list', "test=2"]):
             cli()
         func.assert_called_with(test=['2'])
+
+    def test_invalid_converters(self):
+        cli = self.create_cli()
+        func = MagicMock()
+        with self.assertRaises(ArcError):
+            cli._install_script(function=func,
+                                name="string",
+                                options=["<str:name><int:name>"],
+                                named_arguements=True)
+        with self.assertRaises(ArcError):
+            cli._install_script(function=func,
+                                name="string",
+                                options=["<str::name>"],
+                                named_arguements=True)

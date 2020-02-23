@@ -1,3 +1,4 @@
+import logging
 from arc import CLI
 
 
@@ -18,6 +19,9 @@ class Utility(CLI):
         super().__init__(context_manager=context_manager)
         self.name = name
 
+        # Sets up utility logger
+        self.logger = logging.getLogger(f"cli.utility.{self.name}")
+
     def __repr__(self):
         return "Utility"
 
@@ -31,15 +35,10 @@ class Utility(CLI):
         '''
         print(f"\nUtility \033[93m{self.name}\033[00m")
         print(f"Execute this utility with",
-              "\033[93m{self.name}\033[00m\033[92m:subcommand\033[00m")
+              f"\033[93m{self.name}\033[00m\033[92m:subcommand\033[00m")
 
         if len(self.scripts) > 0:
-            for script, value in self.scripts.items():
-                helper_text = "No Docstring"
-                doc = value['function'].__doc__
-                if doc is not None:
-                    helper_text = doc.strip('\n\t ')
-
-                print(f"\033[92m:{script}\033[00m\n    {helper_text}\n")
+            for script_name, script in self.scripts.items():
+                print(f"\033[92m:{script_name}\033[00m\n    {script.doc}\n")
         else:
             print("No scripts defined")

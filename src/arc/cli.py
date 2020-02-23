@@ -1,8 +1,10 @@
 import sys
-import re
+import time
+import logging
 
 from arc.config import Config
-from arc.converter import ConversionError
+from arc.script import Script
+from arc.errors import ExecutionError
 
 
 class CLI:
@@ -10,18 +12,16 @@ class CLI:
 
     def __init__(self, utilities: list = None, context_manager=None):
         self.scripts = {}
-
-        # Installs the helper script for the entire
-        # ClI, or the utility
-        # No options, named arguement
-        self._install_script(function=self.helper,
-                             name="help",
-                             options=None,
-                             named_arguements=True)
-
         self.context_manager = context_manager
+        self._install_script(function=self.helper, name="help")
 
-        if self.__class__ is CLI:
+        if isinstance(self, CLI):
+            # Sets up root logger Used to log information
+            # to the console that can easily
+            # suppressed for testing
+            logging.basicConfig(level=self.config.logger_level)
+            self.logger = logging.getLogger("cli")
+
             self.utilities = {}
             if utilities is not None:
                 self.install_utilities(*utilities)
@@ -58,30 +58,17 @@ class CLI:
             print("That command does not exist")
             return
 
+        start_time = time.time()
+        script = self.scripts[command]
         try:
-            script: dict = self.scripts[command]
-
-            if self.context_manager is None:
-                if script['options'] is None:
-                    script['function']()
-                elif not script['named_arguements']:
-                    script['function'](*options)
-                else:
-                    script['function'](
-                        **self.__parse_arguements(script, options))
-            else:
-                with self.context_manager as managed_resource:
-                    if script['options'] is None:
-                        script['function'](managed_resource)
-                    elif not script['named_arguements']:
-                        script['function'](managed_resource, *options)
-                    else:
-                        script['function'](managed_resource,
-                                           **self.__parse_arguements(
-                                               script, options))
-        except TypeError as error:
-            print(error)
+            script.execute(context_manager=self.context_manager,
+                           user_arguements=options)
+        except ExecutionError as e:
+            print(e)
             sys.exit(1)
+        finally:
+            end_time = time.time()
+            self.logger.info("Completed in %.2fs", end_time - start_time)
 
     def script(self,
                name: str,
@@ -102,13 +89,12 @@ class CLI:
 
         return decorator
 
-    def _install_script(self, function, name, options, named_arguements):
-        parsed_options = self.__build_options(options)
-        self.scripts[name] = {
-            'function': function,
-            'options': parsed_options,
-            'named_arguements': named_arguements
-        }
+    def _install_script(self,
+                        function,
+                        name,
+                        options=None,
+                        named_arguements=True):
+        self.scripts[name] = Script(name, function, options, named_arguements)
 
     def install_utilities(self, *utilities):
         '''Installs a series of utilities to the CLI'''
@@ -121,44 +107,6 @@ class CLI:
                 sys.exit(1)
 
     @staticmethod
-    def __parse_arguements(script: str, options: list) -> list:
-        ''' Converts command line arguements into python dict
-
-        Takes in Command line options, converts them
-        to a dictionary of arguements that can be passed to
-        the script function as kwargs
-
-            :param script: the script script being ran by the user
-            :param options: list of strings that the user typed in
-                Examples:
-                 - ["port=5000","config=dev"]
-                 The function parses these strings into key value pairs (key=value)
-                 It also attempts to convert them to the specified type
-
-            :returns: arguement dictionary to be unpacked with **
-        '''
-        arguements = {}
-        for option in options:
-            switch, value = "", ""
-            # TODO: Change around this try / except block
-            try:
-                switch, value = option.split("=")
-            except ValueError:
-                print("\033[1;41m   Options must be given a value,",
-                      "ignoring....  \033[00m")
-                break
-            if switch in [option["name"] for option in script['options']]:
-                converter = list(
-                    filter(lambda option: option["name"] == switch,
-                           script['options']))[0]["converter"]
-
-                value = converter(value)
-
-                arguements[switch] = value
-
-        return arguements
-
-    @staticmethod
     def __parse_command(command: str):
         if ":" in command:
             utility, command = command.split(":")
@@ -166,47 +114,6 @@ class CLI:
             utility = None
 
         return utility, command
-
-    def __build_options(self, options: list):
-        '''Parses provided options and buildsinto a dictionary.
-
-        Checks for a type converter
-        :param options - array of strings. Can have a converter
-            associated with it.
-            - without converter "normal_string"
-            - with converter "<int:number>
-        :return - a new array of dictionaries of the parsed options
-            each option looks like this:
-                {
-                    "name": "number"
-                    "converter": IntConverter
-                }
-            StringConverter is default converter
-        '''
-        built = []
-        if options is not None:
-            for option in options:
-                option_dict = {
-                    "name": option,
-                    "converter": self.config.converters["str"]
-                }
-                # Matches to "<convertername:varname>""
-                match = re.search("<.*:.*>", option)
-                if match is not None:
-                    # turns "<convertername:varname>" into ["convertername", "varname"]
-                    converter, name = option.lstrip("<").rstrip(">").split(":")
-
-                    if converter in self.config.converters:
-                        option_dict["name"], option_dict[
-                            "converter"] = name, self.config.converters[
-                                converter]
-                    else:
-                        raise ConversionError(f"'{converter}' is not a valid",
-                                              "conversion identifier")
-
-                built.append(option_dict)
-
-        return built
 
     def helper(self):
         '''
@@ -217,14 +124,8 @@ class CLI:
 
         print("Possible Options: ")
         if len(self.scripts) > 0:
-            for script, value in self.scripts.items():
-                helper_text = "No Docstring"
-                doc = value['function'].__doc__
-                if doc is not None:
-                    helper_text = doc.strip('\n\t ')
-
-                print(f"\033[92m{script}\033[00m\n    {helper_text}\n")
-
+            for script_name, script in self.scripts.items():
+                print(f"\033[92m{script_name}\033[00m\n    {script.doc}\n")
         else:
             print("No scripts defined")
 

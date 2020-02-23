@@ -17,6 +17,7 @@ class BaseTest(unittest.TestCase):
 
     def create_cli(self):
         cli = CLI()
+        cli.logger.setLevel(30)
         for script in self.scripts:
             cli._install_script(**script)
 
