@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="arc-cli",
-    version="0.1.0",
+    version="0.5.0",
     author="Sean Collings",
     author_email="sean@seanrcollings.com",
     description="A Regular CLI",

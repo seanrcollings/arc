@@ -168,9 +168,9 @@ class CLI:
         return utility, command
 
     def __build_options(self, options: list):
-        '''
-        Parses provided options and builds
-        into a dictionary. Checks for a type converter
+        '''Parses provided options and buildsinto a dictionary.
+
+        Checks for a type converter
         :param options - array of strings. Can have a converter
             associated with it.
             - without converter "normal_string"
