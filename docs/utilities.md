@@ -35,7 +35,7 @@ This command is associated with the global CLI
 
 $ python3 example.py converse:greet name=Sean
 Howdy, Sean!
-This command is associated witht the 'converse' utility
+This command is associated with the 'converse' utility
 ```
 As you can see, now we've got two different "greet" commands with different output.
 

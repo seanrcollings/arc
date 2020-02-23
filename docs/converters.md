@@ -1,5 +1,7 @@
 # Type Converters
 - [Type Converters](#type-converters)
+  - [Builtin Converters](#builtin-converters)
+  - [Future Converters](#future-converters)
   - [Use](#use)
   - [Examples](#examples)
     - [Int Conversion](#int-conversion)
@@ -7,7 +9,9 @@
   - [Custom Converters](#custom-converters)
 
 Typically, you don't want numbers, booleans, lists, represented as just strings. Arc provides type conversions that will convert the input to your desired type before passing it on to the command's function. If you've used Flask before, it's URL converters work in essentially the same way
+If no converter is specified, the StringConverter is used by default
 
+## Builtin Converters
 | Indicator | Class Name          | Converts          | Conversion Method                              |
 | --------- | ------------------- | ----------------- | ---------------------------------------------- |
 | str       | StringConverter     | name=Jonathen     | python builtin `str()`                         |
@@ -18,7 +22,12 @@ Typically, you don't want numbers, booleans, lists, represented as just strings.
 | sbool     | StringBoolConverter | happy=True        | Looks for a string of True/true or False/false |
 | ibool     | IntBoolConverter    | sad=0             | Truthy values of integers                      |
 | list      | ListConverter       | my_list=1,2,3,4,5 | Splits on commas, strips spaces                |
-If no converter is specified, the StringConverter is used by default
+
+## Future Converters
+| Indicator | Class Name    | Converts                    | Conversion Method |
+| --------- | ------------- | --------------------------- | ----------------- |
+| dict      | DictConverter | my_dict=key:value,key:value | ??????            |
+
 
 ## Use
 A converter is indicated using the same syntax as Flask's URL Converters `<type:varible_name>`

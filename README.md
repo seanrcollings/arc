@@ -9,7 +9,7 @@ A tool for building easy, and highly extendable CLI systems for Python 3.8
 
 # Installation
 
-From github
+From GitHub
 ```
 $ git clone https://github.com/seanrcollings/cli
 $ pip install -e cli
@@ -34,6 +34,18 @@ cli()
 $ python example.py hello
 Hello, World!
 ```
+
+# Tests
+Run the full test suite with
+```
+$ python3 -m tests
+```
+
+Run a specific test case with
+```
+$ python3 -m tests [TEST CASE]
+```
+
 
 
 Reference [getting started](docs/getting_started.md) for more info

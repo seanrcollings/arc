@@ -105,7 +105,7 @@ def greet(name="Joseph Joestar"):
 ```
 
 ```
-$ python3 example.py greet name=Sean
+$ python3 example.py greet
 Hello, Joseph Joestar!
 ```
 
