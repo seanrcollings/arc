@@ -9,14 +9,18 @@ A tool for building easy, and highly extendable CLI systems for Python 3.8
 
 # Installation
 
-From GitHub
+```
+$ pip install arc-cli
+```
+
+Clone for development
 ```
 $ git clone https://github.com/seanrcollings/cli
 $ pip install -e cli
 ```
 
-# Quick Start
 
+# Quick Start
 
 ```py
 from arc import CLI
@@ -29,6 +33,7 @@ def hello():
 
 cli()
 ```
+Reference [getting started](docs/getting_started.md) for more info
 
 ```
 $ python example.py hello
@@ -48,5 +53,8 @@ $ python3 -m tests [TEST CASE]
 
 
 
-Reference [getting started](docs/getting_started.md) for more info
 
+# My Goals
+- Make a fully functioning, easy to use CLI creator
+- Teach myself how to upload and maintain package on PyPi
+- Do not rely on **any** third party packages (crazy, I know)
