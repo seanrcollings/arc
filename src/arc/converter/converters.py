@@ -48,10 +48,9 @@ class BoolConverter(BaseConverter):
 
 
 class StringBoolConverter(BaseConverter):
-    '''
-        Converts a string to a boolean
-        True / true - True
-        False / false - False
+    '''Converts a string to a boolean
+    True / true - True
+    False / false - False
     '''
     convert_to = "boolean"
 
@@ -67,10 +66,9 @@ class StringBoolConverter(BaseConverter):
 
 
 class IntBoolConverter(BaseConverter):
-    '''
-        Converts an int to a boolean.
-        0 - False
-        All other ints / floats - True
+    '''Converts an int to a boolean.
+    0 - False
+    All other ints / floats - True
     '''
     convert_to = "boolean"
 
@@ -84,10 +82,9 @@ class IntBoolConverter(BaseConverter):
 
 
 class ListConverter(BaseConverter):
-    '''
-        Converts arguement into an array
-        argument: my_list=1,2,3,4,5,6
-        return : ["1", "2", "3", "4", "5", "6"
+    '''Converts arguement into an array
+    argument: my_list=1,2,3,4,5,6
+    return : ["1", "2", "3", "4", "5", "6"
     '''
     convert_to = "list"
 

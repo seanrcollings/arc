@@ -10,10 +10,15 @@ class CLI:
 
     def __init__(self, utilities: list = None, context_manager=None):
         self.scripts = {}
+
+        # Installs the helper script for the entire
+        # ClI, or the utility
+        # No options, named arguement
         self._install_script(function=self.helper,
                              name="help",
                              options=None,
                              named_arguements=True)
+
         self.context_manager = context_manager
 
         if self.__class__ is CLI:
@@ -40,38 +45,40 @@ class CLI:
             self._execute(command, options)
 
     def _execute(self, command: str, options: list):
-        '''
-        Executes the script from the user's command
-            :param command - the user typed in i.e: server:run
-            :param options - various options that the user passed in i.e: port=4321
+        '''Executes the script from the user's command
 
+        If self.context_mangaer is not None, the command will be called
+        within the context of said context manager, and will pass the managed resource
+        as the first arguement to the script
+
+        :param command: the command that the user typed in i.e: run
+        :param options: various options that the user passed in i.e: port=4321
         '''
         if command not in self.scripts:
             print("That command does not exist")
             return
 
         try:
+            script: dict = self.scripts[command]
+
             if self.context_manager is None:
-                script: dict = self.scripts[command]
                 if script['options'] is None:
-                    self.scripts[command]['function']()
+                    script['function']()
                 elif not script['named_arguements']:
-                    self.scripts[command]['function'](*options)
+                    script['function'](*options)
                 else:
-                    self.scripts[command]['function'](
-                        **self.__arguements_dict(script, options))
+                    script['function'](
+                        **self.__parse_arguements(script, options))
             else:
                 with self.context_manager as managed_resource:
-                    script = self.scripts[command]
                     if script['options'] is None:
-                        self.scripts[command]['function'](managed_resource)
-                    if not script['named_arguements']:
-                        self.scripts[command]['function'](managed_resource,
-                                                          *options)
+                        script['function'](managed_resource)
+                    elif not script['named_arguements']:
+                        script['function'](managed_resource, *options)
                     else:
-                        self.scripts[command]['function'](
-                            managed_resource,
-                            **self.__arguements_dict(script, options))
+                        script['function'](managed_resource,
+                                           **self.__parse_arguements(
+                                               script, options))
         except TypeError as error:
             print(error)
             sys.exit(1)
@@ -80,17 +87,15 @@ class CLI:
                name: str,
                options: list = None,
                named_arguements: bool = True):
-        '''
-        Decorator for registering a Script
+        '''Decorator method used to registering a script
         :param name: Name to register the script under, used on the command lin
         to run the script
         :param options: available command lines options for the script
-        :named_arguements: Specifies whether or not options require keywords
+        :param named_arguements: Specifies whether or not options require keywords
             True: All arguements require names, arguement that doesn't match
             the script's options will be ignored
             False: Arguements do not require names, all arguements will be
             passed to the script (*args)
-
         '''
         def decorator(function):
             self._install_script(function, name, options, named_arguements)
@@ -116,8 +121,9 @@ class CLI:
                 sys.exit(1)
 
     @staticmethod
-    def __arguements_dict(script: str, options: list) -> list:
-        '''
+    def __parse_arguements(script: str, options: list) -> list:
+        ''' Converts command line arguements into python dict
+
         Takes in Command line options, converts them
         to a dictionary of arguements that can be passed to
         the script function as kwargs

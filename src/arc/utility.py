@@ -2,9 +2,7 @@ from arc import CLI
 
 
 class Utility(CLI):
-    '''
-    CLI Helper class
-    Wrapper to create a group of utility functions
+    ''' CLI subclass to create a group of utility functions
 
     If the CLI finds that the first section of a command
     is a installed utility, it will pass control over to the utility
