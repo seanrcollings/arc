@@ -1,27 +1,20 @@
 import sys
 import time
-import logging
 
 from arc.config import Config
 from arc.script import Script
 from arc.errors import ExecutionError
+from arc._utils import logger
 
 
 class CLI:
-    config = Config
-
     def __init__(self, utilities: list = None, context_manager=None):
         self.scripts = {}
         self.context_manager = context_manager
         self._install_script(function=self.helper, name="help")
 
-        if isinstance(self, CLI):
-            # Sets up root logger Used to log information
-            # to the console that can easily
-            # suppressed for testing
-            logging.basicConfig(level=self.config.logger_level)
-            self.logger = logging.getLogger("cli")
-
+        # using type because isinstance tests for subclasses
+        if type(self) is CLI:
             self.utilities = {}
             if utilities is not None:
                 self.install_utilities(*utilities)
@@ -68,13 +61,13 @@ class CLI:
             sys.exit(1)
         finally:
             end_time = time.time()
-            self.logger.info("Completed in %.2fs", end_time - start_time)
+            logger(f"Completed in {end_time - start_time:.2f}s")
 
     def script(self,
                name: str,
                options: list = None,
                named_arguements: bool = True):
-        '''Decorator method used to registering a script
+        '''Decorator method used to register a script
         :param name: Name to register the script under, used on the command lin
         to run the script
         :param options: available command lines options for the script
@@ -106,10 +99,10 @@ class CLI:
                       "class can be registerd to Arc")
                 sys.exit(1)
 
-    @staticmethod
-    def __parse_command(command: str):
-        if ":" in command:
-            utility, command = command.split(":")
+    def __parse_command(self, command: str):
+        sep = Config.utility_seperator
+        if sep in command:
+            utility, command = command.split(sep)
         else:
             utility = None
 
@@ -127,7 +120,7 @@ class CLI:
             for script_name, script in self.scripts.items():
                 print(f"\033[92m{script_name}\033[00m\n    {script.doc}\n")
         else:
-            print("No scripts defined")
+            print("No scripts installed")
 
         if len(self.utilities) > 0:
             print("\nInstalled Utilities")

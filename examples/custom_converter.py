@@ -1,6 +1,7 @@
 from math import pi
 from arc.converter import BaseConverter, ConversionError
-from arc import CLI
+from arc import CLI, Config
+from arc.utilities import debug
 
 
 # Custom Circle object
@@ -9,7 +10,7 @@ class Circle:
         self.radius = radius
 
     def __str__(self):
-        return f"Circle({self.radius})"
+        return f"Circle(radius: {self.radius})"
 
     def get_circumference(self):
         return self.radius * 2 * pi
@@ -33,16 +34,16 @@ class CircleConverter(BaseConverter):
             radius = int(value)
             return Circle(radius=radius)
 
-        raise ConversionError(value, cls.convert_to,
-                              "Circle must be an whole number integer")
+        raise ConversionError(value, "Circle must be an whole number integer")
 
 
-cli = CLI()
-cli.config.converters["circle"] = CircleConverter
+cli = CLI(utilities=[debug])
+Config.converters["circle"] = CircleConverter
 
 
 @cli.script("circle", ["<circle:new_circle>"])
 def circle(new_circle):
+    '''Displays some info about the circle object the script is passed'''
     print(new_circle)
     print(new_circle.get_circumference())  # 31.41592653589793
 

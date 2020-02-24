@@ -30,7 +30,8 @@ class Script:
 
         self.doc = "No Docstring"
         if self.function.__doc__ is not None:
-            self.doc = self.function.__doc__.strip('\n\t ')
+            self.doc = self.function.__doc__.strip('\n\t ').replace(
+                "\n", "\n\t")
 
     def __repr__(self):
         return f"<Script : {self.name}>"
@@ -119,7 +120,7 @@ class Script:
 
             :returns: arguement dictionary to be unpacked with **
         '''
-        sep = Config.seperator
+        sep = Config.options_seperator
         user_options_dict = {}
 
         for option in user_options:

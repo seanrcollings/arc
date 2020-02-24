@@ -39,7 +39,7 @@ class BaseConverter:
             value = cls.convert(value)
 
         except ConversionError as e:
-            print(f"'{e.value}' could not be converted to '{e.convert_to}'")
+            print(f"'{e.value}' could not be converted to '{cls.convert_to}'")
             if e.helper_text is not None:
                 print(e.helper_text)
             sys.exit(1)

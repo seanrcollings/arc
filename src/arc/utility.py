@@ -1,9 +1,9 @@
-import logging
 from arc import CLI
+from arc.config import Config
 
 
 class Utility(CLI):
-    ''' CLI subclass to create a group of utility functions
+    ''' CLI subclass to create a group of related scripts
 
     If the CLI finds that the first section of a command
     is a installed utility, it will pass control over to the utility
@@ -19,9 +19,6 @@ class Utility(CLI):
         super().__init__(context_manager=context_manager)
         self.name = name
 
-        # Sets up utility logger
-        self.logger = logging.getLogger(f"cli.utility.{self.name}")
-
     def __repr__(self):
         return "Utility"
 
@@ -29,16 +26,19 @@ class Utility(CLI):
         self._execute(command, options)
 
     def helper(self):
-        '''
-        Helper function for utilities
+        '''Helper function for utilities
         Prints out the docstrings for the utilty's scripts
         '''
         print(f"\nUtility \033[93m{self.name}\033[00m")
-        print(f"Execute this utility with",
-              f"\033[93m{self.name}\033[00m\033[92m:subcommand\033[00m")
+        print(
+            f"Execute this utility with",
+            f"\033[93m{self.name}\033[00m\033[92m{Config.utility_seperator}subcommand\033[00m"
+        )
 
         if len(self.scripts) > 0:
             for script_name, script in self.scripts.items():
-                print(f"\033[92m:{script_name}\033[00m\n    {script.doc}\n")
+                print(
+                    f"\033[92m{Config.utility_seperator}{script_name}\033[00m")
+                print(f"\t{script.doc}")
         else:
             print("No scripts defined")

@@ -1,5 +1,6 @@
 import unittest
 from arc import CLI, Utility
+from arc.config import Config
 
 
 #pylint: disable=protected-access, missing-function-docstring
@@ -16,8 +17,9 @@ class BaseTest(unittest.TestCase):
     ]
 
     def create_cli(self):
+        Config.log = False
+        Config.debug = False
         cli = CLI()
-        cli.logger.setLevel(30)
         for script in self.scripts:
             cli._install_script(**script)
 

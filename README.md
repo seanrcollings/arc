@@ -6,6 +6,7 @@ A tool for building easy, and highly extendable CLI systems for Python 3.8
 - [Utilities](docs/utilities.md)
 - [Type Converters](docs/converters.md)
 - [Context Managers](docs/context_mangers.md)
+- [Configuration](docs/configuration.md)
 
 # Installation
 
