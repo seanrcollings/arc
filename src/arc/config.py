@@ -12,3 +12,5 @@ class Config:
         "ibool": IntBoolConverter,
         "list": ListConverter
     }
+    seperator = "="
+    logger_level = 20

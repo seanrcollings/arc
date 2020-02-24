@@ -15,8 +15,8 @@ $ pip install arc-cli
 
 Clone for development
 ```
-$ git clone https://github.com/seanrcollings/cli
-$ pip install -e cli
+$ git clone https://github.com/seanrcollings/arc
+$ pip install -e arc
 ```
 
 
