@@ -14,4 +14,5 @@ def greet(name="Joseph Joestar"):
     print(f"Hello, {name}!")
 
 
-cli()  # Run the CLI
+if __name__ == "__main__":
+    cli()  # Run the CLI

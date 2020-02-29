@@ -1,5 +1,5 @@
 '''
-Example CLI to demonstarte all of the type converters
+Example CLI to demonstrate all of the type converters
 '''
 from arc import CLI
 cli = CLI()
@@ -60,6 +60,7 @@ def sbool_type(value):
 # python3 converters.py bool value=1 -> True
 # python3 converters.py bool value=4 -> True
 # python3 converters.py bool value=1231 -> True
+# python3 converters.py bool value=afeafa -> error
 @cli.script("ibool", options=["<ibool:value>"])
 def ibool_type(value):
     '''Demonstrates bool conversion'''
@@ -77,4 +78,5 @@ def list_type(value):
     print(value)
 
 
-cli()
+if __name__ == "__main__":
+    cli()

@@ -21,7 +21,7 @@ def read(filename):
         print(file.read())
 
 
-@files.script("write", options=["filename", "write"])
+@files.script("append", options=["filename", "write"])
 def append(filename, write):
     '''Appends text to the specified file
     :param filename: file to be appended to

@@ -20,4 +20,5 @@ def utility_greet(name="Jotaro Kujo"):
     print(f"This command is associated with the 'converse' utility")
 
 
-cli()
+if __name__ == "__main__":
+    cli()

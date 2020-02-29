@@ -8,8 +8,7 @@ debug = Utility("debug")
 
 @debug.script("config")
 def config():
-    '''Displays information about the current config of the Arc app
-    '''
+    '''Displays information about the current config of the Arc app'''
     config_items = {
         "Decorate Text": [Config.decorate_text, "True"],
         "Utility Seperator": [Config.utility_seperator, ":"],

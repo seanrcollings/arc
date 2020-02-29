@@ -11,10 +11,12 @@ dirname, filename = os.path.split(os.path.abspath(__file__))
 os.chdir(dirname)
 
 # Tests
-# pylint: disable=unused-import
+# pylint: disable=unused-import, wrong-import-position, unused-wildcard-import, wildcard-import
 from tests.test_cli import TestCLI
 from tests.test_utility import TestUtility
 from tests.test_converters import TestConverters
+from tests.examples import *
+from tests.utilities import *
 
 if __name__ == "__main__":
     unittest.main()
