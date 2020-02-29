@@ -68,7 +68,7 @@ def ibool_type(value):
 
 
 # python3 examples/converters.py list value=1,2,3,4,5 -> ['1', '2', '3', '4', '5'] # Without spaces, you don't need quotation marks
-# python3 examples/converters.py list value="1,2,3,4,5" -> ['1', '2', '3', '4', '5'] # if you want to pust spaces, you need to quote the whole string
+# python3 examples/converters.py list value="1, 2, 3, 4, 5" -> ['1', '2', '3', '4', '5'] # if you want to pust spaces, you need to quote the whole string
 # python3 examples/converters.py list value="1,    2,    3,  4 , 5" -> ['1', '2', '3', '4', '5']
 @cli.script("list", options=["<list:value>"])
 def list_type(value):
