@@ -4,7 +4,9 @@ env
 build
 dist
 *.egg-info
+
 .arc
+!tests/.arc
 
 manage.py
 *.txt

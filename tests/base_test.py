@@ -17,8 +17,6 @@ class BaseTest(unittest.TestCase):
     ]
 
     def create_cli(self):
-        Config.log = False
-        Config.debug = False
         cli = CLI()
         for script in self.scripts:
             cli._install_script(**script)

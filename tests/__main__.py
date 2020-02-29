@@ -4,6 +4,11 @@ to run, use
     if no test name is provided, it will run the entire test suite
 '''
 import unittest
+import os
+
+# Set the CWD so the correct .arc file gets loaded
+dirname, filename = os.path.split(os.path.abspath(__file__))
+os.chdir(dirname)
 
 # Tests
 # pylint: disable=unused-import

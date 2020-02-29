@@ -16,7 +16,7 @@ def config():
         "Options Seperator": [Config.options_seperator, "="],
         "Log": [Config.log, "False"],
         "Debug": [Config.debug, "False"],
-        "Converters": ["See debug:converters", ""]
+        "Converters": ["See debug:converters", "N/A"]
     }
 
     table = Table(headers=["value", "default"],
