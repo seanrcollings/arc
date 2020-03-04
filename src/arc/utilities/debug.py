@@ -1,4 +1,5 @@
 import os
+import random
 
 from arc import Utility, Config
 from arc.utilities.__table import Table
@@ -9,16 +10,14 @@ debug = Utility("debug")
 @debug.script("config")
 def config():
     '''Displays information about the current config of the Arc app'''
-    config_items = {
-        "Decorate Text": [Config.decorate_text, "True"],
-        "Utility Seperator": [Config.utility_seperator, ":"],
-        "Options Seperator": [Config.options_seperator, "="],
-        "Log": [Config.log, "False"],
-        "Debug": [Config.debug, "False"],
-        "Converters": ["See debug:converters", "N/A"]
-    }
+    config_items = [["Decorate Text", Config.decorate_text, "True"],
+                    ["Utility Seperator", Config.utility_seperator, ":"],
+                    ["Options Seperator", Config.options_seperator, "="],
+                    ["Log", Config.log, "False"],
+                    ["Debug", Config.debug, "False"],
+                    ["Converters", "See debug:converters", "N/A"]]
 
-    table = Table(headers=["value", "default"],
+    table = Table(headers=["name", "value", "default"],
                   rows=config_items,
                   column_width=25)
     table.print_table()
@@ -27,13 +26,14 @@ def config():
 @debug.script("converters")
 def converters():
     '''Displays information about the currently accessible converters'''
-    converter_names = {
-        v.__name__: [v.convert_to, f"<{k}:bar>"]
-        for (k, v) in Config.converters.items()
-    }
+    filler_words = ["foo", "bar", "baz",
+                    "buzz"]  # Randomly pick for filler information
+    converter_rows = [[
+        v.__name__, v.convert_to, f"<{k}:{random.choice(filler_words)}>"
+    ] for (k, v) in Config.converters.items()]
 
-    table = Table(headers=["Convert to", "Example"],
-                  rows=converter_names,
+    table = Table(headers=["Converter Name", "Convert to", "Example"],
+                  rows=converter_rows,
                   column_width=30)
     table.print_table()
 
