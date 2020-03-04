@@ -47,6 +47,9 @@ sys.excepthook = exception_handler
 
 
 def clear():
+    '''Executes a clear screen command
+    will work on any OS
+    '''
     if os.name == "nt":
         os.system("cls")
     else:

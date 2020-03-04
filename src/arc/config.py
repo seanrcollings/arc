@@ -7,8 +7,6 @@ import os
 from arc.converter import *
 from arc.errors import ArcError
 
-print("config: ", os.getcwd())
-
 
 class Config:
     utility_seperator = ":"
@@ -66,9 +64,9 @@ class Config:
                             f"\nProvided type: {type(value)}"))
 
     @classmethod
-    def load_arc_file(cls):
-        if os.path.isfile(".arc"):
-            file = open(".arc")
+    def load_arc_file(cls, arcfile):
+        if os.path.isfile(arcfile):
+            file = open(arcfile)
             for line in file:
                 line = line.partition("#")
                 config = line[0]
@@ -79,6 +77,3 @@ class Config:
                     name, value = config.strip().split("=")
                     cls.set_value(name, value)
             file.close()
-
-
-Config.load_arc_file()

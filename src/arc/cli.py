@@ -8,7 +8,10 @@ from arc._utils import logger, clear
 
 
 class CLI:
-    def __init__(self, utilities: list = None, context_manager=None):
+    def __init__(self,
+                 utilities: list = None,
+                 context_manager=None,
+                 arcfile=".arc"):
         self.scripts = {}
         self.context_manager = context_manager
         self._install_script(function=self.helper, name="help")
@@ -19,7 +22,16 @@ class CLI:
             if utilities is not None:
                 self.install_utilities(*utilities)
 
+        Config.load_arc_file(arcfile)
+
     def __call__(self):
+        '''Arc cli driver method
+
+        Runs rudimentary checks agains sys.argv.
+        This is the ONLY place sys.argv should be accessed
+        all other methods that need the info from sys.argv
+        will be passed it from this method
+        '''
         if len(sys.argv) < 2:
             print("You didn't provide any options.",
                   "Check 'help' for more information")
@@ -99,6 +111,8 @@ class CLI:
                 cont = False
             elif user_input in ("c", "clear", "cls"):
                 clear()
+            elif user_input in ("?", "h"):
+                self.helper()
             elif user_input != "":
                 split = user_input.split(" ")
                 self.__execute_utility(split[0], split[1:])
@@ -140,7 +154,8 @@ class CLI:
                       "class can be registerd to Arc")
                 sys.exit(1)
 
-    def __parse_command(self, command: str):
+    @staticmethod
+    def __parse_command(command: str):
         sep = Config.utility_seperator
         if sep in command:
             utility, command = command.split(sep)
@@ -166,3 +181,5 @@ class CLI:
             print("\nInstalled Utilities")
             for _, utility in self.utilities.items():
                 utility.helper()
+        else:
+            print("No utilities installed")
