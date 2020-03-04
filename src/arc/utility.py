@@ -39,6 +39,6 @@ class Utility(CLI):
             for script_name, script in self.scripts.items():
                 print(
                     f"\033[92m{Config.utility_seperator}{script_name}\033[00m")
-                print(f"\t{script.doc}")
+                print(f"\t{script.doc}\n")
         else:
             print("No scripts defined")

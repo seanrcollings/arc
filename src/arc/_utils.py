@@ -1,5 +1,5 @@
 import sys
-
+import os
 from arc import Config
 
 
@@ -44,3 +44,10 @@ def exception_handler(exception_type,
 
 
 sys.excepthook = exception_handler
+
+
+def clear():
+    if os.name == "nt":
+        os.system("cls")
+    else:
+        os.system("clear")

@@ -4,7 +4,7 @@ import time
 from arc.config import Config
 from arc.script import Script
 from arc.errors import ExecutionError
-from arc._utils import logger
+from arc._utils import logger, clear
 
 
 class CLI:
@@ -25,8 +25,22 @@ class CLI:
                   "Check 'help' for more information")
             return
 
-        utility, command = self.__parse_command(sys.argv[1])
-        options = sys.argv[2:]
+        if "-i" in sys.argv:
+            logger("Entering interactive mode")
+            self.__interactive_mode()
+            logger("Exiting interactive mode")
+            return
+
+        self.execute_utility(sys.argv[1], sys.argv[2:])
+
+    def execute_utility(self, command, options):
+        '''Checks if a utility exists with provided user params
+
+        If one does exist, pass the command and options onto it's
+        execute method. If one doesn't exist, pass command and options
+        on to the global CLI execute method.
+        '''
+        utility, command = self.__parse_command(command)
 
         if utility is not None:
             if utility not in self.utilities:
@@ -62,6 +76,30 @@ class CLI:
         finally:
             end_time = time.time()
             logger(f"Completed in {end_time - start_time:.2f}s")
+
+    def __interactive_mode(self):
+        '''Interactive version of Arc
+
+        If the script is called with -i flag, the
+        Arc script is entered in interactive mode.
+        This means that the user can execute a number
+        of commands while the program is still running.
+
+        quit will exit
+        clear will clear screen
+        '''
+
+        cont = True
+        while cont:
+            user_input = input(">>> ")
+
+            if user_input in ("q", "quit", "exit"):
+                cont = False
+            elif user_input in ("c", "clear", "cls"):
+                clear()
+            elif user_input != "":
+                split = user_input.split(" ")
+                self.execute_utility(split[0], split[1:])
 
     def script(self,
                name: str,
