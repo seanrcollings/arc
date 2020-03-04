@@ -1,6 +1,6 @@
 from io import StringIO
 from unittest.mock import patch
-from tests import BaseTest
+from tests.base_test import BaseTest
 from examples.custom_converter import Config, CircleConverter, Circle, cli
 
 

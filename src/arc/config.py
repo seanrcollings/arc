@@ -7,6 +7,8 @@ import os
 from arc.converter import *
 from arc.errors import ArcError
 
+print("config: ", os.getcwd())
+
 
 class Config:
     utility_seperator = ":"

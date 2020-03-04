@@ -42,6 +42,7 @@ class Script:
         :param context_manager: the context manager for this particular script
             If it's not none, it will create the managed resource, then pass it
             to the script as the first arguement
+
         :param user_arguements: list of user_arguements obtained from sys.argv
         '''
         if context_manager is None:

@@ -31,14 +31,17 @@ class CLI:
             logger("Exiting interactive mode")
             return
 
-        self.execute_utility(sys.argv[1], sys.argv[2:])
+        self.__execute_utility(sys.argv[1], sys.argv[2:])
 
-    def execute_utility(self, command, options):
+    def __execute_utility(self, command, user_arguements):
         '''Checks if a utility exists with provided user params
 
-        If one does exist, pass the command and options onto it's
-        execute method. If one doesn't exist, pass command and options
+        If one does exist, pass the command and user_arguements onto it's
+        execute method. If one doesn't exist, pass command and user_arguements
         on to the global CLI execute method.
+
+        :param command: the command that the user typed in i.e: run
+        :param user_arguements: various user_arguements that the user passed in i.e: port=4321
         '''
         utility, command = self.__parse_command(command)
 
@@ -47,19 +50,18 @@ class CLI:
                 print("That command does not exist")
                 return
 
-            self.utilities[utility](command, options)
+            self.utilities[utility](command, user_arguements)
         else:
-            self._execute(command, options)
+            self._execute(command, user_arguements)
 
-    def _execute(self, command: str, options: list):
+    def _execute(self, command: str, user_arguements: list):
         '''Executes the script from the user's command
 
-        If self.context_mangaer is not None, the command will be called
-        within the context of said context manager, and will pass the managed resource
-        as the first arguement to the script
+        Execution time is recorded and logged at the end of the method.
+        Excepts ExecutionErrors and prints their information
 
         :param command: the command that the user typed in i.e: run
-        :param options: various options that the user passed in i.e: port=4321
+        :param user_arguements: various user_arguements that the user passed in i.e: port=4321
         '''
         if command not in self.scripts:
             print("That command does not exist")
@@ -69,7 +71,7 @@ class CLI:
         script = self.scripts[command]
         try:
             script.execute(context_manager=self.context_manager,
-                           user_arguements=options)
+                           user_arguements=user_arguements)
         except ExecutionError as e:
             print(e)
             sys.exit(1)
@@ -86,9 +88,9 @@ class CLI:
         of commands while the program is still running.
 
         quit will exit
+
         clear will clear screen
         '''
-
         cont = True
         while cont:
             user_input = input(">>> ")
@@ -99,19 +101,20 @@ class CLI:
                 clear()
             elif user_input != "":
                 split = user_input.split(" ")
-                self.execute_utility(split[0], split[1:])
+                self.__execute_utility(split[0], split[1:])
 
     def script(self,
                name: str,
                options: list = None,
                named_arguements: bool = True):
         '''Decorator method used to register a script
+
         :param name: Name to register the script under, used on the command lin
         to run the script
         :param options: available command lines options for the script
         :param named_arguements: Specifies whether or not options require keywords
             True: All arguements require names, arguement that doesn't match
-            the script's options will be ignored
+            the script's options will throw an exception
             False: Arguements do not require names, all arguements will be
             passed to the script (*args)
         '''
@@ -147,8 +150,7 @@ class CLI:
         return utility, command
 
     def helper(self):
-        '''
-        Helper List function
+        '''Helper List function
         Prints out the docstrings for the clis's scripts
         '''
         print("Usage: python3 FILENAME [COMMAND] [ARGUEMENTS ...]\n")

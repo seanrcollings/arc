@@ -5,7 +5,7 @@ from arc import Config
 
 def logger(*messages, state="ok", sep=" ", end="\n"):
     '''Arc logger utility. Logs various dev info.
-    Can be turned on by setting Config.log to True
+    Can be turned on by setting Config.log or Config.debug to True
     '''
     if Config.log or Config.debug:
         if state == "ok":
