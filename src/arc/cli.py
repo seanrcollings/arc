@@ -22,6 +22,8 @@ class CLI:
             if utilities is not None:
                 self.install_utilities(*utilities)
 
+        # loads values from the specified
+        # arcfile and sets them on the config object
         Config.load_arc_file(arcfile)
 
     def __call__(self):
@@ -45,15 +47,15 @@ class CLI:
 
         self.__execute_utility(sys.argv[1], sys.argv[2:])
 
-    def __execute_utility(self, command, user_arguements):
+    def __execute_utility(self, command, user_options):
         '''Checks if a utility exists with provided user params
 
-        If one does exist, pass the command and user_arguements onto it's
-        execute method. If one doesn't exist, pass command and user_arguements
+        If one does exist, pass the command and user_options onto it's
+        execute method. If one doesn't exist, pass command and user_options
         on to the global CLI execute method.
 
         :param command: the command that the user typed in i.e: run
-        :param user_arguements: various user_arguements that the user passed in i.e: port=4321
+        :param user_options: various user_options that the user passed in i.e: port=4321
         '''
         utility, command = self.__parse_command(command)
 
@@ -62,18 +64,18 @@ class CLI:
                 print("That command does not exist")
                 return
 
-            self.utilities[utility](command, user_arguements)
+            self.utilities[utility](command, user_options)
         else:
-            self._execute(command, user_arguements)
+            self._execute(command, user_options)
 
-    def _execute(self, command: str, user_arguements: list):
+    def _execute(self, command: str, user_options: list):
         '''Executes the script from the user's command
 
         Execution time is recorded and logged at the end of the method.
         Excepts ExecutionErrors and prints their information
 
         :param command: the command that the user typed in i.e: run
-        :param user_arguements: various user_arguements that the user passed in i.e: port=4321
+        :param user_options: various user_options that the user passed in i.e: port=4321
         '''
         if command not in self.scripts:
             print("That command does not exist")
@@ -83,7 +85,7 @@ class CLI:
         script = self.scripts[command]
         try:
             script(context_manager=self.context_manager,
-                   user_arguements=user_arguements)
+                   user_options=user_options)
         except ExecutionError as e:
             print(e)
             sys.exit(1)
