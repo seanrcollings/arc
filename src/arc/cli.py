@@ -44,15 +44,15 @@ class CLI:
 
         self.__execute_utility(sys.argv[1], sys.argv[2:])
 
-    def __execute_utility(self, command, user_options):
+    def __execute_utility(self, command, user_input):
         '''Checks if a utility exists with provided user params
 
-        If one does exist, pass the command and user_options onto it's
-        execute method. If one doesn't exist, pass command and user_options
+        If one does exist, pass the command and user_input onto it's
+        execute method. If one doesn't exist, pass command and user_input
         on to the global CLI execute method.
 
         :param command: the command that the user typed in i.e: run
-        :param user_options: various user_options that the user passed in i.e: port=4321
+        :param user_input: various user_input that the user passed in i.e: port=4321
         '''
         utility, command = self.__parse_command(command)
 
@@ -61,18 +61,18 @@ class CLI:
                 print("That command does not exist")
                 return
 
-            self.utilities[utility](command, user_options)
+            self.utilities[utility](command, user_input)
         else:
-            self._execute(command, user_options)
+            self._execute(command, user_input)
 
-    def _execute(self, command: str, user_options: list):
+    def _execute(self, command: str, user_input: list):
         '''Executes the script from the user's command
 
         Execution time is recorded and logged at the end of the method.
         Excepts ExecutionErrors and prints their information
 
         :param command: the command that the user typed in i.e: run
-        :param user_options: various user_options that the user passed in i.e: port=4321
+        :param user_input: various user_input that the user passed in i.e: port=4321
         '''
         if command not in self.scripts:
             print("That command does not exist")
@@ -81,7 +81,7 @@ class CLI:
         start_time = time.time()
         script = self.scripts[command]
         try:
-            script(user_options=user_options, before=self.before)
+            script(user_input=user_input, before=self.before)
         except ExecutionError as e:
             print(e)
             sys.exit(1)
@@ -118,6 +118,7 @@ class CLI:
     def script(self,
                name: str,
                options: list = None,
+               flags: list = None,
                named_arguements: bool = True):
         '''Decorator method used to register a script
 
@@ -131,10 +132,12 @@ class CLI:
             passed to the script (*args)
         '''
         def decorator(function):
-            self._install_script(function, name, options, named_arguements)
+            self._install_script(function, name, options, flags,
+                                 named_arguements)
 
         return decorator
 
+    # TODO: Reimplement context managers / work on before_actions
     # def before_action(self):
     #     def decorator(function):
     #         self.before = function
@@ -145,8 +148,10 @@ class CLI:
                         function,
                         name,
                         options=None,
+                        flags=None,
                         named_arguements=True):
-        self.scripts[name] = Script(name, function, options, named_arguements)
+        self.scripts[name] = Script(name, function, options, flags,
+                                    named_arguements)
 
     def install_utilities(self, *utilities):
         '''Installs a series of utilities to the CLI'''

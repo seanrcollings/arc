@@ -11,6 +11,7 @@ from arc.errors import ArcError
 class Config:
     utility_seperator = ":"
     options_seperator = "="
+    flag_denoter = "--"
     log = False
     debug = False
     decorate_text = True

@@ -6,7 +6,7 @@
   - [Running the CLI](#running-the-cli)
   - [Putting it together](#putting-it-together)
   - [Help Command](#help-command)
-- [Command Options](#command-options)
+  - [Command Options & Flags](#command-options--flags)
   - [Type Converters](#type-converters)
 - [Interactive Mode](#interactive-mode)
 
@@ -78,44 +78,9 @@ def helper():
 ```
 
 
-# Command Options
-When it comes to CLI's you need to be able to accept user input. That's where the `options` paramter comes in
+## Command Options & Flags
+Check this [doc](./options_and_flags.md) for info on options and flags
 
-Let's take our example from before, and add an option the user can type in to be printed instead of "Hello, World!"
-
-```py
-@cli.script("greet", options=["name"])
-def greet(name):
-    '''Command that greets someone'''
-    print(f"Hello, {name}!")
-```
-```
-$ python3 example.py greet name=Sean
-Hello, Sean!
-```
-
-Easy as that! Options are specified on the command line with `[OPTION_NAME]=[OPTION_VALUE]`.
-All options specified in the options list will be passed to the function as arguement with the same name.
-
-In the above example, the `name` option is required for the command execute.
-
-```
-$ python3 example.py greet
-greet() missing 1 required positional argument: 'name'
-```
-
-If you add a default value to the arguement, the option becomes optional
-```py
-@cli.script("greet", options=["name"])
-def greet(name="Joseph Joestar"):
-    '''Command that greets someone'''
-    print(f"Hello, {name}!")
-```
-
-```
-$ python3 example.py greet
-Hello, Joseph Joestar!
-```
 
 ## Type Converters
 Typically, you don't want numbers, booleans, lists, represented as just strings. Arc provides type conversions that will convert the input to your desired type before passing it on to the command's function. If you've used Flask before, it's URL converters work in essentially the same way
