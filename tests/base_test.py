@@ -23,8 +23,8 @@ class BaseTest(unittest.TestCase):
 
         return cli
 
-    def create_util(self, name="util", context_manager=None):
-        util = Utility(name=name, context_manager=context_manager)
+    def create_util(self, name="util"):
+        util = Utility(name=name)
 
         for script in self.scripts:
             util._install_script(**script)

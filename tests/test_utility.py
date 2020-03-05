@@ -42,14 +42,3 @@ class TestUtility(BaseTest):
         with patch('sys.argv', new=["dir", 'util:doesnotexist']):
             cli()
         assert mock_out.getvalue().strip("\n") == "That command does not exist"
-
-    @patch('sys.stdout', new_callable=StringIO)
-    def test_context_manager(self, mock_out):
-        cli = self.create_cli()
-        util = self.create_util(context_manager=StringIO("context"))
-        util._install_script(lambda files: print(files.getvalue()), "files",
-                             None, True)
-        cli.install_utilities(util)
-        with patch('sys.argv', new=["dir", 'util:files']):
-            cli()
-        assert mock_out.getvalue().strip("\n") == "context"

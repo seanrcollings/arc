@@ -36,20 +36,13 @@ class Script:
     def __repr__(self):
         return f"<Script : {self.name}>"
 
-    def __call__(self, context_manager, user_options):
+    def __call__(self, user_options, before):
         '''External interface to execute a script
-
-        :param context_manager: the context manager for this particular script
-            If it's not none, it will create the managed resource, then pass it
-            to the execute method as an arg
+        :param user_options: list of user input obtained from sys.argv
         '''
-        if context_manager is None:
-            self.execute(user_options)
-        else:
-            with context_manager(user_options.pop(0)) as managed_resourece:
-                self.execute(user_options, managed_resourece)
+        self.execute(user_options, before)
 
-    def execute(self, user_options, *args):
+    def execute(self, user_options, before):
         '''Executes the script's function with the correct paramaters
 
         :param user_options: list of user input obtained from sys.argv
@@ -58,12 +51,14 @@ class Script:
             Consider also using this to pass arbitrary args and kwargs
             to the scripts
         '''
+        parsed_user_options = self.__parse_user_options(user_options)
+
         if self.options is None:
-            self.function(*args)
+            self.function()
         elif not self.named_arguements:
-            self.function(*args, *user_options)
+            self.function(*user_options)
         else:
-            self.function(*args, **self.__parse_user_options(user_options))
+            self.function(**parsed_user_options)
 
     @staticmethod
     def __build_options(options: list) -> list:

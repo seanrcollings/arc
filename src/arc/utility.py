@@ -7,16 +7,15 @@ class Utility(CLI):
 
     If the CLI finds that the first section of a command
     is a installed utility, it will pass control over to the utility
-    which then checks if the command is in it's scripts, then calls
-    execute
+    which calls its own execute method
     Examlple:
         Utility db
         db:create
         db:drop
         db:createuser
     '''
-    def __init__(self, name, context_manager=None):
-        super().__init__(context_manager=context_manager)
+    def __init__(self, name):
+        super().__init__()
         self.name = name
 
     def __repr__(self):

@@ -1,5 +1,9 @@
 # Context Managers
 
+# Note
+Arc does no longer supports context managers. It may be reimplemented in the future
+
+
 ## What are context managers?
 I would recommend checking out this [Python Tips](https://book.pythontips.com/en/latest/context_managers.html) article for a more in depth explanation, but here's a quick rundown
 Context Managers allow you to allocate a resourece withing a specified block of code, then release it when the block completes, even if it throws an exception. This is commonly used for opening files in Python, because now you don't have to worry about closing them after

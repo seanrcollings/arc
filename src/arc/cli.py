@@ -8,13 +8,10 @@ from arc._utils import logger, clear
 
 
 class CLI:
-    def __init__(self,
-                 utilities: list = None,
-                 context_manager=None,
-                 arcfile=".arc"):
+    def __init__(self, utilities: list = None, arcfile=".arc"):
         self.scripts = {}
-        self.context_manager = context_manager
         self._install_script(function=self.helper, name="help")
+        self.before = None
 
         # using type because isinstance tests for subclasses
         if type(self) is CLI:
@@ -84,8 +81,7 @@ class CLI:
         start_time = time.time()
         script = self.scripts[command]
         try:
-            script(context_manager=self.context_manager,
-                   user_options=user_options)
+            script(user_options=user_options, before=self.before)
         except ExecutionError as e:
             print(e)
             sys.exit(1)
@@ -138,6 +134,12 @@ class CLI:
             self._install_script(function, name, options, named_arguements)
 
         return decorator
+
+    # def before_action(self):
+    #     def decorator(function):
+    #         self.before = function
+
+    #     return decorator
 
     def _install_script(self,
                         function,
