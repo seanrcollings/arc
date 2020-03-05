@@ -82,8 +82,8 @@ class CLI:
         start_time = time.time()
         script = self.scripts[command]
         try:
-            script.execute(context_manager=self.context_manager,
-                           user_arguements=user_arguements)
+            script(context_manager=self.context_manager,
+                   user_arguements=user_arguements)
         except ExecutionError as e:
             print(e)
             sys.exit(1)

@@ -1,3 +1,4 @@
+import inspect
 from arc.errors import ExecutionError, ArcError
 from arc.converter import is_converter
 from arc.config import Config
@@ -36,31 +37,34 @@ class Script:
     def __repr__(self):
         return f"<Script : {self.name}>"
 
-    def execute(self, context_manager, user_arguements):
-        '''Executes the script's function with the correct paramaters
+    def __call__(self, context_manager, user_arguements):
+        '''External interface to execute a script
 
         :param context_manager: the context manager for this particular script
             If it's not none, it will create the managed resource, then pass it
-            to the script as the first arguement
-
-        :param user_arguements: list of user_arguements obtained from sys.argv
+            to the execute method as an arg
         '''
         if context_manager is None:
-            if self.options is None:
-                self.function()
-            elif not self.named_arguements:
-                self.function(*user_arguements)
-            else:
-                self.function(**self.__parse_arguements(user_arguements))
+            self.execute(user_arguements)
         else:
-            with context_manager as managed_resourece:
-                if self.options is None:
-                    self.function(managed_resourece)
-                elif not self.named_arguements:
-                    self.function(managed_resourece, *user_arguements)
-                else:
-                    self.function(managed_resourece,
-                                  **self.__parse_arguements(user_arguements))
+            with context_manager(user_arguements.pop(0)) as managed_resourece:
+                self.execute(user_arguements, managed_resourece)
+
+    def execute(self, user_arguements, *args):
+        '''Executes the script's function with the correct paramaters
+
+        :param user_arguements: list of user_arguements obtained from sys.argv
+        :param args: list of arbitrary arguments to pass to a script
+            All managed resources exist in this variable
+            Consider also using this to pass arbitrary args and kwargs
+            to the scripts
+        '''
+        if self.options is None:
+            self.function(*args)
+        elif not self.named_arguements:
+            self.function(*args, *user_arguements)
+        else:
+            self.function(*args, **self.__parse_arguements(user_arguements))
 
     @staticmethod
     def __build_options(options: list) -> list:
@@ -87,15 +91,15 @@ class Script:
             # to the correct values
             if option.startswith("<") and option.endswith(">"):
                 if not is_converter(option):
-                    raise ArcError(
-                        f"'{option}' does not conform to converter syntax")
+                    raise ArcError(f"'{option}' does not conform",
+                                   " to converter syntax")
 
                 # turns "<convertername:varname>" into ["convertername", "varname"]
                 converter, name = option.lstrip("<").rstrip(">").split(":")
 
                 if converter not in Config.converters:
-                    raise ArcError((f"'{converter}' is not a valid",
-                                    f"conversion identifier"))
+                    raise ArcError(f"'{converter}' is not a valid",
+                                   "conversion identifier")
 
                 option_dict["name"] = name
                 option_dict["converter"] = Config.converters[converter]
@@ -105,29 +109,29 @@ class Script:
         return built_options
 
     def __parse_arguements(self, user_options: list) -> dict:
-        ''' Converts command line arguements into python dictionary
+        '''Converts command line arguements into python dictionary
 
         Tries to convert the value with the associated converter
         Takes in Command line options, converts them
         to a dictionary of arguements that can be passed to
         the script function as kwargs
 
-            :param script: the script script being ran by the user
-            :param options: list of strings that the user typed in
-                Examples:
-                 - ["port=5000","config=dev"]
-                 The function parses these strings into key value pairs (key=value)
-                 It also attempts to convert them to the specified type
+        :param script: the script script being ran by the user
+        :param options: list of strings that the user typed in
+            Examples:
+                - ["port=5000","config=dev"]
+                The function parses these strings into key value pairs (key=value)
+                It also attempts to convert them to the specified type
 
-            :returns: arguement dictionary to be unpacked with **
+        :returns: arguement dictionary to be unpacked with **
         '''
         sep = Config.options_seperator
         user_options_dict = {}
 
         for option in user_options:
             if sep not in option:
-                raise ExecutionError((f"Options must be seperated"
-                                      f"from their values by '{sep}'"))
+                raise ExecutionError("Options must be seperated",
+                                     f"from their values by '{sep}'")
             if option.endswith(sep):
                 raise ExecutionError("Options must be given a value")
 

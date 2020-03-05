@@ -70,6 +70,13 @@ hello
     Command that prints Hello World
 ```
 
+If you want a more specific help command, simpley over ride the builtin one with a script of your own
+```py
+@cli.script("help")
+def helper():
+    # print out your helper :)
+```
+
 
 # Command Options
 When it comes to CLI's you need to be able to accept user input. That's where the `options` paramter comes in

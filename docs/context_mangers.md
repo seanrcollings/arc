@@ -45,9 +45,9 @@ cli()
 ```py
 from arc import CLI
 
-cli = CLI(context_manager=open("file.txt"))
+cli = CLI(context_manager=open)
 
-@cli.script("read")
+@cli.script("read", options=["file"])
 def hello(file):
     '''Reads the example.txt file in the current directory'''
     print(file.read())

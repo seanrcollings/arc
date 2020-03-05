@@ -1,5 +1,11 @@
 class ArcError(Exception):
     '''Base Arc Exception'''
+    def __init__(self, *args):
+        super().__init__()
+        self.message = " ".join(args)
+
+    def __str__(self):
+        return self.message
 
 
 class ExecutionError(ArcError):
