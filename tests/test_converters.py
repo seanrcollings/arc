@@ -1,6 +1,6 @@
 from unittest.mock import patch, MagicMock
 from tests.base_test import BaseTest
-from arc.errors import *
+from arc.errors import ArcError
 
 
 #pylint: disable=protected-access, missing-function-docstring

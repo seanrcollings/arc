@@ -48,10 +48,6 @@ class Script:
         '''Executes the script's function with the correct paramaters
 
         :param user_input: list of user input obtained from sys.argv
-        :param args: list of arbitrary arguments to pass to a script
-            All managed resources exist in this variable
-            Consider also using this to pass arbitrary args and kwargs
-            to the scripts
         '''
         parsed_user_input = self.__parse_user_input(user_input)
 

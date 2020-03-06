@@ -42,3 +42,24 @@ class TestUtility(BaseTest):
         with patch('sys.argv', new=["dir", 'util:doesnotexist']):
             cli()
         assert mock_out.getvalue().strip("\n") == "That command does not exist"
+
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_flags(self, mock_out):
+        util = self.create_util()
+        cli = self.create_cli(utilities=[util])
+        util._install_script(name="func3",
+                             function=lambda x: print(x),
+                             options=[],
+                             flags=["--x"],
+                             named_arguements=True)
+
+        with patch('sys.argv', new=["dir", 'util:func3', "--x"]):
+            cli()
+        assert mock_out.getvalue().strip("\n") == "True"
+
+        mock_out.truncate(0)
+        mock_out.seek(0)
+
+        with patch('sys.argv', new=["dir", 'util:func3']):
+            cli()
+        assert mock_out.getvalue().strip("\n") == "False"
