@@ -1,6 +1,6 @@
 from arc.errors import ScriptError, ArcError, ExecutionError
 from arc.config import Config
-from arc import script_helper
+from arc.__option import Option
 
 
 class Script:
@@ -25,8 +25,8 @@ class Script:
 
         self.name = name
         self.function = function
-        self.options = script_helper.build_options(options)
-        self.flags = script_helper.build_flags(flags)
+        self.options = self.build_options(options)
+        self.flags = self.build_flags(flags)
 
         if pass_kwargs and pass_args:
             raise ScriptError("pass_kwargs and pass_args cannot both be True")
@@ -71,6 +71,9 @@ class Script:
             self.function(**parsed_user_input["options"],
                           **parsed_user_input["flags"])
 
+    ##################
+    # PARSER METHODS #
+    ##################
     def parse_user_input(self, user_input: list) -> dict:
         '''Converts command line arguements into python dictionary
 
@@ -88,8 +91,7 @@ class Script:
 
         if self.pass_kwargs:
             parsed_options = dict(
-                script_helper.split_on_sep(options,
-                                           sep=Config.options_seperator))
+                self.split(options, sep=Config.options_seperator))
             return {"options": parsed_options, "flags": parsed_flags}
 
         elif self.pass_args:
@@ -115,8 +117,7 @@ class Script:
         '''
         parsed = {}
 
-        for name, value in script_helper.split_on_sep(
-                options, sep=Config.options_seperator):
+        for name, value in self.split(options, sep=Config.options_seperator):
             if name not in self.options.keys():
                 raise ExecutionError(f"'{name}' option not recognized")
 
@@ -146,3 +147,55 @@ class Script:
             else:
                 raise ExecutionError(f"Flag '{flag}' not recognized")
         return flags_copy
+
+    ###################
+    # BUILDER METHODS #
+    ###################
+    @staticmethod
+    def build_options(options: list) -> dict:
+        '''Creates option objects'''
+        if options is None:
+            return {}
+
+        built_options = {}
+        for option in options:
+            option_obj = Option(option)
+            built_options[option_obj.name] = option_obj
+        return built_options
+
+    @staticmethod
+    def build_flags(flags: list) -> dict:
+        '''Insures flags follow specific standards
+            :param flags: list of all flags registered to the scriot
+
+            :returns: dictionary of flag names paired with a default False value
+        '''
+        if flags is None:
+            return {}
+
+        built_flags = {}
+        for flag in flags:
+            if not flag.startswith(Config.flag_denoter):
+                raise ArcError(
+                    "Flags must start with the denoter",
+                    f"'{Config.flag_denoter}'",
+                    "\nThis denoter can be changed by editing 'Config.flag_denoter'"
+                )
+            built_flags[flag.lstrip(Config.flag_denoter)] = False
+
+        return built_flags
+
+    # Other Helper Methods
+    @staticmethod
+    def split(options: list, sep: str):
+        '''Generator that splits strings based on a provided seperator'''
+
+        for option in options:
+            if sep not in option:
+                raise ExecutionError("Options must be seperated",
+                                     f"from their values by '{sep}'")
+            if option.endswith(sep):
+                raise ExecutionError("Options must be given a value")
+
+            name, value = option.split(sep)
+            yield (name, value)

@@ -50,8 +50,7 @@ class TestUtility(BaseTest):
         util._install_script(name="func3",
                              function=lambda x: print(x),
                              options=[],
-                             flags=["--x"],
-                             named_arguements=True)
+                             flags=["--x"])
 
         with patch('sys.argv', new=["dir", 'util:func3', "--x"]):
             cli()

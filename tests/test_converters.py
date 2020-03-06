@@ -8,10 +8,7 @@ class TestConverters(BaseTest):
     def test_string(self):
         cli = self.create_cli()
         func = MagicMock()
-        cli._install_script(function=func,
-                            name="string",
-                            options=["name"],
-                            named_arguements=True)
+        cli._install_script(function=func, name="string", options=["name"])
         with patch('sys.argv', new=["dir", 'string', "name=Sean"]):
             cli()
         func.assert_called_with(name="Sean")
@@ -21,8 +18,7 @@ class TestConverters(BaseTest):
         func = MagicMock()
         cli._install_script(function=func,
                             name="int",
-                            options=["<int:number>"],
-                            named_arguements=True)
+                            options=["<int:number>"])
         with patch('sys.argv', new=["dir", 'int', "number=5"]):
             cli()
         func.assert_called_with(number=5)
@@ -32,8 +28,7 @@ class TestConverters(BaseTest):
         func = MagicMock()
         cli._install_script(function=func,
                             name="float",
-                            options=["<float:number>"],
-                            named_arguements=True)
+                            options=["<float:number>"])
         with patch('sys.argv', new=["dir", 'float', "number=4.5"]):
             cli()
         func.assert_called_with(number=4.5)
@@ -43,8 +38,7 @@ class TestConverters(BaseTest):
         func = MagicMock()
         cli._install_script(function=func,
                             name="byte",
-                            options=["<byte:string>"],
-                            named_arguements=True)
+                            options=["<byte:string>"])
         with patch('sys.argv', new=["dir", 'byte', "string=hello"]):
             cli()
         func.assert_called_with(string=b'hello')
@@ -54,8 +48,7 @@ class TestConverters(BaseTest):
         func = MagicMock()
         cli._install_script(function=func,
                             name="bool",
-                            options=["<bool:test>"],
-                            named_arguements=True)
+                            options=["<bool:test>"])
         with patch('sys.argv', new=["dir", 'bool', "test=''"]):
             cli()
         func.assert_called_with(test=True)
@@ -68,8 +61,7 @@ class TestConverters(BaseTest):
         func = MagicMock()
         cli._install_script(function=func,
                             name="ibool",
-                            options=["<ibool:test>"],
-                            named_arguements=True)
+                            options=["<ibool:test>"])
         with patch('sys.argv', new=["dir", 'ibool', "test=0"]):
             cli()
         func.assert_called_with(test=False)
@@ -82,8 +74,7 @@ class TestConverters(BaseTest):
         func = MagicMock()
         cli._install_script(function=func,
                             name="sbool",
-                            options=["<sbool:test>"],
-                            named_arguements=True)
+                            options=["<sbool:test>"])
         with patch('sys.argv', new=["dir", 'sbool', "test=False"]):
             cli()
         func.assert_called_with(test=False)
@@ -96,8 +87,7 @@ class TestConverters(BaseTest):
         func = MagicMock()
         cli._install_script(function=func,
                             name="list",
-                            options=["<list:test>"],
-                            named_arguements=True)
+                            options=["<list:test>"])
         with patch('sys.argv', new=["dir", 'list', "test=1,2,3,4"]):
             cli()
         func.assert_called_with(test=['1', '2', '3', '4'])
@@ -111,10 +101,8 @@ class TestConverters(BaseTest):
         with self.assertRaises(ArcError):
             cli._install_script(function=func,
                                 name="string",
-                                options=["<str:name><int:name>"],
-                                named_arguements=True)
+                                options=["<str:name><int:name>"])
         with self.assertRaises(ArcError):
             cli._install_script(function=func,
                                 name="string",
-                                options=["<str::name>"],
-                                named_arguements=True)
+                                options=["<str::name>"])

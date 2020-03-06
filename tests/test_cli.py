@@ -43,8 +43,7 @@ class TestCLI(BaseTest):
         cli._install_script(name="func3",
                             function=lambda x: print(x),
                             options=[],
-                            flags=["--x"],
-                            named_arguements=True)
+                            flags=["--x"])
 
         with patch('sys.argv', new=["dir", 'func3', "--x"]):
             cli()
