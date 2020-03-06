@@ -119,21 +119,12 @@ class CLI:
                name: str,
                options: list = None,
                flags: list = None,
-               named_arguements: bool = True):
-        '''Decorator method used to register a script
-
-        :param name: Name to register the script under, used on the command lin
-        to run the script
-        :param options: available command lines options for the script
-        :param named_arguements: Specifies whether or not options require keywords
-            True: All arguements require names, arguement that doesn't match
-            the script's options will throw an exception
-            False: Arguements do not require names, all arguements will be
-            passed to the script (*args)
-        '''
+               pass_args: bool = False,
+               pass_kwargs: bool = False):
+        '''Decorator method used to register a script'''
         def decorator(function):
-            self._install_script(function, name, options, flags,
-                                 named_arguements)
+            self._install_script(function, name, options, flags, pass_args,
+                                 pass_kwargs)
 
         return decorator
 
@@ -149,9 +140,10 @@ class CLI:
                         name,
                         options=None,
                         flags=None,
-                        named_arguements=True):
-        self.scripts[name] = Script(name, function, options, flags,
-                                    named_arguements)
+                        pass_args=False,
+                        pass_kwargs=False):
+        self.scripts[name] = Script(name, function, options, flags, pass_args,
+                                    pass_kwargs)
 
     def install_utilities(self, *utilities):
         '''Installs a series of utilities to the CLI'''

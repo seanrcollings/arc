@@ -12,6 +12,10 @@ class ExecutionError(ArcError):
     '''Raised if there is a problem during the execution of a script'''
 
 
+class ScriptError(ArcError):
+    '''Raised when there is an error in the creation of a script'''
+
+
 class ConversionError(ArcError):
     '''Raised if a type conversion fails '''
     def __init__(self, value, helper_text=None):

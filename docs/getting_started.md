@@ -7,8 +7,6 @@
   - [Putting it together](#putting-it-together)
   - [Help Command](#help-command)
   - [Command Options & Flags](#command-options--flags)
-  - [Type Converters](#type-converters)
-- [Interactive Mode](#interactive-mode)
 
 
 # Creating a CLI
@@ -81,28 +79,3 @@ def helper():
 ## Command Options & Flags
 Check this [doc](./options_and_flags.md) for info on options and flags
 
-
-## Type Converters
-Typically, you don't want numbers, booleans, lists, represented as just strings. Arc provides type conversions that will convert the input to your desired type before passing it on to the command's function. If you've used Flask before, it's URL converters work in essentially the same way
-```py
-@cli.script("number_type", options=["<int:number>"])
-def number_type(number):
-    '''Command that prints the type of a number'''
-    print(type(number))
-```
-
-```
-$ python3 example.py number_type number=5
-<class 'int'>
-```
-Check out [conveters.md](./converters.md) for more in depth info
-
-# Interactive Mode
-Arc also ships with an interactive mode. By using the `-i` flag when executing the file, you will be dumped into an interactive promt from which you can enter a series of commands.
-```
-$ python3 example.py -i
->>> greet name=Sean
-Hello, Sean!
->>>
-```
-This will hopefully have more expanded functionality in the future, but this is what it's got for now

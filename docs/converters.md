@@ -8,7 +8,7 @@
     - [Float Converion](#float-converion)
   - [Custom Converters](#custom-converters)
 
-Typically, you don't want numbers, booleans, lists, represented as just strings. Arc provides type conversions that will convert the input to your desired type before passing it on to the command's function. If you've used Flask before, it's URL converters work in essentially the same way
+Typically, you don't want numbers, booleans, lists, represented as just strings. Arc provides type conversions that will convert the input to your desired type before passing it on to the script. If you've used Flask before, it's URL converters way in essentially the same way
 If no converter is specified, the StringConverter is used by default
 
 ## Builtin Converters

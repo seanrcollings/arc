@@ -3,6 +3,8 @@
   - [Command Options](#command-options)
   - [Flags](#flags)
     - [Flag example](#flag-example)
+    - [Without using a flag](#without-using-a-flag)
+    - [Using a flag](#using-a-flag)
 
 ## Command Options
 When it comes to CLI's you need to be able to accept user input. That's where the `options` paramter comes in
@@ -47,6 +49,23 @@ Hello, Joseph Joestar!
 While you can use options for boolean values, flags are perferrable. Flags look like your typical unix command line switch `--flag_name`. If they are present in your command, the value passed to your script will be true, otherwise it will be false
 ### Flag example
 Let's use the example from above to demo how a flag might work
+### Without using a flag
+```py
+@cli.script("hello", options=["name", "<sbool:reverse>"]) # use the sbool converter to convert the string "True" to a boolean True
+def hello(name, reverse=False): # set a default value, so you only need to specify when it's true
+    '''Command that prints greets someone'''
+    if reverse:
+        name = name[::-1]
+    print(f"Hello, {name}!")
+
+cli()
+```
+```
+$ python3 example.py hello name=Sean reverse=True
+Hello, naeS!
+```
+
+### Using a flag
 ```py
 @cli.script("hello", options=["name"], flags=["--reverse"])
 def hello(name, reverse):
@@ -66,3 +85,4 @@ The script prints exactly the same, just as before, now adding the flag
 $ python3 example.py hello name=Sean --reverse
 Hello, naeS!
 ```
+While using an option for this is perfectly functional, using a flag is a little cleaner
