@@ -11,7 +11,6 @@ class CLI:
     def __init__(self, utilities: list = None, arcfile=".arc"):
         self.scripts = {}
         self._install_script(function=self.helper, name="help")
-        self.before = None
 
         # using type because isinstance tests for subclasses
         if type(self) is CLI:
@@ -85,7 +84,7 @@ class CLI:
         start_time = time.time()
         script = self.scripts[command]
         try:
-            script(user_input=user_input, before=self.before)
+            script(user_input=user_input)
         except ExecutionError as e:
             print(e)
             sys.exit(1)
@@ -131,13 +130,6 @@ class CLI:
                                  pass_kwargs)
 
         return decorator
-
-    # TODO: Reimplement context managers / work on before_actions
-    # def before_action(self):
-    #     def decorator(function):
-    #         self.before = function
-
-    #     return decorator
 
     def _install_script(self,
                         function,

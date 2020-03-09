@@ -15,6 +15,7 @@ os.chdir(dirname)
 from tests.test_cli import TestCLI
 from tests.test_utility import TestUtility
 from tests.test_converters import TestConverters
+from tests.test_script import TestScript
 from tests.examples import *
 from tests.utilities import *
 

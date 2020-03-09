@@ -27,8 +27,8 @@ class Script:
 
         self.name = name
         self.function = function
-        self.options = self.build_options(options)
-        self.flags = self.build_flags(flags)
+        self.options = self.__build_options(options)
+        self.flags = self.__build_flags(flags)
 
         if pass_kwargs and pass_args:
             raise ScriptError("pass_kwargs and pass_args cannot both be True")
@@ -48,11 +48,11 @@ class Script:
     def __repr__(self):
         return f"<Script : {self.name}>"
 
-    def __call__(self, user_input, before):
+    def __call__(self, user_input: list):
         '''External interface to execute a script
         :param user_input: list of user input obtained from sys.argv
         '''
-        parsed_user_input = self.parse_user_input(user_input)
+        parsed_user_input = self.__parse_user_input(user_input)
         logger("Parsed script arguements:", level=3, state="info")
         logger(pformat(parsed_user_input, indent=4), level=3, state="info")
 
@@ -75,7 +75,7 @@ class Script:
     ##################
     # PARSER METHODS #
     ##################
-    def parse_user_input(self, user_input: list) -> dict:
+    def __parse_user_input(self, user_input: list) -> dict:
         '''Converts command line arguements into python dictionary
 
         :param user_input: list of what the user typed in on the command line
@@ -195,7 +195,7 @@ class Script:
     # always attempt to raise a ArcError with a helpful error message so the
     # user knows what they did wrong
     @staticmethod
-    def build_options(options: list) -> dict:
+    def __build_options(options: list) -> dict:
         '''Creates option objects
 
         :param options: list of user provided options. May contain a type converter
@@ -211,7 +211,7 @@ class Script:
         return built_options
 
     @staticmethod
-    def build_flags(flags: list) -> dict:
+    def __build_flags(flags: list) -> dict:
         '''Insures flags follow specific standards
             :param flags: list of all flags registered to the scriot
 
