@@ -91,7 +91,7 @@ class CLI:
             sys.exit(1)
         finally:
             end_time = time.time()
-            logger(f"Completed in {end_time - start_time:.2f}s", level=3)
+            logger(f"Completed in {end_time - start_time:.2f}s")
 
     def __interactive_mode(self):
         '''Interactive version of Arc
@@ -160,7 +160,7 @@ class CLI:
         for utility in utilities:
             if repr(utility) == "Utility":  # work around for circular import
                 self.utilities[utility.name] = utility
-                logger(f"Registered '{utility.name}' utility", state="info")
+                logger(f"Registered '{utility.name}' utility")
             else:
                 print("Only instances of the 'Utility'",
                       "class can be registerd to Arc")
@@ -182,8 +182,10 @@ class CLI:
         Prints out the docstrings for the CLI's scripts
         '''
         print("Usage: python3 FILENAME [COMMAND] [ARGUEMENTS ...]\n")
-
-        print("Possible Options: ")
+        print("Possible options:")
+        print("-i : Enter interactive mode")
+        print()
+        print("Scripts: ")
         if len(self.scripts) > 0:
             for script_name, script in self.scripts.items():
                 print(f"\033[92m{script_name}\033[00m\n    {script.doc}\n")

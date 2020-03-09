@@ -3,7 +3,7 @@ import os
 from arc import Config
 
 
-def logger(*messages, state="ok", level=1, sep=" ", end="\n"):
+def logger(*messages, state="ok", level=3, sep=" ", end="\n"):
     '''Arc logger utility. Logs various dev info.
     Can be turned on by setting Config.log or Config.debug to True
     '''

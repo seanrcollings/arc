@@ -1,5 +1,6 @@
 from arc import CLI
 from arc.config import Config
+from arc._utils import logger
 
 
 class Utility(CLI):
@@ -17,6 +18,7 @@ class Utility(CLI):
     def __init__(self, name):
         super().__init__()
         self.name = name
+        logger(f"Utility '{name}' created'")
 
     def __repr__(self):
         return "Utility"

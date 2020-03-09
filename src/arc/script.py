@@ -1,6 +1,8 @@
+from pprint import pformat, pprint
 from arc.errors import ScriptError, ArcError, ExecutionError
 from arc.config import Config
 from arc.__option import Option
+from arc._utils import logger
 
 
 class Script:
@@ -51,6 +53,8 @@ class Script:
         :param user_input: list of user input obtained from sys.argv
         '''
         parsed_user_input = self.parse_user_input(user_input)
+        logger("Parsed script arguements:", level=3, state="info")
+        logger(pformat(parsed_user_input, indent=4), level=3, state="info")
 
         if self.pass_args:
             # If pass_args is true, that means
