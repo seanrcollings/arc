@@ -2,6 +2,7 @@
 A tool for building easy, and highly extendable CLI systems for Python 3.8
 
 # Docs
+- [Changelog](docs/changelog.md)
 - [Getting Started](docs/getting_started.md)
 - [Utilities](docs/utilities.md)
 - [Type Converters](docs/converters.md)
