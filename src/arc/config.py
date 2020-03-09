@@ -1,7 +1,7 @@
 '''Global Variables bad- >:( Global variables wrapped in a class :)
 In reality, these configs should only be set in the setup of the CLI, not after
 They are also not changed by the program as it executes.
-They will also be loaded from a .arc file
+They will also be _loaded from a .arc file
 '''
 import os
 from arc.converter import *
@@ -15,6 +15,7 @@ class Config:
     log = False
     debug = False
     decorate_text = True
+    logger_level = 1
 
     converters = {
         "str": StringConverter,
@@ -27,10 +28,12 @@ class Config:
         "list": ListConverter
     }
 
-    # __not_preloadable lists config options that cannot be loaded
+    # __not_preloadable lists config options that cannot be _loaded
     # in an .arc file. These usually include things that require objects or
-    # classes to be loaded with them, like converters
+    # classes to be _loaded with them, like converters
     __not_preloadable = ('converters')
+
+    _loaded = False
 
     @classmethod
     def set_value(cls, name: str, value: str):
@@ -78,3 +81,5 @@ class Config:
                     name, value = config.strip().split("=")
                     cls.set_value(name, value)
             file.close()
+
+        cls._loaded = True

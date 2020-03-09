@@ -21,10 +21,12 @@ class CLI:
 
         # loads values from the specified
         # arcfile and sets them on the config object
-        Config.load_arc_file(arcfile)
+        if not Config._loaded:
+            Config.load_arc_file(arcfile)
+            logger("--- Arc file Loaded ---", state="info")
 
     def __call__(self):
-        '''Arc cli driver method
+        '''Arc CLI driver method
 
         Runs rudimentary checks agains sys.argv.
         This is the ONLY place sys.argv should be accessed
@@ -44,7 +46,7 @@ class CLI:
 
         self.__execute_utility(sys.argv[1], sys.argv[2:])
 
-    def __execute_utility(self, command, user_input):
+    def __execute_utility(self, command: str, user_input: list):
         '''Checks if a utility exists with provided user params
 
         If one does exist, pass the command and user_input onto it's
@@ -69,10 +71,12 @@ class CLI:
         '''Executes the script from the user's command
 
         Execution time is recorded and logged at the end of the method.
-        Excepts ExecutionErrors and prints their information
 
         :param command: the command that the user typed in i.e: run
         :param user_input: various user_input that the user passed in i.e: port=4321
+
+        :excepts ExecutionError: Raised during the execution of a script anytime
+            bad data is passed or something unexpected happens
         '''
         if command not in self.scripts:
             print("That command does not exist")
@@ -87,7 +91,7 @@ class CLI:
             sys.exit(1)
         finally:
             end_time = time.time()
-            logger(f"Completed in {end_time - start_time:.2f}s")
+            logger(f"Completed in {end_time - start_time:.2f}s", level=3)
 
     def __interactive_mode(self):
         '''Interactive version of Arc
@@ -142,32 +146,40 @@ class CLI:
                         flags=None,
                         pass_args=False,
                         pass_kwargs=False):
+        '''Installs a script to the CLI or Utility
+            Creates a script object, and adds it to the
+            scripts dictionary with the script's name as it's key
+            and the script object as it's value
+        '''
         self.scripts[name] = Script(name, function, options, flags, pass_args,
                                     pass_kwargs)
+        logger(f"Registered '{name}' script", state="info")
 
     def install_utilities(self, *utilities):
         '''Installs a series of utilities to the CLI'''
         for utility in utilities:
             if repr(utility) == "Utility":  # work around for circular import
                 self.utilities[utility.name] = utility
+                logger(f"Registered '{utility.name}' utility", state="info")
             else:
                 print("Only instances of the 'Utility'",
                       "class can be registerd to Arc")
                 sys.exit(1)
 
     @staticmethod
-    def __parse_command(command: str):
+    def __parse_command(command: str) -> tuple:
+        '''Parses a provided user command, checks if utility'''
         sep = Config.utility_seperator
         if sep in command:
             utility, command = command.split(sep)
         else:
             utility = None
 
-        return utility, command
+        return (utility, command)
 
     def helper(self):
         '''Helper List function
-        Prints out the docstrings for the clis's scripts
+        Prints out the docstrings for the CLI's scripts
         '''
         print("Usage: python3 FILENAME [COMMAND] [ARGUEMENTS ...]\n")
 

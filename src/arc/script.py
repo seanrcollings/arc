@@ -4,12 +4,12 @@ from arc.__option import Option
 
 
 class Script:
-    '''Each installed script will be an instances of this class
+    '''Each script installed to a CLI or utility is an instance of this class
 
-    :param name: Name to register the script under, used on the command lin
+    :param name: Name to register the script under, used on the command line
         to run the script
     :param options: available command lines options for the script. Passed in
-        as a list of strings
+        as a list of strings. Can be given a type converter
     :param pass_args: Specifies whether or not to parse out the command line arguements,
         or simply pass them along to the script. Flags will still be interpreted as flags
     :param pass_kwargs: Similar to pass_args, but will parse the args into a dictionary,
@@ -38,13 +38,6 @@ class Script:
             raise ScriptError("You cannot provide any options if",
                               "pass_args or pass_kwargs is set to True")
 
-        if self.pass_args:
-            method = "pass_args"
-        elif self.pass_kwargs:
-            method = "pass_kwargs"
-        else:
-            method = "standard"
-
         self.doc = "No Docstring"
         if self.function.__doc__ is not None:
             self.doc = self.function.__doc__.strip('\n\t ').replace(
@@ -68,6 +61,10 @@ class Script:
             self.function(*parsed_user_input["options"],
                           **parsed_user_input["flags"])
         else:
+            # if pass_args is false, that means
+            # that options will be a dictionary
+            # to be unpacked with ** and passed
+            # to the function as key word arguements
             self.function(**parsed_user_input["options"],
                           **parsed_user_input["flags"])
 
@@ -77,9 +74,28 @@ class Script:
     def parse_user_input(self, user_input: list) -> dict:
         '''Converts command line arguements into python dictionary
 
-        Dispatches both __parse_options and __parse_flags
-
         :param user_input: list of what the user typed in on the command line
+            The user's input need to parsed into both options (option=value)
+            and flags (--reverse). Once these two are filtered out from each other,
+            both __parse_options and __parse_flags are dispatched. These handle the
+            checking if the provided values are valid for this particular script.
+
+            The manner in which options are parsed is based on pass_args and pass_kwargs
+            instance variables
+
+                By default (pass_kwargs & pass_args == False), options are parsed
+                by splittingon the Config.options_seperator, then checking if it is
+                a valid option registered to the script. If it is, then it will attempt
+                to convert the value via it's type converter.
+
+                If pass_kwargs is True, options will be split on the Config.options_seperator
+                ('=' by default) and those will be passed to the script.
+
+                If pass_args is True, options will just be returned as the filtered list of
+                arguements passed to it
+
+            Flags are always parsed the same
+
         :returns: arguement dictionary to be unpacked with **
         '''
 
@@ -91,7 +107,7 @@ class Script:
 
         if self.pass_kwargs:
             parsed_options = dict(
-                self.split(options, sep=Config.options_seperator))
+                self.__split(options, sep=Config.options_seperator))
             return {"options": parsed_options, "flags": parsed_flags}
 
         elif self.pass_args:
@@ -101,23 +117,28 @@ class Script:
             parsed_options = self.__parse_options(options)
             return {"options": parsed_options, "flags": parsed_flags}
 
-    def __parse_options(self, options):
+    def __parse_options(self, options: list) -> dict:
         ''' Parses the options provided by the user
 
-        Tries to convert the value with the associated converter
-        Takes in Command line options, converts them
-        to a dictionary of arguements that can be passed to
-        the script function as kwargs
-
         :param options: list of strings that the user typed in
-            Examples:
-                - ["port=5000","config=dev"]
-                The function parses these strings into key value pairs (key=value)
-                It also attempts to convert them to the specified type
+            Tries to convert the value with the associated converter
+            Takes in Command line options, converts them
+            to a dictionary of arguements that can be passed to
+            the script function as kwargs
+
+        :returns: dictionary of parsed and converted values
+
+        :raises ExecutionError: if an option is not in self.options
+
+        :example:
+            register: @cli.script("example", options=["name", "<int:number>"], flags=["--reverse"])
+            User enters: python3 example.py example name=Joseph number=2 --reverse
+            Method recieves: ["name=Joseph", "number=2"]
+            Method returns: {"name": "Joseph", "number": 2}
         '''
         parsed = {}
 
-        for name, value in self.split(options, sep=Config.options_seperator):
+        for name, value in self.__split(options, sep=Config.options_seperator):
             if name not in self.options.keys():
                 raise ExecutionError(f"'{name}' option not recognized")
 
@@ -127,17 +148,30 @@ class Script:
 
         return parsed
 
-    def __parse_flags(self, flags):
+    def __parse_flags(self, flags: list) -> dict:
         '''Checks if provided user flags exist
         Sets flags that are provided to true
 
-        :param flags: list of strings that start with "--"
+        :param flags: list of flags to be parsed
+            If a flag is present in the user input and
+            in the script's flags, that flag's value is
+            set to True. Otherwise, it is set to false
 
-        if the flag isn't recognized an ExecutionError is raised
+        :returns: a copy of self.flags with the boolean
+        values swapped based on provided user flags
 
-        :returns: dictionary of flag names, paired with
-        either true or false. If the flag was in the flags variable,
-        it is set to true, otherwise it is false
+        :raises ExecutionError: if a flag is not in self.flags
+
+        :example:
+            register: @cli.script("example", options=["name", "<int:number>"], flags=["--reverse"])
+
+            User enters: python3 example.py example name=Joseph number=2 --reverse
+            Method recieves: ["--reverse"]
+            Method returns: {"reverse": True}
+
+            User enters: python3 example.py example name=Joseph number=2
+            Method recieves: []
+            Method returns: {"reverse": False}
         '''
         flags_copy = self.flags.copy()
         for flag in flags:
@@ -151,9 +185,18 @@ class Script:
     ###################
     # BUILDER METHODS #
     ###################
+    # The build methods are used on intial construction of a CLI
+    # Each script installed must parse it's given options, flags and the like
+    # to determine the user's intent. If something about the syntax is wrong,
+    # always attempt to raise a ArcError with a helpful error message so the
+    # user knows what they did wrong
     @staticmethod
     def build_options(options: list) -> dict:
-        '''Creates option objects'''
+        '''Creates option objects
+
+        :param options: list of user provided options. May contain a type converter
+        :returns: dictionary of name keys and Option object values
+        '''
         if options is None:
             return {}
 
@@ -185,17 +228,28 @@ class Script:
 
         return built_flags
 
-    # Other Helper Methods
+    # Helper Methods
     @staticmethod
-    def split(options: list, sep: str):
-        '''Generator that splits strings based on a provided seperator'''
+    def __split(items: list, sep: str):
+        '''Generator that splits strings based on a provided seperator
 
-        for option in options:
-            if sep not in option:
+        :param items: list of strings to be split
+        :param sep: string to split each item in items on
+
+        :yields: tuple of the thing left and right of the seperator
+
+        :raises ExecutionError: item does not contain the seperator
+        :raises ExecutionError: if nothing is to the right or lef
+            of the seperator
+        '''
+
+        for item in items:
+            if sep not in item:
                 raise ExecutionError("Options must be seperated",
                                      f"from their values by '{sep}'")
-            if option.endswith(sep):
-                raise ExecutionError("Options must be given a value")
+            if item.endswith(sep):
+                raise ExecutionError("Options cannot begin or ",
+                                     f"end with '{sep}'")
 
-            name, value = option.split(sep)
+            name, value = item.split(sep)
             yield (name, value)

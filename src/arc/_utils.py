@@ -3,10 +3,13 @@ import os
 from arc import Config
 
 
-def logger(*messages, state="ok", sep=" ", end="\n"):
+def logger(*messages, state="ok", level=1, sep=" ", end="\n"):
     '''Arc logger utility. Logs various dev info.
     Can be turned on by setting Config.log or Config.debug to True
     '''
+    if level > Config.logger_level:
+        return
+
     if Config.log or Config.debug:
         if state == "ok":
             print(*decorate_text_gen(*messages), sep=sep, end=end)
@@ -48,7 +51,8 @@ sys.excepthook = exception_handler
 
 def clear():
     '''Executes a clear screen command
-    will work on any OS
+    will work on any OS. Used in the CLI's
+    interactive mode
     '''
     if os.name == "nt":
         os.system("cls")

@@ -6,6 +6,7 @@
 | log               | Determines whether or not log messages get output to the console                                |                      False                       |
 | debug             | Determines whether or not debug messages are output to the console                              |                      False                       |
 | converters        | List of available type converters to be used to convert options                                 | [converters](./converters.md#builtin-converters) |
+| flag_denoter      | Determines what character (or series of characters) flags begin with                            |                       "--"                       |
 
 ## Configure in Code
 You can configure certain aspects of an Arc app through the Config object defined in [arc/config.py](../src/arc/config.py)
@@ -37,3 +38,9 @@ log=True # comments are ignored!
 
 ```
 Would have the same output as the example above
+
+You can also specify a file to load as the arc file when creating the CLI
+```py
+from arc import CLI, Config
+cli = CLI(arcfile="myacrfile")
+```
