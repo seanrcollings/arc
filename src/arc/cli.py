@@ -1,17 +1,15 @@
 import sys
-import time
 
 from arc.config import Config
 from arc.script import Script
 from arc.errors import ExecutionError
-from arc._utils import logger, clear
+from arc._utils import logger, clear, timer
 
 
 class CLI:
     def __init__(self, utilities: list = None, arcfile=".arc"):
         self.scripts = {}
-        self._install_script(function=self.helper, name="help")
-
+        self.script("help")(self.helper)
         # using type because isinstance tests for subclasses
         if type(self) is CLI:
             self.utilities = {}
@@ -66,6 +64,7 @@ class CLI:
         else:
             self._execute(command, user_input)
 
+    @timer
     def _execute(self, command: str, user_input: list):
         '''Executes the script from the user's command
 
@@ -81,16 +80,12 @@ class CLI:
             print("That command does not exist")
             return
 
-        start_time = time.time()
         script = self.scripts[command]
         try:
             script(user_input=user_input)
         except ExecutionError as e:
             print(e)
             sys.exit(1)
-        finally:
-            end_time = time.time()
-            logger(f"Completed in {end_time - start_time:.2f}s")
 
     def __interactive_mode(self):
         '''Interactive version of Arc
@@ -123,41 +118,24 @@ class CLI:
                options: list = None,
                flags: list = None,
                pass_args: bool = False,
-               pass_kwargs: bool = False):
-        '''Decorator method used to register a script'''
-        def decorator(function):
-            self._install_script(function, name, options, flags, pass_args,
-                                 pass_kwargs)
-
-        return decorator
-
-    def base(self,
-             options: list = None,
-             flags: list = None,
-             pass_args: bool = False,
-             pass_kwargs: bool = False):
-        '''Decorator method used to register the base script'''
-        def decorator(function):
-            self._install_script(function, "base", options, flags, pass_args,
-                                 pass_kwargs)
-
-        return decorator
-
-    def _install_script(self,
-                        function,
-                        name,
-                        options=None,
-                        flags=None,
-                        pass_args=False,
-                        pass_kwargs=False):
-        '''Installs a script to the CLI or Utility
-            Creates a script object, and adds it to the
-            scripts dictionary with the script's name as it's key
-            and the script object as it's value
+               pass_kwargs: bool = False,
+               default_script=False):
+        '''Decorator method used to install a script
+        Installs a script to the CLI or Utility
+        Creates a script object, and adds it to the
+        scripts dictionary with the script's name as it's key
+        and the script object as it's value
         '''
-        self.scripts[name] = Script(name, function, options, flags, pass_args,
-                                    pass_kwargs)
-        logger(f"Registered '{name}' script", state="info")
+        def decorator(function):
+            script = Script(name, function, options, flags, pass_args,
+                            pass_kwargs)
+
+            self.scripts[name] = script
+            logger(f"Registered '{name}' script", state="info")
+            if default_script:
+                self.scripts["default"] = script
+
+        return decorator
 
     def install_utilities(self, *utilities):
         '''Installs a series of utilities to the CLI'''

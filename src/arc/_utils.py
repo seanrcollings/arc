@@ -1,5 +1,7 @@
 import sys
 import os
+import time
+import functools
 from arc import Config
 
 
@@ -58,3 +60,20 @@ def clear():
         os.system("cls")
     else:
         os.system("clear")
+
+
+def timer(func):
+    '''Decorator for timing functions
+    will only time if Config.debug is set to True
+    '''
+    @functools.wraps(func)
+    def decorator(*args, **kwargs):
+        if Config.debug:
+            start_time = time.time()
+            func(*args, **kwargs)
+            end_time = time.time()
+            logger(f"Completed in {end_time - start_time:.2f}s", level=1)
+        else:
+            func(*args, **kwargs)
+
+    return decorator
