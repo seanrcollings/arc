@@ -131,6 +131,18 @@ class CLI:
 
         return decorator
 
+    def base(self,
+             options: list = None,
+             flags: list = None,
+             pass_args: bool = False,
+             pass_kwargs: bool = False):
+        '''Decorator method used to register the base script'''
+        def decorator(function):
+            self._install_script(function, "base", options, flags, pass_args,
+                                 pass_kwargs)
+
+        return decorator
+
     def _install_script(self,
                         function,
                         name,

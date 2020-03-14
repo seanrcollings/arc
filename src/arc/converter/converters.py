@@ -82,7 +82,7 @@ class IntBoolConverter(BaseConverter):
 class ListConverter(BaseConverter):
     '''Converts arguement into an array
     argument: my_list=1,2,3,4,5,6
-    return : ["1", "2", "3", "4", "5", "6"
+    return : ["1", "2", "3", "4", "5", "6"]
     '''
     convert_to = "list"
 

@@ -88,7 +88,7 @@ class Script:
             instance variables
 
                 By default (pass_kwargs & pass_args == False), options are parsed
-                by splittingon the Config.options_seperator, then checking if it is
+                by splitting on the Config.options_seperator, then checking if it is
                 a valid option registered to the script. If it is, then it will attempt
                 to convert the value via it's type converter.
 
