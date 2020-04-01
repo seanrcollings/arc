@@ -24,7 +24,13 @@ class Utility(CLI):
         return "Utility"
 
     def __call__(self, command, options):
-        self._execute(command, options)
+        if command == "":
+            if len(options) == 0:
+                self._execute(Config.no_args_identifier, options)
+            else:
+                self._execute(Config.anon_identifier, options)
+        else:
+            self._execute(command, options)
 
     def helper(self):
         '''Helper function for utilities

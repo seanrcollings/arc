@@ -26,7 +26,7 @@ If no converter is specified, the StringConverter is used by default
 ## Future Converters
 | Indicator | Class Name    | Converts                    | Conversion Method |
 | --------- | ------------- | --------------------------- | ----------------- |
-| dict      | DictConverter | my_dict=key:value,key:value | ??????            |
+| dict      | DictConverter | my_dict=key:value,key:value | ?                 |
 
 
 ## Use

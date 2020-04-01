@@ -1,4 +1,3 @@
-from pprint import pformat, pprint
 from arc.errors import ScriptError, ArcError, ExecutionError
 from arc.config import Config
 from arc.__option import Option
@@ -54,8 +53,7 @@ class Script:
         '''
         parsed_user_input = self.__parse_user_input(user_input)
         logger("Parsed script arguements:", level=3, state="info")
-        logger(pformat(parsed_user_input, indent=4), level=3, state="info")
-
+        logger(parsed_user_input, level=3, state="info")
         if self.pass_args:
             # If pass_args is true, that means
             # that options will be a list of the
@@ -240,7 +238,7 @@ class Script:
         :param items: list of strings to be split
         :param sep: string to split each item in items on
 
-        :yields: tuple of the thing left and right of the seperator
+        :yields: tuple of the left and right components around the seperator
 
         :raises ExecutionError: item does not contain the seperator
         :raises ExecutionError: if nothing is to the right or lef

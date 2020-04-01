@@ -13,7 +13,8 @@ class BaseTest(unittest.TestCase):
     def create_cli(self, utilities=[]):
         cli = CLI(utilities=utilities)
         for script in self.scripts:
-            cli._install_script(**script)
+            cli.script(name=script["name"],
+                       options=script["options"])(script["function"])
 
         return cli
 
@@ -21,6 +22,7 @@ class BaseTest(unittest.TestCase):
         util = Utility(name=name)
 
         for script in self.scripts:
-            util._install_script(**script)
+            util.script(name=script["name"],
+                        options=script["options"])(script["function"])
 
         return util

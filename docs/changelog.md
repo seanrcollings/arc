@@ -1,11 +1,19 @@
 # ARC - A Regular CLI: Change Log
 Check out the most recent, and all, versions of Arc.
+- [ARC - A Regular CLI: Change Log](#arc---a-regular-cli-change-log)
+- [V0.8.3 (No args and anonymous scrips)](#v083-no-args-and-anonymous-scrips)
 - [v0.8 (Holy features Batman!)](#v08-holy-features-batman)
 - [v0.7 (Configuration)](#v07-configuration)
 - [v0.6 (Script Class)](#v06-script-class)
 - [v0.5 (???)](#v05)
 - [v0.4 (Converters)](#v04-converters)
 - [v0.1 - 0.3](#v01---03)
+
+# V0.8.3 (No args and anonymous scrips)
+- Implemented No arg scripts
+- Implemented anonymous scripts
+- Abstracted timer to decorator, so it can be used to test the speed of any function
+- Fixed the mess that is the logger
 
 # v0.8 (Holy features Batman!)
 - Implemented interactive mode (`-i`)
@@ -19,7 +27,7 @@ Check out the most recent, and all, versions of Arc.
 - Introduced the .arc file for setting loading
 
 # v0.6 (Script Class)
-- Major refactor for scripts to be instances of a Script class rather than have all the data saved to
+- Major refactor for scripts to be instances of a Script class rather than have all the data in one dictionary
 - CLI refactored accordingly to handle this changed
 
 # v0.5 (???)

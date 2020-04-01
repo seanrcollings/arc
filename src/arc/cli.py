@@ -3,7 +3,9 @@ import sys
 from arc.config import Config
 from arc.script import Script
 from arc.errors import ExecutionError
-from arc._utils import logger, clear, timer
+import arc._utils as util
+
+VERSION = "0.8.1"
 
 
 class CLI:
@@ -20,7 +22,7 @@ class CLI:
         # arcfile and sets them on the config object
         if not Config._loaded:
             Config.load_arc_file(arcfile)
-            logger("--- Arc file Loaded ---", state="info")
+            util.logger("--- Arc file Loaded ---", state="info")
 
     def __call__(self):
         '''Arc CLI driver method
@@ -31,17 +33,24 @@ class CLI:
         will be passed it from this method
         '''
         if len(sys.argv) < 2:
-            print("You didn't provide any options.",
-                  "Check 'help' for more information")
-            return
+            if Config.no_args_identifier in self.scripts:
+                self._execute(Config.no_args_identifier, [])
+            else:
+                print("You didn't provide any options.",
+                      "Check 'help' for more information")
 
-        if "-i" in sys.argv:
-            logger("Entering interactive mode")
+        elif "-i" in sys.argv:
+            util.logger("Entering interactive mode")
             self.__interactive_mode()
-            logger("Exiting interactive mode")
+            util.logger("Exiting interactive mode")
             return
 
-        self.__execute_utility(sys.argv[1], sys.argv[2:])
+        elif "--version" in sys.argv or "-v" in sys.argv:
+            print(VERSION)
+            return
+
+        else:
+            self.__execute_utility(sys.argv[1], sys.argv[2:])
 
     def __execute_utility(self, command: str, user_input: list):
         '''Checks if a utility exists with provided user params
@@ -64,11 +73,10 @@ class CLI:
         else:
             self._execute(command, user_input)
 
-    @timer
+    @util.timer
     def _execute(self, command: str, user_input: list):
         '''Executes the script from the user's command
 
-        Execution time is recorded and logged at the end of the method.
 
         :param command: the command that the user typed in i.e: run
         :param user_input: various user_input that the user passed in i.e: port=4321
@@ -76,16 +84,20 @@ class CLI:
         :excepts ExecutionError: Raised during the execution of a script anytime
             bad data is passed or something unexpected happens
         '''
+
         if command not in self.scripts:
-            print("That command does not exist")
-            return
+            if Config.anon_identifier in self.scripts:
+                user_input.append(command)
+                command = Config.anon_identifier
+            else:
+                print("That command does not exist")
+                return
 
         script = self.scripts[command]
         try:
             script(user_input=user_input)
         except ExecutionError as e:
             print(e)
-            sys.exit(1)
 
     def __interactive_mode(self):
         '''Interactive version of Arc
@@ -101,25 +113,27 @@ class CLI:
         '''
         cont = True
         while cont:
-            user_input = input(">>> ")
 
-            if user_input in ("q", "quit", "exit"):
-                cont = False
-            elif user_input in ("c", "clear", "cls"):
-                clear()
-            elif user_input in ("?", "h"):
-                self.helper()
-            elif user_input != "":
-                split = user_input.split(" ")
-                self.__execute_utility(split[0], split[1:])
+            user_input = input(">>> ")
+            try:
+                if user_input in ("q", "quit", "exit"):
+                    cont = False
+                elif user_input in ("c", "clear", "cls"):
+                    util.clear()
+                elif user_input in ("?", "h"):
+                    self.helper()
+                elif user_input != "":
+                    split = user_input.split(" ")
+                    self.__execute_utility(split[0], split[1:])
+            except Exception as e:
+                print(e)
 
     def script(self,
                name: str,
                options: list = None,
                flags: list = None,
                pass_args: bool = False,
-               pass_kwargs: bool = False,
-               default_script=False):
+               pass_kwargs: bool = False):
         '''Decorator method used to install a script
         Installs a script to the CLI or Utility
         Creates a script object, and adds it to the
@@ -131,9 +145,8 @@ class CLI:
                             pass_kwargs)
 
             self.scripts[name] = script
-            logger(f"Registered '{name}' script", state="info")
-            if default_script:
-                self.scripts["default"] = script
+            util.logger(f"Registered '{name}' script", state="info")
+            return function
 
         return decorator
 
@@ -142,7 +155,7 @@ class CLI:
         for utility in utilities:
             if repr(utility) == "Utility":  # work around for circular import
                 self.utilities[utility.name] = utility
-                logger(f"Registered '{utility.name}' utility")
+                util.logger(f"Registered '{utility.name}' utility")
             else:
                 print("Only instances of the 'Utility'",
                       "class can be registerd to Arc")

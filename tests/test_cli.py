@@ -2,8 +2,6 @@
 from io import StringIO
 from unittest.mock import patch
 from tests.base_test import BaseTest
-from arc import CLI
-import sys
 
 
 #pylint: disable=protected-access, missing-function-docstring
@@ -35,10 +33,8 @@ class TestCLI(BaseTest):
 
     @patch('sys.stdout', new_callable=StringIO)
     def test_flags(self, mock_out):
-        self.cli._install_script(name="func3",
-                                 function=lambda x: print(x),
-                                 options=[],
-                                 flags=["--x"])
+        self.cli.script(name="func3", options=[],
+                        flags=["--x"])(function=lambda x: print(x))
 
         with patch('sys.argv', new=["dir", 'func3', "--x"]):
             self.cli()
@@ -53,10 +49,9 @@ class TestCLI(BaseTest):
 
     @patch('sys.stdout', new_callable=StringIO)
     def test_pass_args(self, mock_out):
-        self.cli._install_script(name="args",
-                                 function=lambda *x, flag: print(*x),
-                                 flags=["--flag"],
-                                 pass_args=True)
+        self.cli.script(name="args", flags=["--flag"],
+                        pass_args=True)(function=lambda *x, flag: print(*x))
+
         with patch('sys.argv', new=["dir", 'args', "test=4", "test2",
                                     "test3"]):
             self.cli()
@@ -64,10 +59,24 @@ class TestCLI(BaseTest):
 
     @patch('sys.stdout', new_callable=StringIO)
     def test_pass_kwargs(self, mock_out):
-        self.cli._install_script(name="kwargs",
-                                 function=lambda x, y, flag: print(x, y),
-                                 flags=["--flag"],
-                                 pass_kwargs=True)
+        self.cli.script(
+            name="kwargs", flags=["--flag"],
+            pass_kwargs=True)(function=lambda x, y, flag: print(x, y))
+
         with patch('sys.argv', new=["dir", 'kwargs', "x=4", "y=4"]):
             self.cli()
         assert mock_out.getvalue().strip("\n") == "4 4"
+
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_anon_script(self, mock_out):
+        self.cli.script(name="anon", options=["x"])(lambda x: print(x))
+        with patch("sys.argv", new=["dir", "x=2"]):
+            self.cli()
+        assert mock_out.getvalue().strip("\n") == "2"
+
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_no_args_script(self, mock_out):
+        self.cli.script(name="no_args", )(lambda: print("no_args"))
+        with patch("sys.argv", new=["dir"]):
+            self.cli()
+        assert mock_out.getvalue().strip("\n") == "no_args"

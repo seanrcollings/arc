@@ -1,5 +1,5 @@
 from unittest.mock import patch
-from io import StringIO, TextIOWrapper
+from io import StringIO
 from tests.base_test import BaseTest
 from arc import Utility
 
@@ -47,10 +47,8 @@ class TestUtility(BaseTest):
     def test_flags(self, mock_out):
         util = self.create_util()
         cli = self.create_cli(utilities=[util])
-        util._install_script(name="func3",
-                             function=lambda x: print(x),
-                             options=[],
-                             flags=["--x"])
+        util.script(name="func3", options=[],
+                    flags=["--x"])(function=lambda x: print(x))
 
         with patch('sys.argv', new=["dir", 'util:func3', "--x"]):
             cli()
@@ -62,3 +60,21 @@ class TestUtility(BaseTest):
         with patch('sys.argv', new=["dir", 'util:func3']):
             cli()
         assert mock_out.getvalue().strip("\n") == "False"
+
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_anon_script(self, mock_out):
+        util = self.create_util()
+        cli = self.create_cli(utilities=[util])
+        util.script(name="anon", options=["x"])(lambda x: print(x))
+        with patch("sys.argv", new=["dir", "util:", "x=2"]):
+            cli()
+        assert mock_out.getvalue().strip("\n") == "2"
+
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_no_args_script(self, mock_out):
+        util = self.create_util()
+        cli = self.create_cli(utilities=[util])
+        util.script(name="no_args")(lambda: print("no_args"))
+        with patch("sys.argv", new=["dir", "util:"]):
+            cli()
+        assert mock_out.getvalue().strip("\n") == "no_args"
