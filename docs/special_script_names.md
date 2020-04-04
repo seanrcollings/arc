@@ -2,35 +2,17 @@
 Arc provides a couple special script names for particular functionality
 
 - [Special Script Names](#special-script-names)
-  - [no_args script](#noargs-script)
   - [anon script](#anon-script)
 - [Configuration](#configuration)
 - [Utilities too?](#utilities-too)
 
-## no_args script
-Using the `no_args` script name will allow you to define a script to run when no arguments are passed to Arc
-
-
-```py
-@cli.script("no_args")
-def cli_no_args():
-    print("no_args here!")
-```
-
-```
-$ python example.py
-no_args here!
-```
-It should be noted that the `no_args` script cannot accept any options or flags, that is what the `anon` script is for
-[Example]("../examples/no_args_and_anon.py")
-
 ## anon script
-Using the `no_args` script name will allow you to define a script to run without a script name, but allows other arguements to be passed to the script.
+Using the `anon` script name will allow you to create that you don't have to refer to by a specific name. As the name implies it's anonymous. If one is declared, when you execute the CLI without any paramters, or without a recognized script name, it will attempt to run the anonymous script
 
 ```py
 @cli.script("anon", options=["name"])
-def cli_anon(name):
-    print(name)
+def cli_anon(name="Jotaro"): # Just like a normal script, if you want options to be optional, you have to proivde a default value
+    print(f"Hello {name}!")
 ```
 
 ```
@@ -43,7 +25,7 @@ Both options and flags are available when using the anonymous scripts
 
 # Configuration
 If you don't like the names I've chosen for the special scripts, you can modify them using the [.arc file or editing the Config object](./configuration.md). To change each special script's name, set it's respective config value. Each name is the default name, followed by `_identifier`
-For example, `no_args` config is `no_args_identifier`
+For example, `anon` config is `anon_identifier`
 
 # Utilities too?
 Yes, all the special script names work for both cli scripts and utility scripts. Simply start you command with `utility_name:` and dont' provide a script name like you would normally

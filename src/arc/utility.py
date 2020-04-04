@@ -18,17 +18,14 @@ class Utility(CLI):
     def __init__(self, name):
         super().__init__()
         self.name = name
-        logger(f"Utility '{name}' created'")
+        logger(f"Utility '{name}' created'", state="debug")
 
     def __repr__(self):
         return "Utility"
 
     def __call__(self, command, options):
         if command == "":
-            if len(options) == 0:
-                self._execute(Config.no_args_identifier, options)
-            else:
-                self._execute(Config.anon_identifier, options)
+            self._execute(Config.anon_identifier, options)
         else:
             self._execute(command, options)
 

@@ -5,20 +5,20 @@ import functools
 from arc import Config
 
 
-def logger(*messages, state="ok", level=3, sep=" ", end="\n"):
+def logger(*messages, state="info", sep=" ", end="\n"):
     '''Arc logger utility. Logs various dev info.
     Can be turned on by setting Config.log or Config.debug to True
     '''
-    if level > Config.logger_level:
-        return
 
     if Config.log or Config.debug:
         if state == "ok":
-            print(*decorate_text_gen(*messages), sep=sep, end=end)
+            print(*decorate_text_gen(*messages, tcolor="32"), sep=sep, end=end)
         elif state == "error":
             print(*decorate_text_gen(*messages, tcolor="31"), sep=sep, end=end)
-        else:
+        elif state == "debug" and Config.debug:
             print(*decorate_text_gen(*messages, tcolor="33"), sep=sep, end=end)
+        elif state == "info":
+            print(*decorate_text_gen(*messages, tcolor="37"), sep=sep, end=end)
 
 
 def decorate_text_gen(*strings, tcolor="32", bcolor="40", style="1"):
@@ -68,12 +68,9 @@ def timer(func):
     '''
     @functools.wraps(func)
     def decorator(*args, **kwargs):
-        if Config.debug:
-            start_time = time.time()
-            func(*args, **kwargs)
-            end_time = time.time()
-            logger(f"Completed in {end_time - start_time:.2f}s", level=1)
-        else:
-            func(*args, **kwargs)
+        start_time = time.time()
+        func(*args, **kwargs)
+        end_time = time.time()
+        logger(f"Completed in {end_time - start_time:.2f}s", state="ok")
 
     return decorator

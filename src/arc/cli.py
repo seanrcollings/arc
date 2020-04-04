@@ -22,7 +22,7 @@ class CLI:
         # arcfile and sets them on the config object
         if not Config._loaded:
             Config.load_arc_file(arcfile)
-            util.logger("--- Arc file Loaded ---", state="info")
+            util.logger("--- Arc file Loaded ---", state="debug")
 
     def __call__(self):
         '''Arc CLI driver method
@@ -33,8 +33,8 @@ class CLI:
         will be passed it from this method
         '''
         if len(sys.argv) < 2:
-            if Config.no_args_identifier in self.scripts:
-                self._execute(Config.no_args_identifier, [])
+            if Config.anon_identifier in self.scripts:
+                self._execute(Config.anon_identifier, [])
             else:
                 print("You didn't provide any options.",
                       "Check 'help' for more information")
@@ -76,7 +76,6 @@ class CLI:
     @util.timer
     def _execute(self, command: str, user_input: list):
         '''Executes the script from the user's command
-
 
         :param command: the command that the user typed in i.e: run
         :param user_input: various user_input that the user passed in i.e: port=4321
@@ -145,7 +144,7 @@ class CLI:
                             pass_kwargs)
 
             self.scripts[name] = script
-            util.logger(f"Registered '{name}' script", state="info")
+            util.logger(f"Registered '{name}' script", state="debug")
             return function
 
         return decorator
@@ -155,7 +154,8 @@ class CLI:
         for utility in utilities:
             if repr(utility) == "Utility":  # work around for circular import
                 self.utilities[utility.name] = utility
-                util.logger(f"Registered '{utility.name}' utility")
+                util.logger(f"Registered '{utility.name}' utility",
+                            state="debug")
             else:
                 print("Only instances of the 'Utility'",
                       "class can be registerd to Arc")

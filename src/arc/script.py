@@ -52,8 +52,8 @@ class Script:
         :param user_input: list of user input obtained from sys.argv
         '''
         parsed_user_input = self.__parse_user_input(user_input)
-        logger("Parsed script arguements:", level=3, state="info")
-        logger(parsed_user_input, level=3, state="info")
+        logger("Parsed script arguements:", state="debug")
+        logger(parsed_user_input, state="debug")
         if self.pass_args:
             # If pass_args is true, that means
             # that options will be a list of the

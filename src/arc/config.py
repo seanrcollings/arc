@@ -15,8 +15,6 @@ class Config:
     log = False
     debug = False
     decorate_text = True
-    logger_level = 1
-    no_args_identifier = "no_args"
     anon_identifier = "anon"
 
     converters = {
