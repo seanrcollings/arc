@@ -7,15 +7,15 @@ class Table:
         self.__rows = rows
         self.__column_width = column_width
 
-    def print_table(self):
-        print("")
+    def __str__(self):
 
-        format_headers = [
+        table = "\n"
+        table += " ".join([
             self.__formatter(header.upper(), align="^", tcolor="33", style="4")
             for header in self.__headers
-        ]
+        ])
 
-        print(*format_headers)
+        table += "\n"
 
         for row in self.__rows:
             for item in row:
@@ -23,9 +23,10 @@ class Table:
                     str(item),
                     align=">",
                 )
-                print(formatted_string, end="")
-                print(" ", end="")
-            print()
+                table += formatted_string + " "
+            table += "\n"
+
+        return table
 
     def __formatter(self,
                     string,

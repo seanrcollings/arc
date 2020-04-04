@@ -15,17 +15,18 @@ def config():
                     ["Options Seperator", Config.options_seperator, "="],
                     ["Log", Config.log, "False"],
                     ["Debug", Config.debug, "False"],
-                    ["Converters", "See debug:converters", "N/A"]]
+                    ["Anonymous Identifier", Config.anon_identifier, 'anon'],
+                    ["Converters", "See debug:converters", "-"]]
 
     table = Table(headers=["name", "value", "default"],
                   rows=config_items,
                   column_width=25)
-    table.print_table()
+    print(table)
 
 
 @debug.script("converters")
 def converters():
-    '''Displays information about the currently accessible converters'''
+    '''Displays information aboubt the currently accessible converters'''
     filler_words = ["foo", "bar", "baz",
                     "buzz"]  # Randomly pick for filler information
     converter_rows = [[
@@ -35,7 +36,7 @@ def converters():
     table = Table(headers=["Converter Name", "Convert to", "Example"],
                   rows=converter_rows,
                   column_width=30)
-    table.print_table()
+    print(table)
 
 
 @debug.script("arcfile")

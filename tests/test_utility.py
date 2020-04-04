@@ -69,12 +69,3 @@ class TestUtility(BaseTest):
         with patch("sys.argv", new=["dir", "util:", "x=2"]):
             cli()
         assert mock_out.getvalue().strip("\n") == "2"
-
-    @patch('sys.stdout', new_callable=StringIO)
-    def test_no_args_script(self, mock_out):
-        util = self.create_util()
-        cli = self.create_cli(utilities=[util])
-        util.script(name="no_args")(lambda: print("no_args"))
-        with patch("sys.argv", new=["dir", "util:"]):
-            cli()
-        assert mock_out.getvalue().strip("\n") == "no_args"
