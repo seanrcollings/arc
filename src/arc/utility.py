@@ -1,9 +1,9 @@
-from arc import CLI
+from arc.__script_container import ScriptContainer
 from arc.config import Config
 from arc._utils import logger
 
 
-class Utility(CLI):
+class Utility(ScriptContainer):
     ''' CLI subclass to create a group of related scripts
 
     If the CLI finds that the first section of a command
@@ -20,14 +20,11 @@ class Utility(CLI):
         self.name = name
         logger(f"Utility '{name}' created'", state="debug")
 
-    def __repr__(self):
-        return "Utility"
-
     def __call__(self, command, options):
         if command == "":
-            self._execute(Config.anon_identifier, options)
+            self.execute(Config.anon_identifier, options)
         else:
-            self._execute(command, options)
+            self.execute(command, options)
 
     def helper(self):
         '''Helper function for utilities

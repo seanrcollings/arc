@@ -1,28 +1,20 @@
 import sys
 
+from arc.__script_container import ScriptContainer
 from arc.config import Config
-from arc.script import Script
-from arc.errors import ExecutionError
 import arc._utils as util
+from arc.utility import Utility
 
 VERSION = "0.8.1"
 
 
-class CLI:
+class CLI(ScriptContainer):
     def __init__(self, utilities: list = None, arcfile=".arc"):
-        self.scripts = {}
+        super().__init__(arcfile=arcfile)
         self.script("help")(self.helper)
-        # using type because isinstance tests for subclasses
-        if type(self) is CLI:
-            self.utilities = {}
-            if utilities is not None:
-                self.install_utilities(*utilities)
-
-        # loads values from the specified
-        # arcfile and sets them on the config object
-        if not Config._loaded:
-            Config.load_arc_file(arcfile)
-            util.logger("--- Arc file Loaded ---", state="debug")
+        self.utilities = {}
+        if utilities is not None:
+            self.install_utilities(*utilities)
 
     def __call__(self):
         '''Arc CLI driver method
@@ -34,15 +26,15 @@ class CLI:
         '''
         if len(sys.argv) < 2:
             if Config.anon_identifier in self.scripts:
-                self._execute(Config.anon_identifier, [])
+                self.execute(Config.anon_identifier, [])
             else:
                 print("You didn't provide any options.",
                       "Check 'help' for more information")
 
         elif "-i" in sys.argv:
-            util.logger("Entering interactive mode")
+            util.logger("Entering interactive mode", state="ok")
             self.__interactive_mode()
-            util.logger("Exiting interactive mode")
+            util.logger("Exiting interactive mode", state="ok")
             return
 
         elif "--version" in sys.argv or "-v" in sys.argv:
@@ -71,32 +63,7 @@ class CLI:
 
             self.utilities[utility](command, user_input)
         else:
-            self._execute(command, user_input)
-
-    @util.timer
-    def _execute(self, command: str, user_input: list):
-        '''Executes the script from the user's command
-
-        :param command: the command that the user typed in i.e: run
-        :param user_input: various user_input that the user passed in i.e: port=4321
-
-        :excepts ExecutionError: Raised during the execution of a script anytime
-            bad data is passed or something unexpected happens
-        '''
-
-        if command not in self.scripts:
-            if Config.anon_identifier in self.scripts:
-                user_input.append(command)
-                command = Config.anon_identifier
-            else:
-                print("That command does not exist")
-                return
-
-        script = self.scripts[command]
-        try:
-            script(user_input=user_input)
-        except ExecutionError as e:
-            print(e)
+            self.execute(command, user_input)
 
     def __interactive_mode(self):
         '''Interactive version of Arc
@@ -127,32 +94,10 @@ class CLI:
             except Exception as e:
                 print(e)
 
-    def script(self,
-               name: str,
-               options: list = None,
-               flags: list = None,
-               pass_args: bool = False,
-               pass_kwargs: bool = False):
-        '''Decorator method used to install a script
-        Installs a script to the CLI or Utility
-        Creates a script object, and adds it to the
-        scripts dictionary with the script's name as it's key
-        and the script object as it's value
-        '''
-        def decorator(function):
-            script = Script(name, function, options, flags, pass_args,
-                            pass_kwargs)
-
-            self.scripts[name] = script
-            util.logger(f"Registered '{name}' script", state="debug")
-            return function
-
-        return decorator
-
     def install_utilities(self, *utilities):
         '''Installs a series of utilities to the CLI'''
         for utility in utilities:
-            if repr(utility) == "Utility":  # work around for circular import
+            if isinstance(utility, Utility):  # work around for circular import
                 self.utilities[utility.name] = utility
                 util.logger(f"Registered '{utility.name}' utility",
                             state="debug")
