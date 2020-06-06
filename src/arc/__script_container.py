@@ -6,6 +6,7 @@ from arc.errors import ExecutionError
 
 
 class ScriptContainer(ABC):
+    '''Parent class of CLI and Utility'''
     def __init__(self, arcfile=None):
         self.scripts = {}
 
@@ -25,11 +26,19 @@ class ScriptContainer(ABC):
                flags: list = None,
                pass_args: bool = False,
                pass_kwargs: bool = False):
-        '''Decorator method used to install a script
-        Installs a script to the CLI or Utility
-        Creates a script object, and adds it to the
-        scripts dictionary with the script's name as it's key
-        and the script object as it's value
+        '''Installs a script to the container
+        Creates a script object, appends it to
+        the script container
+
+        :param name: name of the script to be used on the comamnd line
+        :param options: options available when running the script
+        :param flags: flags (boolean values) available when running the script
+        :param pass_args: specifies that the script passes all it's arguements
+            positionally with *args
+        :param pass_kwargs: specifies that this script passes all it's arguements
+            with as key value pairs with **kwargs
+
+        :returns: the provided function, for decorator chaining
         '''
         def decorator(function):
             script = Script(name, function, options, flags, pass_args,

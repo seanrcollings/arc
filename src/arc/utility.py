@@ -26,6 +26,9 @@ class Utility(ScriptContainer):
         else:
             self.execute(command, options)
 
+    def __repr__(self):
+        return self.name
+
     def helper(self):
         '''Helper function for utilities
         Prints out the docstrings for the utilty's scripts

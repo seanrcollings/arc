@@ -2,7 +2,7 @@ import os
 import random
 
 from arc import Utility, Config
-from arc.utilities.__table import Table
+from arc.formatters.table import Table
 
 debug = Utility("debug")
 

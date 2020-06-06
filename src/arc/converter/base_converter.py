@@ -1,21 +1,19 @@
 import sys
+from abc import ABC, abstractmethod, abstractclassmethod
 from arc.converter import ConversionError
 
 
-class BaseConverter:
-    '''Base Converter, all converters inherit from this converter'''
+class BaseConverter(ABC):
+    '''Base Converter, all converters must inherit from this converter'''
     def __new__(cls, value):
         return cls.try_convert(value)
 
-    @classmethod
+    @abstractclassmethod
     def convert(cls, value: str):
-        ''' Method that converts the string sent, to it's desired type.
-        Must implement in child class
-        '''
-        raise NotImplementedError(
-            "Must Implement convert method in child class")
+        ''' Method that converts the string sent, to it's desired type.'''
 
     @property
+    @abstractmethod
     def convert_to(self):
         ''' Specifies conversion type
 
@@ -23,8 +21,6 @@ class BaseConverter:
         converter is supposed to convert the
         value into
         '''
-        raise NotImplementedError(
-            "Must Implement convert_to string in child class")
 
     @classmethod
     def try_convert(cls, value: str):

@@ -16,6 +16,15 @@ class CLI(ScriptContainer):
         if utilities is not None:
             self.install_utilities(*utilities)
 
+    def __repr__(self):
+        string = "---ARC CLI---\n"
+        string += "Scripts: \n"
+        string += "\n\t".join(c for c in self.scripts)
+        string += "\nUtilities: \n"
+        string += "\n\t".join(
+            repr(self.utilities[util]) for util in self.utilities)
+        return string
+
     def __call__(self):
         '''Arc CLI driver method
 
@@ -23,7 +32,11 @@ class CLI(ScriptContainer):
         This is the ONLY place sys.argv should be accessed
         all other methods that need the info from sys.argv
         will be passed it from this method
+
+        :param command: the user can optionally pass in a command string
+        for the CLI to parse, instead of reading input from stdin
         '''
+
         if len(sys.argv) < 2:
             if Config.anon_identifier in self.scripts:
                 self.execute(Config.anon_identifier, [])
@@ -35,11 +48,9 @@ class CLI(ScriptContainer):
             util.logger("Entering interactive mode", state="ok")
             self.__interactive_mode()
             util.logger("Exiting interactive mode", state="ok")
-            return
 
         elif "--version" in sys.argv or "-v" in sys.argv:
             print(VERSION)
-            return
 
         else:
             self.__execute_utility(sys.argv[1], sys.argv[2:])

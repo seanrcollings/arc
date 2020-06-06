@@ -1,7 +1,6 @@
 # Allow it to be recursive?? - <array:<int:number>>
 # TODO: Swap all converters to raise a Conversion exception if they will fail
 
-import sys
 from arc.converter.base_converter import BaseConverter
 from arc.converter import ConversionError
 
