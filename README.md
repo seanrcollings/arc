@@ -61,3 +61,8 @@ $ python3 -m tests [TEST CASE]
 - Make a fully functioning, easy to use CLI creator
 - Teach myself how to upload and maintain package on PyPi
 - Do not rely on **any** third party packages (crazy, I know)
+
+
+# TODO
+- Refactor Config object to employ instances rather than the raw class
+- Write a parser for command line args

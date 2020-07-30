@@ -9,7 +9,7 @@ cli = CLI(utilities=[converse])
 def cli_greet(name="Joseph Joestar"):
     '''Command that greets someone CLI command'''
     print(f"Hello, {name}!")
-    print(f"This command is associated with the global CLI")
+    print("This command is associated with the global CLI")
 
 
 # utility command
@@ -17,7 +17,7 @@ def cli_greet(name="Joseph Joestar"):
 def utility_greet(name="Jotaro Kujo"):
     '''Command that greets someone utility command'''
     print(f"Howdy, {name}!")
-    print(f"This command is associated with the 'converse' utility")
+    print("This command is associated with the 'converse' utility")
 
 
 if __name__ == "__main__":

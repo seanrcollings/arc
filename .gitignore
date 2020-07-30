@@ -4,6 +4,7 @@ env
 build
 dist
 *.egg-info
+.mypy_cache
 
 .arc
 !tests/.arc

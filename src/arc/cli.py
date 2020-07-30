@@ -1,23 +1,23 @@
 import sys
-
+from typing import Dict
 from arc.__script_container import ScriptContainer
 from arc.config import Config
 import arc._utils as util
 from arc.utility import Utility
-
-VERSION = "0.8.1"
 
 
 class CLI(ScriptContainer):
     def __init__(self, utilities: list = None, arcfile=".arc"):
         super().__init__(arcfile=arcfile)
         self.script("help")(self.helper)
-        self.utilities = {}
+        self.utilities: Dict[str, Utility] = {}
+        self.config = Config()
+
         if utilities is not None:
             self.install_utilities(*utilities)
 
     def __repr__(self):
-        string = "---ARC CLI---\n"
+        string: str = "---ARC CLI---\n"
         string += "Scripts: \n"
         string += "\n\t".join(c for c in self.scripts)
         string += "\nUtilities: \n"
@@ -49,8 +49,8 @@ class CLI(ScriptContainer):
             self.__interactive_mode()
             util.logger("Exiting interactive mode", state="ok")
 
-        elif "--version" in sys.argv or "-v" in sys.argv:
-            print(VERSION)
+        # elif "--version" in sys.argv or "-v" in sys.argv:
+        #     print(VERSION)
 
         else:
             self.__execute_utility(sys.argv[1], sys.argv[2:])

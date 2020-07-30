@@ -1,3 +1,4 @@
+from typing import Optional, List, Any
 from arc.errors import ScriptError, ArcError, ExecutionError
 from arc.config import Config
 from arc.__option import Option
@@ -193,7 +194,7 @@ class Script:
     # always attempt to raise a ArcError with a helpful error message so the
     # user knows what they did wrong
     @staticmethod
-    def __build_options(options: list) -> dict:
+    def __build_options(options: Optional[List[str]]) -> dict:
         '''Creates option objects
 
         :param options: list of user provided options. May contain a type converter
@@ -209,7 +210,7 @@ class Script:
         return built_options
 
     @staticmethod
-    def __build_flags(flags: list) -> dict:
+    def __build_flags(flags: Optional[List[str]]) -> dict:
         '''Insures flags follow specific standards
             :param flags: list of all flags registered to the scriot
 
