@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Type, Tuple
 from arc.config import Config
 from arc.errors import ArcError
 from arc.converter import is_converter, parse_converter, StringConverter, BaseConverter
@@ -12,10 +12,10 @@ class Option:
         return f"<Option : {self.name}>"
 
     def __call__(self, value):
-        return self.name, self.converter()._try_convert(value)
+        return self.name, self.converter()._convert_wrapper(value)
 
     @staticmethod
-    def parse(option: str) -> tuple:
+    def parse(option: str) -> Tuple[str, Type[BaseConverter]]:
         '''Parses provided option into name and converter
 
         Checks for a type converter

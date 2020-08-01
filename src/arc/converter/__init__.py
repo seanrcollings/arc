@@ -22,7 +22,12 @@ def parse_converter(string) -> Tuple[str, str]:
     from the provided string. Uses a similar regex as above.
     Ideally, check if it is a converter with is_conveter before
     calling this function
+
+    :param string: converter string to be parsed. Should match this syntax: '<type:name>'
+
+    :returns: tuple(name, converter)
     '''
+
     regex = re.compile(r'<([^<>:]+):([^<>:]+)>$')
     matches = regex.match(string)
 

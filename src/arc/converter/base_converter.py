@@ -20,7 +20,7 @@ class BaseConverter(ABC):
         value into
         '''
 
-    def _try_convert(self, value: str):
+    def _convert_wrapper(self, value: str):
         ''' Try except wrapper for conversion method
 
         Convert method wrapper for catching
