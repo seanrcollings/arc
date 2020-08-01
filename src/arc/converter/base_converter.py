@@ -1,14 +1,12 @@
 import sys
-from abc import ABC, abstractmethod, abstractclassmethod
+from abc import ABC, abstractmethod
 from arc.converter import ConversionError
 
 
 class BaseConverter(ABC):
     '''Base Converter, all converters must inherit from this converter'''
-    def __new__(cls, value):
-        return cls.try_convert(value)
-
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def convert(cls, value: str):
         ''' Method that converts the string sent, to it's desired type.'''
 
@@ -22,8 +20,7 @@ class BaseConverter(ABC):
         value into
         '''
 
-    @classmethod
-    def try_convert(cls, value: str):
+    def _try_convert(self, value: str):
         ''' Try except wrapper for conversion method
 
         Convert method wrapper for catching
@@ -32,10 +29,10 @@ class BaseConverter(ABC):
         converter
         '''
         try:
-            value = cls.convert(value)
+            value = self.convert(value)
 
         except ConversionError as e:
-            print(f"'{e.value}' could not be converted to '{cls.convert_to}'")
+            print(f"'{e.value}' could not be converted to '{self.convert_to}'")
             if e.helper_text is not None:
                 print(e.helper_text)
             sys.exit(1)

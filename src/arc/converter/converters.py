@@ -13,8 +13,7 @@ class StringConverter(BaseConverter):
 class IntConverter(BaseConverter):
     convert_to = "integer"
 
-    @classmethod
-    def convert(cls, value):
+    def convert(self, value):
         if value.isnumeric():
             return int(value)
         raise ConversionError(value, "Value must be a whole number integer")
@@ -23,8 +22,7 @@ class IntConverter(BaseConverter):
 class FloatConverter(BaseConverter):
     convert_to = "float"
 
-    @classmethod
-    def convert(cls, value):
+    def convert(self, value):
         try:
             return float(value)
         except ValueError:
@@ -35,8 +33,7 @@ class FloatConverter(BaseConverter):
 class ByteConverter(BaseConverter):
     convert_to = "byte"
 
-    @classmethod
-    def convert(cls, value):
+    def convert(self, value):
         return value.encode()
 
 
@@ -52,8 +49,7 @@ class StringBoolConverter(BaseConverter):
     '''
     convert_to = "boolean"
 
-    @classmethod
-    def convert(cls, value):
+    def convert(self, value):
         if value.lower() == "true":
             return True
         elif value.lower() == "false":
@@ -69,8 +65,7 @@ class IntBoolConverter(BaseConverter):
     '''
     convert_to = "boolean"
 
-    @classmethod
-    def convert(cls, value):
+    def convert(self, value):
         if value.isnumeric():
             value = int(value)
             return value != 0
@@ -85,8 +80,7 @@ class ListConverter(BaseConverter):
     '''
     convert_to = "list"
 
-    @classmethod
-    def convert(cls, value):
+    def convert(self, value):
         return value.replace(" ", "").split(",")
 
 

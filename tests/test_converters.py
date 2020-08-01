@@ -81,11 +81,11 @@ class TestConverters(BaseTest):
             cli()
         func.assert_called_with(test=['2'])
 
-    def test_invalid_converters(self):
-        cli = self.create_cli()
-        func = MagicMock()
-        with self.assertRaises(ArcError):
-            cli.script(name="string",
-                       options=["<str:name><int:name>"])(function=func)
-        with self.assertRaises(ArcError):
-            cli.script(name="string", options=["<str::name>"])(function=func)
+    # def test_invalid_converters(self):
+    #     cli = self.create_cli()
+    #     func = MagicMock()
+    #     with self.assertRaises(ArcError):
+    #         cli.script(name="string",
+    #                    options=["<str:name><int:name>"])(function=func)
+    #     with self.assertRaises(ArcError):
+    #         cli.script(name="string", options=["<str::name>"])(function=func)

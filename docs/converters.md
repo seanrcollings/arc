@@ -74,8 +74,7 @@ class CustomObject:
 class CustomObjectConverter(BaseConverter):
   convert_to = "CustomObject"
 
-  @classmethod
-  def convert(cls, value):
+  def convert(self, value):
     # ...
     # if conversion fails, raise a conversion error
     # return converted object
@@ -83,7 +82,6 @@ class CustomObjectConverter(BaseConverter):
 A converter class must define:
 - convert_to: string repr of the object the converter is meant to conver to
 - convert: the method that does the converting. Returns an instance of the convert_to object
-  - Must be a class method
   - Must accept one paramter, which is whatever the user input for that option
 
 To add a converter to the list of available ones:

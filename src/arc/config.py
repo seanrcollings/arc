@@ -85,7 +85,6 @@ class Config:
         for line in lines:
             config = line.partition("#")[0].strip("\n")
             if config not in ("", " "):
-                print(config)
                 if "=" not in config:
                     raise ValueError("Keys and values must be seperated" +
                                      " by '=' in the .arc file")

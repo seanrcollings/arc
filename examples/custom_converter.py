@@ -19,8 +19,7 @@ class Circle:
 class CircleConverter(BaseConverter):
     convert_to = "Circle"
 
-    @classmethod
-    def convert(cls, value):
+    def convert(self, value):
         '''
         The conversion method will get called with
         whatever data the user passed in. Then you can

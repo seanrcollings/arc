@@ -1,21 +1,21 @@
+from typing import Type
 from arc.config import Config
 from arc.errors import ArcError
-from arc.converter import *
-from arc.converter import is_converter
+from arc.converter import is_converter, parse_converter, StringConverter, BaseConverter
 
 
 class Option:
-    def __init__(self, option):
+    def __init__(self, option: str):
         self.name, self.converter = self.parse(option)
 
     def __repr__(self):
         return f"<Option : {self.name}>"
 
     def __call__(self, value):
-        return self.name, self.converter(value)
+        return self.name, self.converter()._try_convert(value)
 
     @staticmethod
-    def parse(option: str) -> str:  # One of the converters
+    def parse(option: str) -> tuple:
         '''Parses provided option into name and converter
 
         Checks for a type converter
@@ -27,20 +27,15 @@ class Option:
             StringConverter is default converter
         '''
         name = option
-        converter = StringConverter
+        converter: Type[BaseConverter] = StringConverter
 
-        if option.startswith("<") and option.endswith(">"):
-            if not is_converter(option):
-                raise ArcError(f"'{option}' does not conform",
-                               "to converter syntax")
+        if is_converter(option):
+            name, converter_name = parse_converter(name)
 
-            # turns "<convertername:varname>" into ["convertername", "varname"]
-            converter, name = option.lstrip("<").rstrip(">").split(":")
-
-            if converter not in Config.converters:
+            if converter_name not in Config.converters:
                 raise ArcError(f"'{converter}' is not a valid",
                                "conversion identifier")
 
-            converter = Config.converters[converter]
+            converter = Config.converters[converter_name]
 
         return name, converter
