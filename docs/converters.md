@@ -7,9 +7,10 @@
     - [Int Conversion](#int-conversion)
     - [Float Converion](#float-converion)
   - [Custom Converters](#custom-converters)
+  - [Input Converter Functions](#input-converter-functions)
 
-Typically, you don't want numbers, booleans, lists, represented as just strings. Arc provides type conversions that will convert the input to your desired type before passing it on to the script. If you've used Flask before, it's URL converters way in essentially the same way
-If no converter is specified, the StringConverter is used by default
+
+
 
 ## Builtin Converters
 | Indicator | Class Name          | Converts          | Conversion Method                              |
@@ -30,6 +31,8 @@ If no converter is specified, the StringConverter is used by default
 
 
 ## Use
+Typically, you don't want numbers, booleans, lists, represented as just strings. Arc provides type conversions that will convert the input to your desired type before passing it on to the script. If you've used Flask before, it's URL converters way in essentially the same way. If no converter is specified, the StringConverter is used by default
+
 A converter is indicated using the same syntax as Flask's URL Converters `<type:varible_name>`
 For example, for a int this could be: `<int:number>`
 For a bool it could be: `<bool:go_left>`
@@ -63,7 +66,7 @@ $ python3 example.py number_type number=5.3
 Check [examples/converters.py](/examples/converters.py) for full examples
 
 ## Custom Converters
-If you want to convert user input into your own custom object, or just modify the way that Arc alread does it, making custom converters is very easy.
+Arc also allows you to add your own custom converters
 
 ```py
 from arc.converter import BaseConverter, ConversionError
@@ -93,3 +96,22 @@ cli.config.converters["custom"] = CustomObjectConverter # <custom:value>
 See a full example in [examples/custom_converter.py](/examples/custom_converter.py)
 
 Pre-made converters defined in [src/arc/converter/converters.py](/src/arc/converter/converters.py)
+
+## Input Converter Functions
+Arc also allows you to use it's converter functionality when gathering user input from within a script
+```py
+from arc import CLI
+from arc.converter.input import convert_to_int
+
+cli = CLI()
+
+@cli.script("example")
+def example():
+  cool_number = convert_to_int("Please enter a number: ")
+  print(type(cool_number)) # '<class : int>'
+
+cli()
+```
+Note that all convereters in `Config.converter` will have a function associated with it. This includes all custom converters. The functions will be named `convert_to_<indicator>`
+
+Note that if the script defines a custom converter, it's respective input function will need to be imported after it is added to `Config.converter` otherwise it doesn't yet exist to import.

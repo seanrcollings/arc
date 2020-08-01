@@ -14,8 +14,8 @@ os.chdir(dirname)
 # pylint: disable=unused-import, wrong-import-position, unused-wildcard-import, wildcard-import
 from tests.test_cli import TestCLI
 from tests.test_utility import TestUtility
-from tests.test_converters import TestConverters
 from tests.test_script import TestScript
+from tests.converter import *
 from tests.examples import *
 from tests.utilities import *
 
