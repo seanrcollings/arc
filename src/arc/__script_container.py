@@ -10,11 +10,8 @@ class ScriptContainer(ABC):
     def __init__(self, arcfile=None):
         self.scripts = {}
 
-        # loads values from the specified
-        # arcfile and sets them on the config object
-        if not Config._loaded and arcfile is not None:
+        if arcfile is not None and not Config._loaded:
             Config.load_arc_file(arcfile)
-            util.logger("--- Arc file Loaded ---", state="debug")
 
     @abstractmethod
     def __call__(self):

@@ -66,3 +66,4 @@ $ python3 -m tests [TEST CASE]
 # TODO
 - Refactor Config object to employ instances rather than the raw class
 - Write a parser for command line args
+- Refactor BaseConverter / Converters to make more sense

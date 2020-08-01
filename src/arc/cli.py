@@ -1,17 +1,18 @@
 import sys
 from typing import Dict
-from arc.__script_container import ScriptContainer
+
 from arc.config import Config
+
+from arc.__script_container import ScriptContainer
 import arc._utils as util
 from arc.utility import Utility
 
 
 class CLI(ScriptContainer):
     def __init__(self, utilities: list = None, arcfile=".arc"):
-        super().__init__(arcfile=arcfile)
+        super().__init__(arcfile)
         self.script("help")(self.helper)
         self.utilities: Dict[str, Utility] = {}
-        self.config = Config()
 
         if utilities is not None:
             self.install_utilities(*utilities)
@@ -48,9 +49,6 @@ class CLI(ScriptContainer):
             util.logger("Entering interactive mode", state="ok")
             self.__interactive_mode()
             util.logger("Exiting interactive mode", state="ok")
-
-        # elif "--version" in sys.argv or "-v" in sys.argv:
-        #     print(VERSION)
 
         else:
             self.__execute_utility(sys.argv[1], sys.argv[2:])
@@ -132,11 +130,10 @@ class CLI(ScriptContainer):
         '''Helper List function
         Prints out the docstrings for the CLI's scripts
         '''
-        print("Usage: python3 FILENAME [COMMAND] [ARGUEMENTS ...]\n")
-        print("Possible options:")
-        print("-i : Enter interactive mode")
-        print()
-        print("Scripts: ")
+        print("Usage: python3 FILENAME [COMMAND] [ARGUEMENTS ...]\n\n",
+              "Possible options:\n", "-i : Enter interactive mode\n",
+              "Scripts: ")
+
         if len(self.scripts) > 0:
             for script_name, script in self.scripts.items():
                 print(f"\033[92m{script_name}\033[00m\n    {script.doc}\n")
