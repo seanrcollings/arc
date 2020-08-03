@@ -17,6 +17,10 @@ class ScriptError(ArcError):
     """Raised when there is an error in the creation of a script"""
 
 
+class ParserError(ArcError):
+    """Raised when there is an errr in the parser"""
+
+
 class ConversionError(ArcError):
     """Raised if a type conversion fails """
 

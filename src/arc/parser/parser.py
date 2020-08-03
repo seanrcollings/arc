@@ -4,7 +4,10 @@ from dataclasses import dataclass
 
 from arc import Config
 from arc._utils import decorate_text
-from arc.errors import ArcError
+from arc.errors import ParserError
+
+Config.debug = True
+Config.log = True
 
 
 @dataclass
@@ -73,6 +76,9 @@ class Tokenizer:
         self.data = data
 
     def tokenize(self):
+        if len(self.data) == 0:
+            raise ParserError("No provided input")
+
         tokens = []
         while len(self.data) > 0:
             tokens.append(self.__tokenize_one_token())
@@ -87,7 +93,7 @@ class Tokenizer:
                 self.data = self.data[match.end() :].strip()
                 return Token(name, value)
 
-        raise ArcError(f"Couldn't match token on {self.data}")
+        raise ParserError(f"Couldn't match token on {self.data}")
 
 
 class Parser:
@@ -95,13 +101,16 @@ class Parser:
         self.tokens = tokens
 
     def parse(self):
+        if len(self.tokens) == 0:
+            raise ParserError("No tokens to parse")
+
         return self.parse_util()
 
     def parse_util(self):
         try:
             util = self.consume("utility")
             return UtilNode(util.value.rstrip(":"), self.parse_script())
-        except ArcError:
+        except ParserError:
             return self.parse_script()
 
     def parse_script(self):
@@ -133,14 +142,8 @@ class Parser:
         if (actual_type := self.tokens[0].type) == expected_type:
             return self.tokens.pop(0)
 
-        raise ArcError(
+        raise ParserError(
             "Unexpected token.",
             f"Expected token type '{expected_type}', got '{actual_type}'",
         )
 
-
-t = Tokenizer("util:script_name option=value --flag option2=value2 --flag2").tokenize()
-
-# print("\n".join([str(token) for token in t]))
-p = Parser(t).parse()
-print(p)
