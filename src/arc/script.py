@@ -6,7 +6,7 @@ from arc._utils import logger
 
 
 class Script:
-    '''Each script installed to a CLI or utility is an instance of this class
+    """Each script installed to a CLI or utility is an instance of this class
 
     :param name: Name to register the script under, used on the command line
         to run the script
@@ -16,14 +16,17 @@ class Script:
         or simply pass them along to the script. Flags will still be interpreted as flags
     :param pass_kwargs: Similar to pass_args, but will parse the args into a dictionary,
         splitting on the Config.options_seperator. Flags will still be interpreted as flags
-    '''
-    def __init__(self,
-                 name: str,
-                 function,
-                 options: list = None,
-                 flags: list = None,
-                 pass_args: bool = False,
-                 pass_kwargs: bool = False):
+    """
+
+    def __init__(
+        self,
+        name: str,
+        function,
+        options: list = None,
+        flags: list = None,
+        pass_args: bool = False,
+        pass_kwargs: bool = False,
+    ):
 
         self.name = name
         self.function = function
@@ -37,21 +40,22 @@ class Script:
         self.pass_kwargs = pass_kwargs
 
         if (self.pass_args or self.pass_kwargs) and len(self.options) > 0:
-            raise ScriptError("You cannot provide any options if",
-                              "pass_args or pass_kwargs is set to True")
+            raise ScriptError(
+                "You cannot provide any options if",
+                "pass_args or pass_kwargs is set to True",
+            )
 
         self.doc = "No Docstring"
         if self.function.__doc__ is not None:
-            self.doc = self.function.__doc__.strip('\n\t ').replace(
-                "\n", "\n\t")
+            self.doc = self.function.__doc__.strip("\n\t ").replace("\n", "\n\t")
 
     def __repr__(self):
         return f"<Script : {self.name}>"
 
     def __call__(self, user_input: list):
-        '''External interface to execute a script
+        """External interface to execute a script
         :param user_input: list of user input obtained from sys.argv
-        '''
+        """
         parsed_user_input = self.__parse_user_input(user_input)
         logger("Parsed script arguements:", state="debug")
         logger(parsed_user_input, state="debug")
@@ -61,21 +65,19 @@ class Script:
             # arguements to be passed to the function. Since
             # options is list, it needs to be unpacked
             # with one '*' instead of two
-            self.function(*parsed_user_input["options"],
-                          **parsed_user_input["flags"])
+            self.function(*parsed_user_input["options"], **parsed_user_input["flags"])
         else:
             # if pass_args is false, that means
             # that options will be a dictionary
             # to be unpacked with ** and passed
             # to the function as key word arguements
-            self.function(**parsed_user_input["options"],
-                          **parsed_user_input["flags"])
+            self.function(**parsed_user_input["options"], **parsed_user_input["flags"])
 
     ##################
     # PARSER METHODS #
     ##################
     def __parse_user_input(self, user_input: list) -> dict:
-        '''Converts command line arguements into python dictionary
+        """Converts command line arguements into python dictionary
 
         :param user_input: list of what the user typed in on the command line
             The user's input need to parsed into both options (option=value)
@@ -100,7 +102,7 @@ class Script:
             Flags are always parsed the same
 
         :returns: arguement dictionary to be unpacked with **
-        '''
+        """
 
         flag_den = Config.flag_denoter
 
@@ -109,8 +111,7 @@ class Script:
         parsed_flags = self.__parse_flags(flags)
 
         if self.pass_kwargs:
-            parsed_options = dict(
-                self.__split(options, sep=Config.options_seperator))
+            parsed_options = dict(self.__split(options, sep=Config.options_seperator))
             return {"options": parsed_options, "flags": parsed_flags}
 
         elif self.pass_args:
@@ -121,7 +122,7 @@ class Script:
             return {"options": parsed_options, "flags": parsed_flags}
 
     def __parse_options(self, options: list) -> dict:
-        ''' Parses the options provided by the user
+        """ Parses the options provided by the user
 
         :param options: list of strings that the user typed in
             Tries to convert the value with the associated converter
@@ -138,7 +139,7 @@ class Script:
             User enters: python3 example.py example name=Joseph number=2 --reverse
             Method recieves: ["name=Joseph", "number=2"]
             Method returns: {"name": "Joseph", "number": 2}
-        '''
+        """
         parsed = {}
 
         for name, value in self.__split(options, sep=Config.options_seperator):
@@ -152,7 +153,7 @@ class Script:
         return parsed
 
     def __parse_flags(self, flags: list) -> dict:
-        '''Checks if provided user flags exist
+        """Checks if provided user flags exist
         Sets flags that are provided to true
 
         :param flags: list of flags to be parsed
@@ -175,7 +176,7 @@ class Script:
             User enters: python3 example.py example name=Joseph number=2
             Method recieves: []
             Method returns: {"reverse": False}
-        '''
+        """
         flags_copy = self.flags.copy()
         for flag in flags:
             flag = flag.lstrip(Config.flag_denoter)
@@ -195,11 +196,11 @@ class Script:
     # user knows what they did wrong
     @staticmethod
     def __build_options(options: Optional[List[str]]) -> dict:
-        '''Creates option objects
+        """Creates option objects
 
         :param options: list of user provided options. May contain a type converter
         :returns: dictionary of name keys and Option object values
-        '''
+        """
         if options is None:
             return {}
 
@@ -211,11 +212,11 @@ class Script:
 
     @staticmethod
     def __build_flags(flags: Optional[List[str]]) -> dict:
-        '''Insures flags follow specific standards
+        """Insures flags follow specific standards
             :param flags: list of all flags registered to the scriot
 
             :returns: dictionary of flag names paired with a default False value
-        '''
+        """
         if flags is None:
             return {}
 
@@ -225,7 +226,7 @@ class Script:
                 raise ArcError(
                     "Flags must start with the denoter",
                     f"'{Config.flag_denoter}'",
-                    "\nThis denoter can be changed by editing 'Config.flag_denoter'"
+                    "\nThis denoter can be changed by editing 'Config.flag_denoter'",
                 )
             built_flags[flag.lstrip(Config.flag_denoter)] = False
 
@@ -234,7 +235,7 @@ class Script:
     # Helper Methods
     @staticmethod
     def __split(items: list, sep: str):
-        '''Generator that splits strings based on a provided seperator
+        """Generator that splits strings based on a provided seperator
 
         :param items: list of strings to be split
         :param sep: string to split each item in items on
@@ -244,15 +245,15 @@ class Script:
         :raises ExecutionError: item does not contain the seperator
         :raises ExecutionError: if nothing is to the right or lef
             of the seperator
-        '''
+        """
 
         for item in items:
             if sep not in item:
-                raise ExecutionError("Options must be seperated",
-                                     f"from their values by '{sep}'")
+                raise ExecutionError(
+                    "Options must be seperated", f"from their values by '{sep}'"
+                )
             if item.endswith(sep):
-                raise ExecutionError("Options cannot begin or ",
-                                     f"end with '{sep}'")
+                raise ExecutionError("Options cannot begin or ", f"end with '{sep}'")
 
             name, value = item.split(sep)
             yield (name, value)

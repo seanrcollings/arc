@@ -10,30 +10,25 @@ class Table:
     def __str__(self):
 
         table = "\n"
-        table += " ".join([
-            self.__formatter(header.upper(), align="^", tcolor="33", style="4")
-            for header in self.__headers
-        ])
+        table += " ".join(
+            [
+                self.__formatter(header.upper(), align="^", tcolor="33", style="4")
+                for header in self.__headers
+            ]
+        )
 
         table += "\n"
 
         for row in self.__rows:
             for item in row:
-                formatted_string = self.__formatter(
-                    str(item),
-                    align=">",
-                )
+                formatted_string = self.__formatter(str(item), align=">",)
                 table += formatted_string + " "
             table += "\n"
 
         return table
 
-    def __formatter(self,
-                    string,
-                    align="<",
-                    type_of="s",
-                    tcolor="32",
-                    bcolor="40",
-                    style="1"):
+    def __formatter(
+        self, string, align="<", type_of="s", tcolor="32", bcolor="40", style="1"
+    ):
         formatted = format(string, f"{align}{self.__column_width}{type_of}")
         return decorate_text(formatted, tcolor, bcolor, style)

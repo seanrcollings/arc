@@ -6,7 +6,8 @@ from arc.errors import ExecutionError
 
 
 class ScriptContainer(ABC):
-    '''Parent class of CLI and Utility'''
+    """Parent class of CLI and Utility"""
+
     def __init__(self, arcfile=None):
         self.scripts = {}
 
@@ -17,13 +18,15 @@ class ScriptContainer(ABC):
     def __call__(self):
         pass
 
-    def script(self,
-               name: str,
-               options: list = None,
-               flags: list = None,
-               pass_args: bool = False,
-               pass_kwargs: bool = False):
-        '''Installs a script to the container
+    def script(
+        self,
+        name: str,
+        options: list = None,
+        flags: list = None,
+        pass_args: bool = False,
+        pass_kwargs: bool = False,
+    ):
+        """Installs a script to the container
         Creates a script object, appends it to
         the script container
 
@@ -36,11 +39,10 @@ class ScriptContainer(ABC):
             with as key value pairs with **kwargs
 
         :returns: the provided function, for decorator chaining
-        '''
-        def decorator(function):
-            script = Script(name, function, options, flags, pass_args,
-                            pass_kwargs)
+        """
 
+        def decorator(function):
+            script = Script(name, function, options, flags, pass_args, pass_kwargs)
             self.scripts[name] = script
             util.logger(f"Registered '{name}' script", state="debug")
             return function
@@ -49,14 +51,14 @@ class ScriptContainer(ABC):
 
     @util.timer
     def execute(self, command: str, user_input: list):
-        '''Executes the script from the user's command
+        """Executes the script from the user's command
 
         :param command: the command that the user typed in i.e: run
         :param user_input: various user_input that the user passed in i.e: port=4321
 
         :excepts ExecutionError: Raised during the execution of a script anytime
             bad data is passed or something unexpected happens
-        '''
+        """
 
         if command not in self.scripts:
             if Config.anon_identifier in self.scripts:
