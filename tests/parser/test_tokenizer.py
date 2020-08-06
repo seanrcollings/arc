@@ -1,4 +1,3 @@
-from unittest.mock import patch
 from tests.base_test import BaseTest
 from arc.parser import Tokenizer
 from arc.parser.data_classes import Token

@@ -33,7 +33,7 @@ class Utility(ScriptContainer):
         """
         print(f"\nUtility \033[93m{self.name}\033[00m")
         print(
-            f"Execute this utility with",
+            "Execute this utility with",
             f"\033[93m{self.name}\033[00m\033[92m{Config.utility_seperator}subcommand\033[00m",
         )
 

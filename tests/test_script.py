@@ -1,5 +1,5 @@
 """Test the functionality of the Script class"""
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 from tests.base_test import BaseTest
 from arc.script import Script
 from arc.errors import ScriptError, ArcError

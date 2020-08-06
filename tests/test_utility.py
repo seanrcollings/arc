@@ -1,7 +1,5 @@
 from unittest.mock import MagicMock
-from io import StringIO
 from tests.base_test import BaseTest
-from arc import Utility
 from arc.errors import ScriptError
 
 

@@ -1,7 +1,7 @@
 """Test the functionality of the CLI as a whole"""
-from io import StringIO
 
-from unittest.mock import patch, MagicMock
+
+from unittest.mock import MagicMock
 from tests.base_test import BaseTest
 from arc.errors import ScriptError
 
