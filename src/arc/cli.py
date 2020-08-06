@@ -63,7 +63,7 @@ class CLI(ScriptContainer):
             print("That command does not exist")
             sys.exit(1)
 
-        return self.utilities[util_name](util_node.script)
+        self.utilities[util_name](util_node.script)
 
     # def __interactive_mode(self):
     #     """Interactive version of Arc

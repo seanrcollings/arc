@@ -1,9 +1,9 @@
 """Test the functionality of the Script class"""
 from unittest.mock import patch, MagicMock
-import importlib
 from tests.base_test import BaseTest
 from arc.script import Script
-from arc.errors import ExecutionError, ArcError
+from arc.errors import ScriptError, ArcError
+from arc.parser.data_classes import FlagNode, OptionNode
 
 
 class TestScript(BaseTest):
@@ -21,10 +21,13 @@ class TestScript(BaseTest):
     def test_execution(self):
         script = self.create_script(options=["x", "<int:y>"], flags=["--test"])
 
-        script(user_input=["x=2", "y=3"])
+        script(options=[OptionNode("x", "2"), OptionNode("y", "3")], flags=[])
         script.function.assert_called_with(x="2", y=3, test=False)
 
-        script(user_input=["x=2", "y=3", "--test"])
+        script(
+            options=[OptionNode("x", "2"), OptionNode("y", "3")],
+            flags=[FlagNode("test")],
+        )
         script.function.assert_called_with(x="2", y=3, test=True)
 
     def test_build_flags(self):
@@ -36,10 +39,10 @@ class TestScript(BaseTest):
 
     def test_nonexistant_options(self):
         script = self.create_script(options=["x", "<int:y>"], flags=["--test"])
-        with self.assertRaises(ExecutionError):
-            script(user_input=["p=2"])
+        with self.assertRaises(ScriptError):
+            script(options=[OptionNode("p", "2")], flags=[])
 
     def test_nonexistant_flag(self):
-        script = self.create_script(options=["x", "<int:y>"], flags=["--test"])
-        with self.assertRaises(ExecutionError):
-            script(user_input=["--none"])
+        script = self.create_script(options=[], flags=["--test"])
+        with self.assertRaises(ScriptError):
+            script(options=[], flags=[FlagNode("none")])

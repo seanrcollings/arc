@@ -74,9 +74,9 @@ class TestConverters(BaseTest):
         with patch("sys.argv", new=["dir", "list", "test=1,2,3,4"]):
             cli()
         func.assert_called_with(test=["1", "2", "3", "4"])
-        with patch("sys.argv", new=["dir", "list", "test=2"]):
-            cli()
-        func.assert_called_with(test=["2"])
+        # with patch("sys.argv", new=["dir", "list", "test=2"]):
+        #     cli()
+        # func.assert_called_with(test=["2"])
 
     # def test_invalid_converters(self):
     #     cli = self.create_cli()

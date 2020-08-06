@@ -112,11 +112,10 @@ class Script:
         not in self.flags
         """
         for flag in flag_nodes:
-            try:
+            if flag.name in self.flags:
                 self.flags[flag.name] = not self.flags[flag.name]
-            except KeyError:
-                print(f"Flag '{flag.name}' not recognized'")
-                sys.exit(1)
+            else:
+                raise ScriptError(f"Flag '{flag.name}' not recognized'")
 
     ###################
     # BUILDER METHODS #

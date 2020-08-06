@@ -19,6 +19,7 @@ from tests.test_script import TestScript
 from tests.converter import *
 from tests.examples import *
 from tests.utilities import *
+from tests.parser import *
 
 if __name__ == "__main__":
     unittest.main()

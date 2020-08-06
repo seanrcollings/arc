@@ -12,7 +12,8 @@ class Tokenizer:
         self.data = data
         self.TOKEN_TYPES = [
             ("flag", fr"{Config.flag_denoter}\b\w+\b"),
-            ("option", fr"\b\w+{Config.options_seperator}[\"\']?\w+\b[\"\']?"),
+            ("option", fr"\b\w+{Config.options_seperator}[\"\'][\w\s\,\.]+\b[\"\']"),
+            ("option", fr"\b\w+{Config.options_seperator}[\w\,\.]+\b"),
             ("utility", fr"\b\w+\b{Config.utility_seperator}"),
             ("script", r"\b\w+\b"),
         ]
@@ -20,8 +21,8 @@ class Tokenizer:
     def tokenize(self):
         if len(self.data) == 0:
             raise ParserError("No provided input")
-        tokens = []
 
+        tokens = []
         while len(self.data) > 0:
             tokens.append(self.__tokenize_one_token())
         return tokens
@@ -32,7 +33,6 @@ class Tokenizer:
             if match := regex.match(self.data):
                 value = match.group(1)
                 self.data = self.data[match.end() :].strip()
-
                 return dc.Token(name, value)
 
         raise ParserError(f"Couldn't match token on {self.data}")
@@ -60,34 +60,39 @@ class Parser:
     def parse_script(self):
         if self.peek("script"):
             script = self.consume("script")
-            return dc.ScriptNode(script.value, *self.parse_script_body())
+            name = script.value
+        else:
+            # for anonymous scripts
+            name = Config.anon_identifier
 
-        # for anonymous scripts
-        return dc.ScriptNode(Config.anon_identifier, *self.parse_script_body())
+        return dc.ScriptNode(name, *self.parse_script_body())
 
     def parse_script_body(self):
-        options = filter(lambda o: o.type == "option", self.tokens)
-        flags = filter(lambda f: f.type == "flag", self.tokens)
-        return self.parse_options(options), self.parse_flags(flags)
+        options = []
+        flags = []
+        for token in self.tokens.copy():
+            if token.type == "option":
+                options.append(self.parse_option(token))
+            elif token.type == "flag":
+                flags.append(self.parse_flag(token))
+            else:
+                raise ParserError(f"Invalid token '{token.type}' in script body")
 
-    @staticmethod
-    def parse_options(tokens):
-        parsed_options = []
-        for option in tokens:
-            name, value = option.value.split("=")
-            parsed_options.append(dc.OptionNode(name, value))
+        return options, flags
 
-        return parsed_options
+    def parse_option(self, token):
+        self.consume("option")
+        name, value = token.value.split(Config.options_seperator)
+        return dc.OptionNode(name, value)
 
-    @staticmethod
-    def parse_flags(tokens):
-        parsed_flags = []
-        for flag in tokens:
-            parsed_flags.append(dc.FlagNode(flag.value.lstrip(Config.flag_denoter)))
-
-        return parsed_flags
+    def parse_flag(self, token):
+        self.consume("flag")
+        return dc.FlagNode(token.value.lstrip(Config.flag_denoter))
 
     def consume(self, expected_type):
+        if len(self.tokens) == 0:
+            raise ParserError("No tokens to consume")
+
         if (actual_type := self.tokens[0].type) == expected_type:
             return self.tokens.pop(0)
 
@@ -97,4 +102,7 @@ class Parser:
         )
 
     def peek(self, expected_type):
-        return expected_type == self.tokens[0].type
+        try:
+            return expected_type == self.tokens[0].type
+        except IndexError:
+            return False
