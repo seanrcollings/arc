@@ -3,7 +3,7 @@ from arc.parser import Tokenizer
 from arc.parser.data_classes import Token
 from arc.errors import ParserError
 
-
+# pylint: disable=protected-access, missing-function-docstring
 class TestTokenizer(BaseTest):
     def test_no_input(self):
         with self.assertRaises(ParserError):

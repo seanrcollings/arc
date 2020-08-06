@@ -5,7 +5,7 @@ from arc.script import Script
 from arc.errors import ScriptError, ArcError
 from arc.parser.data_classes import FlagNode, OptionNode
 
-
+# pylint: disable=protected-access, missing-function-docstring
 class TestScript(BaseTest):
     def create_script(self, options=None, flags=None, convert=True, raw=False):
         func = MagicMock()

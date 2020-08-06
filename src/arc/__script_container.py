@@ -1,4 +1,3 @@
-import sys
 from abc import ABC, abstractmethod
 import arc._utils as util
 from arc.script import Script
@@ -35,10 +34,10 @@ class ScriptContainer(ABC):
         :param name: name of the script to be used on the comamnd line
         :param options: options available when running the script
         :param flags: flags (boolean values) available when running the script
-        :param raw: specifies that the script passes all it's arguements
-            positionally with *args
-        :param convert: specifies that this script passes all it's arguements
-            with as key value pairs with **kwargs
+        :param raw: specifies wether the script should passed the parsed values
+            or just leave them as is
+        :param convert: Specifies whether the script should try to convert
+            provided values
 
         :returns: the provided function, for decorator chaining
         """
@@ -70,3 +69,7 @@ class ScriptContainer(ABC):
             script(options=script_node.options, flags=script_node.flags)
         except ExecutionError as e:
             print(e)
+
+    @abstractmethod
+    def helper(self):
+        pass

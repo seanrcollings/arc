@@ -3,7 +3,7 @@ from arc.parser import Parser
 from arc.parser.data_classes import Token, ScriptNode, UtilNode
 from arc.errors import ParserError
 
-
+# pylint: disable=protected-access, missing-function-docstring
 class TestParser(BaseTest):
     TEST_TOKENS = [
         Token("utility", "util:"),

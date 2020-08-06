@@ -59,8 +59,7 @@ class Parser:
 
     def parse_script(self):
         if self.peek("script"):
-            script = self.consume("script")
-            name = script.value
+            name = self.consume("script").value
         else:
             # for anonymous scripts
             name = Config.anon_identifier
@@ -106,3 +105,7 @@ class Parser:
             return expected_type == self.tokens[0].type
         except IndexError:
             return False
+
+
+t = Tokenizer("script value=2 --flag").tokenize()
+print(t)

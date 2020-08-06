@@ -2,7 +2,6 @@ from unittest.mock import MagicMock
 from tests.base_test import BaseTest
 from arc.errors import ScriptError
 
-
 # pylint: disable=protected-access, missing-function-docstring
 class TestUtility(BaseTest):
     def setUp(self):

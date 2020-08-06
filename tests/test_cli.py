@@ -1,6 +1,4 @@
 """Test the functionality of the CLI as a whole"""
-
-
 from unittest.mock import MagicMock
 from tests.base_test import BaseTest
 from arc.errors import ScriptError

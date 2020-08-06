@@ -1,10 +1,11 @@
-import sys
 import inspect
+import sys
+
 from typing import Optional, List, Dict, Callable
 from arc.errors import ScriptError, ArcError
-import arc._utils as util
-from arc.config import Config
 from arc.__option import Option
+from arc.config import Config
+import arc._utils as util
 
 
 class Script:
@@ -46,13 +47,16 @@ class Script:
     def __call__(self, options: list, flags: list):
         """External interface to execute a script"""
 
-        self.__match_options(options)
-        self.__match_flags(flags)
-
         util.logger("---------------------------")
-        self.function(
-            **{key: obj.value for key, obj in self.options.items()}, **self.flags
-        )
+        if self.raw:
+            self.function(sys.argv[1:])
+        else:
+            self.__match_options(options)
+            self.__match_flags(flags)
+
+            self.function(
+                **{key: obj.value for key, obj in self.options.items()}, **self.flags
+            )
         util.logger("---------------------------")
 
     def __match_options(self, option_nodes: list):
@@ -62,10 +66,11 @@ class Script:
 
        :param option_nodes: list of OptionNodes from the parser
 
-       :raises ScriptError: if a option is present in option_nodes and
-       not in self.options
-       :raises ScriptError: if a option is not given a value and does not
-       have a default value provided by self.function
+       :raises ScriptError:
+            - if a option is present in option_nodes and
+            not in self.options
+            - if a option is not given a value and does not
+            have a default value provided by self.function
        """
 
         # Ideally these two loops could be consolidated
