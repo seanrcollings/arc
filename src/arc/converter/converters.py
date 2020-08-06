@@ -1,6 +1,6 @@
 # Allow it to be recursive?? - <array:<int:number>>
-# TODO: Swap all converters to raise a Conversion exception if they will fail
 
+import re
 from arc.converter.base_converter import BaseConverter
 from arc.converter import ConversionError
 
@@ -82,7 +82,11 @@ class ListConverter(BaseConverter):
     convert_to = "list"
 
     def convert(self, value):
-        return value.replace(" ", "").split(",")
+        if "," in value:
+            return value.replace(" ", "").split(",")
+        raise ConversionError(
+            value, "ListConverter only accepts comma seperated strings"
+        )
 
 
 # Dictionary Conversion... etc....

@@ -19,6 +19,8 @@ def logger(*messages, state="info", sep=" ", end="\n"):
             print(*decorate_text_gen(*messages, tcolor="33"), sep=sep, end=end)
         elif state == "info":
             print(*decorate_text_gen(*messages, tcolor="37"), sep=sep, end=end)
+        else:
+            print(*messages, sep=sep, end=end)
 
 
 def decorate_text_gen(*strings, tcolor="32", bcolor="40", style="1"):
@@ -45,7 +47,7 @@ def exception_handler(exception_type, exception, traceback, debug_hook=sys.excep
         print(f"{exception_type.__name__}: {exception}")
 
 
-sys.excepthook = exception_handler
+# sys.excepthook = exception_handler
 
 
 def clear():

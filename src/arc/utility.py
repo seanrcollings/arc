@@ -21,11 +21,8 @@ class Utility(ScriptContainer):
         self.name = name
         logger(f"Utility '{name}' created'", state="debug")
 
-    def __call__(self, command, options):
-        if command == "":
-            self.execute(Config.anon_identifier, options)
-        else:
-            self.execute(command, options)
+    def __call__(self, script_node):
+        self.execute(script_node)
 
     def __repr__(self):
         return self.name

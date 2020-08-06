@@ -9,14 +9,13 @@ class TestHTTPS(BaseTest):
     def setUp(self):
         self.cli = self.create_cli(utilities=[https])
 
-    @patch('http.client.HTTPResponse.read', new_callable=MagicMock)
+    @patch("http.client.HTTPResponse.read", new_callable=MagicMock)
     @patch("sys.stdout", new_callable=StringIO)
     def test_get(self, mock_out, mock_connection):
         mock_connection.return_value = "test"
-        with patch("sys.argv",
-                   new=[
-                       "dir", "https:get", "url=www.example.com",
-                       "endpoint=/test"
-                   ]):
+        with patch(
+            "sys.argv",
+            new=["dir", "https:get", "url=www.example.com", "endpoint=/test"],
+        ):
             self.cli()
         assert mock_out.getvalue().strip() == "test"

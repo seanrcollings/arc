@@ -1,7 +1,8 @@
-'''
+"""
 Example CLI to demonstrate all of the type converters
-'''
+"""
 from arc import CLI
+
 cli = CLI()
 
 
@@ -9,7 +10,7 @@ cli = CLI()
 # python3 converters.py int value=hi -> error
 @cli.script("int", options=["<int:value>"])
 def int_type(value):
-    '''Demonstrates int conversion'''
+    """Demonstrates int conversion"""
     print(type(value))
     print(value)
 
@@ -18,7 +19,7 @@ def int_type(value):
 # python3 converters.py byte value=hi -> bytes
 @cli.script("byte", options=["<byte:value>"])
 def byte_type(value):
-    '''Demonstrates byte conversion'''
+    """Demonstrates byte conversion"""
     print(type(value))
     print(value)
 
@@ -28,7 +29,7 @@ def byte_type(value):
 # python3 converters.py int value=hi -> error
 @cli.script("float", options=["<float:value>"])
 def float_type(value):
-    '''Demonstrates float conversion'''
+    """Demonstrates float conversion"""
     print(type(value))
     print(value)
 
@@ -39,7 +40,7 @@ def float_type(value):
 # python3 converters.py bool value="" -> False
 @cli.script("bool", options=["<bool:value>"])
 def bool_type(value):
-    '''Demonstrates bool conversion'''
+    """Demonstrates bool conversion"""
     print(type(value))
     print(value)
 
@@ -51,7 +52,7 @@ def bool_type(value):
 # python3 converters.py bool value=ainfea -> error
 @cli.script("sbool", options=["<sbool:value>"])
 def sbool_type(value):
-    '''Demonstrates bool conversion'''
+    """Demonstrates bool conversion"""
     print(type(value))
     print(value)
 
@@ -63,7 +64,7 @@ def sbool_type(value):
 # python3 converters.py bool value=afeafa -> error
 @cli.script("ibool", options=["<ibool:value>"])
 def ibool_type(value):
-    '''Demonstrates bool conversion'''
+    """Demonstrates bool conversion"""
     print(type(value))
     print(value)
 
@@ -73,7 +74,7 @@ def ibool_type(value):
 # python3 examples/converters.py list value="1,    2,    3,  4 , 5" -> ['1', '2', '3', '4', '5']
 @cli.script("list", options=["<list:value>"])
 def list_type(value):
-    '''Demonstrates bool conversion'''
+    """Demonstrates bool conversion"""
     print(type(value))
     print(value)
 
