@@ -1,2 +1,2 @@
 from .parser import Tokenizer, Parser
-from .data_classes import ScriptNode, UtilNode
+from .data_types import ScriptNode, UtilNode

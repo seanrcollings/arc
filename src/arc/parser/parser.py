@@ -1,10 +1,10 @@
 import re
 
 from arc import Config
-import arc.parser.data_classes as dc
+import arc.parser.data_types as types
 from arc.errors import ParserError
 
-# pylint: disable=missing-function-docstring
+# pylint: disable=missing-function-docstring, missing-class-docstring
 
 
 class Tokenizer:
@@ -33,7 +33,7 @@ class Tokenizer:
             if match := regex.match(self.data):
                 value = match.group(1)
                 self.data = self.data[match.end() :].strip()
-                return dc.Token(name, value)
+                return types.Token(name, value)
 
         raise ParserError(f"Couldn't match token on {self.data}")
 
@@ -51,7 +51,7 @@ class Parser:
     def parse_util(self):
         if self.peek("utility"):
             util = self.consume("utility")
-            return dc.UtilNode(
+            return types.UtilNode(
                 util.value.rstrip(Config.utility_seperator), self.parse_script()
             )
 
@@ -64,7 +64,7 @@ class Parser:
             # for anonymous scripts
             name = Config.anon_identifier
 
-        return dc.ScriptNode(name, *self.parse_script_body())
+        return types.ScriptNode(name, *self.parse_script_body())
 
     def parse_script_body(self):
         options = []
@@ -82,11 +82,11 @@ class Parser:
     def parse_option(self, token):
         self.consume("option")
         name, value = token.value.split(Config.options_seperator)
-        return dc.OptionNode(name, value)
+        return types.OptionNode(name, value)
 
     def parse_flag(self, token):
         self.consume("flag")
-        return dc.FlagNode(token.value.lstrip(Config.flag_denoter))
+        return types.FlagNode(token.value.lstrip(Config.flag_denoter))
 
     def consume(self, expected_type):
         if len(self.tokens) == 0:
@@ -107,5 +107,8 @@ class Parser:
             return False
 
 
-t = Tokenizer("script value=2 --flag").tokenize()
-print(t)
+if __name__ == "__main__":
+    t = Tokenizer("script value=2 --flag").tokenize()
+    print(t)
+    p = Parser(t).parse()
+    print(p)

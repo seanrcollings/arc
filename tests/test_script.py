@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 from tests.base_test import BaseTest
 from arc.script import Script
 from arc.errors import ScriptError, ArcError
-from arc.parser.data_classes import FlagNode, OptionNode
+from arc.parser.data_types import FlagNode, OptionNode
 
 # pylint: disable=protected-access, missing-function-docstring
 class TestScript(BaseTest):

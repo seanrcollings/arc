@@ -1,6 +1,6 @@
 from tests.base_test import BaseTest
 from arc.parser import Parser
-from arc.parser.data_classes import Token, ScriptNode, UtilNode
+from arc.parser.data_types import Token, ScriptNode, UtilNode
 from arc.errors import ParserError
 
 # pylint: disable=protected-access, missing-function-docstring
