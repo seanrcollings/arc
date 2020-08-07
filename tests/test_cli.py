@@ -1,10 +1,10 @@
-'''Test the functionality of the CLI as a whole'''
-from io import StringIO
-from unittest.mock import patch
+"""Test the functionality of the CLI as a whole"""
+from unittest.mock import MagicMock
 from tests.base_test import BaseTest
+from arc.errors import ScriptError
 
 
-#pylint: disable=protected-access, missing-function-docstring
+# pylint: disable=protected-access, missing-function-docstring
 class TestCLI(BaseTest):
     def setUp(self):
         self.cli = self.create_cli()
@@ -13,63 +13,37 @@ class TestCLI(BaseTest):
         assert "func1" in self.cli.scripts.keys()
         assert "func2" in self.cli.scripts.keys()
 
-    @patch('sys.stdout', new_callable=StringIO)
-    def test_func1(self, mock_out):
-        with patch('sys.argv', new=["dir", 'func1', "x=2"]):
-            self.cli()
-        assert mock_out.getvalue().strip("\n") == "2"
+    def test_func1(self):
+        self.cli("func1 x=2")
+        self.cli.scripts["func1"].function.assert_called_with(x="2")
 
-    @patch('sys.stdout', new_callable=StringIO)
-    def test_func2(self, mock_out):
-        with patch('sys.argv', new=["dir", 'func2', "x=2"]):
-            self.cli()
-        assert mock_out.getvalue().strip("\n") == "4"
+    def test_func2(self):
+        self.cli("func2 x=4")
+        self.cli.scripts["func2"].function.assert_called_with(x=4)
 
-    @patch('sys.stdout', new_callable=StringIO)
-    def test_nonexistant_script(self, mock_out):
-        with patch('sys.argv', new=["dir", 'doesnotexist']):
-            self.cli()
-        assert mock_out.getvalue().strip("\n") == "That command does not exist"
+    def test_nonexistant_script(self):
+        with self.assertRaises(ScriptError):
+            self.cli("doesnotexist")
 
-    @patch('sys.stdout', new_callable=StringIO)
-    def test_flags(self, mock_out):
-        self.cli.script(name="func3", options=[],
-                        flags=["--x"])(function=lambda x: print(x))
+    def test_present_flags(self):
+        self.cli.script(name="func3", options=[], flags=["--x"])(MagicMock())
+        self.cli("func3 --x")
+        self.cli.scripts["func3"].function.assert_called_with(x=True)
 
-        with patch('sys.argv', new=["dir", 'func3', "--x"]):
-            self.cli()
-        assert mock_out.getvalue().strip("\n") == "True"
+    def test_absent_flags(self):
+        self.cli.script(name="func3", options=[], flags=["--x"])(MagicMock())
+        self.cli("func3")
+        self.cli.scripts["func3"].function.assert_called_with(x=False)
 
-        mock_out.truncate(0)
-        mock_out.seek(0)
+    def test_anon_script(self):
+        self.cli.script(name="anon", options=["x"])(MagicMock())
+        self.cli("x=2")
+        self.cli.scripts["anon"].function.assert_called_with(x="2")
 
-        with patch('sys.argv', new=["dir", 'func3']):
-            self.cli()
-        assert mock_out.getvalue().strip("\n") == "False"
+    def test_raw(self):
+        pass
 
-    @patch('sys.stdout', new_callable=StringIO)
-    def test_pass_args(self, mock_out):
-        self.cli.script(name="args", flags=["--flag"],
-                        pass_args=True)(function=lambda *x, flag: print(*x))
-
-        with patch('sys.argv', new=["dir", 'args', "test=4", "test2",
-                                    "test3"]):
-            self.cli()
-        assert mock_out.getvalue().strip("\n") == "test=4 test2 test3"
-
-    @patch('sys.stdout', new_callable=StringIO)
-    def test_pass_kwargs(self, mock_out):
-        self.cli.script(
-            name="kwargs", flags=["--flag"],
-            pass_kwargs=True)(function=lambda x, y, flag: print(x, y))
-
-        with patch('sys.argv', new=["dir", 'kwargs', "x=4", "y=4"]):
-            self.cli()
-        assert mock_out.getvalue().strip("\n") == "4 4"
-
-    @patch('sys.stdout', new_callable=StringIO)
-    def test_anon_script(self, mock_out):
-        self.cli.script(name="anon", options=["x"])(lambda x: print(x))
-        with patch("sys.argv", new=["dir", "x=2"]):
-            self.cli()
-        assert mock_out.getvalue().strip("\n") == "2"
+    def test_convert(self):
+        self.cli.scripts["func2"].convert = False
+        self.cli("func2 x=4")
+        self.cli.scripts["func2"].function.assert_called_with(x="4")

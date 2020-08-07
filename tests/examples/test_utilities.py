@@ -8,7 +8,7 @@ class TestUtilities(BaseTest):
     def test_installed(self):
         assert cli.utilities[converse.name] is converse
 
-    @patch('sys.stdout', new_callable=StringIO)
+    @patch("sys.stdout", new_callable=StringIO)
     def test_execute(self, mock_out):
         with patch("sys.argv", new=["dir", "converse:greet", "name=Sean"]):
             cli()

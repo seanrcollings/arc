@@ -6,9 +6,9 @@ from arc import Config
 
 
 def logger(*messages, state="info", sep=" ", end="\n"):
-    '''Arc logger utility. Logs various dev info.
+    """Arc logger utility. Logs various dev info.
     Can be turned on by setting Config.log or Config.debug to True
-    '''
+    """
 
     if Config.log or Config.debug:
         if state == "ok":
@@ -19,10 +19,12 @@ def logger(*messages, state="info", sep=" ", end="\n"):
             print(*decorate_text_gen(*messages, tcolor="33"), sep=sep, end=end)
         elif state == "info":
             print(*decorate_text_gen(*messages, tcolor="37"), sep=sep, end=end)
+        else:
+            print(*messages, sep=sep, end=end)
 
 
 def decorate_text_gen(*strings, tcolor="32", bcolor="40", style="1"):
-    '''Generator that colors a series of strings'''
+    """Generator that colors a series of strings"""
     for string in strings:
         if not Config.decorate_text:
             yield string
@@ -31,31 +33,28 @@ def decorate_text_gen(*strings, tcolor="32", bcolor="40", style="1"):
 
 
 def decorate_text(string, tcolor="32", bcolor="40", style="1"):
-    return f"\033[{style};{tcolor};{bcolor}m{string}\033[00m"
+    return f"\033[{style};{tcolor}m{string}\033[00m"
 
 
-def exception_handler(exception_type,
-                      exception,
-                      traceback,
-                      debug_hook=sys.excepthook):
-    '''Exception handler to overide the default one
+def exception_handler(exception_type, exception, traceback, debug_hook=sys.excepthook):
+    """Exception handler to overide the default one
     supresses traceback messages
     will be used if debug is set to False
-    '''
+    """
     if Config.debug:
         debug_hook(exception_type, exception, traceback)
     else:
         print(f"{exception_type.__name__}: {exception}")
 
 
-sys.excepthook = exception_handler
+# sys.excepthook = exception_handler
 
 
 def clear():
-    '''Executes a clear screen command
+    """Executes a clear screen command
     will work on any OS. Used in the CLI's
     interactive mode
-    '''
+    """
     if os.name == "nt":
         os.system("cls")
     else:
@@ -63,9 +62,10 @@ def clear():
 
 
 def timer(func):
-    '''Decorator for timing functions
+    """Decorator for timing functions
     will only time if Config.debug is set to True
-    '''
+    """
+
     @functools.wraps(func)
     def decorator(*args, **kwargs):
         start_time = time.time()

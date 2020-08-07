@@ -1,6 +1,6 @@
 # Allow it to be recursive?? - <array:<int:number>>
-# TODO: Swap all converters to raise a Conversion exception if they will fail
 
+import re
 from arc.converter.base_converter import BaseConverter
 from arc.converter import ConversionError
 
@@ -26,8 +26,7 @@ class FloatConverter(BaseConverter):
         try:
             return float(value)
         except ValueError:
-            raise ConversionError(value,
-                                  "Value must be a number (1.3, 4, 1.7)")
+            raise ConversionError(value, "Value must be a number (1.3, 4, 1.7)")
 
 
 class ByteConverter(BaseConverter):
@@ -43,10 +42,11 @@ class BoolConverter(BaseConverter):
 
 
 class StringBoolConverter(BaseConverter):
-    '''Converts a string to a boolean
+    """Converts a string to a boolean
     True / true - True
     False / false - False
-    '''
+    """
+
     convert_to = "boolean"
 
     def convert(self, value):
@@ -59,29 +59,34 @@ class StringBoolConverter(BaseConverter):
 
 
 class IntBoolConverter(BaseConverter):
-    '''Converts an int to a boolean.
+    """Converts an int to a boolean.
     0 - False
     All other ints / floats - True
-    '''
+    """
+
     convert_to = "boolean"
 
     def convert(self, value):
         if value.isnumeric():
             value = int(value)
             return value != 0
-        raise ConversionError(value,
-                              "ibool only accepts whole number integers")
+        raise ConversionError(value, "ibool only accepts whole number integers")
 
 
 class ListConverter(BaseConverter):
-    '''Converts arguement into an array
+    """Converts arguement into an array
     argument: my_list=1,2,3,4,5,6
     return : ["1", "2", "3", "4", "5", "6"]
-    '''
+    """
+
     convert_to = "list"
 
     def convert(self, value):
-        return value.replace(" ", "").split(",")
+        if "," in value:
+            return value.replace(" ", "").split(",")
+        raise ConversionError(
+            value, "ListConverter only accepts comma seperated strings"
+        )
 
 
 # Dictionary Conversion... etc....

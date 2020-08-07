@@ -1,17 +1,15 @@
 import sys
 from typing import Dict
 
-from arc.config import Config
-
 from arc.__script_container import ScriptContainer
 import arc._utils as util
 from arc.utility import Utility
+from arc.parser import Tokenizer, Parser, ScriptNode, UtilNode
 
 
 class CLI(ScriptContainer):
     def __init__(self, utilities: list = None, arcfile=".arc"):
         super().__init__(arcfile)
-        self.script("help")(self.helper)
         self.utilities: Dict[str, Utility] = {}
 
         if utilities is not None:
@@ -22,117 +20,102 @@ class CLI(ScriptContainer):
         string += "Scripts: \n"
         string += "\n\t".join(c for c in self.scripts)
         string += "\nUtilities: \n"
-        string += "\n\t".join(
-            repr(self.utilities[util]) for util in self.utilities)
+        string += "\n\t".join(repr(self.utilities[util]) for util in self.utilities)
         return string
 
-    def __call__(self):
-        '''Arc CLI driver method
+    def __call__(self, command=None):
+        """Arc CLI driver method
 
-        Runs rudimentary checks agains sys.argv.
-        This is the ONLY place sys.argv should be accessed
-        all other methods that need the info from sys.argv
-        will be passed it from this method
+        Tokenizes and Parses the user input, then passes
+        on the resulting NodeTree to the correct execution method
 
-        :param command: the user can optionally pass in a command string
-        for the CLI to parse, instead of reading input from stdin
-        '''
+        :param command: if present, will be used as the command string
+        for the CLI to parse, instead of reading input from argv
+        """
+        input_string = " ".join(sys.argv[1:])
+        if command:
+            input_string = command
 
-        if len(sys.argv) < 2:
-            if Config.anon_identifier in self.scripts:
-                self.execute(Config.anon_identifier, [])
-            else:
-                print("You didn't provide any options.",
-                      "Check 'help' for more information")
+        tokens = Tokenizer(input_string).tokenize()
+        parsed = Parser(tokens).parse()
+        # util.logger(parsed)
 
-        elif "-i" in sys.argv:
-            util.logger("Entering interactive mode", state="ok")
-            self.__interactive_mode()
-            util.logger("Exiting interactive mode", state="ok")
-
+        if isinstance(parsed, UtilNode):
+            self.__execute_utility(parsed)
+        elif isinstance(parsed, ScriptNode):
+            self.execute(parsed)
         else:
-            self.__execute_utility(sys.argv[1], sys.argv[2:])
+            raise RuntimeError("You shouldn't be here. Please report this bug")
 
-    def __execute_utility(self, command: str, user_input: list):
-        '''Checks if a utility exists with provided user params
+    def __execute_utility(self, util_node: UtilNode):
+        """Checks if a utility exists with provided user params
 
         If one does exist, pass the command and user_input onto it's
         execute method. If one doesn't exist, pass command and user_input
         on to the global CLI execute method.
 
-        :param command: the command that the user typed in i.e: run
-        :param user_input: various user_input that the user passed in i.e: port=4321
-        '''
-        utility, command = self.__parse_command(command)
+        :param util_node: The Node tree created by the parser
+        """
 
-        if utility is not None:
-            if utility not in self.utilities:
-                print("That command does not exist")
-                return
+        util_name = util_node.name
 
-            self.utilities[utility](command, user_input)
-        else:
-            self.execute(command, user_input)
+        if util_node.name not in self.utilities:
+            print("That command does not exist")
+            sys.exit(1)
 
-    def __interactive_mode(self):
-        '''Interactive version of Arc
+        self.utilities[util_name](util_node.script)
 
-        If the script is called with -i flag, the
-        Arc script is entered in interactive mode.
-        This means that the user can execute a number
-        of commands while the program is still running.
+    # def __interactive_mode(self):
+    #     """Interactive version of Arc
 
-        quit will exit
+    #     If the script is called with -i flag, the
+    #     Arc script is entered in interactive mode.
+    #     This means that the user can execute a number
+    #     of commands while the program is still running.
 
-        clear will clear screen
-        '''
-        cont = True
-        while cont:
+    #     quit will exit
 
-            user_input = input(">>> ")
-            try:
-                if user_input in ("q", "quit", "exit"):
-                    cont = False
-                elif user_input in ("c", "clear", "cls"):
-                    util.clear()
-                elif user_input in ("?", "h"):
-                    self.helper()
-                elif user_input != "":
-                    split = user_input.split(" ")
-                    self.__execute_utility(split[0], split[1:])
-            except Exception as e:
-                print(e)
+    #     clear will clear screen
+    #     """
+    #     cont = True
+    #     while cont:
+
+    #         user_input = input(">>> ")
+    #         try:
+    #             if user_input in ("q", "quit", "exit"):
+    #                 cont = False
+    #             elif user_input in ("c", "clear", "cls"):
+    #                 util.clear()
+    #             elif user_input in ("?", "h"):
+    #                 self.helper()
+    #             elif user_input != "":
+    #                 split = user_input.split(" ")
+    #                 self.__execute_utility(split[0], split[1:])
+    #         except Exception as e:
+    #             print(e)
 
     def install_utilities(self, *utilities):
-        '''Installs a series of utilities to the CLI'''
+        """Installs a series of utilities to the CLI"""
         for utility in utilities:
-            if isinstance(utility, Utility):  # work around for circular import
+            if isinstance(utility, Utility):
                 self.utilities[utility.name] = utility
-                util.logger(f"Registered '{utility.name}' utility",
-                            state="debug")
+                util.logger(f"Registered '{utility.name}' utility", state="debug")
             else:
-                print("Only instances of the 'Utility'",
-                      "class can be registerd to Arc")
+                print(
+                    "Only instances of the 'Utility'", "class can be registerd to Arc"
+                )
                 sys.exit(1)
 
-    @staticmethod
-    def __parse_command(command: str) -> tuple:
-        '''Parses a provided user command, checks if utility'''
-        sep = Config.utility_seperator
-        if sep in command:
-            utility, command = command.split(sep)
-        else:
-            utility = None
-
-        return (utility, command)
-
     def helper(self):
-        '''Helper List function
+        """Helper List function
         Prints out the docstrings for the CLI's scripts
-        '''
-        print("Usage: python3 FILENAME [COMMAND] [ARGUEMENTS ...]\n\n",
-              "Possible options:\n", "-i : Enter interactive mode\n",
-              "Scripts: ")
+        """
+        print(
+            "Usage: python3 FILENAME [COMMAND] [ARGUEMENTS ...]\n\n",
+            "Possible options:\n",
+            "-i : Enter interactive mode\n",
+            "Scripts: ",
+        )
 
         if len(self.scripts) > 0:
             for script_name, script in self.scripts.items():
