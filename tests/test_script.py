@@ -7,15 +7,10 @@ from arc.parser.data_types import FlagNode, OptionNode
 
 # pylint: disable=protected-access, missing-function-docstring
 class TestScript(BaseTest):
-    def create_script(self, options=None, flags=None, convert=True, raw=False):
+    def create_script(self, options=None, flags=None, convert=True):
         func = MagicMock()
         return Script(
-            name="test",
-            function=func,
-            options=options,
-            flags=flags,
-            convert=convert,
-            raw=raw,
+            name="test", function=func, options=options, flags=flags, convert=convert
         )
 
     def test_execution(self):

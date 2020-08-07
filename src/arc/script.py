@@ -1,5 +1,4 @@
 import inspect
-import sys
 
 from typing import Optional, List, Dict, Callable, Any, Union
 from arc.errors import ScriptError, ArcError

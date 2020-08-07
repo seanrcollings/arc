@@ -1,15 +1,29 @@
 # ARC - A Regular CLI: Change Log
 Check out the most recent, and all, versions of Arc.
 - [ARC - A Regular CLI: Change Log](#arc---a-regular-cli-change-log)
-- [V0.8.3 (No args and anonymous scrips)](#v083-no-args-and-anonymous-scrips)
+- [Future](#future)
+- [v0.9 (Improved Parsing)](#v09-improved-parsing)
+- [v0.8.3 (No args and anonymous scrips)](#v083-no-args-and-anonymous-scrips)
 - [v0.8 (Holy features Batman!)](#v08-holy-features-batman)
 - [v0.7 (Configuration)](#v07-configuration)
 - [v0.6 (Script Class)](#v06-script-class)
-- [v0.5 (???)](#v05)
+- [v0.5 (???)](#v05-)
 - [v0.4 (Converters)](#v04-converters)
 - [v0.1 - 0.3](#v01---03)
 
-# V0.8.3 (No args and anonymous scrips)
+# Future
+- Positional arguements for scripts so they pass their input by position rather than by keyword
+- Retrieve type data for options from type hints
+- Implement multiple parsers for different styles of input
+
+# v0.9 (Improved Parsing)
+- Implemented a parsing engine for the user input
+- Removed no_args special script (can just use a anon script with no args)
+- Input functions for each converter (convert_to_<converter_name>)
+- Removed `pass_args` and `pass_kwargs`
+- Added `convert` paramater to scripts
+
+# v0.8.3 (No args and anonymous scrips)
 - Implemented No arg scripts
 - Implemented anonymous scripts
 - Abstracted timer to decorator, so it can be used to test the speed of any function
