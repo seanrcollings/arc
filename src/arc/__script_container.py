@@ -19,33 +19,23 @@ class ScriptContainer(ABC):
     def __call__(self):
         pass
 
-    def script(
-        self,
-        name: str,
-        options: list = None,
-        flags: list = None,
-        raw: bool = False,
-        convert: bool = True,
-    ):
+    def script(self, *args, **kwargs):
         """Installs a script to the container
         Creates a script object, appends it to
         the script container
 
-        :param name: name of the script to be used on the comamnd line
-        :param options: options available when running the script
-        :param flags: flags (boolean values) available when running the script
-        :param raw: specifies wether the script should passed the parsed values
-            or just leave them as is
-        :param convert: Specifies whether the script should try to convert
-            provided values
-
-        :returns: the provided function, for decorator chaining
+        :returns: the provided function, for decorator chaining. As such,
+            you can give one function multiple script names
         """
 
         def decorator(function):
-            script = Script(name, function, options, flags, raw, convert)
-            self.scripts[name] = script
-            util.logger(f"Registered '{name}' script", state="debug")
+            if "function" in kwargs:
+                raise ScriptError(
+                    "Keyword 'function' not acceptable in script decorator"
+                )
+            script = Script(*args, **kwargs, function=function)
+            self.scripts[script.name] = script
+            util.logger(f"Registered '{script.name}' script", state="debug")
             return function
 
         return decorator

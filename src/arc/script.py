@@ -1,7 +1,7 @@
 import inspect
 import sys
 
-from typing import Optional, List, Dict, Callable
+from typing import Optional, List, Dict, Callable, Any
 from arc.errors import ScriptError, ArcError
 from arc.__option import Option
 from arc.config import Config
@@ -18,16 +18,21 @@ class Script:
     :param raw: Specifies whether or not to parse out the command line arguements,
         or simply pass them along to the script. Flags will still be interpreted as flags
     :param convert: Will instruct the script not to attempt any conversions of the given data
+    :param meta: meta data that can be passed in in the @script decorator. If it is a function,
+        it will be called and that functions return will be passed into self.function
+    :param function: Script function to be called with the parse and converted options
     """
 
     def __init__(
         self,
         name: str,
-        function,
         options: List[str] = None,
         flags: List[str] = None,
         raw: bool = False,
         convert: bool = True,
+        meta: Any = None,
+        *,
+        function: Callable,
     ):
 
         self.name = name
@@ -36,6 +41,11 @@ class Script:
         self.flags: Dict[str, bool] = self.__build_flags(flags)
         self.raw = raw
         self.convert = convert
+
+        if callable(meta):
+            self.meta = meta()
+        else:
+            self.meta = meta
 
         self.doc = "No Docstring"
         if self.function.__doc__ is not None:
@@ -54,9 +64,17 @@ class Script:
             self.__match_options(options)
             self.__match_flags(flags)
 
-            self.function(
-                **{key: obj.value for key, obj in self.options.items()}, **self.flags
-            )
+            if self.meta:
+                self.function(
+                    **{key: obj.value for key, obj in self.options.items()},
+                    **self.flags,
+                    meta=self.meta,
+                )
+            else:
+                self.function(
+                    **{key: obj.value for key, obj in self.options.items()},
+                    **self.flags,
+                )
         util.logger("---------------------------")
 
     def __match_options(self, option_nodes: list):

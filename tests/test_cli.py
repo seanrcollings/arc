@@ -39,3 +39,11 @@ class TestCLI(BaseTest):
         self.cli.script(name="anon", options=["x"])(MagicMock())
         self.cli("x=2")
         self.cli.scripts["anon"].function.assert_called_with(x="2")
+
+    def test_raw(self):
+        pass
+
+    def test_convert(self):
+        self.cli.scripts["func2"].convert = False
+        self.cli("func2 x=4")
+        self.cli.scripts["func2"].function.assert_called_with(x="4")
