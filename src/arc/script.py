@@ -1,7 +1,7 @@
 import inspect
 import sys
 
-from typing import Optional, List, Dict, Callable, Any
+from typing import Optional, List, Dict, Callable, Any, Union
 from arc.errors import ScriptError, ArcError
 from arc.__option import Option
 from arc.config import Config
@@ -28,7 +28,6 @@ class Script:
         name: str,
         options: List[str] = None,
         flags: List[str] = None,
-        raw: bool = False,
         convert: bool = True,
         meta: Any = None,
         *,
@@ -39,7 +38,6 @@ class Script:
         self.function: Callable = function
         self.options: Dict[str, Option] = self.__build_options(options)
         self.flags: Dict[str, bool] = self.__build_flags(flags)
-        self.raw = raw
         self.convert = convert
 
         if callable(meta):
@@ -57,24 +55,26 @@ class Script:
     def __call__(self, options: list, flags: list):
         """External interface to execute a script"""
 
-        util.logger("---------------------------")
-        if self.raw:
-            self.function(sys.argv[1:])
-        else:
-            self.__match_options(options)
-            self.__match_flags(flags)
+        # At the end of this function, args must be either a list or dict
+        # if its a dict it gets unpacked with **;if its a list it gets unpacked with *
+        # either way, it gets passed to self.function
+        args: Union[List, Dict]
 
-            if self.meta:
-                self.function(
-                    **{key: obj.value for key, obj in self.options.items()},
-                    **self.flags,
-                    meta=self.meta,
-                )
-            else:
-                self.function(
-                    **{key: obj.value for key, obj in self.options.items()},
-                    **self.flags,
-                )
+        self.__match_options(options)
+        self.__match_flags(flags)
+
+        args = {
+            **{key: obj.value for key, obj in self.options.items()},
+            **self.flags,
+        }
+        if self.meta:
+            args["meta"] = self.meta
+
+        util.logger("---------------------------")
+        if isinstance(args, list):
+            self.function(*args)
+        elif isinstance(args, dict):
+            self.function(**args)
         util.logger("---------------------------")
 
     def __match_options(self, option_nodes: list):
