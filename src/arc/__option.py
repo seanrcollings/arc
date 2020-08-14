@@ -1,41 +1,46 @@
-from typing import Type, Tuple, Any
+from typing import Type
 from arc.config import Config
 from arc.errors import ArcError
-from arc.converter import is_converter, parse_converter, StringConverter, BaseConverter
+from arc.converter import BaseConverter
+
+
+class NoDefault:
+    """Type for when a paramater doesn't have a default value"""
 
 
 class Option:
-    def __init__(self, option: str):
-        self.name, self.converter = self.parse(option)
-        self.value: Any
+    def __init__(self, param):
+        self.name = param.name
+
+        if param.annotation == param.empty:
+            annotation = "str"
+        else:
+            annotation = param.annotation.__name__
+
+        self.converter = self.get_converter(annotation)
+
+        if param.default == param.empty:
+            self.default = NoDefault
+        else:
+            self.default = param.default
+
+        self.value = self.default
 
     def __repr__(self):
         return f"<Option : {self.name}>"
 
     def convert(self):
-        self.value = self.converter()._convert_wrapper(self.value)
+        # Consider removing the converter_wrapper and simply catching the error in here?
+        self.value = self.converter().convert_wrapper(self.value)
 
     @staticmethod
-    def parse(option: str) -> Tuple[str, Type[BaseConverter]]:
-        """Parses provided option into name and converter
+    def get_converter(annotation: str) -> Type[BaseConverter]:
+        converter = Config.converters.get(annotation)
 
-        Checks for a type converter
-        :param options - array of strings. Can have a converter
-            associated with it.
-            - without converter "normal_string"
-            - with converter "<int:number>"
-        :returns: name of option, converter class
-            StringConverter is default converter
-        """
-        name = option
-        converter: Type[BaseConverter] = StringConverter
+        if converter is None:
+            raise ArcError(
+                f"'{annotation}' not a valid converter.",
+                "If this is a custom converter make sure it is in Config.converters",
+            )
 
-        if is_converter(option):
-            name, converter_name = parse_converter(name)
-
-            if converter_name not in Config.converters:
-                raise ArcError(f"'{converter}' is not a valid", "conversion identifier")
-
-            converter = Config.converters[converter_name]
-
-        return name, converter
+        return converter

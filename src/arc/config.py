@@ -103,3 +103,10 @@ class Config:
                 cls.__set_loaded_value(name, value)
 
         cls._loaded = True
+
+    @classmethod
+    def add_converter(cls, obj: Type[BaseConverter]):
+        if issubclass(obj, BaseConverter):
+            cls.converters[obj.convert_to] = obj
+        else:
+            raise ArcError("Converter must inherit from 'Base Converter'")

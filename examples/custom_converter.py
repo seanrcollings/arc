@@ -20,14 +20,14 @@ class CircleConverter(BaseConverter):
     convert_to = "Circle"
 
     def convert(self, value):
-        '''
+        """
         The conversion method will get called with
         whatever data the user passed in. Then you can
         try and convert it to your type. If something fails,
         Raise a ConversionError and the BaseConverter will handle it
         will only convert to ints, a more expanded version might
         also convert to floats
-        '''
+        """
         if value.isnumeric():
             radius = int(value)
             return Circle(radius=radius)
@@ -36,14 +36,14 @@ class CircleConverter(BaseConverter):
 
 
 cli = CLI()
-Config.converters["circle"] = CircleConverter
+Config.add_converter(CircleConverter)
 
 
-@cli.script("circle", ["<circle:new_circle>"])
-def circle(new_circle):
-    '''Displays some info about the circle object the script is passed'''
+@cli.script("circle")
+def circle(new_circle: Circle):
+    """Displays some info about the circle object the script is passed"""
     print(new_circle)
-    # print(new_circle.get_circumference())  # 31.41592653589793
+    print(new_circle.get_circumference())
 
 
 if __name__ == "__main__":
