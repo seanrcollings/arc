@@ -16,4 +16,3 @@ class TestCLI(BaseTest):
         self.cli.install_utilities(util1, util2)
         self.assertIn(util1, self.cli.utilities.values())
         self.assertIn(util2, self.cli.utilities.values())
-

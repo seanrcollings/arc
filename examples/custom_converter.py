@@ -17,7 +17,7 @@ class Circle:
 
 # Custom converter for Circle class
 class CircleConverter(BaseConverter):
-    convert_to = "Circle"
+    convert_to = Circle
 
     def convert(self, value):
         """
@@ -43,7 +43,7 @@ Config.add_converter(CircleConverter)
 def circle(new_circle: Circle):
     """Displays some info about the circle object the script is passed"""
     print(new_circle)
-    print(new_circle.get_circumference())
+    # print(new_circle.get_circumference())
 
 
 if __name__ == "__main__":

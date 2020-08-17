@@ -30,7 +30,7 @@ class Config:
         "str": StringConverter,
         "int": IntConverter,
         "float": FloatConverter,
-        "byte": ByteConverter,
+        "bytes": BytesConverter,
         "bool": BoolConverter,
         "sbool": StringBoolConverter,
         "ibool": IntBoolConverter,
@@ -107,6 +107,6 @@ class Config:
     @classmethod
     def add_converter(cls, obj: Type[BaseConverter]):
         if issubclass(obj, BaseConverter):
-            cls.converters[obj.convert_to] = obj
+            cls.converters[obj.convert_to.__name__] = obj
         else:
             raise ArcError("Converter must inherit from 'Base Converter'")

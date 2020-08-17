@@ -7,10 +7,9 @@ from arc.converter import ConversionError
 class BaseConverter(ABC):
     """Base Converter, all converters must inherit from this converter"""
 
-    @classmethod
-    @abstractmethod
-    def convert(cls, value: str) -> Any:
+    def convert(self, value: str) -> Any:
         """ Method that converts the string sent, to it's desired type."""
+        return self.convert_to(value)
 
     @property
     @abstractmethod

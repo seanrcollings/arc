@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Type, Union
 from arc.config import Config
 from arc.errors import ArcError
 from arc.converter import BaseConverter
@@ -30,12 +30,18 @@ class Option:
         return f"<Option : {self.name}>"
 
     def convert(self):
+        """Converts self.value using the converter found by get_converter"""
         # Consider removing the converter_wrapper and simply catching the error in here?
         self.value = self.converter().convert_wrapper(self.value)
 
     @staticmethod
     def get_converter(annotation: str) -> Type[BaseConverter]:
-        converter = Config.converters.get(annotation)
+        """Finds the converter Class for the specified annotation
+
+        :raises ArcError: If no converter is found
+        :returns converter: Type[BaseConverter]
+        """
+        converter: Union[Type[BaseConverter], None] = Config.converters.get(annotation)
 
         if converter is None:
             raise ArcError(

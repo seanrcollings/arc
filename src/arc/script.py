@@ -43,8 +43,7 @@ class Script:
 
         self.name = name
         self.function: Callable = function
-        self.options, self.flags = self.__build_args()
-        self.__build_args()
+        self.options, self.flags = self.__build_args(self.function)
         self.convert = convert
 
         if callable(meta):
@@ -137,8 +136,9 @@ class Script:
             else:
                 raise ScriptError(f"Flag '{flag.name}' not recognized'")
 
-    def __build_args(self) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
-        sig = inspect.signature(self.function)
+    @staticmethod
+    def __build_args(func) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
+        sig = inspect.signature(func)
         options = {}
         flags = {}
 

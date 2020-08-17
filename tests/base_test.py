@@ -1,23 +1,20 @@
 import unittest
-from unittest.mock import MagicMock
-from arc import CLI, Utility, Config
-
-Config.debug = True
-Config.log = True
+from unittest.mock import create_autospec
+from arc import CLI, Utility
 
 
 # pylint: disable=protected-access, missing-function-docstring
 class BaseTest(unittest.TestCase):
     scripts = [
-        dict(name="func1", function=MagicMock(), options=["x"]),
-        dict(name="func2", function=MagicMock(), options=["<int:x>"]),
+        dict(name="func1", function=lambda x: x, annotations={}),
+        dict(name="func2", function=lambda x: x, annotations={"x": int}),
     ]
 
     def create_cli(self, utilities=[]):
         cli = CLI(utilities=utilities)
         for script in self.scripts:
-            cli.script(name=script["name"], options=script["options"])(
-                script["function"]
+            self.create_script(
+                cli, script["name"], script["function"], script["annotations"]
             )
 
         return cli
@@ -26,8 +23,14 @@ class BaseTest(unittest.TestCase):
         util = Utility(name=name)
 
         for script in self.scripts:
-            util.script(name=script["name"], options=script["options"])(
-                script["function"]
+            self.create_script(
+                util, script["name"], script["function"], script["annotations"]
             )
 
         return util
+
+    def create_script(self, container, name, func, annotations=dict()):
+        func.__annotations__ = annotations
+        func = create_autospec(func)
+        container.script(name=name)(func)
+        return func
