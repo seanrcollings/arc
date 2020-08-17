@@ -5,6 +5,8 @@ from arc import CLI, Config
 
 # Custom Circle object
 class Circle:
+    __name__ = "circle"
+
     def __init__(self, radius=3):
         self.radius = radius
 

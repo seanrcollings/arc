@@ -1,6 +1,3 @@
-# Allow it to be recursive?? - <array:<int:number>>
-
-import re
 from arc.converter.base_converter import BaseConverter
 from arc.converter import ConversionError
 

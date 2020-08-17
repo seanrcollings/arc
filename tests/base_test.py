@@ -10,7 +10,7 @@ class BaseTest(unittest.TestCase):
         dict(name="func2", function=lambda x: x, annotations={"x": int}),
     ]
 
-    def create_cli(self, utilities=[]):
+    def create_cli(self, utilities=list()):
         cli = CLI(utilities=utilities)
         for script in self.scripts:
             self.create_script(
