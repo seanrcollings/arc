@@ -3,7 +3,7 @@ class ArcError(Exception):
 
     def __init__(self, *args):
         super().__init__()
-        self.message = " ".join(args)
+        self.message = f"\033[1;31m{' '.join(args)}\033[00m"
 
     def __str__(self):
         return self.message

@@ -1,4 +1,4 @@
-from typing import Type, Union
+from typing import Type, Union, _GenericAlias
 from arc.config import Config
 from arc.errors import ArcError
 from arc.converter import BaseConverter
@@ -15,6 +15,8 @@ class Option:
         if param.annotation == param.empty:
             annotation = "str"
         else:
+            if isinstance(param.annotation, _GenericAlias):
+                raise ArcError("Arc currently does not suppot type aliases :(")
             annotation = param.annotation.__name__
 
         self.converter = self.get_converter(annotation)
