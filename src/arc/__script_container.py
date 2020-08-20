@@ -8,12 +8,12 @@ from arc.errors import ExecutionError, ScriptError
 class ScriptContainer(ABC):
     """Parent class of CLI and Utility"""
 
-    def __init__(self, arcfile=None):
+    def __init__(self, arcdir=".", arcfile=".arc"):
         self.scripts = {}
         self.script("help")(self.helper)
 
         if arcfile is not None and not Config._loaded:
-            Config.load_arc_file(arcfile)
+            Config.load_arc_file(f"{arcdir}/{arcfile}")
 
     @abstractmethod
     def __call__(self):

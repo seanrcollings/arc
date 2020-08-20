@@ -1,7 +1,8 @@
+import sys
 import inspect
-
 from typing import List, Dict, Callable, Any, Union, Tuple
-from arc.errors import ScriptError
+
+from arc.errors import ScriptError, ExecutionError
 from arc.__option import Option, NoDefault
 import arc._utils as util
 
@@ -76,12 +77,16 @@ class Script:
         if self.meta:
             args["meta"] = self.meta
 
-        util.logger("---------------------------")
-        if isinstance(args, list):
-            self.function(*args)
-        elif isinstance(args, dict):
-            self.function(**args)
-        util.logger("---------------------------")
+        try:
+            util.logger("---------------------------")
+            if isinstance(args, list):
+                self.function(*args)
+            elif isinstance(args, dict):
+                self.function(**args)
+            util.logger("---------------------------")
+        except ExecutionError as e:
+            print(e)
+            sys.exit(1)
 
     def __match_options(self, option_nodes: list):
         """Get's the final option values to pass to script

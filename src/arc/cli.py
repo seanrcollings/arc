@@ -8,8 +8,8 @@ from arc.parser import Tokenizer, Parser, ScriptNode, UtilNode
 
 
 class CLI(ScriptContainer):
-    def __init__(self, utilities: list = None, arcfile=".arc"):
-        super().__init__(arcfile)
+    def __init__(self, utilities: list = None, arcdir="", arcfile=".arc"):
+        super().__init__(arcdir, arcfile)
         self.utilities: Dict[str, Utility] = {}
 
         if utilities is not None:
