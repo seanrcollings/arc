@@ -1,10 +1,11 @@
 import sys
-from typing import Dict
+from typing import Dict, List, Tuple
 
 from arc.__script_container import ScriptContainer
 import arc._utils as util
 from arc.utility import Utility
 from arc.parser import Tokenizer, Parser, ScriptNode, UtilNode
+from arc.config import Config
 
 
 class CLI(ScriptContainer):
@@ -23,20 +24,13 @@ class CLI(ScriptContainer):
         string += "\n\t".join(repr(self.utilities[util]) for util in self.utilities)
         return string
 
-    def __call__(self, *args):
+    def __call__(self, *args, **kwargs):
         """Arc CLI driver method
 
         Tokenizes and Parses the user input, then passes
         on the resulting NodeTree to the correct execution method
-
-        :param command: if present, will be used as the command string
-        for the CLI to parse, instead of reading input from argv
         """
-        if len(args) > 0:
-            input_list = args
-        else:
-            input_list = sys.argv[1:]
-
+        input_list = self.__get_input__list(args, kwargs)
         tokens = Tokenizer(input_list).tokenize()
         parsed = Parser(tokens).parse()
         # util.logger(parsed)
@@ -66,34 +60,19 @@ class CLI(ScriptContainer):
 
         self.utilities[util_name](util_node.script)
 
-    # def __interactive_mode(self):
-    #     """Interactive version of Arc
+    @staticmethod
+    def __get_input__list(args: Tuple[str], kwargs: Dict[str, str]) -> List[str]:
+        if len(args) > 0:
+            input_list = list(args)
+            # Could also move this out of the if statement
+            # to provide a way to force a value on the cli
+            for key, value in kwargs.items():
+                input_list.append(key + Config.options_seperator + value)
 
-    #     If the script is called with -i flag, the
-    #     Arc script is entered in interactive mode.
-    #     This means that the user can execute a number
-    #     of commands while the program is still running.
+        else:
+            input_list = sys.argv[1:]
 
-    #     quit will exit
-
-    #     clear will clear screen
-    #     """
-    #     cont = True
-    #     while cont:
-
-    #         user_input = input(">>> ")
-    #         try:
-    #             if user_input in ("q", "quit", "exit"):
-    #                 cont = False
-    #             elif user_input in ("c", "clear", "cls"):
-    #                 util.clear()
-    #             elif user_input in ("?", "h"):
-    #                 self.helper()
-    #             elif user_input != "":
-    #                 split = user_input.split(" ")
-    #                 self.__execute_utility(split[0], split[1:])
-    #         except Exception as e:
-    #             print(e)
+        return input_list
 
     def install_utilities(self, *utilities):
         """Installs a series of utilities to the CLI"""
@@ -114,7 +93,6 @@ class CLI(ScriptContainer):
         print(
             "Usage: python3 FILENAME [COMMAND] [ARGUEMENTS ...]\n\n",
             "Possible options:\n",
-            "-i : Enter interactive mode\n",
             "Scripts: ",
         )
 
