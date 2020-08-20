@@ -8,7 +8,7 @@ from arc.parser import Tokenizer, Parser, ScriptNode, UtilNode
 
 
 class CLI(ScriptContainer):
-    def __init__(self, utilities: list = None, arcdir="", arcfile=".arc"):
+    def __init__(self, utilities: list = None, arcdir=".", arcfile=".arc"):
         super().__init__(arcdir, arcfile)
         self.utilities: Dict[str, Utility] = {}
 
@@ -23,7 +23,7 @@ class CLI(ScriptContainer):
         string += "\n\t".join(repr(self.utilities[util]) for util in self.utilities)
         return string
 
-    def __call__(self, command=None):
+    def __call__(self, *args):
         """Arc CLI driver method
 
         Tokenizes and Parses the user input, then passes
@@ -32,11 +32,12 @@ class CLI(ScriptContainer):
         :param command: if present, will be used as the command string
         for the CLI to parse, instead of reading input from argv
         """
-        input_string = " ".join(sys.argv[1:])
-        if command:
-            input_string = command
+        if len(args) > 0:
+            input_list = args
+        else:
+            input_list = sys.argv[1:]
 
-        tokens = Tokenizer(input_string).tokenize()
+        tokens = Tokenizer(input_list).tokenize()
         parsed = Parser(tokens).parse()
         # util.logger(parsed)
 

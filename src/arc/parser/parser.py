@@ -1,4 +1,6 @@
 import re
+import pdb
+from typing import List
 
 from arc import Config
 import arc.parser.data_types as types
@@ -8,12 +10,11 @@ from arc.errors import ParserError
 
 
 class Tokenizer:
-    def __init__(self, data):
+    def __init__(self, data: List[str]):
         self.data = data
         self.TOKEN_TYPES = [
             ("flag", fr"{Config.flag_denoter}\b\w+\b"),
-            ("option", fr"\b\w+{Config.options_seperator}[\"\'][\w\s\,\.]+\b[\"\']"),
-            ("option", fr"\b\w+{Config.options_seperator}[\w\,\.]+\b"),
+            ("option", fr"\b\w+{Config.options_seperator}[\w\,\.\s]+\b"),
             ("utility", fr"\b\w+\b{Config.utility_seperator}"),
             ("script", r"\b\w+\b"),
         ]
@@ -30,12 +31,18 @@ class Tokenizer:
     def __tokenize_one_token(self):
         for name, regex in self.TOKEN_TYPES:
             regex = re.compile(fr"\A({regex})")
-            if match := regex.match(self.data):
+            match_against = self.data[0].strip()
+            if match := regex.match(match_against):
                 value = match.group(1)
-                self.data = self.data[match.end() :].strip()
+                # Checks if we match against the entire string
+                # Or just part of it
+                if len(match_against) == match.end():
+                    self.data = self.data[1:]
+                else:
+                    self.data[0] = self.data[0][match.end() :].strip()
                 return types.Token(name, value)
 
-        raise ParserError(f"Couldn't match token on {self.data}")
+        raise ParserError(f"Couldn't match token on {self.data[0]}")
 
 
 class Parser:
@@ -106,9 +113,3 @@ class Parser:
         except IndexError:
             return False
 
-
-if __name__ == "__main__":
-    t = Tokenizer("script value=2 --flag").tokenize()
-    print(t)
-    p = Parser(t).parse()
-    print(p)
