@@ -32,6 +32,6 @@ class ConversionError(ArcError):
         :param value: the value attempting to be converted
         :param helper_text: any additional helper text for the user
         """
-        super().__init__()
+        super().__init__(f"{helper_text}, was {value}")
         self.value = self.colorize(value)
         self.helper_text = self.colorize(helper_text)
