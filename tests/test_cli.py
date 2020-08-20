@@ -18,8 +18,8 @@ class TestCLI(BaseTest):
         self.assertIn(util2, self.cli.utilities.values())
 
     def test_execute(self):
-        self.cli("func1 x=2")
+        self.cli("func1", "x=2")
         self.cli.scripts["func1"].function.assert_called_with(x="2")
 
-        self.cli("func2 x=2")
+        self.cli("func2", "x=2")
         self.cli.scripts["func2"].function.assert_called_with(x=2)
