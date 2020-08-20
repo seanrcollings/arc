@@ -33,7 +33,14 @@ class ScriptContainer(ABC):
                 raise ScriptError(
                     "Keyword 'function' not acceptable in script decorator"
                 )
-            script = Script(*args, **kwargs, function=function)
+            if len(args) == 0:
+                name = function.__name__
+                pass_args = args
+            else:
+                name = args[0]
+                pass_args = args[1:]
+
+            script = Script(name=name, *pass_args, **kwargs, function=function)
             self.scripts[script.name] = script
             util.logger(f"Registered '{script.name}' script", state="debug")
             return function

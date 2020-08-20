@@ -32,14 +32,7 @@ class Script:
     """
 
     def __init__(
-        self,
-        name: str = None,
-        options: List[str] = None,
-        flags: List[str] = None,
-        convert: bool = True,
-        meta: Any = None,
-        *,
-        function: Callable,
+        self, name: str, convert: bool = True, meta: Any = None, *, function: Callable,
     ):
 
         self.name = name

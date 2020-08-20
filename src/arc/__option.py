@@ -16,7 +16,11 @@ class Option:
             annotation = "str"
         else:
             if isinstance(param.annotation, _GenericAlias):
-                raise ArcError("Arc currently does not suppot type aliases :(")
+                raise ArcError(
+                    "Arc currently does not suppot type aliases :(",
+                    "\n In the future, I would like to add support for them",
+                    "(https://github.com/seanrcollings/arc/issues/13 )",
+                )
             annotation = param.annotation.__name__
 
         self.converter = self.get_converter(annotation)
