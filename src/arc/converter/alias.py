@@ -1,18 +1,43 @@
-from typing import _GenericAlias, Union, List, Set, Tuple, Type
+"""
+This module defines functions to be used to convert string inputs into their
+appropriate types based on the type alias provided
+
+Union[int, str]
+    - i: '1234'
+    - o: 1234
+
+    - i: 'hello'
+    - o: 'hello'
+
+List[int]
+    - i: '1,2,3,4,5,6'
+    - o: [1, 2, 3, 4, 5, 6]
+
+etc..
+"""
+
+from typing import Union, List, Set, Tuple, Type
+from typing import _GenericAlias as GenericAlias  # type: ignore
 from arc.config import Config
 from arc.errors import ConversionError
 
 
+def is_alias(alias):
+    return isinstance(alias, GenericAlias)
+
+
 def get_converter(obj):
-    converter = Config.converters.get(obj.__name__)
-    if converter is None:
-        raise KeyError("Converter not found")
-    return converter
+    try:
+        converter = Config.converters[obj.__name__]
+    except KeyError as e:
+        e.message = "Converter not found"
+        raise
+    return converter()
 
 
-def convert_alias(alias: Type[_GenericAlias], value: str):
-    if not isinstance(alias, _GenericAlias):
-        raise RuntimeError("Provided alias must inherit from _GenericAlias")
+def convert_alias(alias: Type[GenericAlias], value: str):
+    if not is_alias(alias):
+        raise RuntimeError("Provided alias must inherit from GenericAlias")
 
     origin = alias.__origin__
     if origin is Union:
@@ -30,12 +55,12 @@ def convert_alias(alias: Type[_GenericAlias], value: str):
 def convert_union(alias, value):
     for union_type in alias.__args__:
         try:
-            if isinstance(union_type, _GenericAlias):
+            if is_alias(union_type):
                 return convert_alias(union_type, value)
 
-            converter = get_converter(union_type)
+            converter = Config.get_converter(union_type.__name__)
             if converter:
-                return converter().convert(value)
+                return converter.convert(value)
         except ConversionError:
             continue
 
@@ -43,14 +68,13 @@ def convert_union(alias, value):
 
 
 def collection_setup(collection_alias, value):
-    if "," not in value:
-        raise ConversionError(value)
+    contains_type = collection_alias.__args__[0]
+    if is_alias(contains_type):
+        raise ConversionError(
+            contains_type, message="Arc only supports shallow Type Aliases"
+        )
 
-    items = [item.strip() for item in value.split(",")]
-    _type = collection_alias.__args__[0]
-    converter = get_converter(_type)()
-
-    return items, converter
+    return value.split(","), Config.get_converter(contains_type.__name__)
 
 
 def convert_list(alias, value):
@@ -60,7 +84,7 @@ def convert_list(alias, value):
 
 def convert_set(alias, value):
     items, converter = collection_setup(alias, value)
-    return set({converter.convert(item) for item in items})
+    return set(converter.convert(item) for item in items)
 
 
 def convert_tuple(alias, value):
@@ -68,5 +92,5 @@ def convert_tuple(alias, value):
     return tuple(converter.convert(item) for item in items)
 
 
-converted = convert_alias(Union[Union[List[int], int], Union[str, int]], "1,2,3,4")
+converted = convert_alias(Union[int, str], "14")
 print(type(converted), "|", converted)

@@ -115,3 +115,12 @@ class Config:
             cls.converters[obj.convert_to.__name__] = obj
         else:
             raise ArcError("Converter must inherit from 'Base Converter'")
+
+    @classmethod
+    def get_converter(cls, name):
+        try:
+            converter = cls.converters[name]
+        except KeyError as e:
+            e.message = "Converter not found"
+            raise
+        return converter()

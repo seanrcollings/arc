@@ -33,7 +33,7 @@ class BaseConverter(ABC):
             value = self.convert(value)
 
         except ConversionError as e:
-            print(f"'{e.value}' could not be converted to '{self.convert_to}'")
+            print(f"Value: {e.value} could not be converted to '{self.convert_to}'")
             if e.helper_text is not None:
                 print(e.helper_text)
             sys.exit(1)
