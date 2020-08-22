@@ -26,18 +26,9 @@ def is_alias(alias):
     return isinstance(alias, GenericAlias)
 
 
-def get_converter(obj):
-    try:
-        converter = Config.converters[obj.__name__]
-    except KeyError as e:
-        e.message = "Converter not found"
-        raise
-    return converter()
-
-
 def convert_alias(alias: Type[GenericAlias], value: str):
     if not is_alias(alias):
-        raise RuntimeError("Provided alias must inherit from GenericAlias")
+        raise ConversionError(None, "Provided alias must inherit from GenericAlias")
 
     origin = alias.__origin__
     if origin is Union:
@@ -49,7 +40,7 @@ def convert_alias(alias: Type[GenericAlias], value: str):
     elif origin is tuple:
         return convert_tuple(alias, value)
     else:
-        print(origin)
+        raise ConversionError(None, f"Type Alias for '{origin}' not supported")
 
 
 def convert_union(alias, value):
@@ -71,7 +62,7 @@ def collection_setup(collection_alias, value):
     contains_type = collection_alias.__args__[0]
     if is_alias(contains_type):
         raise ConversionError(
-            contains_type, message="Arc only supports shallow Type Aliases"
+            contains_type, message="Arc only supports shallow Collection Type Aliases"
         )
 
     return value.split(","), Config.get_converter(contains_type.__name__)
@@ -90,7 +81,3 @@ def convert_set(alias, value):
 def convert_tuple(alias, value):
     items, converter = collection_setup(alias, value)
     return tuple(converter.convert(item) for item in items)
-
-
-converted = convert_alias(Union[int, str], "14")
-print(type(converted), "|", converted)
