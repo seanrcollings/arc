@@ -16,7 +16,7 @@ List[int]
 """
 
 from typing import _GenericAlias as GenericAlias  # type: ignore
-from typing import Union, Type, Tuple
+from typing import Union, Type
 
 from arc.errors import ConversionError
 from arc.config import Config
@@ -51,7 +51,7 @@ def convert_union(alias, value):
 
             converter = Config.get_converter(union_type.__name__)
             if converter:
-                return converter.convert(value)
+                return converter().convert(value)
         except ConversionError:
             continue
 
@@ -70,12 +70,12 @@ def collection_setup(collection_alias, value):
 
 def convert_list(alias, value):
     items, converter = collection_setup(alias, value)
-    return list([converter.convert(item) for item in items])
+    return list([converter().convert(item) for item in items])
 
 
 def convert_set(alias, value):
     items, converter = collection_setup(alias, value)
-    return set(converter.convert(item) for item in items)
+    return set(converter().convert(item) for item in items)
 
 
 def convert_tuple(alias, value):
@@ -86,7 +86,6 @@ def convert_tuple(alias, value):
         )
 
     return tuple(
-        Config.get_converter(alias.__args__[idx].__name__).convert_wrapper(item)
+        Config.get_converter(alias.__args__[idx].__name__)().convert_wrapper(item)
         for idx, item in enumerate(items)
     )
-

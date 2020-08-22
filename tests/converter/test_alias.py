@@ -1,7 +1,7 @@
+from typing import List, Set, Tuple, Dict, Union
 from tests.base_test import BaseTest
 from arc.errors import ConversionError
 from arc.converter.alias import convert_alias as ca
-from typing import List, Set, Tuple, Dict, Union
 
 
 class TestAliasConverter(BaseTest):
@@ -58,4 +58,3 @@ class TestAliasConverter(BaseTest):
 
         with self.assertRaises(ConversionError):
             tup = ca(Tuple[int, str, int], "1,word,2,word")
-
