@@ -34,5 +34,7 @@ class ConversionError(ArcError):
         """
         if message:
             super().__init__(message)
+        else:
+            super().__init__(f"Value: {value}\nInfo:{helper_text}")
         self.value = self.colorize(value)
         self.helper_text = self.colorize(helper_text)

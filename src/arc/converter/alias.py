@@ -13,13 +13,13 @@ List[int]
     - i: '1,2,3,4,5,6'
     - o: [1, 2, 3, 4, 5, 6]
 
-etc..
 """
 
-from typing import Union, List, Set, Tuple, Type
 from typing import _GenericAlias as GenericAlias  # type: ignore
-from arc.config import Config
+from typing import Union, Type, Tuple
+
 from arc.errors import ConversionError
+from arc.config import Config
 
 
 def is_alias(alias):
@@ -79,5 +79,14 @@ def convert_set(alias, value):
 
 
 def convert_tuple(alias, value):
-    items, converter = collection_setup(alias, value)
-    return tuple(converter.convert(item) for item in items)
+    items, _ = collection_setup(alias, value)
+    if (i_len := len(items)) != (a_len := len(alias.__args__)):
+        raise ConversionError(
+            value=items, message=f"{alias} expects {a_len} item(s), was {i_len}",
+        )
+
+    return tuple(
+        Config.get_converter(alias.__args__[idx].__name__).convert_wrapper(item)
+        for idx, item in enumerate(items)
+    )
+

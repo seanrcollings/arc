@@ -47,12 +47,15 @@ class TestAliasConverter(BaseTest):
         self.assertEqual(st, {True, True, False})
 
     def test_tuple_alias(self):
-        tup = ca(Tuple[int], "1,2,3,4,5")
+        tup = ca(Tuple[int, int, int, int, int], "1,2,3,4,5")
         self.assertEqual(tup, (1, 2, 3, 4, 5))
 
-        tup = ca(Tuple[str], "word,word,word")
+        tup = ca(Tuple[str, str, str], "word,word,word")
         self.assertEqual(tup, ("word", "word", "word"))
 
-        tup = ca(Tuple[str, int], "1,word,2,word")
+        tup = ca(Tuple[int, str, int, str], "1,word,2,word")
         self.assertEqual(tup, (1, "word", 2, "word"))
+
+        with self.assertRaises(ConversionError):
+            tup = ca(Tuple[int, str, int], "1,word,2,word")
 
