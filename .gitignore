@@ -12,3 +12,4 @@ dist
 manage.py
 *.txt
 !requirements.txt
+.venv

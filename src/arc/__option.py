@@ -7,27 +7,38 @@ class NoDefault:
 
 
 class Option:
-    def __init__(self, param):
-        self.name = param.name
+    def __init__(self, param=None, data_dict=None):
+        if param:
+            self.name = param.name
 
-        if param.annotation == param.empty:
-            self.annotation = str
+            if param.annotation == param.empty:
+                self.annotation = str
+            else:
+                self.annotation = param.annotation
+
+            if is_alias(self.annotation):
+                name = self.annotation.__origin__.__name__
+            else:
+                name = self.annotation.__name__
+
+            self.converter = Config.get_converter(name)
+
+            if param.default == param.empty:
+                self.default = NoDefault
+            else:
+                self.default = param.default
+
+            self.value = self.default
+
+        elif data_dict:
+            self.name, self.annotation, self.default = data_dict
+            self.converter = Config.get_converter("str")
+
         else:
-            self.annotation = param.annotation
-
-        if is_alias(self.annotation):
-            name = self.annotation.__origin__.__name__
-        else:
-            name = self.annotation.__name__
-
-        self.converter = Config.get_converter(name)
-
-        if param.default == param.empty:
-            self.default = NoDefault
-        else:
-            self.default = param.default
-
-        self.value = self.default
+            raise ValueError(
+                "Option class must be provided a Parameter"
+                + "object or a dictionary containing the information"
+            )
 
     def __repr__(self):
         return f"<Option : {self.name}>"

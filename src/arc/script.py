@@ -37,8 +37,10 @@ class Script:
 
         self.name = name
         self.function: Callable = function
-        self.options, self.flags = self.__build_args(self.function)
         self.convert = convert
+        self.pass_kwargs = False
+        self.kwargs: Dict[str, Any] = {}
+        self.options, self.flags = self.__build_args(self.function)
 
         if callable(meta):
             self.meta = meta()
@@ -72,10 +74,7 @@ class Script:
 
         try:
             util.logger("---------------------------")
-            if isinstance(args, list):
-                self.function(*args)
-            elif isinstance(args, dict):
-                self.function(**args)
+            self.function(**args)
             util.logger("---------------------------")
         except ExecutionError as e:
             print(e)
@@ -105,7 +104,16 @@ class Script:
         # Sets the value property on the each Option
         for option in option_nodes:
             if option.name not in self.options:
-                raise ScriptError(f"Option '{option.name}' not recognized")
+                if self.pass_kwargs:
+                    self.options[option.name] = Option(
+                        data_dict={
+                            "name": option.name,
+                            "annotation": str,
+                            "default": NoDefault,
+                        }
+                    )
+                else:
+                    raise ScriptError(f"Option '{option.name}' not recognized")
 
             self.options[option.name].value = option.value
 
@@ -134,16 +142,18 @@ class Script:
             else:
                 raise ScriptError(f"Flag '{flag.name}' not recognized'")
 
-    @staticmethod
-    def __build_args(func) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
+    def __build_args(self, func) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
         sig = inspect.signature(func)
-        options = {}
-        flags = {}
+        options: Dict[str, Option] = {}
+        flags: Dict[str, Flag] = {}
 
         for param in sig.parameters.values():
             if param.annotation is bool:
                 flags[param.name] = Flag(param)
             else:
-                options[param.name] = Option(param)
+                if param.kind is param.VAR_KEYWORD:
+                    self.pass_kwargs = True
+                else:
+                    options[param.name] = Option(param)
 
         return options, flags
