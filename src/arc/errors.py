@@ -27,11 +27,14 @@ class ParserError(ArcError):
 class ConversionError(ArcError):
     """Raised if a type conversion fails """
 
-    def __init__(self, value, helper_text=None):
+    def __init__(self, value, helper_text=None, message=None):
         """ Initializes the conversion errors
         :param value: the value attempting to be converted
         :param helper_text: any additional helper text for the user
         """
-        super().__init__()
+        if message:
+            super().__init__(message)
+        else:
+            super().__init__(f"Value: {value}\nInfo:{helper_text}")
         self.value = self.colorize(value)
         self.helper_text = self.colorize(helper_text)

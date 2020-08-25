@@ -19,7 +19,7 @@ class ScriptContainer(ABC):
     def __call__(self):
         pass
 
-    def script(self, *args, **kwargs):
+    def script(self, name=None, *args, **kwargs):
         """Installs a script to the container
         Creates a script object, appends it to
         the script container
@@ -33,14 +33,15 @@ class ScriptContainer(ABC):
                 raise ScriptError(
                     "Keyword 'function' not acceptable in script decorator"
                 )
-            if len(args) == 0:
-                name = function.__name__
+
+            if name is None:
+                script_name = function.__name__
                 pass_args = args
             else:
-                name = args[0]
+                script_name = name
                 pass_args = args[1:]
 
-            script = Script(name=name, *pass_args, **kwargs, function=function)
+            script = Script(name=script_name, *pass_args, **kwargs, function=function)
             self.scripts[script.name] = script
             util.logger(f"Registered '{script.name}' script", state="debug")
             return function

@@ -17,8 +17,9 @@ from tests.test_cli import TestCLI
 from tests.test_utility import TestUtility
 from tests.test_script import TestScript
 from tests.converter import *
-from tests.examples import *
-from tests.utilities import *
+
+# from tests.examples import *
+# from tests.utilities import *
 from tests.parser import *
 
 if __name__ == "__main__":

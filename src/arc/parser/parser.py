@@ -111,4 +111,3 @@ class Parser:
             return expected_type == self.tokens[0].type
         except IndexError:
             return False
-
