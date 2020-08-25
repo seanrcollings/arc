@@ -14,7 +14,7 @@ class TestConverter(BaseConverter):
 
 
 class TestInputConverters(BaseTest):
-    def tes_all(self):
+    def test_all(self):
         importlib.reload(inp)
         for name, converter in Config.converters.items():
             self.assertTrue(hasattr(inp, f"input_to_{name}"))

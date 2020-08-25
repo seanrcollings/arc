@@ -25,7 +25,10 @@ class Utility(ScriptContainer):
         self.execute(script_node)
 
     def __repr__(self):
-        return self.name
+        return f"<Utility : {self.name}"
+
+    def __subclasshook__(self):
+        print(self)
 
     def helper(self):
         """Helper function for utilities

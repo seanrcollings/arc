@@ -1,10 +1,19 @@
+import sys
 import inspect
+from typing import List, Dict, Callable, Any, Union, Tuple
 
-from typing import Optional, List, Dict, Callable, Any, Union
-from arc.errors import ScriptError, ArcError
-from arc.__option import Option
-from arc.config import Config
+from arc.errors import ScriptError, ExecutionError
+from arc.__option import Option, NoDefault
 import arc._utils as util
+
+
+class Flag:
+    def __init__(self, param):
+        self.name = param.name
+        if param.default is param.empty:
+            self.value = False
+        else:
+            self.value = param.default
 
 
 class Script:
@@ -23,20 +32,12 @@ class Script:
     """
 
     def __init__(
-        self,
-        name: str,
-        options: List[str] = None,
-        flags: List[str] = None,
-        convert: bool = True,
-        meta: Any = None,
-        *,
-        function: Callable,
+        self, name: str, convert: bool = True, meta: Any = None, *, function: Callable,
     ):
 
         self.name = name
         self.function: Callable = function
-        self.options: Dict[str, Option] = self.__build_options(options)
-        self.flags: Dict[str, bool] = self.__build_flags(flags)
+        self.options, self.flags = self.__build_args(self.function)
         self.convert = convert
 
         if callable(meta):
@@ -64,17 +65,21 @@ class Script:
 
         args = {
             **{key: obj.value for key, obj in self.options.items()},
-            **self.flags,
+            **{key: obj.value for key, obj in self.flags.items()},
         }
         if self.meta:
             args["meta"] = self.meta
 
-        util.logger("---------------------------")
-        if isinstance(args, list):
-            self.function(*args)
-        elif isinstance(args, dict):
-            self.function(**args)
-        util.logger("---------------------------")
+        try:
+            util.logger("---------------------------")
+            if isinstance(args, list):
+                self.function(*args)
+            elif isinstance(args, dict):
+                self.function(**args)
+            util.logger("---------------------------")
+        except ExecutionError as e:
+            print(e)
+            sys.exit(1)
 
     def __match_options(self, option_nodes: list):
         """Get's the final option values to pass to script
@@ -107,19 +112,9 @@ class Script:
             if self.convert:
                 self.options[option.name].convert()
 
-        # Iterates over the Option objects and checks if they have
-        # a value propery set by the previous loop
-        # if the option doesn't have a value, it checks
-        # the functions' defaut value for that arguement
-        # Default value is set as as the options value
-        for name, option in self.options.items():
-            if not hasattr(option, "value"):
-                sig = inspect.signature(self.function)
-                default = sig.parameters[name].default
-                if default == sig.parameters[name].empty:
-                    raise ScriptError(f"No value for required option: {name}")
-
-                option.value = default
+        for option in self.options.values():
+            if option.value is NoDefault:
+                raise ScriptError(f"No valued for required option '{option.name}'")
 
     def __match_flags(self, flag_nodes: list):
         """Get's the final flag values to pass to the script
@@ -135,52 +130,20 @@ class Script:
         """
         for flag in flag_nodes:
             if flag.name in self.flags:
-                self.flags[flag.name] = not self.flags[flag.name]
+                self.flags[flag.name].value = not self.flags[flag.name].value
             else:
                 raise ScriptError(f"Flag '{flag.name}' not recognized'")
 
-    ###################
-    # BUILDER METHODS #
-    ###################
-    # The build methods are used on intial construction of a CLI
-    # Each script installed must parse it's given options, flags and the like
-    # to determine the user's intent. If something about the syntax is wrong,
-    # always attempt to raise a ArcError with a helpful error message so the
-    # user knows what they did wrong
     @staticmethod
-    def __build_options(options: Optional[List[str]]) -> Dict[str, Option]:
-        """Creates option objects
+    def __build_args(func) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
+        sig = inspect.signature(func)
+        options = {}
+        flags = {}
 
-        :param options: list of user provided options. May contain a type converter
-        :returns: dictionary of name keys and Option object values
-        """
-        if options is None:
-            return {}
+        for param in sig.parameters.values():
+            if param.annotation is bool:
+                flags[param.name] = Flag(param)
+            else:
+                options[param.name] = Option(param)
 
-        built_options = {}
-        for option in options:
-            option_obj = Option(option)
-            built_options[option_obj.name] = option_obj
-        return built_options
-
-    @staticmethod
-    def __build_flags(flags: Optional[List[str]]) -> Dict[str, bool]:
-        """Insures flags follow specific standards
-            :param flags: list of all flags registered to the scriot
-
-            :returns: dictionary of flag names paired with a default False value
-        """
-        if flags is None:
-            return {}
-
-        built_flags = {}
-        for flag in flags:
-            if not flag.startswith(Config.flag_denoter):
-                raise ArcError(
-                    "Flags must start with the denoter",
-                    f"'{Config.flag_denoter}'",
-                    "\nThis denoter can be changed by editing 'Config.flag_denoter'",
-                )
-            built_flags[flag.lstrip(Config.flag_denoter)] = False
-
-        return built_flags
+        return options, flags

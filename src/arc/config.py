@@ -4,7 +4,7 @@ They are also not changed by the program as it executes.
 They will also be loaded from a .arc file
 """
 import os
-from typing import Type, Dict, Any, List, cast
+from typing import Type, Dict, Any, List
 from arc.converter.converters import *
 from arc.converter import BaseConverter
 from arc.errors import ArcError, ConversionError
@@ -30,7 +30,7 @@ class Config:
         "str": StringConverter,
         "int": IntConverter,
         "float": FloatConverter,
-        "byte": ByteConverter,
+        "bytes": BytesConverter,
         "bool": BoolConverter,
         "sbool": StringBoolConverter,
         "ibool": IntBoolConverter,
@@ -103,3 +103,20 @@ class Config:
                 cls.__set_loaded_value(name, value)
 
         cls._loaded = True
+
+    @classmethod
+    def add_converter(cls, obj: Type[BaseConverter]):
+        """Adds a converter to self.converters
+        :param obj: The Custom converter to be added. Must inherit from BaseConverter
+
+        :raises ArcError: if obj is not a sublcass of BaseConverter
+        """
+        if issubclass(obj, BaseConverter):
+            cls.converters[obj.convert_to.__name__] = obj
+        else:
+            raise ArcError("Converter must inherit from 'Base Converter'")
+
+    @classmethod
+    def get_converter(cls, key):
+        return cls.converters.get(key)
+

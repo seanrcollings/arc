@@ -3,7 +3,7 @@ from arc import Config
 
 def base_input_func(prompt: str, converter):
     user_input = input(prompt)
-    return converter()._convert_wrapper(user_input)
+    return converter().convert_wrapper(user_input)
 
 
 # Dynamicaly creates a function for each of the converters

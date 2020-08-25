@@ -8,18 +8,18 @@ from arc.errors import ExecutionError, ScriptError
 class ScriptContainer(ABC):
     """Parent class of CLI and Utility"""
 
-    def __init__(self, arcfile=None):
+    def __init__(self, arcdir=".", arcfile=".arc"):
         self.scripts = {}
         self.script("help")(self.helper)
 
         if arcfile is not None and not Config._loaded:
-            Config.load_arc_file(arcfile)
+            Config.load_arc_file(f"{arcdir}/{arcfile}")
 
     @abstractmethod
     def __call__(self):
         pass
 
-    def script(self, *args, **kwargs):
+    def script(self, name=None, *args, **kwargs):
         """Installs a script to the container
         Creates a script object, appends it to
         the script container
@@ -33,7 +33,15 @@ class ScriptContainer(ABC):
                 raise ScriptError(
                     "Keyword 'function' not acceptable in script decorator"
                 )
-            script = Script(*args, **kwargs, function=function)
+
+            if name is None:
+                script_name = function.__name__
+                pass_args = args
+            else:
+                script_name = name
+                pass_args = args[1:]
+
+            script = Script(name=script_name, *pass_args, **kwargs, function=function)
             self.scripts[script.name] = script
             util.logger(f"Registered '{script.name}' script", state="debug")
             return function

@@ -1,17 +1,13 @@
-# Allow it to be recursive?? - <array:<int:number>>
-
-import re
 from arc.converter.base_converter import BaseConverter
 from arc.converter import ConversionError
 
 
 class StringConverter(BaseConverter):
-    convert_to = "string"
-    convert = str
+    convert_to = str
 
 
 class IntConverter(BaseConverter):
-    convert_to = "integer"
+    convert_to = int
 
     def convert(self, value):
         if value.isnumeric():
@@ -20,7 +16,7 @@ class IntConverter(BaseConverter):
 
 
 class FloatConverter(BaseConverter):
-    convert_to = "float"
+    convert_to = float
 
     def convert(self, value):
         try:
@@ -29,16 +25,18 @@ class FloatConverter(BaseConverter):
             raise ConversionError(value, "Value must be a number (1.3, 4, 1.7)")
 
 
-class ByteConverter(BaseConverter):
-    convert_to = "byte"
+class BytesConverter(BaseConverter):
+    convert_to = bytes
 
     def convert(self, value):
         return value.encode()
 
 
+# !! DEPRECATED !!
+# Honestly, I don't think these will ever get called
+# Since bool annotations get matched with flags and not options
 class BoolConverter(BaseConverter):
-    convert_to = "boolean"
-    convert = bool
+    convert_to = bool
 
 
 class StringBoolConverter(BaseConverter):
@@ -47,7 +45,7 @@ class StringBoolConverter(BaseConverter):
     False / false - False
     """
 
-    convert_to = "boolean"
+    convert_to = bool
 
     def convert(self, value):
         if value.lower() == "true":
@@ -64,7 +62,7 @@ class IntBoolConverter(BaseConverter):
     All other ints / floats - True
     """
 
-    convert_to = "boolean"
+    convert_to = bool
 
     def convert(self, value):
         if value.isnumeric():
@@ -79,7 +77,7 @@ class ListConverter(BaseConverter):
     return : ["1", "2", "3", "4", "5", "6"]
     """
 
-    convert_to = "list"
+    convert_to = list
 
     def convert(self, value):
         if "," in value:

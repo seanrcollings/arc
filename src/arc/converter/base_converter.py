@@ -7,10 +7,9 @@ from arc.converter import ConversionError
 class BaseConverter(ABC):
     """Base Converter, all converters must inherit from this converter"""
 
-    @classmethod
-    @abstractmethod
-    def convert(cls, value: str) -> Any:
+    def convert(self, value: str) -> Any:
         """ Method that converts the string sent, to it's desired type."""
+        return self.convert_to(value)
 
     @property
     @abstractmethod
@@ -22,7 +21,7 @@ class BaseConverter(ABC):
         value into
         """
 
-    def _convert_wrapper(self, value: str):
+    def convert_wrapper(self, value: str):
         """ Try except wrapper for conversion method
 
         Convert method wrapper for catching
@@ -34,7 +33,7 @@ class BaseConverter(ABC):
             value = self.convert(value)
 
         except ConversionError as e:
-            print(f"'{e.value}' could not be converted to '{self.convert_to}'")
+            print(f"Value: {e.value} could not be converted to '{self.convert_to}'")
             if e.helper_text is not None:
                 print(e.helper_text)
             sys.exit(1)
