@@ -39,7 +39,7 @@ class Script:
         self.function: Callable = function
         self.convert = convert
         self.pass_kwargs = False
-        self.kwargs: Dict[str, Any] = {}
+        self.pass_args = False
         self.options, self.flags = self.__build_args(self.function)
 
         if callable(meta):
@@ -54,27 +54,30 @@ class Script:
     def __repr__(self):
         return f"<Script : {self.name}>"
 
-    def __call__(self, options: list, flags: list):
+    def __call__(self, script_node):
         """External interface to execute a script"""
 
-        # At the end of this function, args must be either a list or dict
-        # if its a dict it gets unpacked with **;if its a list it gets unpacked with *
-        # either way, it gets passed to self.function
-        args: Union[List, Dict]
+        self.__match_options(script_node.options)
+        self.__match_flags(script_node.flags)
 
-        self.__match_options(options)
-        self.__match_flags(flags)
-
-        args = {
+        kwargs: Dict[str, Any] = {
             **{key: obj.value for key, obj in self.options.items()},
             **{key: obj.value for key, obj in self.flags.items()},
         }
-        if self.meta:
-            args["meta"] = self.meta
+        posargs: List[str] = [a.value for a in script_node.args]
+
+        if len(posargs) > 0 and not self.pass_args:
+            raise ScriptError(
+                "Cannot pass artibrary arguements when there is no",
+                "*args specified in script definition",
+            )
+
+        if self.meta is not None:
+            kwargs["meta"] = self.meta
 
         try:
             util.logger("---------------------------")
-            self.function(**args)
+            self.function(*posargs, **kwargs)
             util.logger("---------------------------")
         except ExecutionError as e:
             print(e)
@@ -106,11 +109,9 @@ class Script:
             if option.name not in self.options:
                 if self.pass_kwargs:
                     self.options[option.name] = Option(
-                        data_dict={
-                            "name": option.name,
-                            "annotation": str,
-                            "default": NoDefault,
-                        }
+                        data_dict=dict(
+                            name=option.name, annotation=str, default=NoDefault
+                        )
                     )
                 else:
                     raise ScriptError(f"Option '{option.name}' not recognized")
@@ -147,13 +148,23 @@ class Script:
         options: Dict[str, Option] = {}
         flags: Dict[str, Flag] = {}
 
-        for param in sig.parameters.values():
+        for idx, param in enumerate(sig.parameters.values()):
             if param.annotation is bool:
                 flags[param.name] = Flag(param)
+
+            elif param.kind is param.VAR_KEYWORD:
+                if idx != len(sig.parameters.values()) - 1:
+                    raise ScriptError(
+                        "**kwargs must be the last argument of the script"
+                    )
+                self.pass_kwargs = True
+
+            elif param.kind is param.VAR_POSITIONAL:
+                if idx != 0:
+                    raise ScriptError("*args must be the first argument of the script")
+                self.pass_args = True
+
             else:
-                if param.kind is param.VAR_KEYWORD:
-                    self.pass_kwargs = True
-                else:
-                    options[param.name] = Option(param)
+                options[param.name] = Option(param)
 
         return options, flags
