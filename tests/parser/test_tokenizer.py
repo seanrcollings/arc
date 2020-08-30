@@ -1,14 +1,9 @@
 from tests.base_test import BaseTest
 from arc.parser import Tokenizer
 from arc.parser.data_types import Token
-from arc.errors import ParserError
 
 # pylint: disable=protected-access, missing-function-docstring
 class TestTokenizer(BaseTest):
-    def test_no_input(self):
-        with self.assertRaises(ParserError):
-            Tokenizer("").tokenize()
-
     def test_tokenize(self):
         """'Test basic tokenizing behavior"""
         tokens = Tokenizer(

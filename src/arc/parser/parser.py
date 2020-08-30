@@ -19,9 +19,6 @@ class Tokenizer:
         ]
 
     def tokenize(self):
-        if len(self.data) == 0:
-            raise ParserError("No provided input")
-
         tokens = []
         while len(self.data) > 0:
             tokens.append(self.__tokenize_one_token())
@@ -49,9 +46,6 @@ class Parser:
         self.tokens = tokens
 
     def parse(self):
-        if len(self.tokens) == 0:
-            raise ParserError("No tokens to parse")
-
         return self.parse_util()
 
     def parse_util(self):

@@ -13,10 +13,6 @@ class TestParser(BaseTest):
         Token("flag", "--flag"),
     ]
 
-    def test_fail(self):
-        with self.assertRaises(ParserError):
-            Parser("").parse()
-
     def test_util_parse(self):
         tree = Parser([Token("utility", "name:")]).parse()
         self.assertIsInstance(tree, UtilNode)

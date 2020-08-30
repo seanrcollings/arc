@@ -27,9 +27,6 @@ class Utility(ScriptContainer):
     def __repr__(self):
         return f"<Utility : {self.name}"
 
-    def __subclasshook__(self):
-        print(self)
-
     def helper(self):
         """Helper function for utilities
         Prints out the docstrings for the utilty's scripts
