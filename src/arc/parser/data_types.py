@@ -14,6 +14,16 @@ class Token:
 
 
 @dataclass
+class ArgNode:
+    """Matches to anything that isn't a flag or value"""
+
+    value: str
+
+    def __repr__(self):
+        return self.value
+
+
+@dataclass
 class OptionNode:
     """Matches to:
         option=value
@@ -57,6 +67,7 @@ class ScriptNode:
     name: str
     options: List[OptionNode]
     flags: List[FlagNode]
+    args: List[ArgNode]
 
     def __repr__(self, level=0):
         tabs = "\t" * level
@@ -65,6 +76,7 @@ class ScriptNode:
             f"name: {decorate_text(self.name, tcolor='32')}"
             f"\n{tabs}options: {', '.join([decorate_text(str(o)) for o in self.options])}"
             f"\n{tabs}flags: {', '.join([decorate_text(str(f)) for f in self.flags])}"
+            f"\n{tabs}other args: {', '.join([decorate_text(str(a)) for a in self.args])}"
         )
         return string
 

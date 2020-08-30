@@ -33,10 +33,10 @@ class Tokenizer:
             match_against = self.data[0].strip()
             if match := regex.match(match_against):
                 value = match.group(1)
-                # Checks if we match against the entire string
-                # Or just part of it
+                # Checks if we match against the
+                # entire string or just part of it
                 if len(match_against) == match.end():
-                    self.data = self.data[1:]
+                    self.data.pop(0)
                 else:
                     self.data[0] = self.data[0][match.end() :].strip()
                 return types.Token(name, value)
@@ -75,15 +75,17 @@ class Parser:
     def parse_script_body(self):
         options = []
         flags = []
+        args = []
+
         for token in self.tokens.copy():
             if token.type == "option":
                 options.append(self.parse_option(token))
             elif token.type == "flag":
                 flags.append(self.parse_flag(token))
             else:
-                raise ParserError(f"Invalid token '{token.type}' in script body")
+                args.append(self.parse_arg(token))
 
-        return options, flags
+        return options, flags, args
 
     def parse_option(self, token):
         self.consume("option")
@@ -93,6 +95,10 @@ class Parser:
     def parse_flag(self, token):
         self.consume("flag")
         return types.FlagNode(token.value.lstrip(Config.flag_denoter))
+
+    def parse_arg(self, token):
+        self.consume(self.tokens[0].type)
+        return types.ArgNode(token.value)
 
     def consume(self, expected_type):
         if len(self.tokens) == 0:
