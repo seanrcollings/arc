@@ -47,7 +47,7 @@ def exception_handler(exception_type, exception, traceback, debug_hook=sys.excep
         print(f"{exception_type.__name__}: {exception}")
 
 
-# sys.excepthook = exception_handler
+sys.excepthook = exception_handler
 
 
 def clear():

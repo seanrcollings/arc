@@ -2,8 +2,7 @@ from arc.config import Config
 from arc.converter.alias import convert_alias, is_alias
 
 
-class NoDefault:
-    """Type for when a paramater doesn't have a default value"""
+NO_DEFAULT = type("NO_DEFAULT", (), {})
 
 
 class Option:
@@ -24,7 +23,7 @@ class Option:
             self.converter = Config.get_converter(name)
 
             if param.default == param.empty:
-                self.default = NoDefault
+                self.default = NO_DEFAULT
             else:
                 self.default = param.default
 

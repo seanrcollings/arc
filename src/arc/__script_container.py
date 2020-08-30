@@ -62,10 +62,11 @@ class ScriptContainer(ABC):
             bad data is passed or something unexpected happens
         """
 
-        if script_node.name not in self.scripts:
-            raise ScriptError("That command does not exist")
+        script_name = script_node.name
+        if script_name not in self.scripts:
+            raise ScriptError(f"The script '{script_name}' is not recognized")
 
-        script = self.scripts[script_node.name]
+        script = self.scripts[script_name]
         try:
             script(script_node)
         except ExecutionError as e:

@@ -1,19 +1,11 @@
 import sys
 import inspect
-from typing import List, Dict, Callable, Any, Union, Tuple
+from typing import List, Dict, Callable, Any, Tuple
 
 from arc.errors import ScriptError, ExecutionError
-from arc.__option import Option, NoDefault
+from arc.script.__option import Option, NO_DEFAULT
+from arc.script.__flag import Flag
 import arc._utils as util
-
-
-class Flag:
-    def __init__(self, param):
-        self.name = param.name
-        if param.default is param.empty:
-            self.value = False
-        else:
-            self.value = param.default
 
 
 class Script:
@@ -110,7 +102,7 @@ class Script:
                 if self.pass_kwargs:
                     self.options[option.name] = Option(
                         data_dict=dict(
-                            name=option.name, annotation=str, default=NoDefault
+                            name=option.name, annotation=str, default=NO_DEFAULT
                         )
                     )
                 else:
@@ -122,7 +114,7 @@ class Script:
                 self.options[option.name].convert()
 
         for option in self.options.values():
-            if option.value is NoDefault:
+            if option.value is NO_DEFAULT:
                 raise ScriptError(f"No valued for required option '{option.name}'")
 
     def __match_flags(self, flag_nodes: list):

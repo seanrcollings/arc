@@ -22,21 +22,16 @@ class TestScript(BaseTest):
         )
 
         script(
-            ScriptNode(
-                name="test",
+            self.create_script_node(
                 options=[OptionNode("x", "2"), OptionNode("y", "3")],
-                flags=[],
-                args=[],
             )
         )
         script.function.assert_called_with(x="2", y=3, test=False)
 
         script(
-            ScriptNode(
-                name="test",
+            self.create_script_node(
                 options=[OptionNode("x", "2"), OptionNode("y", "3")],
                 flags=[FlagNode("test")],
-                args=[],
             )
         )
         script.function.assert_called_with(x="2", y=3, test=True)
@@ -46,8 +41,7 @@ class TestScript(BaseTest):
             annotations={"b": int, "c": float, "d": bytes, "e": list, "f": bool},
         )
         script(
-            ScriptNode(
-                name="test",
+            self.create_script_node(
                 options=[
                     OptionNode("a", "test"),
                     OptionNode("b", "2"),
@@ -56,7 +50,6 @@ class TestScript(BaseTest):
                     OptionNode("e", "1,2,3,4"),
                 ],
                 flags=[FlagNode("f")],
-                args=[],
             )
         )
         script.function.assert_called_with(
@@ -106,21 +99,27 @@ class TestScript(BaseTest):
         )
         script.function.assert_called_with(test1="2", test2="4")
 
+        script = self.create_script(lambda a, **kwargs: kwargs, annotations={"a": int})
+        script(
+            self.create_script_node(
+                options=[
+                    OptionNode("test1", "2"),
+                    OptionNode("test2", "4"),
+                    OptionNode("a", "2"),
+                ]
+            )
+        )
+        script.function.assert_called_with(a=2, test1="2", test2="4")
+
     def test_nonexistant_options(self):
         script = self.create_script(
             lambda x, y, test: x, annotations={"y": int, "test": bool}
         )
 
         with self.assertRaises(ScriptError):
-            script(
-                ScriptNode(
-                    name="test", options=[OptionNode("p", "2")], flags=[], args=[]
-                )
-            )
+            script(self.create_script_node(options=[OptionNode("p", "2")]))
 
     def test_nonexistant_flag(self):
         script = self.create_script(lambda test: test, annotations={"test": bool})
         with self.assertRaises(ScriptError):
-            script(
-                ScriptNode(name="test", options=[], flags=[FlagNode("none")], args=[])
-            )
+            script(self.create_script_node(flags=[FlagNode("none")]))

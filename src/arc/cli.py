@@ -19,7 +19,7 @@ class CLI(ScriptContainer):
     def __repr__(self):
         string: str = "---ARC CLI---\n"
         string += "Scripts: \n"
-        string += "\n\t".join(c for c in self.scripts)
+        string += "\n".join(c for c in self.scripts)
         string += "\nUtilities: \n"
         string += "\n\t".join(repr(self.utilities[util]) for util in self.utilities)
         return string
@@ -54,8 +54,8 @@ class CLI(ScriptContainer):
 
         util_name = util_node.name
 
-        if util_node.name not in self.utilities:
-            print("That command does not exist")
+        if util_name not in self.utilities:
+            print(f"The utility '{util_name}' is not recognized")
             sys.exit(1)
 
         self.utilities[util_name](util_node.script)
@@ -90,12 +90,9 @@ class CLI(ScriptContainer):
         """Helper List function
         Prints out the docstrings for the CLI's scripts
         """
-        print(
-            "Usage: python3 FILENAME [COMMAND] [ARGUEMENTS ...]\n\n",
-            "Possible options:\n",
-            "Scripts: ",
-        )
+        print("Usage: python3 FILENAME [COMMAND] [ARGUEMENTS ...]\n\n",)
 
+        print("Installed Scripts: \n")
         if len(self.scripts) > 0:
             for script_name, script in self.scripts.items():
                 print(f"\033[92m{script_name}\033[00m\n    {script.doc}\n")
@@ -106,5 +103,3 @@ class CLI(ScriptContainer):
             print("\nInstalled Utilities")
             for _, utility in self.utilities.items():
                 utility.helper()
-        else:
-            print("No utilities installed")
