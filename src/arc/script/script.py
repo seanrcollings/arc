@@ -56,10 +56,13 @@ class Script:
     def __call__(self, script_node):
         """External interface to execute a script"""
 
+        # __match* methods mutate a state object with respect to the script_node
+        # the mutated state object's values will then be passed on to the script
         if self.positional:
             self.__match_pos_options(script_node.args)
         else:
             self.__match_options(script_node.options)
+
         self.__match_flags(script_node.flags)
 
         kwargs: Dict[str, Any] = {
@@ -86,9 +89,8 @@ class Script:
             sys.exit(1)
 
     def __match_options(self, option_nodes: list):
-        """Get's the final option values to pass to script
-       iterates though the option_nodes and sets their values
-       as the values to each Option object in self.options
+        """Mutates self.options based on key value pairs provided in
+        option nodes
 
        :param option_nodes: list of OptionNodes from the parser
 
@@ -118,10 +120,14 @@ class Script:
         self.__options_filled()
 
     def __match_pos_options(self, arg_nodes: list):
+        """Mutates self.options based on positional strings
+        """
         length = len(arg_nodes)
         for idx, option in enumerate(self.options.values()):
             if len(arg_nodes) >= idx:
                 option.value = arg_nodes.pop(0).value
+                if self.convert:
+                    option.convert()
 
         if len(arg_nodes) != 0 and not self.pass_args:
             raise ScriptError(
