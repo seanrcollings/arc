@@ -8,7 +8,8 @@ class ArcError(Exception):
     def __str__(self):
         return self.message
 
-    def colorize(self, string: str):
+    @staticmethod
+    def colorize(string: str):
         return f"\033[1;31m{string}\033[00m"
 
 

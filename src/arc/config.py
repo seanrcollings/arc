@@ -119,4 +119,3 @@ class Config:
     @classmethod
     def get_converter(cls, key):
         return cls.converters.get(key)
-

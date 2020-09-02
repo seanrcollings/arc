@@ -5,3 +5,10 @@ class Flag:
             self.value = False
         else:
             self.value = param.default
+
+    def __str__(self):
+        return f"--{self.name} {self.value}"
+
+    def reverse(self):
+        self.value = not self.value
+        return self
