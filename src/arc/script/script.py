@@ -1,6 +1,6 @@
 import sys
 from abc import ABC, abstractmethod
-from typing import List, Dict, Callable, Tuple
+from typing import List, Dict, Callable, Tuple, Union
 from contextlib import contextmanager
 
 from arc.errors import ScriptError, ExecutionError

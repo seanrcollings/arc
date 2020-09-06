@@ -14,7 +14,6 @@ class KeywordScript(Script):
         super().__init__(name, function)
 
     def execute(self, script_node: ScriptNode):
-        self.validate_input(script_node)
         self.match_input(script_node)
 
         args: Dict[str, Any] = {
