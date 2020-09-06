@@ -33,15 +33,13 @@ class PositionalScript(Script):
 
     def __match_options(self, arg_nodes: List[ArgNode]):
         options = list(self.options.values())
-        if len(arg_nodes) < len(options):
-            raise ScriptError(
-                "Script failed to recieve values for options:",
-                ", ".join([option.name for option in options[len(arg_nodes) :]]),
-            )
 
-        for option in options:
+        for idx in range(0, len(arg_nodes)):
+            option = options[idx]
             option.value = arg_nodes.pop(0).value
             option.convert()
+
+        self.assert_options_filled()
 
     def __match_flags(self, flag_nodes: List[FlagNode]):
         """Get's the final flag values to pass to the script
