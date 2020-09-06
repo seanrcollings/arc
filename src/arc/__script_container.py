@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Dict
+from typing import Dict, Type
 import arc._utils as util
-from arc.script import Script
+from arc.script import script_factory
+from arc.script.script import Script
 from arc.config import Config
 from arc.errors import ExecutionError, ScriptError
 
@@ -10,7 +11,7 @@ class ScriptContainer(ABC):
     """Parent class of CLI and Utility"""
 
     def __init__(self, arcdir=".", arcfile=".arc"):
-        self.scripts: Dict[Script] = {}
+        self.scripts: Dict[str, Type[Script]] = {}
         self.script("help")(self.helper)
 
         if arcfile is not None and not Config._loaded:
@@ -31,12 +32,7 @@ class ScriptContainer(ABC):
 
         def decorator(function):
 
-            if name is None:
-                script_name = function.__name__
-            else:
-                script_name = name
-
-            script = Script(name=script_name, positional=positional, function=function)
+            script = script_factory(name=name, positional=positional, function=function)
             self.scripts[script.name] = script
             util.logger(f"Registered '{script.name}' script", state="debug")
             return function
