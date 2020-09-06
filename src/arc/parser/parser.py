@@ -5,8 +5,6 @@ from arc import Config
 import arc.parser.data_types as types
 from arc.errors import ParserError
 
-# pylint: disable=missing-function-docstring, missing-class-docstring
-
 
 class Tokenizer:
     def __init__(self, data: List[str]):

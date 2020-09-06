@@ -24,7 +24,13 @@ class Script:
     """
 
     def __init__(
-        self, name: str, convert: bool = True, meta: Any = None, *, function: Callable,
+        self,
+        name: str,
+        convert: bool = True,
+        meta: Any = None,
+        positional=False,
+        *,
+        function: Callable,
     ):
 
         self.name = name
@@ -32,6 +38,7 @@ class Script:
         self.convert = convert
         self.pass_kwargs = False
         self.pass_args = False
+        self.positional = positional
         self.options, self.flags = self.__build_args(self.function)
 
         if callable(meta):
@@ -49,7 +56,13 @@ class Script:
     def __call__(self, script_node):
         """External interface to execute a script"""
 
-        self.__match_options(script_node.options)
+        # __match* methods mutate a state object with respect to the script_node
+        # the mutated state object's values will then be passed on to the script
+        if self.positional:
+            self.__match_pos_options(script_node.args)
+        else:
+            self.__match_options(script_node.options)
+
         self.__match_flags(script_node.flags)
 
         kwargs: Dict[str, Any] = {
@@ -76,9 +89,8 @@ class Script:
             sys.exit(1)
 
     def __match_options(self, option_nodes: list):
-        """Get's the final option values to pass to script
-       iterates though the option_nodes and sets their values
-       as the values to each Option object in self.options
+        """Mutates self.options based on key value pairs provided in
+        option nodes
 
        :param option_nodes: list of OptionNodes from the parser
 
@@ -89,14 +101,6 @@ class Script:
             have a default value provided by self.function
        """
 
-        # Ideally these two loops could be consolidated
-        # into a single loop and that would half the runtime
-        # (O(2n) -> O(n)). But since the length of arrays is never
-        # going to be a size where that would matter, it shouldn't
-        # ever cause an issue. I pray for the soul who writes a script
-        # with enough options where that would matter
-
-        # Sets the value property on the each Option
         for option in option_nodes:
             if option.name not in self.options:
                 if self.pass_kwargs:
@@ -113,9 +117,24 @@ class Script:
             if self.convert:
                 self.options[option.name].convert()
 
-        for option in self.options.values():
-            if option.value is NO_DEFAULT:
-                raise ScriptError(f"No valued for required option '{option.name}'")
+        self.__options_filled()
+
+    def __match_pos_options(self, arg_nodes: list):
+        """Mutates self.options based on positional strings
+        """
+        length = len(arg_nodes)
+        for idx, option in enumerate(self.options.values()):
+            if len(arg_nodes) >= idx:
+                option.value = arg_nodes.pop(0).value
+                if self.convert:
+                    option.convert()
+
+        if len(arg_nodes) != 0 and not self.pass_args:
+            raise ScriptError(
+                f"Script recieved {length} arguments, expected {len(self.options)}"
+            )
+
+        self.__options_filled()
 
     def __match_flags(self, flag_nodes: list):
         """Get's the final flag values to pass to the script
@@ -131,7 +150,7 @@ class Script:
         """
         for flag in flag_nodes:
             if flag.name in self.flags:
-                self.flags[flag.name].value = not self.flags[flag.name].value
+                self.flags[flag.name].reverse()
             else:
                 raise ScriptError(f"Flag '{flag.name}' not recognized'")
 
@@ -160,3 +179,9 @@ class Script:
                 options[param.name] = Option(param)
 
         return options, flags
+
+    # HELPERS
+    def __options_filled(self):
+        for option in self.options.values():
+            if option.value is NO_DEFAULT:
+                raise ScriptError(f"No valued for required option '{option.name}'")
