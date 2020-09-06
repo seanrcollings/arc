@@ -50,7 +50,7 @@ class FlagNode:
     name: str
 
     def __repr__(self):
-        return self.name
+        return f"--{self.name}"
 
 
 @dataclass

@@ -14,8 +14,6 @@ class PositionalScript(Script):
         super().__init__(*args, **kwargs)
 
     def execute(self, script_node: ScriptNode):
-        self.match_input(script_node)
-
         args: List[Any] = [
             *[obj.value for obj in self.options.values()],
             *[obj.value for obj in self.flags.values()],

@@ -1,10 +1,10 @@
 import inspect
 from typing import Dict, Any, List, Union, Tuple
+from arc.errors import ScriptError
 
 from arc.parser.data_types import ScriptNode, FlagNode, OptionNode
-from arc.errors import ScriptError
-from .script import Script
 from .__option import Option, NO_DEFAULT
+from .script import Script
 from .__flag import Flag
 
 
@@ -14,8 +14,6 @@ class KeywordScript(Script):
         super().__init__(name, function)
 
     def execute(self, script_node: ScriptNode):
-        self.match_input(script_node)
-
         args: Dict[str, Any] = {
             **{key: obj.value for key, obj in self.options.items()},
             **{key: obj.value for key, obj in self.flags.items()},

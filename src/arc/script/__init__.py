@@ -16,5 +16,5 @@ def script_factory(name, function, positional=False):
         return PositionalScript(name, function)
 
     # RawScript - Doesn't do anything, just passes values along to the script
-
     return RawScript(name, function)
+

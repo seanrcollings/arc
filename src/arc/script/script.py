@@ -1,6 +1,6 @@
 import sys
 from abc import ABC, abstractmethod
-from typing import List, Dict, Callable, Tuple, Union
+from typing import List, Dict, Callable, Tuple
 from contextlib import contextmanager
 
 from arc.errors import ScriptError, ExecutionError
@@ -29,6 +29,7 @@ class Script(ABC):
     def __call__(self, script_node):
         """External interface to execute a script"""
         self.validate_input(script_node)
+        self.match_input(script_node)
         if len(self.validation_errors) == 0:
             self.execute(script_node)
         else:
