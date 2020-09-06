@@ -9,8 +9,8 @@ from arc.config import Config
 
 
 class CLI(ScriptContainer):
-    def __init__(self, utilities: list = None, arcdir=".", arcfile=".arc"):
-        super().__init__(arcdir, arcfile)
+    def __init__(self, utilities: list = None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.utilities: Dict[str, Utility] = {}
 
         if utilities is not None:

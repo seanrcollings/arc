@@ -74,3 +74,6 @@ def timer(func):
         logger(f"Completed in {end_time - start_time:.2f}s", state="ok")
 
     return decorator
+
+
+symbol = lambda name, mro=(), clsdict={}: type(name, mro, clsdict)

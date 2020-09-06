@@ -5,12 +5,14 @@ from arc.script import script_factory
 from arc.script.script import Script
 from arc.config import Config
 from arc.errors import ExecutionError, ScriptError
+from arc.script import ScriptType
 
 
 class ScriptContainer(ABC):
     """Parent class of CLI and Utility"""
 
-    def __init__(self, arcdir=".", arcfile=".arc"):
+    def __init__(self, arcdir=".", arcfile=".arc", script_type=ScriptType.KEYWORD):
+        self.script_type = script_type
         self.scripts: Dict[str, Type[Script]] = {}
         self.script("help")(self.helper)
 
@@ -21,7 +23,7 @@ class ScriptContainer(ABC):
     def __call__(self):
         pass
 
-    def script(self, name=None, positional=False):
+    def script(self, name=None, script_type=None):
         """Installs a script to the container
         Creates a script object, appends it to
         the script container
@@ -29,10 +31,11 @@ class ScriptContainer(ABC):
         :returns: the provided function, for decorator chaining. As such,
             you can give one function multiple script names
         """
+        if script_type is None:
+            script_type = self.script_type
 
         def decorator(function):
-
-            script = script_factory(name=name, positional=positional, function=function)
+            script = script_factory(name, function, script_type)
             self.scripts[script.name] = script
             util.logger(f"Registered '{script.name}' script", state="debug")
             return function

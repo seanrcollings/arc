@@ -16,8 +16,8 @@ class Utility(ScriptContainer):
         db:createuser
     """
 
-    def __init__(self, name):
-        super().__init__()
+    def __init__(self, name, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.name = name
         logger(f"Utility '{name}' created'", state="debug")
 
