@@ -4,7 +4,7 @@ import arc._utils as util
 from arc.script import script_factory
 from arc.script.script import Script
 from arc.config import Config
-from arc.errors import ExecutionError, ScriptError
+from arc.errors import ScriptError
 from arc.script import ScriptType
 
 
@@ -14,7 +14,7 @@ class ScriptContainer(ABC):
     def __init__(self, arcdir=".", arcfile=".arc", script_type=ScriptType.KEYWORD):
         self.script_type = script_type
         self.scripts: Dict[str, Type[Script]] = {}
-        self.script("help")(self.helper)
+        self.script("help", script_type=ScriptType.KEYWORD)(self.helper)
 
         if arcfile is not None and not Config._loaded:
             Config.load_arc_file(f"{arcdir}/{arcfile}")
@@ -37,7 +37,10 @@ class ScriptContainer(ABC):
         def decorator(function):
             script = script_factory(name, function, script_type)
             self.scripts[script.name] = script
-            util.logger(f"Registered '{script.name}' script", state="debug")
+            util.logger(
+                f"Registered '{script.name}' script to {self.__class__.__name__}",
+                state="debug",
+            )
             return function
 
         return decorator
@@ -55,15 +58,11 @@ class ScriptContainer(ABC):
             bad data is passed or something unexpected happens
         """
 
-        script_name = script_node.name
-        if script_name not in self.scripts:
-            raise ScriptError(f"The script '{script_name}' is not recognized")
+        if script_node.name not in self.scripts:
+            raise ScriptError(f"The script '{script_node.name}' is not recognized")
 
-        script = self.scripts[script_name]
-        try:
-            script(script_node)
-        except ExecutionError as e:
-            print(e)
+        script = self.scripts[script_node.name]
+        script(script_node)
 
     @abstractmethod
     def helper(self):

@@ -78,6 +78,6 @@ class Script(ABC):
         """Helper function to check if user input is valid,
         should be overridden by child class
 
-        If it isn't valid, just throw an error
+        If it isn't valid, add a reason to self.validation_errors
         """
         return True
