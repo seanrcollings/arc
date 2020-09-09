@@ -41,8 +41,8 @@ class Script(ABC):
 
         """
         self.validate_input(script_node)
-        self.match_input(script_node)
         if len(self.validation_errors) == 0:
+            self.match_input(script_node)
             self.execute(script_node)
         else:
             raise ScriptError(
@@ -55,9 +55,12 @@ class Script(ABC):
         """Execution entry point of each script"""
 
     @abstractmethod
-    def match_input(self, script_node):
+    def match_input(self, script_node) -> None:
         """Matches the input provided by script_node
-        with the script's options and flags
+        with the script's options and flags. Should mutate
+        state because this function returns None. For example,
+        options values should be set on their respective option
+        in self.options
         """
 
     @abstractmethod

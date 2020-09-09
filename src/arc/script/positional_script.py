@@ -88,3 +88,11 @@ class PositionalScript(Script):
                 options[param.name] = Option(param)
 
         return options, flags
+
+    def validate_input(self, script_node: ScriptNode):
+        if len(script_node.options) > 0:
+            self.validation_errors.append(
+                "This script accepts arguements by position"
+                + " only. As a result, it will not accept input"
+                + " in the form of 'option=value'"
+            )

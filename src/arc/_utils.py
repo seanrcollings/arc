@@ -93,7 +93,7 @@ class symbol:
         self.__name = name
 
     def __str__(self):
-        return f"<Symbol : {self.__name}>"
+        return self.__name
 
     def __hash__(self):
         return hash(self.__name)

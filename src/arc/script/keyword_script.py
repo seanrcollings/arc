@@ -102,4 +102,10 @@ class KeywordScript(Script):
 
         return options, flags
 
-    # HELPERS
+    def validate_input(self, script_node: ScriptNode):
+        if len(script_node.args) > 0:
+            self.validation_errors.append(
+                "This script accepts arguements by keyword"
+                + " only. As a result, it will not accept input"
+                + " in the form of 'value value value'"
+            )
