@@ -1,69 +1,27 @@
-import sys
 import inspect
-from typing import List, Dict, Callable, Any, Tuple
+from typing import List, Dict, Any, Tuple
 
-from arc.errors import ScriptError, ExecutionError
+from arc.errors import ScriptError
 from arc.script.__option import Option, NO_DEFAULT
 from arc.script.__flag import Flag
-import arc._utils as util
+from arc.parser.data_types import ScriptNode
+from .script import Script
 
 
-class Script:
-    """Each script installed to a CLI or utility is an instance of this class
+class LegacyScript(Script):
+    """Legacy Script behavior, not reccomended"""
 
-    :param name: Name to register the script under, used on the command line
-        to run the script
-    :param options: available command lines options for the script. Passed in
-        as a list of strings. Can be given a type converter
-    :param raw: Specifies whether or not to parse out the command line arguements,
-        or simply pass them along to the script. Flags will still be interpreted as flags
-    :param convert: Will instruct the script not to attempt any conversions of the given data
-    :param meta: meta data that can be passed in in the @script decorator. If it is a function,
-        it will be called and that functions return will be passed into self.function
-    :param function: Script function to be called with the parse and converted options
-    """
-
-    def __init__(
-        self,
-        name: str,
-        convert: bool = True,
-        meta: Any = None,
-        positional=False,
-        *,
-        function: Callable,
-    ):
-
-        self.name = name
-        self.function: Callable = function
-        self.convert = convert
+    def __init__(self, *args, positional=False, convert=False, **kwargs):
+        self.positional = positional
         self.pass_kwargs = False
         self.pass_args = False
-        self.positional = positional
-        self.options, self.flags = self.__build_args(self.function)
-
-        if callable(meta):
-            self.meta = meta()
-        else:
-            self.meta = meta
-
-        self.doc = "No Docstring"
-        if self.function.__doc__ is not None:
-            self.doc = self.function.__doc__.strip("\n\t ").replace("\n", "\n\t")
+        super().__init__(*args, **kwargs)
 
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
 
-    def __call__(self, script_node):
+    def execute(self, script_node):
         """External interface to execute a script"""
-
-        # __match* methods mutate a state object with respect to the script_node
-        # the mutated state object's values will then be passed on to the script
-        if self.positional:
-            self.__match_pos_options(script_node.args)
-        else:
-            self.__match_options(script_node.options)
-
-        self.__match_flags(script_node.flags)
 
         kwargs: Dict[str, Any] = {
             **{key: obj.value for key, obj in self.options.items()},
@@ -77,16 +35,18 @@ class Script:
                 "*args specified in script definition",
             )
 
-        if self.meta is not None:
-            kwargs["meta"] = self.meta
-
-        try:
-            util.logger("---------------------------")
+        with self.catch():
             self.function(*posargs, **kwargs)
-            util.logger("---------------------------")
-        except ExecutionError as e:
-            print(e)
-            sys.exit(1)
+
+    def match_input(self, script_node: ScriptNode):
+        # __match* methods mutate a state object with respect to the script_node
+        # the mutated state object's values will then be passed on to the script
+        if self.positional:
+            self.__match_pos_options(script_node.args)
+        else:
+            self.__match_options(script_node.options)
+
+        self.__match_flags(script_node.flags)
 
     def __match_options(self, option_nodes: list):
         """Mutates self.options based on key value pairs provided in
@@ -113,11 +73,9 @@ class Script:
                     raise ScriptError(f"Option '{option.name}' not recognized")
 
             self.options[option.name].value = option.value
+            self.options[option.name].convert()
 
-            if self.convert:
-                self.options[option.name].convert()
-
-        self.__options_filled()
+        self.assert_options_filled()
 
     def __match_pos_options(self, arg_nodes: list):
         """Mutates self.options based on positional strings
@@ -126,15 +84,14 @@ class Script:
         for idx, option in enumerate(self.options.values()):
             if len(arg_nodes) >= idx:
                 option.value = arg_nodes.pop(0).value
-                if self.convert:
-                    option.convert()
+                option.convert()
 
         if len(arg_nodes) != 0 and not self.pass_args:
             raise ScriptError(
                 f"Script recieved {length} arguments, expected {len(self.options)}"
             )
 
-        self.__options_filled()
+        self.assert_options_filled()
 
     def __match_flags(self, flag_nodes: list):
         """Get's the final flag values to pass to the script
@@ -154,8 +111,8 @@ class Script:
             else:
                 raise ScriptError(f"Flag '{flag.name}' not recognized'")
 
-    def __build_args(self, func) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
-        sig = inspect.signature(func)
+    def build_args(self, function) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
+        sig = inspect.signature(function)
         options: Dict[str, Option] = {}
         flags: Dict[str, Flag] = {}
 
@@ -179,9 +136,3 @@ class Script:
                 options[param.name] = Option(param)
 
         return options, flags
-
-    # HELPERS
-    def __options_filled(self):
-        for option in self.options.values():
-            if option.value is NO_DEFAULT:
-                raise ScriptError(f"No valued for required option '{option.name}'")

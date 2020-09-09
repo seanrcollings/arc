@@ -27,7 +27,19 @@ class Script(ABC):
         return f"<{self.__class__.__name__} : {self.name}>"
 
     def __call__(self, script_node):
-        """External interface to execute a script"""
+        """External interface to execute a script
+
+        Handles a few things behind the scenes
+            - calls self.validate_input
+            - calls self.match_input
+        Both of these can be defined in the
+        children classes, and will never need to be called
+        directly by the child class
+
+        :param script_node: SciptNode object created by the parser
+            May contain options, flags and arbitrary args
+
+        """
         self.validate_input(script_node)
         self.match_input(script_node)
         if len(self.validation_errors) == 0:

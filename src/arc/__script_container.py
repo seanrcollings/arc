@@ -23,7 +23,7 @@ class ScriptContainer(ABC):
     def __call__(self):
         pass
 
-    def script(self, name=None, script_type=None):
+    def script(self, name=None, script_type=None, **kwargs):
         """Installs a script to the container
         Creates a script object, appends it to
         the script container
@@ -35,7 +35,7 @@ class ScriptContainer(ABC):
             script_type = self.script_type
 
         def decorator(function):
-            script = script_factory(name, function, script_type)
+            script = script_factory(name, function, script_type, **kwargs)
             self.scripts[script.name] = script
             util.logger(
                 f"Registered '{script.name}' script to {self.__class__.__name__}",
