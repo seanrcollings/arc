@@ -1,17 +1,17 @@
 """Test the functionality of the Script class"""
 from unittest.mock import create_autospec
 from tests.base_test import BaseTest
-from arc.script import Script
+from arc.script.legacy_script import LegacyScript
 from arc.errors import ScriptError
 from arc.parser.data_types import FlagNode, OptionNode, ScriptNode, ArgNode
 from arc.convert.converters import *
 
 # pylint: disable=protected-access, missing-function-docstring
-class TestScript(BaseTest):
-    def create_script(self, func, annotations={}, convert=True):
+class TestLegacyScript(BaseTest):
+    def create_script(self, func, annotations={}, positional=False):
         func.__annotations__ = annotations
         func = create_autospec(func)
-        return Script(name="test", function=func, convert=convert)
+        return LegacyScript(funcname="test", function=func, positional=positional)
 
     def create_script_node(self, name="test", options=[], flags=[], args=[]):
         return ScriptNode(name, options, flags, args)
