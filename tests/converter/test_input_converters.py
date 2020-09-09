@@ -2,8 +2,8 @@ import importlib
 from tests.base_test import BaseTest
 from arc.errors import ArcError
 from arc import Config
-from arc.converter import BaseConverter
-from arc.converter import input as inp
+from arc.convert import BaseConverter
+from arc.convert import input as inp
 
 
 class TestConverter(BaseConverter):

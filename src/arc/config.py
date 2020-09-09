@@ -5,8 +5,8 @@ They will also be loaded from a .arc file
 """
 import os
 from typing import Type, Dict, Any, List
-from arc.converter.converters import *
-from arc.converter import BaseConverter
+from arc.convert.converters import *
+from arc.convert import BaseConverter
 from arc.errors import ArcError, ConversionError
 
 

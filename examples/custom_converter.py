@@ -1,5 +1,5 @@
 from math import pi
-from arc.converter import BaseConverter, ConversionError
+from arc.convert import BaseConverter, ConversionError
 from arc import CLI, Config
 
 

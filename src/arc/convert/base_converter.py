@@ -1,7 +1,7 @@
 import sys
 from typing import Any
 from abc import ABC, abstractmethod
-from arc.converter import ConversionError
+from arc.convert import ConversionError
 
 
 class BaseConverter(ABC):

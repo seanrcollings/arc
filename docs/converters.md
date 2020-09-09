@@ -69,7 +69,7 @@ Check [examples/converters.py](/examples/converters.py) for full examples
 Arc also allows you to add your own custom converters
 
 ```py
-from arc.converter import BaseConverter, ConversionError
+from arc.convert import BaseConverter, ConversionError
 
 class CustomObject:
   # ...
@@ -101,7 +101,7 @@ Pre-made converters defined in [src/arc/converter/converters.py](/src/arc/conver
 Arc also allows you to use it's converter functionality when gathering user input from within a script
 ```py
 from arc import CLI
-from arc.converter.input import convert_to_int
+from arc.convert.input import convert_to_int
 
 cli = CLI()
 

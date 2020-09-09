@@ -4,7 +4,7 @@ from tests.base_test import BaseTest
 from arc.script import Script
 from arc.errors import ScriptError
 from arc.parser.data_types import FlagNode, OptionNode, ScriptNode, ArgNode
-from arc.converter.converters import *
+from arc.convert.converters import *
 
 # pylint: disable=protected-access, missing-function-docstring
 class TestScript(BaseTest):
