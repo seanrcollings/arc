@@ -1,7 +1,5 @@
-"""Test the functionality of the CLI as a whole"""
-from unittest.mock import MagicMock
 from tests.base_test import BaseTest
-from arc.errors import ScriptError
+from arc.errors import ArcError
 from arc import Utility
 
 
@@ -23,3 +21,7 @@ class TestCLI(BaseTest):
 
         self.cli("func2", "x=2")
         self.cli.scripts["func2"].function.assert_called_with(x=2)
+
+    def test_nonexistant_utility(self):
+        with self.assertRaises(ArcError):
+            self.cli("doesnotexist:func1", "x=2")

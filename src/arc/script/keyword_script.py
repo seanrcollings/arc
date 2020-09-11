@@ -78,9 +78,8 @@ class KeywordScript(Script):
         for idx, param in enumerate(sig.parameters.values()):
             if param.annotation is bool:
                 flags[param.name] = Flag(param)
-                continue
 
-            if param.kind is param.VAR_POSITIONAL:
+            elif param.kind is param.VAR_POSITIONAL:
                 raise ScriptError(
                     "Keyword Arc scripts do not allow *args.",
                     "If you wish to use it, add `positional=True`",
@@ -88,7 +87,7 @@ class KeywordScript(Script):
                     "make ALL options passed by position rather than keyword",
                 )
 
-            if param.kind is param.VAR_KEYWORD:
+            elif param.kind is param.VAR_KEYWORD:
                 if idx != len(sig.parameters.values()) - 1:
                     raise ScriptError(
                         "The variable keyword arguement (**kwargs)",

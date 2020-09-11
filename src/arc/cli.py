@@ -56,8 +56,7 @@ class CLI(ScriptContainer):
         util_name = util_node.name
 
         if util_name not in self.utilities:
-            print(f"The utility '{util_name}' is not recognized")
-            sys.exit(1)
+            raise ArcError(f"The utility '{util_name}' is not recognized")
 
         self.utilities[util_name](util_node.script)
 

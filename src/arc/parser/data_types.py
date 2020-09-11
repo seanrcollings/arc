@@ -20,7 +20,7 @@ class ArgNode:
     value: str
 
     def __repr__(self):
-        return self.value
+        return f"<ArgNode : {self.value}>"
 
 
 @dataclass

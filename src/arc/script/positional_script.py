@@ -20,7 +20,7 @@ class PositionalScript(Script):
         ]
 
         if self.pass_args:
-            args += script_node.args
+            args += [arg.value for arg in script_node.args]
 
         with self.catch():
             self.function(*args)
@@ -32,8 +32,7 @@ class PositionalScript(Script):
     def __match_options(self, arg_nodes: List[ArgNode]):
         options = list(self.options.values())
 
-        for idx in range(0, len(arg_nodes)):
-            option = options[idx]
+        for option in options:
             option.value = arg_nodes.pop(0).value
             option.convert()
 

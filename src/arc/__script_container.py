@@ -31,8 +31,11 @@ class ScriptContainer(ABC):
         :returns: the provided function, for decorator chaining. As such,
             you can give one function multiple script names
         """
-        if script_type is None:
-            script_type = self.script_type
+        # Fallback for script type:
+        #   - provided arguement
+        #   - script_type of the container (if it's a util it can also inherit it's type)
+        #   - Defaults to KEYWORD
+        script_type = script_type or self.script_type or ScriptType.KEYWORD
 
         def decorator(function):
             script = script_factory(name, function, script_type, **kwargs)
@@ -54,8 +57,6 @@ class ScriptContainer(ABC):
 
         :raises ScriptError: If the command doesn't exist
 
-        :excepts ExecutionError: Raised during the execution of a script anytime
-            bad data is passed or something unexpected happens
         """
 
         if script_node.name not in self.scripts:

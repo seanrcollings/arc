@@ -4,6 +4,7 @@ from typing import List, Dict, Callable, Tuple
 from contextlib import contextmanager
 
 from arc.errors import ScriptError, ExecutionError
+from arc.parser.data_types import ScriptNode
 from arc.script.__option import Option, NO_DEFAULT
 from arc.script.__flag import Flag
 import arc._utils as util
@@ -51,22 +52,33 @@ class Script(ABC):
             )
 
     @abstractmethod
-    def execute(self, script_node):
-        """Execution entry point of each script"""
+    def execute(self, script_node: ScriptNode):
+        """Execution entry point of each script
+
+        :param script_node: SciptNode object created by the parser.
+        None of the Script classes use script_node in their implementation
+        of execute, but they may need to so it passes it currently
+        """
 
     @abstractmethod
-    def match_input(self, script_node) -> None:
+    def match_input(self, script_node: ScriptNode) -> None:
         """Matches the input provided by script_node
         with the script's options and flags. Should mutate
         state because this function returns None. For example,
         options values should be set on their respective option
         in self.options
+
+        :param script_node: ScriptNode object created by the parser
+        Has had the UtilNode stripped away if it existed
         """
 
     @abstractmethod
     def build_args(self, function) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
         """Builds the options and flag collections based
-        on the function definition"""
+        on the function definition
+
+        :param function: User-defined function that get's called by the script.
+        """
 
     # HELPERS
 
@@ -95,4 +107,3 @@ class Script(ABC):
 
         If it isn't valid, add a reason to self.validation_errors
         """
-        return True
