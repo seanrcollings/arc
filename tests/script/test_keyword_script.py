@@ -1,10 +1,7 @@
-from unittest.mock import create_autospec
-
 from tests.script.base_script_test import BaseScriptTest
 from arc.parser.data_types import ScriptNode, FlagNode, ArgNode, OptionNode
 from arc.script.keyword_script import KeywordScript
 from arc.errors import ScriptError
-from arc.script.__option import Option
 
 
 class TestKeywordScript(BaseScriptTest):

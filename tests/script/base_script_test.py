@@ -30,4 +30,3 @@ class BaseScriptTest(BaseTest):
         script = self.create_script(lambda test: test, annotations={"test": bool})
         with self.assertRaises(ScriptError):
             script(self.create_script_node(flags=[FlagNode("none")]))
-
