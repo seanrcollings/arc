@@ -5,9 +5,9 @@ from contextlib import contextmanager
 
 from arc.errors import ScriptError, ExecutionError
 from arc.parser.data_types import ScriptNode
-from arc.script.__option import Option, NO_DEFAULT
-from arc.script.__flag import Flag
 import arc._utils as util
+from .__option import Option, NO_DEFAULT
+from .__flag import Flag
 from .script_mixin import ScriptMixin
 
 

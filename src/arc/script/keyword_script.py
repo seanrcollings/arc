@@ -1,12 +1,10 @@
-import inspect
-from typing import Dict, Any, List, Union, Tuple
+from typing import Dict, Any, List, Union
 from arc.errors import ScriptError
 
-from arc.parser.data_types import ScriptNode, FlagNode, OptionNode
+from arc.parser.data_types import ScriptNode, OptionNode
 from .__option import Option, NO_DEFAULT
 from .script_mixin import ScriptMixin
 from .script import Script
-from .__flag import Flag
 
 
 class KeywordScript(Script, ScriptMixin):

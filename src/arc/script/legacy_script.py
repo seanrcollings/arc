@@ -1,9 +1,8 @@
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any
 
 from arc.errors import ScriptError
 from arc.script.__option import Option, NO_DEFAULT
 from arc.parser.data_types import ScriptNode
-from arc.script.__flag import Flag
 from .script_mixin import ScriptMixin
 from .script import Script
 

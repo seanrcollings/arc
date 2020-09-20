@@ -1,4 +1,3 @@
-# type: ignore
 import inspect
 from typing import List, Dict
 
@@ -23,8 +22,8 @@ class ScriptMixin:
         not in self.flags
         """
         for flag in flag_nodes:
-            if flag.name in self.flags:
-                self.flags[flag.name].reverse()
+            if flag.name in self.flags:  # type: ignore
+                self.flags[flag.name].reverse()  # type: ignore
             else:
                 raise ScriptError(f"Flag '{flag.name}' not recognized'")
 
