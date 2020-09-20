@@ -8,9 +8,10 @@ from arc.parser.data_types import ScriptNode
 from arc.script.__option import Option, NO_DEFAULT
 from arc.script.__flag import Flag
 import arc._utils as util
+from .script_mixin import ScriptMixin
 
 
-class Script(ABC):
+class Script(ABC, ScriptMixin):
     def __init__(
         self, name: str, function: Callable,
     ):
@@ -50,6 +51,16 @@ class Script(ABC):
                 "Pre-script validation checks failed: \n",
                 "\n".join(self.validation_errors),
             )
+
+    # def build_args(self) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
+    #     with self.ArgBuilder(self.function) as builder:
+
+    #         for idx, param in enumerate(builder):
+    #             builder.param = param
+    #             builder.idx = idx
+    #             self.arg_hook(builder)
+
+    #         return builder.args
 
     @abstractmethod
     def execute(self, script_node: ScriptNode):

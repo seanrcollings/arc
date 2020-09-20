@@ -1,14 +1,14 @@
-import inspect
 from typing import List, Dict, Any, Tuple
 
 from arc.errors import ScriptError
 from arc.script.__option import Option, NO_DEFAULT
-from arc.script.__flag import Flag
 from arc.parser.data_types import ScriptNode
+from arc.script.__flag import Flag
+from .script_mixin import ScriptMixin
 from .script import Script
 
 
-class LegacyScript(Script):
+class LegacyScript(Script, ScriptMixin):
     """Legacy Script behavior, not reccomended"""
 
     def __init__(self, *args, positional=False, convert=False, **kwargs):
@@ -46,7 +46,7 @@ class LegacyScript(Script):
         else:
             self.__match_options(script_node.options)
 
-        self.__match_flags(script_node.flags)
+        self._match_flags(script_node.flags)
 
     def __match_options(self, option_nodes: list):
         """Mutates self.options based on key value pairs provided in
@@ -60,7 +60,6 @@ class LegacyScript(Script):
             - if a option is not given a value and does not
             have a default value provided by self.function
        """
-
         for option in option_nodes:
             if option.name not in self.options:
                 if self.pass_kwargs:
@@ -93,46 +92,21 @@ class LegacyScript(Script):
 
         self.assert_options_filled()
 
-    def __match_flags(self, flag_nodes: list):
-        """Get's the final flag values to pass to the script
-
-        Compares the FlagNodes given with self.flags
-        if they are present in both, the flag is set to True,
-        if it is absent from the Nodes it is set to false
-
-        :param flag_nodes: list of FlagNodes from the parser
-
-        :raises ScriptError: if a flag is present in FlagNodes, but
-        not in self.flags
-        """
-        for flag in flag_nodes:
-            if flag.name in self.flags:
-                self.flags[flag.name].reverse()
-            else:
-                raise ScriptError(f"Flag '{flag.name}' not recognized'")
-
     def build_args(self, function) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
-        sig = inspect.signature(function)
-        options: Dict[str, Option] = {}
-        flags: Dict[str, Flag] = {}
+        with self.ArgBuilder(function) as builder:
+            for idx, param in enumerate(builder):
+                if param.kind is param.VAR_KEYWORD:
+                    if idx != len(builder) - 1:
+                        raise ScriptError(
+                            "**kwargs must be the last argument of the script"
+                        )
+                    self.pass_kwargs = True
 
-        for idx, param in enumerate(sig.parameters.values()):
-            if param.annotation is bool:
-                flags[param.name] = Flag(param)
+                if param.kind is param.VAR_POSITIONAL:
+                    if idx != 0:
+                        raise ScriptError(
+                            "*args must be the first argument of the script"
+                        )
+                    self.pass_args = True
 
-            elif param.kind is param.VAR_KEYWORD:
-                if idx != len(sig.parameters.values()) - 1:
-                    raise ScriptError(
-                        "**kwargs must be the last argument of the script"
-                    )
-                self.pass_kwargs = True
-
-            elif param.kind is param.VAR_POSITIONAL:
-                if idx != 0:
-                    raise ScriptError("*args must be the first argument of the script")
-                self.pass_args = True
-
-            else:
-                options[param.name] = Option(param)
-
-        return options, flags
+            return builder.args

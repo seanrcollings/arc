@@ -1,12 +1,10 @@
-"""Test the functionality of the Script class"""
-from unittest.mock import create_autospec
 from tests.script.base_script_test import BaseScriptTest
 from arc.script.legacy_script import LegacyScript
 from arc.errors import ScriptError
-from arc.parser.data_types import FlagNode, OptionNode, ScriptNode, ArgNode
+from arc.parser.data_types import FlagNode, OptionNode, ArgNode
 from arc.convert.converters import *
 
-# pylint: disable=protected-access, missing-function-docstring
+
 class TestLegacyScript(BaseScriptTest):
     script_class = LegacyScript
 

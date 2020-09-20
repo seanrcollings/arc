@@ -1,5 +1,5 @@
 from tests.script.base_script_test import BaseScriptTest
-from arc.parser.data_types import ScriptNode, FlagNode, ArgNode, OptionNode
+from arc.parser.data_types import FlagNode, ArgNode, OptionNode
 from arc.script.keyword_script import KeywordScript
 from arc.errors import ScriptError
 
@@ -19,7 +19,6 @@ class TestKeywordScript(BaseScriptTest):
         super().__init__(*args, **kwargs)
 
     def test_execute(self):
-
         self.script1(
             self.create_script_node(
                 options=[OptionNode("x", "2"), OptionNode("y", "3")],
