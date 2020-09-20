@@ -53,27 +53,26 @@ class KeywordScript(Script, ScriptMixin):
 
         self.assert_options_filled()
 
-    def build_args(self, function) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
-        with self.ArgBuilder(function) as builder:
-            for idx, param in enumerate(builder):
-                if param.kind is param.VAR_POSITIONAL:
-                    raise ScriptError(
-                        "Keyword Arc scripts do not allow *args.",
-                        "If you wish to use it, add `positional=True`",
-                        "to @cli.script. However, be aware that this will",
-                        "make ALL options passed by position rather than keyword",
-                    )
+    def arg_hook(self, builder):
+        param = builder.param
+        idx = builder.idx
 
-                if param.kind is param.VAR_KEYWORD:
-                    if idx != len(builder) - 1:
-                        raise ScriptError(
-                            "The variable keyword arguement (**kwargs)",
-                            "must be the last argument of the script",
-                        )
+        if param.kind is param.VAR_POSITIONAL:
+            raise ScriptError(
+                "Keyword Arc scripts do not allow *args.",
+                "If you wish to use it, add `positional=True`",
+                "to @cli.script. However, be aware that this will",
+                "make ALL options passed by position rather than keyword",
+            )
 
-                    self.pass_kwargs = True
+        if param.kind is param.VAR_KEYWORD:
+            if idx != len(builder) - 1:
+                raise ScriptError(
+                    "The variable keyword arguement (**kwargs)",
+                    "must be the last argument of the script",
+                )
 
-            return builder.args
+            self.pass_kwargs = True
 
     def validate_input(self, script_node: ScriptNode):
         if len(script_node.args) > 0:

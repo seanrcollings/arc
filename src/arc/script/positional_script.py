@@ -39,27 +39,25 @@ class PositionalScript(Script, ScriptMixin):
 
         self.assert_options_filled()
 
-    def build_args(self, function) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
-        with self.ArgBuilder(self.function) as builder:
-            for idx, param in enumerate(builder):
-                if param.kind is param.VAR_KEYWORD:
-                    raise ScriptError(
-                        "Positional Arc scripts do not allow **kwargs.",
-                        "If you wish to use it, remove `positional=True`",
-                        "from @cli.script. However, be aware that this will",
-                        "make ALL options passed by keyword rather than position",
-                    )
+    def arg_hook(self, builder):
+        param = builder.param
+        idx = builder.idx
+        if param.kind is param.VAR_KEYWORD:
+            raise ScriptError(
+                "Positional Arc scripts do not allow **kwargs.",
+                "If you wish to use it, remove `positional=True`",
+                "from @cli.script. However, be aware that this will",
+                "make ALL options passed by keyword rather than position",
+            )
 
-                if param.kind is param.VAR_POSITIONAL:
-                    if idx != builder.length - 1:
-                        raise ScriptError(
-                            "The variable postional arguement (*args)",
-                            "must be the last argument of the script",
-                        )
+        if param.kind is param.VAR_POSITIONAL:
+            if idx != builder.length - 1:
+                raise ScriptError(
+                    "The variable postional arguement (*args)",
+                    "must be the last argument of the script",
+                )
 
-                    self.pass_args = True
-
-            return builder.args
+            self.pass_args = True
 
     def validate_input(self, script_node: ScriptNode):
         if len(script_node.options) > 0:

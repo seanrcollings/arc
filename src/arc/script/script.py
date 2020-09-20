@@ -18,7 +18,7 @@ class Script(ABC, ScriptMixin):
 
         self.name = name
         self.function: Callable = function
-        self.options, self.flags = self.build_args(self.function)
+        self.options, self.flags = self.build_args()
         self.validation_errors: List[str] = []
 
         self.doc = "No Docstring"
@@ -52,15 +52,15 @@ class Script(ABC, ScriptMixin):
                 "\n".join(self.validation_errors),
             )
 
-    # def build_args(self) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
-    #     with self.ArgBuilder(self.function) as builder:
+    def build_args(self) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
+        with self.ArgBuilder(self.function) as builder:
 
-    #         for idx, param in enumerate(builder):
-    #             builder.param = param
-    #             builder.idx = idx
-    #             self.arg_hook(builder)
+            for idx, param in enumerate(builder):
+                builder.param = param
+                builder.idx = idx
+                self.arg_hook(builder)
 
-    #         return builder.args
+            return builder.args
 
     @abstractmethod
     def execute(self, script_node: ScriptNode):
@@ -84,7 +84,7 @@ class Script(ABC, ScriptMixin):
         """
 
     @abstractmethod
-    def build_args(self, function) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
+    def arg_hook(self, builder):
         """Builds the options and flag collections based
         on the function definition
 

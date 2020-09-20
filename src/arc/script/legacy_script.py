@@ -92,21 +92,15 @@ class LegacyScript(Script, ScriptMixin):
 
         self.assert_options_filled()
 
-    def build_args(self, function) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
-        with self.ArgBuilder(function) as builder:
-            for idx, param in enumerate(builder):
-                if param.kind is param.VAR_KEYWORD:
-                    if idx != len(builder) - 1:
-                        raise ScriptError(
-                            "**kwargs must be the last argument of the script"
-                        )
-                    self.pass_kwargs = True
+    def arg_hook(self, builder):
+        param = builder.param
+        idx = builder.idx
+        if param.kind is param.VAR_KEYWORD:
+            if idx != len(builder) - 1:
+                raise ScriptError("**kwargs must be the last argument of the script")
+            self.pass_kwargs = True
 
-                if param.kind is param.VAR_POSITIONAL:
-                    if idx != 0:
-                        raise ScriptError(
-                            "*args must be the first argument of the script"
-                        )
-                    self.pass_args = True
-
-            return builder.args
+        if param.kind is param.VAR_POSITIONAL:
+            if idx != 0:
+                raise ScriptError("*args must be the first argument of the script")
+            self.pass_args = True

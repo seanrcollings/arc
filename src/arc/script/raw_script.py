@@ -12,5 +12,5 @@ class RawScript(Script):
     def match_input(self, script_node: ScriptNode):
         pass
 
-    def build_args(self, function):
-        return [], []
+    def arg_hook(self, builder):
+        pass
