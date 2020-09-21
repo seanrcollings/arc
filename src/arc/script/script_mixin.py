@@ -1,10 +1,13 @@
+import sys
 import inspect
 from typing import List, Dict
+from contextlib import contextmanager
 
 from arc.parser.data_types import FlagNode
-from arc.errors import ScriptError
+from arc.errors import ScriptError, ExecutionError
 
-from .__option import Option
+import arc._utils as util
+from .__option import Option, NO_DEFAULT
 from .__flag import Flag
 
 
@@ -26,6 +29,27 @@ class ScriptMixin:
                 self.flags[flag.name].reverse()  # type: ignore
             else:
                 raise ScriptError(f"Flag '{flag.name}' not recognized'")
+
+    # HELPERS
+
+    @staticmethod
+    @contextmanager
+    def catch():
+        """Context Manager to catch and handle errors
+        when calling the script's function"""
+        try:
+            util.logger("---------------------------")
+            yield
+        except ExecutionError as e:
+            print(e)
+            sys.exit(1)
+        finally:
+            util.logger("---------------------------")
+
+    def assert_options_filled(self):
+        for option in self.options.values():
+            if option.value is NO_DEFAULT:
+                raise ScriptError(f"No valued for required option '{option.name}'")
 
     class ArgBuilder:
         def __init__(self, function):

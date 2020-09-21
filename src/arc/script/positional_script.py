@@ -1,12 +1,10 @@
-from typing import List, Dict, Tuple, Any
+from typing import List, Any
 
 from arc.parser.data_types import ScriptNode, ArgNode
-from arc.errors import ScriptError
+from arc.errors import ScriptError, ValidationError
 
 from .script import Script
 from .script_mixin import ScriptMixin
-from .__option import Option
-from .__flag import Flag
 
 
 class PositionalScript(Script, ScriptMixin):
@@ -61,7 +59,7 @@ class PositionalScript(Script, ScriptMixin):
 
     def validate_input(self, script_node: ScriptNode):
         if len(script_node.options) > 0:
-            self.validation_errors.append(
+            raise ValidationError(
                 "This script accepts arguements by position"
                 + " only. As a result, it will not accept input"
                 + " in the form of 'option=value'"

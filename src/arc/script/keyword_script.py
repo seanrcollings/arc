@@ -1,5 +1,5 @@
 from typing import Dict, Any, List, Union
-from arc.errors import ScriptError
+from arc.errors import ScriptError, ValidationError
 
 from arc.parser.data_types import ScriptNode, OptionNode
 from .__option import Option, NO_DEFAULT
@@ -74,7 +74,7 @@ class KeywordScript(Script, ScriptMixin):
 
     def validate_input(self, script_node: ScriptNode):
         if len(script_node.args) > 0:
-            self.validation_errors.append(
+            raise ValidationError(
                 "This script accepts arguements by keyword"
                 + " only. As a result, it will not accept input"
                 + " in the form of 'value value value'"

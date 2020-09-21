@@ -1,12 +1,9 @@
-import sys
 from abc import ABC, abstractmethod
 from typing import List, Dict, Callable, Tuple
-from contextlib import contextmanager
 
-from arc.errors import ScriptError, ExecutionError
+from arc.errors import ScriptError, ValidationError
 from arc.parser.data_types import ScriptNode
-import arc._utils as util
-from .__option import Option, NO_DEFAULT
+from .__option import Option
 from .__flag import Flag
 from .script_mixin import ScriptMixin
 
@@ -42,7 +39,11 @@ class Script(ABC, ScriptMixin):
             May contain options, flags and arbitrary args
 
         """
-        self.validate_input(script_node)
+        try:
+            self.validate_input(script_node)
+        except ValidationError as e:
+            self.validation_errors.append(str(e))
+
         if len(self.validation_errors) == 0:
             self.match_input(script_node)
             self.execute(script_node)
@@ -53,6 +54,9 @@ class Script(ABC, ScriptMixin):
             )
 
     def build_args(self) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
+        """Builds the options and flag collections based
+        on the function definition
+        """
         with self.ArgBuilder(self.function) as builder:
 
             for idx, param in enumerate(builder):
@@ -83,38 +87,12 @@ class Script(ABC, ScriptMixin):
         Has had the UtilNode stripped away if it existed
         """
 
-    @abstractmethod
     def arg_hook(self, builder):
-        """Builds the options and flag collections based
-        on the function definition
-
-        :param function: User-defined function that get's called by the script.
-        """
-
-    # HELPERS
-
-    @staticmethod
-    @contextmanager
-    def catch():
-        """Context Manager to catch and handle errors
-        when calling the script's function"""
-        try:
-            util.logger("---------------------------")
-            yield
-        except ExecutionError as e:
-            print(e)
-            sys.exit(1)
-        finally:
-            util.logger("---------------------------")
-
-    def assert_options_filled(self):
-        for option in self.options.values():
-            if option.value is NO_DEFAULT:
-                raise ScriptError(f"No valued for required option '{option.name}'")
+        """build_args hook.
+        Can be used to check each of the args it's creating"""
 
     def validate_input(self, script_node):
         """Helper function to check if user input is valid,
         should be overridden by child class
 
-        If it isn't valid, add a reason to self.validation_errors
-        """
+        If it isn't valid, raise a ValidationError"""
