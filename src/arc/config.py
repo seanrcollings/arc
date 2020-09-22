@@ -87,7 +87,8 @@ class Config:
     def load_arc_file(cls, arcfile):
         """Reads in a arc config file and parses it's contents"""
         if not os.path.isfile(arcfile):
-            raise FileNotFoundError(f"arc configuration file '{arcfile}' not found")
+            return
+            # raise FileNotFoundError(f"arc configuration file '{arcfile}' not found")
 
         file = open(arcfile)
         lines = file.readlines()

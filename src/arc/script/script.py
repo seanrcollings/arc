@@ -10,7 +10,9 @@ from .script_mixin import ScriptMixin
 
 class Script(ABC, ScriptMixin):
     def __init__(
-        self, name: str, function: Callable,
+        self,
+        name: str,
+        function: Callable,
     ):
 
         self.name = name

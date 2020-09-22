@@ -38,8 +38,10 @@ class LegacyScript(Script, ScriptMixin):
             self.function(*posargs, **kwargs)
 
     def match_input(self, script_node: ScriptNode):
-        # __match* methods mutate a state object with respect to the script_node
-        # the mutated state object's values will then be passed on to the script
+        # __match* methods mutate a state object
+        # with respect to the script_node
+        # the mutated state object's values
+        # will then be passed on to the script
         if self.positional:
             self.__match_pos_options(script_node.args)
         else:
@@ -49,16 +51,16 @@ class LegacyScript(Script, ScriptMixin):
 
     def __match_options(self, option_nodes: list):
         """Mutates self.options based on key value pairs provided in
-        option nodes
+         option nodes
 
-       :param option_nodes: list of OptionNodes from the parser
+        :param option_nodes: list of OptionNodes from the parser
 
-       :raises ScriptError:
-            - if a option is present in option_nodes and
-            not in self.options
-            - if a option is not given a value and does not
-            have a default value provided by self.function
-       """
+        :raises ScriptError:
+             - if a option is present in option_nodes and
+             not in self.options
+             - if a option is not given a value and does not
+             have a default value provided by self.function
+        """
         for option in option_nodes:
             if option.name not in self.options:
                 if self.pass_kwargs:
@@ -76,8 +78,7 @@ class LegacyScript(Script, ScriptMixin):
         self.assert_options_filled()
 
     def __match_pos_options(self, arg_nodes: list):
-        """Mutates self.options based on positional strings
-        """
+        """Mutates self.options based on positional strings"""
         length = len(arg_nodes)
         for idx, option in enumerate(self.options.values()):
             if len(arg_nodes) >= idx:

@@ -27,14 +27,14 @@ class KeywordScript(Script, ScriptMixin):
 
     def __match_options(self, option_nodes: List[OptionNode]):
         """Mutates self.options based on key value pairs provided in
-        option nodes
+         option nodes
 
-       :param option_nodes: list of OptionNodes from the parser
+        :param option_nodes: list of OptionNodes from the parser
 
-       :raises ScriptError:
-            - if a option is present in option_nodes and
-            not in self.options
-       """
+        :raises ScriptError:
+             - if a option is present in option_nodes and
+             not in self.options
+        """
 
         for node in option_nodes:
             option: Union[Option, None] = self.options.get(node.name)
