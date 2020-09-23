@@ -49,7 +49,7 @@ class ScriptMixin:
     def assert_options_filled(self):
         for option in self.options.values():
             if option.value is NO_DEFAULT:
-                raise ScriptError(f"No valued for required option '{option.name}'")
+                raise ScriptError(f"No value for required option '{option.name}'")
 
     class ArgBuilder:
         def __init__(self, function):

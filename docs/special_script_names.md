@@ -10,7 +10,7 @@ Arc provides a couple special script names for particular functionality
 Using the `anon` script name will allow you to create that you don't have to refer to by a specific name. As the name implies it's anonymous. If one is declared, when you execute the CLI without any paramters, or without a recognized script name, it will attempt to run the anonymous script
 
 ```py
-@cli.script("anon", options=["name"])
+@cli.script("anon")
 def cli_anon(name="Jotaro"): # Just like a normal script, if you want options to be optional, you have to proivde a default value
     print(f"Hello {name}!")
 ```

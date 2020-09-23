@@ -6,7 +6,6 @@ to run, use
 import unittest
 import os
 
-
 # Set the CWD so the correct .arc file gets loaded
 dirname, filename = os.path.split(os.path.abspath(__file__))
 os.chdir(dirname)
@@ -21,6 +20,7 @@ from tests.converter import *
 # from tests.examples import *
 # from tests.utilities import *
 from tests.parser import *
+from tests import docs
 
 if __name__ == "__main__":
     unittest.main()

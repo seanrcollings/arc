@@ -11,7 +11,7 @@
 
 # Creating a CLI
 At it's simplest, Arc centers around a CLI object
-```py 1
+```py x
 from arc import CLI
 
 cli = CLI()
@@ -20,7 +20,7 @@ cli = CLI()
 ## Creating a Command
 Commands are created using Python decorators. A function becomes a command using the `cli.script()` decorator. You can pass a name into the script decorator. If there isn't an explicit name, the function's name will be used This will be the name used to execute the command.
 
-```py 2
+```py x
 @cli.script("hello")
 def hello():
     print("Hello, World!")
@@ -28,7 +28,7 @@ def hello():
 
 ## Running the CLI
 To run the CLI, you simply need to call the cli, like you would call a regular function
-```py 3
+```py x
 cli()
 ```
 
@@ -47,7 +47,7 @@ def hello():
 cli()
 ```
 
-```
+```out
 $ python example.py hello
 Hello, World!
 ```
@@ -69,13 +69,17 @@ hello
 ```
 
 If you want a more specific help command, simpley over ride the builtin one with a script of your own
-```py
+```py x 
 @cli.script("help")
 def helper():
     # print out your helper :)
 ```
 
 
-## Command Options & Flags
-Check this [doc](./options_and_flags.md) for info on options and flags
+## Arc Features
+- [Options and Flags](./options_and_flags.md)
+- [Converters](./converters.md)
+- [Special Script Names](./special_script_names.md)
+- [Utilities](./utilities.md)
+- [Script Types](./scripts/scripts.md)
 
