@@ -53,12 +53,10 @@ class ScriptMixin:
 
     class ArgBuilder:
         def __init__(self, function):
-            self.sig = inspect.signature(function)
-            self.length = len(self.sig.parameters.values())
-            self.options: Dict[str, Option] = {}
-            self.flags: Dict[str, Flag] = {}
-            self.param = None
-            self.idx = 0
+            self.__sig = inspect.signature(function)
+            self.__length = len(self.__sig.parameters.values())
+            self.__options: Dict[str, Option] = {}
+            self.__flags: Dict[str, Flag] = {}
 
         def __enter__(self):
             return self
@@ -67,20 +65,23 @@ class ScriptMixin:
             del self
 
         def __len__(self):
-            return self.length
+            return self.__length
 
         def __iter__(self):
-            for param in self.sig.parameters.values():
+            for param in self.__sig.parameters.values():
                 yield param
                 self.add_arg(param)
 
-        def add_arg(self, param):
-            if param.annotation is bool:
-                self.flags[param.name] = Flag(param)
-
-            elif param.kind not in (param.VAR_KEYWORD, param.VAR_POSITIONAL):
-                self.options[param.name] = Option(param)
-
         @property
         def args(self):
-            return self.options, self.flags
+            return self.__options, self.__flags
+
+        def add_arg(self, param):
+            if param.annotation is bool:
+                self.__flags[param.name] = Flag(param)
+
+            elif param.kind not in (param.VAR_KEYWORD, param.VAR_POSITIONAL):
+                self.__options[param.name] = Option(param)
+
+        def getMeta(self, **kwargs):
+            return dict(length=self.__length, **kwargs)

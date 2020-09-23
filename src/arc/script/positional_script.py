@@ -37,9 +37,9 @@ class PositionalScript(Script, ScriptMixin):
 
         self.assert_options_filled()
 
-    def arg_hook(self, builder):
-        param = builder.param
-        idx = builder.idx
+    def arg_hook(self, param, meta):
+        idx = meta["index"]
+
         if param.kind is param.VAR_KEYWORD:
             raise ScriptError(
                 "Positional Arc scripts do not allow **kwargs.",
@@ -49,7 +49,7 @@ class PositionalScript(Script, ScriptMixin):
             )
 
         if param.kind is param.VAR_POSITIONAL:
-            if idx != builder.length - 1:
+            if idx != meta["length"] - 1:
                 raise ScriptError(
                     "The variable postional arguement (*args)",
                     "must be the last argument of the script",

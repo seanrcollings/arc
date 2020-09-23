@@ -51,9 +51,8 @@ class KeywordScript(Script, ScriptMixin):
 
         self.assert_options_filled()
 
-    def arg_hook(self, builder):
-        param = builder.param
-        idx = builder.idx
+    def arg_hook(self, param, meta):
+        idx = meta["index"]
 
         if param.kind is param.VAR_POSITIONAL:
             raise ScriptError(
@@ -64,7 +63,7 @@ class KeywordScript(Script, ScriptMixin):
             )
 
         if param.kind is param.VAR_KEYWORD:
-            if idx != len(builder) - 1:
+            if idx != meta["length"] - 1:
                 raise ScriptError(
                     "The variable keyword arguement (**kwargs)",
                     "must be the last argument of the script",

@@ -10,7 +10,9 @@ from .script_mixin import ScriptMixin
 
 class Script(ABC, ScriptMixin):
     def __init__(
-        self, name: str, function: Callable,
+        self,
+        name: str,
+        function: Callable,
     ):
 
         self.name = name
@@ -60,9 +62,8 @@ class Script(ABC, ScriptMixin):
         with self.ArgBuilder(self.function) as builder:
 
             for idx, param in enumerate(builder):
-                builder.param = param
-                builder.idx = idx
-                self.arg_hook(builder)
+                meta = builder.getMeta(index=idx)
+                self.arg_hook(param, meta)
 
             return builder.args
 
@@ -87,11 +88,11 @@ class Script(ABC, ScriptMixin):
         Has had the UtilNode stripped away if it existed
         """
 
-    def arg_hook(self, builder):
+    def arg_hook(self, param, meta) -> None:
         """build_args hook.
         Can be used to check each of the args it's creating"""
 
-    def validate_input(self, script_node):
+    def validate_input(self, script_node) -> None:
         """Helper function to check if user input is valid,
         should be overridden by child class
 
