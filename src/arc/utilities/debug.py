@@ -31,7 +31,7 @@ def converters():
     """Displays information aboubt the currently accessible converters"""
     filler_words = ["foo", "bar", "baz", "buzz"]  # Randomly pick for filler information
     converter_rows = [
-        [v.__name__, v.convert_to, f"<{k}:{random.choice(filler_words)}>"]
+        [v.__name__, v.convert_to, f"{random.choice(filler_words)} : {k}"]
         for (k, v) in Config.converters.items()
     ]
 

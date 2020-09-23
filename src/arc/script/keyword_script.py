@@ -57,8 +57,8 @@ class KeywordScript(Script, ScriptMixin):
         if param.kind is param.VAR_POSITIONAL:
             raise ScriptError(
                 "Keyword Arc scripts do not allow *args.",
-                "If you wish to use it, add `positional=True`",
-                "to @cli.script. However, be aware that this will",
+                "If you wish to use it, change the script type to POSITIONAL",
+                "However, be aware that this will",
                 "make ALL options passed by position rather than keyword",
             )
 

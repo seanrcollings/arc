@@ -43,8 +43,8 @@ class PositionalScript(Script, ScriptMixin):
         if param.kind is param.VAR_KEYWORD:
             raise ScriptError(
                 "Positional Arc scripts do not allow **kwargs.",
-                "If you wish to use it, remove `positional=True`",
-                "from @cli.script. However, be aware that this will",
+                "If you wish to use it, change the script type to KEYWORD",
+                "in @cli.script. However, be aware that this will",
                 "make ALL options passed by keyword rather than position",
             )
 

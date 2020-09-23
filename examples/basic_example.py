@@ -4,8 +4,8 @@ from arc import CLI
 cli = CLI()  # Create an instance of the Arc CLI
 
 
-# Specifies the command's name and it's available options
-@cli.script("greet", options=["name"])
+# Specifies the command's name (if not specified, will use the function's name)
+@cli.script("greet")
 def greet(name="Joseph Joestar"):
     # any options specified above will be passed
     # to the function with the same name.

@@ -17,8 +17,9 @@ from tests.test_utility import TestUtility
 from tests.script import *
 from tests.converter import *
 
-# from tests.examples import *
-# from tests.utilities import *
+from tests.examples import *
+
+from tests.utilities import *
 from tests.parser import *
 from tests import docs
 

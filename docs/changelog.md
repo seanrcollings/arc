@@ -1,7 +1,7 @@
 # ARC - A Regular CLI: Change Log
 Check out the most recent, and all, versions of Arc.
-- [ARC - A Regular CLI: Change Log](#arc---a-regular-cli-change-log)
 - [Future](#future)
+- [v1.0 (First Major Version!)](#v10-first-major-version)
 - [v0.9 (Improved Parsing)](#v09-improved-parsing)
 - [v0.8.3 (No args and anonymous scrips)](#v083-no-args-and-anonymous-scrips)
 - [v0.8 (Holy features Batman!)](#v08-holy-features-batman)
@@ -12,9 +12,19 @@ Check out the most recent, and all, versions of Arc.
 - [v0.1 - 0.3](#v01---03)
 
 # Future
-- Positional arguements for scripts so they pass their input by position rather than by keyword
-- Retrieve type data for options from type hints
 - Implement multiple parsers for different styles of input
+- Type guessing
+- Better default helper text
+- Add custom types (ie: for file objects)
+- Allow arbitrary nesting of utilites
+
+# v1.0 (First Major Version!)
+- Implmented different [ScriptTypes](./scripts/script_types.md) that interpret input differently
+- Added supprot for Type Alias conversions, like `List[int]` currently only supports Union, List, Set, and Tuple Alias
+- Quoted options (option_name="option with spaces") function properly again
+- Parser now enables the use of anon scripts
+- Arc no longer errors when a .arc file is not present (whoops)
+- Users can now implement a custom script class to handle user input 
 
 # v0.9 (Improved Parsing)
 - Implemented a parsing engine for the user input
