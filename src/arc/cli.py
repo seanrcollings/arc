@@ -84,17 +84,14 @@ class CLI(ScriptContainer):
                 util.logger(f"Registered '{utility.name}' utility", state="debug")
             else:
                 raise ArcError(
-                    "Only instances of the 'Utility'",
-                    "class can be registerd to ARC",
+                    "Only instances of the 'Utility'", "class can be registerd to ARC",
                 )
 
     def helper(self):
         """Helper List function
         Prints out the docstrings for the CLI's scripts
         """
-        print(
-            "Usage: python3 FILENAME [COMMAND] [ARGUEMENTS ...]\n\n",
-        )
+        print("Usage: python3 FILENAME [COMMAND] [ARGUEMENTS ...]\n\n",)
 
         print("Installed Scripts: \n")
         if len(self.scripts) > 0:

@@ -84,10 +84,10 @@ class symbol:
     def __new__(cls, name, *args, **kwargs):
         if name in cls.__symbols__:
             return cls.__symbols__[name]
-        else:
-            obj = super().__new__(cls, *args, **kwargs)
-            cls.__symbols__[name] = obj
-            return obj
+
+        obj = super().__new__(cls, *args, **kwargs)
+        cls.__symbols__[name] = obj
+        return obj
 
     def __init__(self, name):
         self.__name = name

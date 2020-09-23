@@ -37,7 +37,7 @@ class ScriptType:
         """Enables the addition of Custom script classes to modulate Arc's behavior
 
         :param type_name: the name to be identified with the type. Will be uppercased
-            type_name = "test" | ScriptType.TEST
+            type_name = "test" -> ScriptType.TEST
 
         :param type_class: The Script type class, must inherit from Script
         """

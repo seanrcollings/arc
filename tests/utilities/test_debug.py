@@ -5,7 +5,8 @@ from arc.utilities.debug import debug
 
 
 class TestDebug(BaseTest):
-    '''For now, just test if these execute at all, not what they return'''
+    """For now, just test if these execute at all, not what they return"""
+
     def setUp(self):
         self.cli = self.create_cli(utilities=[debug])
 
