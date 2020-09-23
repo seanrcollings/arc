@@ -13,16 +13,13 @@
 
 
 ## Builtin Converters
-| Indicator | Class Name          | Converts          | Conversion Method                              |
-| --------- | ------------------- | ----------------- | ---------------------------------------------- |
-| str       | StringConverter     | name=Jonathen     | python builtin `str()`                         |
-| byte      | ByteConverter       | name=Terry        | python builtin `str.encode()`                  |
-| int       | IntConverter        | number=4          | python builtin `int()`                         |
-| float     | FloatConverter      | number=3.5        | python builtin `float()`                       |
-| bool      | BoolConverter       | happy=True, sad=0 | python builtin `bool()`                        |
-| sbool     | StringBoolConverter | happy=True        | Looks for a string of True/true or False/false |
-| ibool     | IntBoolConverter    | sad=0             | Truthy values of integers                      |
-| list      | ListConverter       | my_list=1,2,3,4,5 | Splits on commas, strips spaces                |
+| Indicator | Class Name      | Converts          | Conversion Method               |
+| --------- | --------------- | ----------------- | ------------------------------- |
+| str       | StringConverter | name=Jonathen     | python builtin `str()`          |
+| byte      | ByteConverter   | name=Terry        | python builtin `str.encode()`   |
+| int       | IntConverter    | number=4          | python builtin `int()`          |
+| float     | FloatConverter  | number=3.5        | python builtin `float()`        |
+| list      | ListConverter   | my_list=1,2,3,4,5 | Splits on commas, strips spaces |
 
 ## Future Converters
 | Indicator | Class Name    | Converts                    | Conversion Method |
@@ -31,35 +28,33 @@
 
 
 ## Use
-Typically, you don't want numbers, booleans, lists, represented as just strings. Arc provides type conversions that will convert the input to your desired type before passing it on to the script. If you've used Flask before, it's URL converters way in essentially the same way. If no converter is specified, the StringConverter is used by default
+Typically, you don't want numbers, booleans, lists, represented as just strings. Arc provides type conversions that will convert the input to your desired type before passing it on to the script. If you've used Flask before, it's URL converters way in essentially the same way. If no converter is specified, the StringConverter is used by default.
 
-A converter is indicated using the same syntax as Flask's URL Converters `<type:varible_name>`
-For example, for a int this could be: `<int:number>`
-For a bool it could be: `<bool:go_left>`
+The type to convert input to is specified by Python's builin type hinting system
 
 ## Examples
 ### Int Conversion
 ```py
-@cli.script("number_type", options=["<int:number>"])
-def number_type(number):
+@cli.script("number_type")
+def number_type(number: int):
     '''Prints the type of a number'''
     print(type(number))
 ```
 
-```
+```out
 $ python3 example.py number_type number=5
 <class 'int'>
 ```
 
 ### Float Converion
 ```py
-@cli.script("float_type", options=["<float:number>"])
-def float_type(number):
+@cli.script("float_type")
+def float_type(number: float):
     '''Prints the type of a float'''
     print(type(number))
 ```
 
-```
+```out
 $ python3 example.py number_type number=5.3
 <class 'float'>
 ```
@@ -69,13 +64,13 @@ Check [examples/converters.py](/examples/converters.py) for full examples
 Arc also allows you to add your own custom converters
 
 ```py
-from arc.converter import BaseConverter, ConversionError
+from arc.convert import BaseConverter, ConversionError
 
 class CustomObject:
   # ...
 
 class CustomObjectConverter(BaseConverter):
-  convert_to = "CustomObject"
+  convert_to = CustomObject
 
   def convert(self, value):
     # ...
@@ -83,14 +78,15 @@ class CustomObjectConverter(BaseConverter):
     # return converted object
 ```
 A converter class must define:
-- convert_to: string repr of the object the converter is meant to conver to
-- convert: the method that does the converting. Returns an instance of the convert_to object
+- `convert_to`: Nmae of the object the converter is meant to convert to
+- `convert`: the method that does the converting. Returns an instance of the convert_to object
   - Must accept one paramter, which is whatever the user input for that option
 
 To add a converter to the list of available ones:
 ```py
+from arc import Config
 cli = CLI()
-cli.config.converters["custom"] = CustomObjectConverter # <custom:value>
+Config.add_converter(CircleConverter)
 ```
 
 See a full example in [examples/custom_converter.py](/examples/custom_converter.py)
@@ -101,7 +97,7 @@ Pre-made converters defined in [src/arc/converter/converters.py](/src/arc/conver
 Arc also allows you to use it's converter functionality when gathering user input from within a script
 ```py
 from arc import CLI
-from arc.converter.input import convert_to_int
+from arc.convert.input import convert_to_int
 
 cli = CLI()
 

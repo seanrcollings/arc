@@ -4,7 +4,7 @@ from arc import Utility
 files = Utility("files")
 
 
-@files.script("create", options=["filename"])
+@files.script("create")
 def create(filename):
     """Creates a a specified file
     :param filename: file to be created
@@ -12,7 +12,7 @@ def create(filename):
     open(filename, "w+").close()
 
 
-@files.script("read", options=["filename"])
+@files.script("read")
 def read(filename):
     """Reads a specified file
     :param filename: file to be read
@@ -21,7 +21,7 @@ def read(filename):
         print(file.read())
 
 
-@files.script("append", options=["filename", "write"])
+@files.script("append")
 def append(filename, write):
     """Appends text to the specified file
     :param filename: file to be appended to
@@ -31,7 +31,7 @@ def append(filename, write):
         file.write(write)
 
 
-@files.script("delete", options=["filename"])
+@files.script("delete")
 def delete(filename):
     """Deletes a specified file
     :param filename: file to be deleted

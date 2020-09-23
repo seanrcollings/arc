@@ -5,8 +5,8 @@ They will also be loaded from a .arc file
 """
 import os
 from typing import Type, Dict, Any, List
-from arc.converter.converters import *
-from arc.converter import BaseConverter
+from arc.convert.converters import *
+from arc.convert import BaseConverter
 from arc.errors import ArcError, ConversionError
 
 
@@ -87,7 +87,8 @@ class Config:
     def load_arc_file(cls, arcfile):
         """Reads in a arc config file and parses it's contents"""
         if not os.path.isfile(arcfile):
-            raise FileNotFoundError(f"arc configuration file '{arcfile}' not found")
+            return
+            # raise FileNotFoundError(f"arc configuration file '{arcfile}' not found")
 
         file = open(arcfile)
         lines = file.readlines()

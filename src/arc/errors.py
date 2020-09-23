@@ -21,6 +21,10 @@ class ScriptError(ArcError):
     """Raised when there is an error in the creation of a script"""
 
 
+class ValidationError(ArcError):
+    """Raised when there is an error in validating script input"""
+
+
 class ParserError(ArcError):
     """Raised when there is an error in the parser"""
 

@@ -9,6 +9,9 @@ class Flag:
     def __str__(self):
         return f"--{self.name} {self.value}"
 
+    def __repr__(self):
+        return f"<Flag : {self.name} : {self.value}>"
+
     def reverse(self):
         self.value = not self.value
         return self

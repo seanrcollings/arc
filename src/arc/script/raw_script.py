@@ -1,0 +1,13 @@
+import sys
+
+from arc.parser.data_types import ScriptNode
+from .script import Script
+
+
+class RawScript(Script):
+    def execute(self, script_node):
+        with self.catch():
+            self.function(*sys.argv)
+
+    def match_input(self, script_node: ScriptNode):
+        pass

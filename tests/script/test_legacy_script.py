@@ -1,20 +1,12 @@
-"""Test the functionality of the Script class"""
-from unittest.mock import create_autospec
-from tests.base_test import BaseTest
-from arc.script import Script
+from tests.script.base_script_test import BaseScriptTest
+from arc.script.legacy_script import LegacyScript
 from arc.errors import ScriptError
-from arc.parser.data_types import FlagNode, OptionNode, ScriptNode, ArgNode
-from arc.converter.converters import *
+from arc.parser.data_types import FlagNode, OptionNode, ArgNode
+from arc.convert.converters import *
 
-# pylint: disable=protected-access, missing-function-docstring
-class TestScript(BaseTest):
-    def create_script(self, func, annotations={}, convert=True):
-        func.__annotations__ = annotations
-        func = create_autospec(func)
-        return Script(name="test", function=func, convert=convert)
 
-    def create_script_node(self, name="test", options=[], flags=[], args=[]):
-        return ScriptNode(name, options, flags, args)
+class TestLegacyScript(BaseScriptTest):
+    script_class = LegacyScript
 
     def test_execution(self):
         script = self.create_script(
@@ -110,16 +102,3 @@ class TestScript(BaseTest):
             )
         )
         script.function.assert_called_with(a=2, test1="2", test2="4")
-
-    def test_nonexistant_options(self):
-        script = self.create_script(
-            lambda x, y, test: x, annotations={"y": int, "test": bool}
-        )
-
-        with self.assertRaises(ScriptError):
-            script(self.create_script_node(options=[OptionNode("p", "2")]))
-
-    def test_nonexistant_flag(self):
-        script = self.create_script(lambda test: test, annotations={"test": bool})
-        with self.assertRaises(ScriptError):
-            script(self.create_script_node(flags=[FlagNode("none")]))

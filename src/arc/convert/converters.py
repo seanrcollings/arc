@@ -1,5 +1,5 @@
-from arc.converter.base_converter import BaseConverter
-from arc.converter import ConversionError
+from arc.convert.base_converter import BaseConverter
+from arc.convert import ConversionError
 
 
 class StringConverter(BaseConverter):

@@ -1,17 +1,20 @@
 from abc import ABC, abstractmethod
-from typing import Dict
+from typing import Dict, Type
 import arc._utils as util
-from arc.script import Script
+from arc.script import script_factory
+from arc.script.script import Script
 from arc.config import Config
-from arc.errors import ExecutionError, ScriptError
+from arc.errors import ScriptError
+from arc.script import ScriptType
 
 
 class ScriptContainer(ABC):
     """Parent class of CLI and Utility"""
 
-    def __init__(self, arcdir=".", arcfile=".arc"):
-        self.scripts: Dict[Script] = {}
-        self.script("help")(self.helper)
+    def __init__(self, arcdir=".", arcfile=".arc", script_type=ScriptType.KEYWORD):
+        self.script_type = script_type
+        self.scripts: Dict[str, Type[Script]] = {}
+        self.script("help", script_type=ScriptType.KEYWORD)(self.helper)
 
         if arcfile is not None and not Config._loaded:
             Config.load_arc_file(f"{arcdir}/{arcfile}")
@@ -20,7 +23,7 @@ class ScriptContainer(ABC):
     def __call__(self):
         pass
 
-    def script(self, name=None, positional=False):
+    def script(self, name=None, script_type=None, **kwargs):
         """Installs a script to the container
         Creates a script object, appends it to
         the script container
@@ -28,17 +31,19 @@ class ScriptContainer(ABC):
         :returns: the provided function, for decorator chaining. As such,
             you can give one function multiple script names
         """
+        # Fallback for script type:
+        #   - provided arguement
+        #   - script_type of the container (if it's a util it can also inherit it's type)
+        #   - Defaults to KEYWORD
+        script_type = script_type or self.script_type or ScriptType.KEYWORD
 
         def decorator(function):
-
-            if name is None:
-                script_name = function.__name__
-            else:
-                script_name = name
-
-            script = Script(name=script_name, positional=positional, function=function)
+            script = script_factory(name, function, script_type, **kwargs)
             self.scripts[script.name] = script
-            util.logger(f"Registered '{script.name}' script", state="debug")
+            util.logger(
+                f"registered '{script.name}' script to {self.__class__.__name__}",
+                state="debug",
+            )
             return function
 
         return decorator
@@ -52,19 +57,13 @@ class ScriptContainer(ABC):
 
         :raises ScriptError: If the command doesn't exist
 
-        :excepts ExecutionError: Raised during the execution of a script anytime
-            bad data is passed or something unexpected happens
         """
 
-        script_name = script_node.name
-        if script_name not in self.scripts:
-            raise ScriptError(f"The script '{script_name}' is not recognized")
+        if script_node.name not in self.scripts:
+            raise ScriptError(f"The script '{script_node.name}' is not recognized")
 
-        script = self.scripts[script_name]
-        try:
-            script(script_node)
-        except ExecutionError as e:
-            print(e)
+        script = self.scripts[script_node.name]
+        script(script_node)
 
     @abstractmethod
     def helper(self):

@@ -26,7 +26,7 @@ $ pip install -e arc
 # Quick Start
 
 ```py
-from arc import CLI
+from arc import CLI 
 
 cli = CLI()
 

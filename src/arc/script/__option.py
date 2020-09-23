@@ -1,8 +1,8 @@
 from arc.config import Config
-from arc.converter.alias import convert_alias, is_alias
+from arc.convert.alias import convert_alias, is_alias
+from arc._utils import symbol
 
-
-NO_DEFAULT = type("NO_DEFAULT", (), {})
+NO_DEFAULT = symbol("NO_DEFAULT")
 
 
 class Option:

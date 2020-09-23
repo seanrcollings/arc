@@ -1,7 +1,7 @@
 from typing import List, Set, Tuple, Dict, Union
 from tests.base_test import BaseTest
 from arc.errors import ConversionError
-from arc.converter.alias import convert_alias as ca
+from arc.convert.alias import convert_alias as ca
 
 
 class TestAliasConverter(BaseTest):

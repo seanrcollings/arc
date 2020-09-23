@@ -41,7 +41,7 @@ log=True # comments are ignored!
 Would have the same result as the example above
 
 Arc will default to looking for a file called .arc in the current directory. But you can specify a different name:
-```py
+```py x
 from arc import CLI
 cli = CLI(arcfile="myacrfile")
 ```

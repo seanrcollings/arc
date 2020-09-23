@@ -6,7 +6,7 @@ cli = CLI(utilities=[converse])
 
 
 # regular cli command
-@cli.script("greet", options=["name"])
+@cli.script("greet")
 def cli_greet(name="Joseph Joestar"):
     """Command that greets someone CLI command"""
     print(f"Hello, {name}!")
@@ -14,7 +14,7 @@ def cli_greet(name="Joseph Joestar"):
 
 
 # utility command
-@converse.script("greet", options=["name"])
+@converse.script("greet")
 def utility_greet(name="Jotaro Kujo"):
     """Command that greets someone utility command"""
     print(f"Howdy, {name}!")

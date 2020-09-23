@@ -21,7 +21,6 @@ class BaseTest(unittest.TestCase):
 
     def create_util(self, name="util"):
         util = Utility(name=name)
-
         for script in self.scripts:
             self.create_script(
                 util, script["name"], script["function"], script["annotations"]

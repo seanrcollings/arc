@@ -2,6 +2,7 @@ import sys
 import os
 import time
 import functools
+from typing import Dict
 from arc import Config
 
 
@@ -47,7 +48,7 @@ def exception_handler(exception_type, exception, traceback, debug_hook=sys.excep
         print(f"{exception_type.__name__}: {exception}")
 
 
-sys.excepthook = exception_handler
+# sys.excepthook = exception_handler
 
 
 def clear():
@@ -74,3 +75,28 @@ def timer(func):
         logger(f"Completed in {end_time - start_time:.2f}s", state="ok")
 
     return decorator
+
+
+class symbol:
+    __symbols__: Dict[str, object] = {}
+    # use object to get rid of mypy error, will actually be of type symbol
+
+    def __new__(cls, name, *args, **kwargs):
+        if name in cls.__symbols__:
+            return cls.__symbols__[name]
+
+        obj = super().__new__(cls, *args, **kwargs)
+        cls.__symbols__[name] = obj
+        return obj
+
+    def __init__(self, name):
+        self.__name = name
+
+    def __str__(self):
+        return self.__name
+
+    def __hash__(self):
+        return hash(self.__name)
+
+    def __eq__(self, other):
+        return self.__name == other

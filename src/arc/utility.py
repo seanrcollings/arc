@@ -16,8 +16,8 @@ class Utility(ScriptContainer):
         db:createuser
     """
 
-    def __init__(self, name):
-        super().__init__()
+    def __init__(self, name, *args, script_type=None, **kwargs):
+        super().__init__(*args, script_type=script_type, **kwargs)
         self.name = name
         logger(f"Utility '{name}' created'", state="debug")
 
@@ -25,7 +25,7 @@ class Utility(ScriptContainer):
         self.execute(script_node)
 
     def __repr__(self):
-        return f"<Utility : {self.name}"
+        return f"<Utility : {self.name}>"
 
     def helper(self):
         """Helper function for utilities

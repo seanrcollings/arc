@@ -6,11 +6,12 @@ import arc._utils as util
 from arc.utility import Utility
 from arc.parser import Tokenizer, Parser, ScriptNode, UtilNode
 from arc.config import Config
+from arc.errors import ArcError
 
 
 class CLI(ScriptContainer):
-    def __init__(self, utilities: list = None, arcdir=".", arcfile=".arc"):
-        super().__init__(arcdir, arcfile)
+    def __init__(self, utilities: list = None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.utilities: Dict[str, Utility] = {}
 
         if utilities is not None:
@@ -55,8 +56,7 @@ class CLI(ScriptContainer):
         util_name = util_node.name
 
         if util_name not in self.utilities:
-            print(f"The utility '{util_name}' is not recognized")
-            sys.exit(1)
+            raise ArcError(f"The utility '{util_name}' is not recognized")
 
         self.utilities[util_name](util_node.script)
 
@@ -78,13 +78,14 @@ class CLI(ScriptContainer):
         """Installs a series of utilities to the CLI"""
         for utility in utilities:
             if isinstance(utility, Utility):
+                if utility.script_type is None:
+                    utility.script_type = self.script_type
                 self.utilities[utility.name] = utility
                 util.logger(f"Registered '{utility.name}' utility", state="debug")
             else:
-                print(
-                    "Only instances of the 'Utility'", "class can be registerd to Arc"
+                raise ArcError(
+                    "Only instances of the 'Utility'", "class can be registerd to ARC",
                 )
-                sys.exit(1)
 
     def helper(self):
         """Helper List function
