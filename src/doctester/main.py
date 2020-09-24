@@ -1,6 +1,12 @@
 import re
-from typing import List
-from doctester.data_types import CodeBlock, Executable, GROUP, NO_EXECUTE, EXECUTE
+from typing import List, Tuple
+from doctester.data_types import (
+    CodeBlock,
+    Executable,
+    FRAGMENT,
+    EXECUTE,
+    OUTPUT,
+)
 
 # def walk_dir(directory):
 #     for root, dirs, files in os.walk(directory, topdown=True):
@@ -9,7 +15,7 @@ from doctester.data_types import CodeBlock, Executable, GROUP, NO_EXECUTE, EXECU
 
 
 def parse_file(file_name):
-    regex = r"```([a-z0-9 ]*)\n([\s\S]*?)\n```"
+    regex = r"```([a-wyz0-9 ]+)\n([\s\S]*?)\n```"
     blocks = []
     with open(file_name) as file:
         test_str = file.read()
@@ -19,39 +25,42 @@ def parse_file(file_name):
     return blocks
 
 
+def make_groups(blocks) -> List[List[CodeBlock]]:
+    groups: List[List[CodeBlock]] = []
+    while len(blocks) > 0:
+        first_block = blocks.pop(0)
+        group: List[CodeBlock] = [first_block]
+        for _ in range(0, len(blocks) - 1):
+            block = blocks[0]
+            if (
+                block.lang == first_block.lang
+                and block.fragment_index > first_block.fragment_index
+            ):
+                group.append(blocks.pop(0))
+            else:
+                break
+        groups.append(group)
+    return groups
+
+
 def execute_factory(blocks: List[CodeBlock]) -> List[Executable]:
     executables: List[Executable] = []
-    breakpoint()
-    while len(blocks) != 0:
-        block = blocks.pop(0)
+    groups = make_groups(blocks)
 
-        if block.directive == GROUP:
-            group = [block]
+    for index, group in enumerate(groups):
+        group_type = group[0].type
+        if group_type == OUTPUT:
+            continue
 
-            for group_block in blocks:
-                # breakpoint()
-                if group_block.directive != GROUP:
-                    break
-                group.append(blocks.pop(0))
+        output_group = []
+        if index + 1 < len(groups) - 1 and groups[index + 1][0].type == OUTPUT:
+            output_group = groups[index + 1]
 
-            output = None
-            if len(blocks) != 0 and blocks[0].lang == "out":
-                output = blocks.pop(0)
-            executables.append(Executable(group, output))
-
-        elif block.directive == EXECUTE:
-            output = None
-            if len(blocks) != 0 and blocks[0].lang == "out":
-                output = blocks.pop(0)
-            executables.append(Executable([block], output))
-
+        executables.append(Executable(group, output_group))
     return executables
 
 
-b = parse_file("docs/test.md")
+b = parse_file("docs/getting_started.md")
 d = execute_factory(b)
-for ex in d:
-    print("----------------")
-    for comp in ex.exec_components:
-        print(comp.code)
-    print("----------------")
+for exe in d:
+    exe.run()

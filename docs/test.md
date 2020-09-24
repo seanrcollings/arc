@@ -32,54 +32,7 @@ To run the CLI, you simply need to call the cli, like you would call a regular f
 cli()
 ```
 
-
-## Putting it together
-```py
-from arc import CLI
-
-cli = CLI()
-
-@cli.script("hello")
-def hello():
-    '''Command that prints Hello World'''
-    print("Hello, World!")
-
-cli()
-```
-
 ```out
 $ python example.py hello
 Hello, World!
 ```
-
-
-## Help Command
-All CLI's come bundled with a help command that displays all installed commands. The command uses the function's docstring as it's documentation
-```
-$ python example.py help
-Usage: python3 FILENAME [COMMAND] [ARGUEMENTS ...]
-
-Possible Options:
-help
-    Helper List function
-        Prints out the docstrings for the clis's scripts
-
-hello
-    Command that prints Hello World
-```
-
-If you want a more specific help command, simpley over ride the builtin one with a script of your own
-```py 
-@cli.script("help")
-def helper():
-    # print out your helper :)
-```
-
-
-## Arc Features
-- [Options and Flags](./options_and_flags.md)
-- [Converters](./converters.md)
-- [Special Script Names](./special_script_names.md)
-- [Utilities](./utilities.md)
-- [Script Types](./scripts/scripts.md)
-
