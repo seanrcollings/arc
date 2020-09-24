@@ -9,7 +9,7 @@ from .script_mixin import ScriptMixin
 
 class PositionalScript(Script, ScriptMixin):
     def __init__(self, *args, **kwargs):
-        self.pass_args = False
+        self.__pass_args = False
         super().__init__(*args, **kwargs)
 
     def execute(self, script_node: ScriptNode):
@@ -18,7 +18,7 @@ class PositionalScript(Script, ScriptMixin):
             *[obj.value for obj in self.flags.values()],
         ]
 
-        if self.pass_args:
+        if self.__pass_args:
             args += [arg.value for arg in script_node.args]
 
         with self.catch():
@@ -55,7 +55,7 @@ class PositionalScript(Script, ScriptMixin):
                     "must be the last argument of the script",
                 )
 
-            self.pass_args = True
+            self.__pass_args = True
 
     def validate_input(self, script_node: ScriptNode):
         if len(script_node.options) > 0:

@@ -1,54 +1,31 @@
-import sys
+import logging
 import os
 import time
 import functools
 from typing import Dict
-from arc import Config
 
 
-def logger(*messages, state="info", sep=" ", end="\n"):
-    """Arc logger utility. Logs various dev info.
-    Can be turned on by setting Config.log or Config.debug to True
-    """
+class MyFormatter(logging.Formatter):
+    def format(self, record):
+        level = record.levelno
+        message = record.getMessage()
+        if level == logging.DEBUG:
+            return decorate_text(message, tcolor=33)
+        elif level == logging.INFO:
+            return decorate_text(message, tcolor=32)
 
-    if Config.log or Config.debug:
-        if state == "ok":
-            print(*decorate_text_gen(*messages, tcolor="32"), sep=sep, end=end)
-        elif state == "error":
-            print(*decorate_text_gen(*messages, tcolor="31"), sep=sep, end=end)
-        elif state == "debug" and Config.debug:
-            print(*decorate_text_gen(*messages, tcolor="33"), sep=sep, end=end)
-        elif state == "info":
-            print(*decorate_text_gen(*messages, tcolor="37"), sep=sep, end=end)
-        else:
-            print(*messages, sep=sep, end=end)
+        return decorate_text(message, tcolor=31)
 
 
-def decorate_text_gen(*strings, tcolor="32", bcolor="40", style="1"):
-    """Generator that colors a series of strings"""
-    for string in strings:
-        if not Config.decorate_text:
-            yield string
-        else:
-            yield decorate_text(string, tcolor, bcolor, style)
+logger = logging.getLogger("arc_logger")
+handler = logging.StreamHandler()
+formatter = MyFormatter()
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def decorate_text(string, tcolor="32", bcolor="40", style="1"):
     return f"\033[{style};{tcolor}m{string}\033[00m"
-
-
-def exception_handler(exception_type, exception, traceback, debug_hook=sys.excepthook):
-    """Exception handler to overide the default one
-    supresses traceback messages
-    will be used if debug is set to False
-    """
-    if Config.debug:
-        debug_hook(exception_type, exception, traceback)
-    else:
-        print(f"{exception_type.__name__}: {exception}")
-
-
-# sys.excepthook = exception_handler
 
 
 def clear():
@@ -72,7 +49,7 @@ def timer(func):
         start_time = time.time()
         func(*args, **kwargs)
         end_time = time.time()
-        logger(f"Completed in {end_time - start_time:.2f}s", state="ok")
+        logger.info(f"Completed in {end_time - start_time:.2f}s")
 
     return decorator
 

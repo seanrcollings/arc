@@ -34,7 +34,7 @@ class CLI(ScriptContainer):
         input_list = self.__get_input__list(args, kwargs)
         tokens = Tokenizer(input_list).tokenize()
         parsed = Parser(tokens).parse()
-        # util.logger(parsed)
+        # util.logger.debug(parsed)
 
         if isinstance(parsed, UtilNode):
             self.__execute_utility(parsed)
@@ -81,7 +81,7 @@ class CLI(ScriptContainer):
                 if utility.script_type is None:
                     utility.script_type = self.script_type
                 self.utilities[utility.name] = utility
-                util.logger(f"Registered '{utility.name}' utility", state="debug")
+                util.logger.debug(f"Registered '{utility.name}' utility")
             else:
                 raise ArcError(
                     "Only instances of the 'Utility'", "class can be registerd to ARC",

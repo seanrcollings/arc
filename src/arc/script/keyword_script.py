@@ -9,7 +9,7 @@ from .script import Script
 
 class KeywordScript(Script, ScriptMixin):
     def __init__(self, name, function):
-        self.pass_kwargs = False
+        self.__pass_kwargs = False
         super().__init__(name, function)
 
     def execute(self, script_node: ScriptNode):
@@ -39,7 +39,7 @@ class KeywordScript(Script, ScriptMixin):
         for node in option_nodes:
             option: Union[Option, None] = self.options.get(node.name)
 
-            if self.pass_kwargs and not option:
+            if self.__pass_kwargs and not option:
                 self.options[node.name] = option = Option(
                     data_dict=dict(name=node.name, annotation=str, default=NO_DEFAULT)
                 )
@@ -69,7 +69,7 @@ class KeywordScript(Script, ScriptMixin):
                     "must be the last argument of the script",
                 )
 
-            self.pass_kwargs = True
+            self.__pass_kwargs = True
 
     def validate_input(self, script_node: ScriptNode):
         if len(script_node.args) > 0:

@@ -56,7 +56,7 @@ class TestKeywordScript(BaseScriptTest):
             script = self.create_script(lambda *args: args)
 
         script = self.create_script(lambda **kwargs: kwargs)
-        self.assertTrue(script.pass_kwargs)
+        self.assertTrue(script._KeywordScript__pass_kwargs)
 
     def test_validate_input(self):
         with self.assertRaises(ScriptError):

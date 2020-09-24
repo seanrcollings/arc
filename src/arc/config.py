@@ -4,6 +4,7 @@ They are also not changed by the program as it executes.
 They will also be loaded from a .arc file
 """
 import os
+import logging
 from typing import Type, Dict, Any, List
 from arc.convert.converters import *
 from arc.convert import BaseConverter
@@ -104,6 +105,16 @@ class Config:
                 cls.__set_loaded_value(name, value)
 
         cls._loaded = True
+        cls.__setup_logging()
+
+    @classmethod
+    def __setup_logging(cls):
+        logger = logging.getLogger("arc_logger")
+
+        if cls.log:
+            logger.setLevel(logging.INFO)
+        if cls.debug:
+            logger.setLevel(logging.DEBUG)
 
     @classmethod
     def add_converter(cls, obj: Type[BaseConverter]):

@@ -38,13 +38,13 @@ class ScriptMixin:
         """Context Manager to catch and handle errors
         when calling the script's function"""
         try:
-            util.logger("---------------------------")
+            util.logger.debug("---------------------------")
             yield
         except ExecutionError as e:
             print(e)
             sys.exit(1)
         finally:
-            util.logger("---------------------------")
+            util.logger.debug("---------------------------")
 
     def assert_options_filled(self):
         for option in self.options.values():

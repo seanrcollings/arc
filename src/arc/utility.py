@@ -4,7 +4,7 @@ from arc._utils import logger
 
 
 class Utility(ScriptContainer):
-    """ CLI subclass to create a group of related scripts
+    """CLI subclass to create a group of related scripts
 
     If the CLI finds that the first section of a command
     is a installed utility, it will pass control over to the utility
@@ -19,7 +19,7 @@ class Utility(ScriptContainer):
     def __init__(self, name, *args, script_type=None, **kwargs):
         super().__init__(*args, script_type=script_type, **kwargs)
         self.name = name
-        logger(f"Utility '{name}' created'", state="debug")
+        logger.debug(f"Utility '{name}' created'")
 
     def __call__(self, script_node):
         self.execute(script_node)

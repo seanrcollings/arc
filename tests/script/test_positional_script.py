@@ -21,4 +21,4 @@ class TestPositionalScript(BaseScriptTest):
             script = self.create_script(lambda **kwargs: kwargs)
 
         script = self.create_script(lambda *args: args)
-        self.assertTrue(script.pass_args)
+        self.assertTrue(script._PositionalScript__pass_args)

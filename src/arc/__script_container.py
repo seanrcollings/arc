@@ -40,9 +40,8 @@ class ScriptContainer(ABC):
         def decorator(function):
             script = script_factory(name, function, script_type, **kwargs)
             self.scripts[script.name] = script
-            util.logger(
-                f"registered '{script.name}' script to {self.__class__.__name__}",
-                state="debug",
+            util.logger.debug(
+                f"registered '{script.name}' script to {self.__class__.__name__}"
             )
             return function
 

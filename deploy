@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import sys
 import subprocess
-import re
 
 if len(sys.argv) == 1:
     raise ValueError("Must provide a version number")
