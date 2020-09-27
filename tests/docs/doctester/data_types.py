@@ -66,29 +66,24 @@ class Executable(unittest.TestCase):
         self.origin = exec_components[0].file_name
         super().__init__()
 
-    def run_tests(self):
+    def test_execute(self):
         if len(self.tests) == 0:
             return
-        print(f"Testing docs for: {self.origin}")
-        print("-----------------------------------------")
+        # print(f"Testing docs for: {self.origin}")
+        # print("-----------------------------------------")
         for io in self.tests:
             with self.create_file(io):
-                print(f"Executing command: [{str(io.command)}]")
-                try:
-                    out = subprocess.run(
-                        [io.command.exe, io.command.file, *io.command.args],
-                        check=True,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                    )
+                # print(f"Executing command: [{str(io.command)}]")
+                out = subprocess.run(
+                    [io.command.exe, io.command.file, *io.command.args],
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
 
-                    if out.stdout.decode("utf-8").strip("\n") == io.output:
-                        print("Passed")
-                except subprocess.CalledProcessError as e:
-                    print("Command failed with the following error:")
-                    print(e.stderr.decode("utf-8"))
+                self.assertEqual(out.stdout.decode("utf-8").strip("\n"), io.output)
 
-        print("-----------------------------------------")
+        # print("-----------------------------------------")
 
     @contextmanager
     def create_file(self, io: IO):

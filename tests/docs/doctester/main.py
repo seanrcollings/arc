@@ -1,7 +1,7 @@
 import os
 import re
 from typing import List
-from doctester.data_types import (
+from .data_types import (
     CodeBlock,
     Executable,
     OUTPUT,
@@ -65,19 +65,19 @@ def execute_factory(blocks: List[CodeBlock]) -> List[Executable]:
 
 
 def test_docs_dir(root_dir: str):
-    parsed_files = walk_dir("docs")
+    parsed_files = walk_dir(root_dir)
     for p in parsed_files:
         executables = execute_factory(p)
         for exe in executables:
-            exe.run_tests()
+            exe.test_execute()
 
 
 def test_doc_file(file_name: str):
     parsed_file = parse_file(file_name)
     executable = execute_factory(parsed_file)
     for exe in executable:
-        exe.run_tests()
+        exe.test_execute()
 
 
-test_docs_dir("docs")
+# test_docs_dir("docs")
 # test_doc_file("docs/options_and_flags.md")

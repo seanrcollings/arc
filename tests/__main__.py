@@ -21,7 +21,7 @@ from tests.examples import *
 
 from tests.utilities import *
 from tests.parser import *
-from tests import docs
+from tests.docs import *
 
 if __name__ == "__main__":
     unittest.main()
