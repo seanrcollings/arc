@@ -35,10 +35,16 @@ The type to convert input to is specified by Python's builin type hinting system
 ## Examples
 ### Int Conversion
 ```py
+from arc import CLI
+
+cli = CLI()
+
 @cli.script("number_type")
 def number_type(number: int):
     '''Prints the type of a number'''
     print(type(number))
+
+cli()
 ```
 
 ```out
@@ -48,14 +54,19 @@ $ python3 example.py number_type number=5
 
 ### Float Converion
 ```py
+from arc import CLI
+cli = CLI()
+
 @cli.script("float_type")
 def float_type(number: float):
     '''Prints the type of a float'''
     print(type(number))
+
+cli()
 ```
 
 ```out
-$ python3 example.py number_type number=5.3
+$ python3 example.py float_type number=5.3
 <class 'float'>
 ```
 Check [examples/converters.py](/examples/converters.py) for full examples

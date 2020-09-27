@@ -1,17 +1,19 @@
+import os
 import re
-from typing import List, Tuple
+from typing import List
 from doctester.data_types import (
     CodeBlock,
     Executable,
-    FRAGMENT,
-    EXECUTE,
     OUTPUT,
 )
 
-# def walk_dir(directory):
-#     for root, dirs, files in os.walk(directory, topdown=True):
-#         for file in files:
-#             parse_file(f"{root}/{file}")
+
+def walk_dir(directory):
+    parsed_files: List[List[CodeBlock]] = []
+    for root, _, files in os.walk(directory, topdown=True):
+        for file in files:
+            parsed_files.append(parse_file(f"{root}/{file}"))
+    return parsed_files
 
 
 def parse_file(file_name):
@@ -21,7 +23,9 @@ def parse_file(file_name):
         test_str = file.read()
         matches = re.finditer(regex, test_str, re.MULTILINE)
         for match in matches:
-            blocks.append(CodeBlock(match.group(1), match.group(2)))
+            blocks.append(
+                CodeBlock(match.group(1), match.group(2), file_name=file_name)
+            )
     return blocks
 
 
@@ -60,7 +64,20 @@ def execute_factory(blocks: List[CodeBlock]) -> List[Executable]:
     return executables
 
 
-b = parse_file("docs/getting_started.md")
-d = execute_factory(b)
-for exe in d:
-    exe.run()
+def test_docs_dir(root_dir: str):
+    parsed_files = walk_dir("docs")
+    for p in parsed_files:
+        executables = execute_factory(p)
+        for exe in executables:
+            exe.run_tests()
+
+
+def test_doc_file(file_name: str):
+    parsed_file = parse_file(file_name)
+    executable = execute_factory(parsed_file)
+    for exe in executable:
+        exe.run_tests()
+
+
+test_docs_dir("docs")
+# test_doc_file("docs/options_and_flags.md")

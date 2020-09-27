@@ -6,10 +6,15 @@ When it comes to CLI's you need to be able to accept user input. Arc will look a
 Let's take our example from before, and add an option the user can type in to be printed instead of "Hello, World!"
 
 ```py
+from arc import CLI
+cli = CLI()
+
 @cli.script()
 def greet(name):
     '''Command that greets someone'''
     print(f"Hello, {name}!")
+
+cli()
 ```
 ```out
 $ python3 example.py greet name=Sean
@@ -28,10 +33,15 @@ greet() missing 1 required positional argument: 'name'
 
 If you add a default value to the arguement, the option becomes optional
 ```py
+from arc import CLI
+cli = CLI()
+
 @cli.script()
 def greet(name="Joseph Joestar"):
     '''Command that greets someone'''
     print(f"Hello, {name}!")
+
+cli()
 ```
 
 ```out
@@ -44,6 +54,9 @@ Flags are specified by giving a function argument a `bool` type hint. Flags look
 
 ### Using a flag
 ```py
+from arc import CLI
+cli = CLI()
+
 @cli.script("hello")
 def hello(name, reverse: bool):
     '''Command that prints greets someone'''

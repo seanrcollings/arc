@@ -1,8 +1,11 @@
-from contextlib import contextmanager
-from dataclasses import dataclass
-from typing import List, Tuple
-import subprocess
 import os
+import shlex
+import unittest
+import subprocess
+from typing import List
+from dataclasses import dataclass
+from contextlib import contextmanager
+
 
 EXECUTE = "EXECUTE"
 FRAGMENT = "FRAGMENT"
@@ -10,10 +13,11 @@ OUTPUT = "OUTPUT"
 
 
 class CodeBlock:
-    def __init__(self, meta: str, code: str):
+    def __init__(self, meta: str, code: str, file_name: str):
         split = meta.strip().split(" ")
         self.lang = split[0]
         self.fragment_index = 0
+        self.file_name = file_name
 
         if len(split) == 2:
             _type = split[1]
@@ -40,41 +44,61 @@ class CodeBlock:
 
 
 @dataclass
+class Command:
+    exe: str
+    file: str
+    args: List[str]
+
+    def __str__(self):
+        return f"{self.exe} {self.file} {' '.join(self.args)}"
+
+
+@dataclass
 class IO:
-    command: str
+    command: Command
     output: str
 
 
-class Executable:
+class Executable(unittest.TestCase):
     def __init__(self, exec_components: List[CodeBlock], output: List[CodeBlock]):
         self.code: str = self.parse_exec(exec_components)
         self.tests: List[IO] = self.parse_output(output)
+        self.origin = exec_components[0].file_name
+        super().__init__()
 
-    def run(self):
+    def run_tests(self):
+        if len(self.tests) == 0:
+            return
+        print(f"Testing docs for: {self.origin}")
+        print("-----------------------------------------")
         for io in self.tests:
-            with self.create_file():
+            with self.create_file(io):
+                print(f"Executing command: [{str(io.command)}]")
+                try:
+                    out = subprocess.run(
+                        [io.command.exe, io.command.file, *io.command.args],
+                        check=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                    )
 
-                out = subprocess.run(
-                    ["python", "example.py", "hello"],
-                    check=True,
-                    stdout=subprocess.PIPE,
-                )
+                    if out.stdout.decode("utf-8").strip("\n") == io.output:
+                        print("Passed")
+                except subprocess.CalledProcessError as e:
+                    print("Command failed with the following error:")
+                    print(e.stderr.decode("utf-8"))
 
-                print(out.stdout.decode("utf-8").strip("\n") == io.output)
-
-            # print(out.decode("utf-8").strip("\n"), io.output)
-            # print(out.decode("utf-8") == io.output)
+        print("-----------------------------------------")
 
     @contextmanager
-    def create_file(self):
-        file = open("example.py", "w+")
+    def create_file(self, io: IO):
+        file = open(io.command.file, "w+")
         file.write(self.code)
         file.close()
         try:
             yield file
         finally:
-            pass
-            os.remove("example.py")
+            os.remove(io.command.file)
 
     @staticmethod
     def parse_exec(comp: List[CodeBlock]) -> str:
@@ -85,7 +109,9 @@ class Executable:
         tests: List[IO] = []
         for output_block in output:
             lines = output_block.code.splitlines()
-            command = lines[0].strip("$").strip()
+            args_list = shlex.split(lines[0].strip("$").strip())
+
+            command = Command(args_list[0], args_list[1], args_list[2:])
             data = "\n".join(lines[1:])
             tests.append(IO(command, data))
         return tests
