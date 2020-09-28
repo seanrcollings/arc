@@ -77,7 +77,3 @@ def test_doc_file(file_name: str):
     executable = execute_factory(parsed_file)
     for exe in executable:
         exe.test_execute()
-
-
-# test_docs_dir("docs")
-# test_doc_file("docs/options_and_flags.md")

@@ -10,12 +10,12 @@ from arc import ScriptType as st
 cli = CLI()
 
 @cli.script("greeting", st.KEYWORD) # Since it is the default, specifying here is optional
-def test(name="Jotaro Kujo");
+def test(name="Jotaro Kujo"):
     print(f"Greeting, {name}!")
 
 cli()
 ```
-```
+```out
 $ python3 example.py greeting name="Sean"
 Greeting, Sean!
 ```
@@ -27,7 +27,7 @@ from arc import ScriptType as st
 cli = CLI()
 
 @cli.script("greeting", st.KEYWORD)
-def test(name="Jotaro Kujo", **kwargs);
+def test(name="Jotaro Kujo", **kwargs):
     print(f"Greeting, {name}!")
     if len(kwargs) > 0:
         for key, val in kwargs.items():
@@ -35,7 +35,7 @@ def test(name="Jotaro Kujo", **kwargs);
 
 cli()
 ```
-```
+```out
 $ python3 example.py greeting name="Sean" age=19 occupation="Programmer"
 Greeting, Sean!
 age 19
@@ -55,12 +55,12 @@ from arc import ScriptType as st
 cli = CLI()
 
 @cli.script("greeting", st.POSITIONAL)
-def test(name="Jotaro Kujo");
+def test(name="Jotaro Kujo"):
     print(f"Greeting, {name}!")
 
 cli()
 ```
-```
+```out
 $ python3 example.py greeting Sean
 Greeting, Sean!
 ```
@@ -71,16 +71,16 @@ from arc import ScriptType as st
 
 cli = CLI()
 
-@cli.script("greeting", st.KEYWORD)
-def test(name="Jotaro Kujo", *args);
+@cli.script("greeting", st.POSITIONAL)
+def test(name="Jotaro Kujo", *args):
     print(f"Greeting, {name}!")
-    if len(kwargs) > 0:
-        for val in arg:
+    if len(args) > 0:
+        for val in args:
             print(val)
 
 cli()
 ```
-```
+```out
 $ python3 example.py greeting "Sean" 19 "Programmer"
 Greeting, Sean!
 19

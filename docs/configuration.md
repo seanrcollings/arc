@@ -23,7 +23,7 @@ def hello():
 
 cli()
 ```
-```
+```out
 $ python3 example.py hello
 Hello, World!
 Completed in 0.00s
