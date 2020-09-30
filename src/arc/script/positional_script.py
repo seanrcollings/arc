@@ -32,6 +32,8 @@ class PositionalScript(Script, ScriptMixin):
         options = list(self.options.values())
 
         for option in options:
+            if len(arg_nodes) == 0:
+                break
             option.value = arg_nodes.pop(0).value
             option.convert()
 
@@ -60,7 +62,13 @@ class PositionalScript(Script, ScriptMixin):
     def validate_input(self, script_node: ScriptNode):
         if len(script_node.options) > 0:
             raise ValidationError(
-                "This script accepts arguements by position"
-                + " only. As a result, it will not accept input"
-                + " in the form of 'option=value'"
+                "This script accepts arguements by position",
+                "only. As a result, it will not accept input",
+                "in the form of 'option=value'",
+            )
+
+        if len(script_node.args) > len(self.options) and not self.__pass_args:
+            raise ValidationError(
+                "You passed more arguments than this script accepts.",
+                f"accepts: {self.options} | got:{len(script_node.args)}",
             )

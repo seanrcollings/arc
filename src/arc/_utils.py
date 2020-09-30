@@ -75,6 +75,9 @@ class symbol:
     def __str__(self):
         return self.__name
 
+    def __repr__(self):
+        return f"<symbol : {self.__name}>"
+
     def __hash__(self):
         return hash(self.__name)
 
