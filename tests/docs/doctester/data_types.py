@@ -59,18 +59,17 @@ class IO:
     output: str
 
 
-class Executable(unittest.TestCase):
+class Executable:
     def __init__(self, exec_components: List[CodeBlock], output: List[CodeBlock]):
         self.code: str = self.parse_exec(exec_components)
         self.tests: List[IO] = self.parse_output(output)
         self.origin = exec_components[0].file_name
+        self.result = None
         super().__init__()
 
-    def test_execute(self):
+    def execute(self):
         if len(self.tests) == 0:
-            return
-        # print(f"Testing docs for: {self.origin}")
-        # print("-----------------------------------------")
+            return True, True
         for io in self.tests:
             with self.create_file(io):
                 # print(f"Executing command: [{str(io.command)}]")
@@ -80,10 +79,8 @@ class Executable(unittest.TestCase):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                 )
-
-                self.assertEqual(out.stdout.decode("utf-8").strip("\n"), io.output)
-
-        # print("-----------------------------------------")
+                self.result = out.stdout.decode("utf-8").strip("\n")
+                return self.result, io.output
 
     @contextmanager
     def create_file(self, io: IO):

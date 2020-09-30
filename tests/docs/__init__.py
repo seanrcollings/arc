@@ -1,1 +1,1 @@
-from .test_docs import TestDocs
+from .doctester.test_case import TestDocs

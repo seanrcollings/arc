@@ -64,16 +64,22 @@ def execute_factory(blocks: List[CodeBlock]) -> List[Executable]:
     return executables
 
 
-def test_docs_dir(root_dir: str):
+def get_executables(root_dir: str):
     parsed_files = walk_dir(root_dir)
+    executables = []
     for p in parsed_files:
-        executables = execute_factory(p)
-        for exe in executables:
-            exe.test_execute()
+        executables += execute_factory(p)
+    return executables
 
 
-def test_doc_file(file_name: str):
-    parsed_file = parse_file(file_name)
-    executable = execute_factory(parsed_file)
-    for exe in executable:
-        exe.test_execute()
+def test_docs_dir(root_dir: str):
+    executables = get_executables(root_dir)
+    for exe in executables:
+        exe.execute()
+
+
+# def test_doc_file(file_name: str):
+#     parsed_file = parse_file(file_name)
+#     executable = execute_factory(parsed_file)
+#     for exe in executable:
+#         exe.test_execute()
