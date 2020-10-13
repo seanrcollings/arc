@@ -1,22 +1,22 @@
 import os
 import random
 
-from arc import Utility, Config
+from arc import Utility, config
 from arc.formatters.table import Table
 
 debug = Utility("debug")
 
 
 @debug.script("config")
-def config():
+def display_config():
     """Displays information about the current config of the Arc app"""
     config_items = [
-        ["Decorate Text", Config.decorate_text, "True"],
-        ["Utility Seperator", Config.utility_seperator, ":"],
-        ["Options Seperator", Config.options_seperator, "="],
-        ["Log", Config.log, "False"],
-        ["Debug", Config.debug, "False"],
-        ["Anonymous Identifier", Config.anon_identifier, "anon"],
+        ["Decorate Text", config.decorate_text, "True"],
+        ["Utility Seperator", config.utility_seperator, ":"],
+        ["Options Seperator", config.options_seperator, "="],
+        ["Log", config.log, "False"],
+        ["Debug", config.debug, "False"],
+        ["Anonymous Identifier", config.anon_identifier, "anon"],
         ["Converters", "See debug:converters", "-"],
     ]
 
@@ -32,7 +32,7 @@ def converters():
     filler_words = ["foo", "bar", "baz", "buzz"]  # Randomly pick for filler information
     converter_rows = [
         [v.__name__, v.convert_to, f"{random.choice(filler_words)} : {k}"]
-        for (k, v) in Config.converters.items()
+        for (k, v) in config.converters.items()
     ]
 
     table = Table(

@@ -1,7 +1,7 @@
 import re
 from typing import List
 
-from arc import Config
+from arc import config
 import arc.parser.data_types as types
 from arc.errors import ParserError
 
@@ -10,9 +10,9 @@ class Tokenizer:
     def __init__(self, data: List[str]):
         self.data = data
         self.TOKEN_TYPES = [
-            ("flag", fr"{Config.flag_denoter}\b\w+\b"),
-            ("option", fr"\b\w+{Config.options_seperator}[\w\,\.\s]+\b"),
-            ("utility", fr"\b\w+\b{Config.utility_seperator}"),
+            ("flag", fr"{config.flag_denoter}\b\w+\b"),
+            ("option", fr"\b\w+{config.options_seperator}[\w\,\.\s]+\b"),
+            ("utility", fr"\b\w+\b{config.utility_seperator}"),
             ("script", r"\b\w+\b"),
         ]
 
@@ -50,7 +50,7 @@ class Parser:
         if self.peek("utility"):
             util = self.consume("utility")
             return types.UtilNode(
-                util.value.rstrip(Config.utility_seperator), self.parse_script()
+                util.value.rstrip(config.utility_seperator), self.parse_script()
             )
 
         return self.parse_script()
@@ -60,7 +60,7 @@ class Parser:
             name = self.consume("script").value
         else:
             # for anonymous scripts
-            name = Config.anon_identifier
+            name = config.anon_identifier
 
         return types.ScriptNode(name, *self.parse_script_body())
 
@@ -81,12 +81,12 @@ class Parser:
 
     def parse_option(self, token):
         self.consume("option")
-        name, value = token.value.split(Config.options_seperator)
+        name, value = token.value.split(config.options_seperator)
         return types.OptionNode(name, value)
 
     def parse_flag(self, token):
         self.consume("flag")
-        return types.FlagNode(token.value.lstrip(Config.flag_denoter))
+        return types.FlagNode(token.value.lstrip(config.flag_denoter))
 
     def parse_arg(self, token):
         self.consume(self.tokens[0].type)

@@ -1,4 +1,8 @@
-from arc.config import Config
+from arc._config import Config
+
+config = Config()
+
+# pylint: disable=wrong-import-position
 from arc.cli import CLI
 from arc.utility import Utility
 from arc.script import ScriptType

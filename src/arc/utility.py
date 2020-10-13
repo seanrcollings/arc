@@ -1,5 +1,4 @@
 from arc.__script_container import ScriptContainer
-from arc.config import Config
 from arc._utils import logger
 
 
@@ -19,7 +18,7 @@ class Utility(ScriptContainer):
     def __init__(self, name, *args, script_type=None, **kwargs):
         super().__init__(*args, script_type=script_type, **kwargs)
         self.name = name
-        logger.debug(f"Utility '{name}' created'")
+        logger.debug("Utility %s created'", name)
 
     def __call__(self, script_node):
         self.execute(script_node)

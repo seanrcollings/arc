@@ -1,4 +1,4 @@
-from arc.config import Config
+from arc import config
 from arc.convert.alias import convert_alias, is_alias
 from arc._utils import symbol
 
@@ -20,7 +20,7 @@ class Option:
             else:
                 name = self.annotation.__name__
 
-            self.converter = Config.get_converter(name)
+            self.converter = config.get_converter(name)
 
             if param.default == param.empty:
                 self.default = NO_DEFAULT
@@ -31,7 +31,7 @@ class Option:
 
         elif data_dict:
             self.name, self.annotation, self.default = data_dict
-            self.converter = Config.get_converter("str")
+            self.converter = config.get_converter(str)
 
         else:
             raise ValueError(

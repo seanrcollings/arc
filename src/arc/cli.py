@@ -5,12 +5,12 @@ from arc.__script_container import ScriptContainer
 import arc._utils as util
 from arc.utility import Utility
 from arc.parser import Tokenizer, Parser, ScriptNode, UtilNode
-from arc.config import Config
+from arc import config
 from arc.errors import ArcError
 
 
 class CLI(ScriptContainer):
-    def __init__(self, utilities: list = None, *args, **kwargs):
+    def __init__(self, *args, utilities: list = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.utilities: Dict[str, Utility] = {}
 
@@ -34,7 +34,8 @@ class CLI(ScriptContainer):
         input_list = self.__get_input__list(args, kwargs)
         tokens = Tokenizer(input_list).tokenize()
         parsed = Parser(tokens).parse()
-        # util.logger.debug(parsed)
+        util.logger.debug(parsed)
+        # print(parsed)
 
         if isinstance(parsed, UtilNode):
             self.__execute_utility(parsed)
@@ -67,7 +68,7 @@ class CLI(ScriptContainer):
             # Could also move this out of the if statement
             # to provide a way to force a value on the cli
             for key, value in kwargs.items():
-                input_list.append(key + Config.options_seperator + value)
+                input_list.append(key + config.options_seperator + value)
 
         else:
             input_list = sys.argv[1:]

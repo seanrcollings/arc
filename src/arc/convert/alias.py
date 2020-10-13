@@ -19,7 +19,7 @@ from typing import _GenericAlias as GenericAlias  # type: ignore
 from typing import Union, Type
 
 from arc.errors import ConversionError
-from arc.config import Config
+from arc import config
 
 
 def is_alias(alias):
@@ -49,7 +49,7 @@ def convert_union(alias, value):
             if is_alias(union_type):
                 return convert_alias(union_type, value)
 
-            converter = Config.get_converter(union_type.__name__)
+            converter = config.get_converter(union_type.__name__)
             if converter:
                 return converter().convert(value)
         except ConversionError:
@@ -65,7 +65,7 @@ def collection_setup(collection_alias, value):
             contains_type, message="Arc only supports shallow Collection Type Aliases"
         )
 
-    return value.split(","), Config.get_converter(contains_type.__name__)
+    return value.split(","), config.get_converter(contains_type.__name__)
 
 
 def convert_list(alias, value):
@@ -86,6 +86,6 @@ def convert_tuple(alias, value):
         )
 
     return tuple(
-        Config.get_converter(alias.__args__[idx].__name__)().convert_wrapper(item)
+        config.get_converter(alias.__args__[idx].__name__)().convert_wrapper(item)
         for idx, item in enumerate(items)
     )

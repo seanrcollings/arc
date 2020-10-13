@@ -3,7 +3,7 @@ import os
 import time
 import functools
 from typing import Dict
-from arc import Config
+from arc import config
 
 
 class MyFormatter(logging.Formatter):
@@ -26,7 +26,7 @@ logger.addHandler(handler)
 
 
 def decorate_text(string, tcolor="32", bcolor="40", style="1"):
-    if Config.decorate_text:
+    if config.decorate_text:
         return f"\033[{style};{tcolor}m{string}\033[00m"
     return string
 
@@ -44,7 +44,7 @@ def clear():
 
 def timer(func):
     """Decorator for timing functions
-    will only time if Config.debug is set to True
+    will only time if config.debug is set to True
     """
 
     @functools.wraps(func)
@@ -55,6 +55,10 @@ def timer(func):
         logger.info(f"Completed in {end_time - start_time:.2f}s")
 
     return decorator
+
+
+# def basic_func_info(func) -> str:
+#     """Generates basic info"""
 
 
 class symbol:
