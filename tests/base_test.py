@@ -31,5 +31,5 @@ class BaseTest(unittest.TestCase):
     def create_script(self, container, name, func, annotations=dict()):
         func.__annotations__ = annotations
         func = create_autospec(func)
-        container.script(name=name)(func)
+        container.install_script(name=name, function=func)
         return func

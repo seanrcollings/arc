@@ -46,6 +46,10 @@ class ScriptContainer(ABC):
 
         return decorator
 
+    def install_script(self, name, function, script_type=None, **kwargs):
+        """Alias function for the decorator. Makes adding scripts programmatically easier"""
+        return self.script(name, script_type, **kwargs)(function)
+
     @util.timer
     def execute(self, script_node):
         """Executes the script from the user's command

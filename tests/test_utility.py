@@ -12,7 +12,7 @@ class TestUtility(BaseTest):
     def create_func3(self):
         func = lambda x: x
         func.__annotations__ = {"x": bool}
-        self.util.script(name="func3")(create_autospec(func))
+        self.util.install_script(name="func3", function=create_autospec(func))
 
     def test_register(self):
         assert self.util.name in self.cli.utilities.keys()
