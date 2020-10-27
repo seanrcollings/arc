@@ -20,3 +20,13 @@ class TestRawScript(BaseScriptTest):
 
     def test_nonexistant_flag(self):
         pass
+
+    def test_meta(self):
+        script = self.create_script(
+            lambda *args, meta: meta, annotations={"a": int}, meta={"val": 2}
+        )
+        args = ["exec", "test=2", "test=4"]
+        with patch.object(sys, "argv", args):
+            script(self.create_script_node())
+
+        script.function.assert_called_with(*args, meta={"val": 2})

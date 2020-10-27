@@ -8,9 +8,9 @@ from .script import Script
 
 
 class KeywordScript(Script, ScriptMixin):
-    def __init__(self, name, function):
+    def __init__(self, name, function, *args, **kwargs):
         self.__pass_kwargs = False
-        super().__init__(name, function)
+        super().__init__(name, function, *args, **kwargs)
 
     def execute(self, script_node: ScriptNode):
         args: Dict[str, Any] = {
@@ -49,6 +49,7 @@ class KeywordScript(Script, ScriptMixin):
             option.value = node.value
             option.convert()
 
+        self.add_meta()
         self.assert_options_filled()
 
     def arg_hook(self, param, meta):

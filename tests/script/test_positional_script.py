@@ -22,3 +22,10 @@ class TestPositionalScript(BaseScriptTest):
 
         script = self.create_script(lambda *args: args)
         self.assertTrue(script._PositionalScript__pass_args)
+
+    def test_meta(self):
+        script = self.create_script(
+            lambda a, meta: meta, annotations={"a": int}, meta={"val": 2}
+        )
+        script(self.create_script_node(args=[ArgNode("2")]))
+        script.function.assert_called_with(a=2, meta={"val": 2})

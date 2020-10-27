@@ -37,6 +37,7 @@ class PositionalScript(Script, ScriptMixin):
             option.value = arg_nodes.pop(0).value
             option.convert()
 
+        self.add_meta()
         self.assert_options_filled()
 
     def arg_hook(self, param, meta):

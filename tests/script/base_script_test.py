@@ -9,11 +9,11 @@ from arc.parser.data_types import ScriptNode, OptionNode, FlagNode
 class BaseScriptTest(BaseTest):
     script_class = Script
 
-    def create_script(self, func, annotations={}):
+    def create_script(self, func, annotations={}, *args, **kwargs):
         if len(func.__annotations__) == 0:
             func.__annotations__ = annotations
         func = create_autospec(func)
-        return self.script_class(name="test", function=func)
+        return self.script_class(name="test", function=func, *args, **kwargs)
 
     def create_script_node(self, name="test", options=[], flags=[], args=[]):
         return ScriptNode(name, options, flags, args)

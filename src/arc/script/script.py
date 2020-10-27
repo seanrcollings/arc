@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Callable, Tuple
+from typing import List, Dict, Callable, Tuple, Any
 
 from arc.errors import ScriptError, ValidationError
 from arc.parser.data_types import ScriptNode
@@ -9,14 +9,13 @@ from .script_mixin import ScriptMixin
 
 
 class Script(ABC, ScriptMixin):
-    def __init__(
-        self, name: str, function: Callable,
-    ):
+    def __init__(self, name: str, function: Callable, meta: Any = None):
 
         self.name = name
         self.function: Callable = function
         self.options, self.flags = self.build_args()
         self.validation_errors: List[str] = []
+        self.meta = meta
 
         self.doc = "No Docstring"
         if self.function.__doc__ is not None:

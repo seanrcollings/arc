@@ -7,7 +7,10 @@ from .script import Script
 class RawScript(Script):
     def execute(self, script_node):
         with self.catch():
-            self.function(*sys.argv)
+            if self.meta:
+                self.function(*sys.argv, meta=self.meta)
+            else:
+                self.function(*sys.argv)
 
     def match_input(self, script_node: ScriptNode):
         pass

@@ -51,7 +51,6 @@ class TestKeywordScript(BaseScriptTest):
         )
 
     def test_build_args(self):
-
         with self.assertRaises(ScriptError):
             script = self.create_script(lambda *args: args)
 
@@ -87,3 +86,10 @@ class TestKeywordScript(BaseScriptTest):
             )
         )
         script.function.assert_called_with(a=2, test1="2", test2="4")
+
+    def test_meta(self):
+        script = self.create_script(
+            lambda a, meta: meta, annotations={"a": int}, meta={"val": 2}
+        )
+        script(self.create_script_node(options=[OptionNode("a", "2")]))
+        script.function.assert_called_with(a=2, meta={"val": 2})

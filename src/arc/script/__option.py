@@ -1,3 +1,4 @@
+from typing import Any
 from arc import config
 from arc.convert.alias import convert_alias, is_alias
 from arc._utils import symbol
@@ -44,6 +45,8 @@ class Option:
 
     def convert(self):
         """Converts self.value using the converter found by get_converter"""
+        if self.annotation is Any:
+            return
         if is_alias(self.annotation):
             self.value = convert_alias(self.annotation, self.value)
         else:

@@ -1,6 +1,6 @@
 import sys
 import inspect
-from typing import List, Dict
+from typing import List, Dict, Any
 from contextlib import contextmanager
 
 from arc.parser.data_types import FlagNode
@@ -50,6 +50,13 @@ class ScriptMixin:
         for option in self.options.values():
             if option.value is NO_DEFAULT:
                 raise ScriptError(f"No value for required option '{option.name}'")
+
+    def add_meta(self):
+        if self.meta:
+            self.options["meta"] = Option(
+                data_dict=dict(name="meta", annotation=Any, default=NO_DEFAULT)
+            )
+            self.options["meta"].value = self.meta
 
     class ArgBuilder:
         def __init__(self, function):

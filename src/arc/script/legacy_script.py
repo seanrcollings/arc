@@ -75,6 +75,7 @@ class LegacyScript(Script, ScriptMixin):
             self.options[option.name].value = option.value
             self.options[option.name].convert()
 
+        self.add_meta()
         self.assert_options_filled()
 
     def __match_pos_options(self, arg_nodes: list):
@@ -90,6 +91,7 @@ class LegacyScript(Script, ScriptMixin):
                 f"Script recieved {length} arguments, expected {len(self.options)}"
             )
 
+        self.add_meta()
         self.assert_options_filled()
 
     def arg_hook(self, param, meta):
