@@ -1,8 +1,7 @@
-import sys
 from io import StringIO
 from unittest.mock import patch, MagicMock
 from tests.base_test import BaseTest
-from arc.utilities import https
+from arc.utilities.https import https
 
 
 class TestHTTPS(BaseTest):
