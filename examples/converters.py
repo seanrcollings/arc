@@ -1,6 +1,7 @@
 """Example CLI to demonstrate all of the type converters"""
 from typing import List
 from arc import CLI
+from arc.types import File
 
 cli = CLI()
 
@@ -33,13 +34,21 @@ def float_type(value: float):
     print(value)
 
 
-# python3 converters.py list value=1,2,3,4,5 -> ['1', '2', '3', '4', '5'] # Without spaces, you don't need quotation marks
-# python3 converters.py list value="1, 2, 3, 4, 5" -> error, spaces not allowed
+# python3 converters.py list value=1,2,3,4,5 -> ['1', '2', '3', '4', '5']
+# Without spaces, you don't need quotation marks
 @cli.script("list")
 def list_type(value: List[int]):
     """Demonstrates bool conversion"""
     print(type(value))
     print(value)
+
+
+# python3 converters.py list value=/path/to/file -> File handler
+@cli.script("file")
+def file_type(value: File["w"]):
+    """Demonstrates file conversion"""
+    print(type(value))
+    print(value.readlines())
 
 
 if __name__ == "__main__":

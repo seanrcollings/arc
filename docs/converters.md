@@ -13,13 +13,14 @@
 
 
 ## Builtin Converters
-| Indicator | Class Name      | Converts          | Conversion Method               |
-| --------- | --------------- | ----------------- | ------------------------------- |
-| str       | StringConverter | name=Jonathen     | python builtin `str()`          |
-| byte      | ByteConverter   | name=Terry        | python builtin `str.encode()`   |
-| int       | IntConverter    | number=4          | python builtin `int()`          |
-| float     | FloatConverter  | number=3.5        | python builtin `float()`        |
-| list      | ListConverter   | my_list=1,2,3,4,5 | Splits on commas, strips spaces |
+| Indicator | Class Name      | Converts               | Conversion Method               | Other Notes                                          |
+| --------- | --------------- | ---------------------- | ------------------------------- | ---------------------------------------------------- |
+| str       | StringConverter | name=Jonathen          | python builtin `str()`          |
+| byte      | ByteConverter   | name=Terry             | python builtin `str.encode()`   |
+| int       | IntConverter    | number=4               | python builtin `int()`          |
+| float     | FloatConverter  | number=3.5             | python builtin `float()`        |
+| list      | ListConverter   | my_list=1,2,3,4,5      | Splits on commas, strips spaces | Use the generic List[\<type\>] for nested conversion |
+| File      | FileConverter   | filename=/path/to/file | Creates a file handeler object  | Specify file mode: File["w"] (write)                 |
 
 ## Future Converters
 | Indicator | Class Name    | Converts                    | Conversion Method |
