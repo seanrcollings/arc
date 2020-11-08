@@ -13,3 +13,4 @@ manage.py
 *.txt
 !requirements.txt
 .venv
+.envrc

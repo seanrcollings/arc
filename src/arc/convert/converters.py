@@ -1,5 +1,6 @@
 from arc.convert.base_converter import BaseConverter
 from arc.convert import ConversionError
+from arc.types.file import File
 
 
 class StringConverter(BaseConverter):
@@ -87,4 +88,12 @@ class ListConverter(BaseConverter):
         )
 
 
-# Dictionary Conversion... etc....
+class FileConverter(BaseConverter):
+    """Converts a string to a file handler object
+        /path/to/a/file
+    """
+
+    convert_to = File
+
+    def convert(self, value):
+        return self.annotation.open(value)

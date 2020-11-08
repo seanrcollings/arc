@@ -11,7 +11,7 @@ class Tokenizer:
         self.data = data
         self.TOKEN_TYPES = [
             ("flag", fr"{config.flag_denoter}\b\w+\b"),
-            ("option", fr"\b\w+{config.options_seperator}[\w\,\.\s]+\b"),
+            ("option", fr"\b\w+{config.options_seperator}[\w\,\.\s\\\/]+\b"),
             ("utility", fr"\b\w+\b{config.utility_seperator}"),
             ("script", r"\b\w+\b"),
         ]

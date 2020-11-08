@@ -49,6 +49,7 @@ class Config:
             "sbool": StringBoolConverter,
             "ibool": IntBoolConverter,
             "list": ListConverter,
+            "File": FileConverter,
         }
 
     @property
@@ -96,6 +97,9 @@ class Config:
             key = key.__name__
         elif is_alias(key):
             key = "alias"
+        else:
+            key = str(key)
+
         return self.converters.get(key)
 
     # Arc file Methods

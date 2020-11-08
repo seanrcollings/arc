@@ -18,8 +18,10 @@ class Option:
 
             if is_alias(self.annotation):
                 name = self.annotation.__origin__.__name__
-            else:
+            elif isinstance(self.annotation, type):
                 name = self.annotation.__name__
+            elif isinstance(self.annotation, object):
+                name = self.annotation.__class__.__name__
 
             self.converter = config.get_converter(name)
 
