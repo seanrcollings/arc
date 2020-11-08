@@ -6,6 +6,7 @@ from arc.parser.data_types import ScriptNode
 from .__option import Option
 from .__flag import Flag
 from .script_mixin import ScriptMixin
+from arc.types import File
 
 
 class Script(ABC, ScriptMixin):
@@ -52,6 +53,8 @@ class Script(ABC, ScriptMixin):
                 "\n".join(self.validation_errors),
             )
 
+        self.cleanup()
+
     def build_args(self) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
         """Builds the options and flag collections based
         on the function definition
@@ -94,3 +97,7 @@ class Script(ABC, ScriptMixin):
         should be overridden by child class
 
         If it isn't valid, raise a ValidationError"""
+
+    def cleanup(self):
+        for _, option in self.options.items():
+            option.cleanup()

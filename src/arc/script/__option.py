@@ -2,6 +2,7 @@ from typing import Any
 from arc import config
 from arc.convert.alias import convert_alias, is_alias
 from arc._utils import symbol
+from arc.types import needs_cleanup
 
 NO_DEFAULT = symbol("NO_DEFAULT")
 
@@ -53,3 +54,9 @@ class Option:
             self.value = convert_alias(self.annotation, self.value)
         else:
             self.value = self.converter(self.annotation).convert_wrapper(self.value)
+
+    def cleanup(self):
+        if needs_cleanup(self.annotation):
+            # Any special types need to implement
+            # the __del__ magic method to preform cleanup
+            del self.value
