@@ -1,3 +1,4 @@
+from typing import _GenericAlias as GenericAlias  # type: ignore
 from arc.errors import ConversionError
 from arc.convert.base_converter import BaseConverter
 from arc.convert.converters import *
@@ -12,3 +13,7 @@ __all__ = [
     "IntBoolConverter",
     "ListConverter",
 ]
+
+
+def is_alias(alias):
+    return isinstance(alias, GenericAlias)

@@ -21,8 +21,8 @@ class FloatConverter(BaseConverter):
     def convert(self, value):
         try:
             return float(value)
-        except ValueError:
-            raise ConversionError(value, "Value must be a number (1.3, 4, 1.7)")
+        except ValueError as e:
+            raise ConversionError(value, "Value must be a number (1.3, 4, 1.7)") from e
 
 
 class BytesConverter(BaseConverter):

@@ -1,11 +1,14 @@
 import sys
 from typing import Any
 from abc import ABC, abstractmethod
-from arc.convert import ConversionError
+from arc.errors import ConversionError
 
 
 class BaseConverter(ABC):
     """Base Converter, all converters must inherit from this converter"""
+
+    def __init__(self, annotation):
+        self.annotation = annotation
 
     def convert(self, value: str) -> Any:
         """ Method that converts the string sent, to it's desired type."""
@@ -14,7 +17,7 @@ class BaseConverter(ABC):
     @property
     @abstractmethod
     def convert_to(self):
-        """ Specifies conversion type
+        """Specifies conversion type
 
         String that specifies what type the
         converter is supposed to convert the
@@ -22,7 +25,7 @@ class BaseConverter(ABC):
         """
 
     def convert_wrapper(self, value: str):
-        """ Try except wrapper for conversion method
+        """Try except wrapper for conversion method
 
         Convert method wrapper for catching
         ConversionErrors. Will display the info

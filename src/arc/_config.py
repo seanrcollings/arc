@@ -2,7 +2,7 @@ import os
 import logging
 from typing import Type, Dict, Any, List
 from arc.convert.converters import *
-from arc.convert import BaseConverter
+from arc.convert import BaseConverter, is_alias
 from arc.errors import ArcError, ConversionError
 
 
@@ -94,6 +94,8 @@ class Config:
     def get_converter(self, key):
         if isinstance(key, type):
             key = key.__name__
+        elif is_alias(key):
+            key = "alias"
         return self.converters.get(key)
 
     # Arc file Methods
@@ -139,7 +141,7 @@ class Config:
 
         for converter in config_converters:
             try:
-                value = converter().convert(value)
+                value = converter(converter.convert_to).convert(value)
                 break
             except ConversionError:
                 continue

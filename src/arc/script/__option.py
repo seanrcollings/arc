@@ -50,4 +50,4 @@ class Option:
         if is_alias(self.annotation):
             self.value = convert_alias(self.annotation, self.value)
         else:
-            self.value = self.converter().convert_wrapper(self.value)
+            self.value = self.converter(self.annotation).convert_wrapper(self.value)
