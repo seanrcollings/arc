@@ -20,7 +20,7 @@
 | int       | IntConverter    | number=4               | python builtin `int()`          |
 | float     | FloatConverter  | number=3.5             | python builtin `float()`        |
 | list      | ListConverter   | my_list=1,2,3,4,5      | Splits on commas, strips spaces | Use the generic List[\<type\>] for nested conversion |
-| File      | FileConverter   | filename=/path/to/file | Creates a file handeler object  | Specify file mode: File["w"] (write)                 |
+| File      | FileConverter   | filename=/path/to/file | Creates a file handeler object  | Specify file mode: File[File.<WRITE, READ, APPEND>]  |
 
 ## Future Converters
 | Indicator | Class Name    | Converts                    | Conversion Method |
