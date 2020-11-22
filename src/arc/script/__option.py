@@ -19,10 +19,8 @@ class Option:
 
             if is_alias(self.annotation):
                 name = self.annotation.__origin__.__name__
-            elif isinstance(self.annotation, type):
+            else:
                 name = self.annotation.__name__
-            elif isinstance(self.annotation, object):
-                name = self.annotation.__class__.__name__
 
             self.converter = config.get_converter(name)
 
@@ -56,7 +54,7 @@ class Option:
             self.value = self.converter(self.annotation).convert_wrapper(self.value)
 
     def cleanup(self):
+        # Any special types need to implement
+        # the __del__ magic method to preform cleanup
         if needs_cleanup(self.annotation):
-            # Any special types need to implement
-            # the __del__ magic method to preform cleanup
             del self.value

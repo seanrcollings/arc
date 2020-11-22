@@ -1,9 +1,16 @@
-from arc.types.arc_type import ArcType
+from typing import TypeVar
+from .arc_generic import ArcGeneric
 
+T = TypeVar("T")
 
-class File(metaclass=ArcType):
+# Files do not work yet
+class File(ArcGeneric[T]):
+    READ = TypeVar("READ")
+    WRITE = TypeVar("WRITE")
+    APPEND = TypeVar("APPEND")
+
     def __init__(self, mode):
-        self.mode = mode
+        breakpoint()
         self.file_path = None
         self.__file_handle = None
 
