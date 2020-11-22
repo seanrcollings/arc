@@ -1,3 +1,5 @@
+from typing import Dict, Type, Optional, Union
+
 from arc.convert.base_converter import BaseConverter
 from arc.convert import ConversionError
 from arc.types.file import File
@@ -97,3 +99,21 @@ class FileConverter(BaseConverter):
 
     def convert(self, value):
         return self.annotation.open(value)
+
+
+converter_mapping: Dict[str, Type[BaseConverter]] = {
+    "str": StringConverter,
+    "int": IntConverter,
+    "float": FloatConverter,
+    "bytes": BytesConverter,
+    "bool": BoolConverter,
+    "sbool": StringBoolConverter,
+    "ibool": IntBoolConverter,
+    "list": ListConverter,
+}
+
+
+def get_converter(key: Union[str, type]) -> Optional[Type[BaseConverter]]:
+    if isinstance(key, type):
+        key = key.__name__
+    return converter_mapping.get(key)

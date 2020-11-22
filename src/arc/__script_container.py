@@ -40,9 +40,7 @@ class ScriptContainer(ABC):
             script = script_factory(name, function, script_type, **kwargs)
             self.scripts[script.name] = script
             util.logger.debug(
-                "registered '%s' script to %s",
-                script.name,
-                self.__class__.__name__,
+                "registered '%s' script to %s", script.name, self.__class__.__name__,
             )
             return function
 

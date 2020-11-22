@@ -9,7 +9,7 @@ class File(ArcGeneric[T]):
     WRITE = TypeVar("WRITE")
     APPEND = TypeVar("APPEND")
 
-    def __init__(self, mode):
+    def __init__(self):
         breakpoint()
         self.file_path = None
         self.__file_handle = None

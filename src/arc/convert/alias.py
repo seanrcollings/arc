@@ -83,8 +83,7 @@ def convert_tuple(alias, value):
     items, _ = collection_setup(alias, value)
     if (i_len := len(items)) != (a_len := len(alias.__args__)):
         raise ConversionError(
-            value=items,
-            message=f"{alias} expects {a_len} item(s), was {i_len}",
+            value=items, message=f"{alias} expects {a_len} item(s), was {i_len}",
         )
 
     return tuple(
