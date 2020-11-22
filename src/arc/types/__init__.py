@@ -1,3 +1,4 @@
+from .arc_generic import ArcGeneric
 from .file import File
 
 

@@ -1,8 +1,8 @@
 from typing import Any
 from arc import config
-from arc.convert.alias import convert_alias, is_alias
+from arc.convert import is_alias
 from arc._utils import symbol
-from arc.types import needs_cleanup
+from arc.types import needs_cleanup, ArcGeneric
 
 NO_DEFAULT = symbol("NO_DEFAULT")
 
@@ -18,7 +18,10 @@ class Option:
                 self.annotation = param.annotation
 
             if is_alias(self.annotation):
-                name = self.annotation.__origin__.__name__
+                if issubclass(self.annotation.__origin__, ArcGeneric):
+                    name = self.annotation.__origin__.__name__.lower()
+                else:
+                    name = "alias"
             else:
                 name = self.annotation.__name__
 
@@ -48,10 +51,8 @@ class Option:
         """Converts self.value using the converter found by get_converter"""
         if self.annotation is Any:
             return
-        if is_alias(self.annotation):
-            self.value = convert_alias(self.annotation, self.value)
-        else:
-            self.value = self.converter(self.annotation).convert_wrapper(self.value)
+
+        self.value = self.converter(self.annotation).convert_wrapper(self.value)
 
     def cleanup(self):
         # Any special types need to implement
