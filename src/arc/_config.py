@@ -1,9 +1,11 @@
 import os
 import logging
-from typing import Type, Dict, Any, List
+from typing import Type, Any, List, Union, TypeVar, Optional
 from arc.convert.converters import *
-from arc.convert import BaseConverter, is_alias
+from arc.convert import BaseConverter, converter_mapping, get_converter
 from arc.errors import ArcError, ConversionError
+
+T = TypeVar("T", bound="Config")
 
 
 class Config:
@@ -40,20 +42,10 @@ class Config:
         self.decorate_text: bool = True
         self.anon_identifier: str = "anon"
 
-        self.converters: Dict[str, Type[BaseConverter]] = {
-            "str": StringConverter,
-            "int": IntConverter,
-            "float": FloatConverter,
-            "bytes": BytesConverter,
-            "bool": BoolConverter,
-            "sbool": StringBoolConverter,
-            "ibool": IntBoolConverter,
-            "list": ListConverter,
-            "File": FileConverter,
-        }
+        self.converters = converter_mapping
 
     @property
-    def instance(self):
+    def instance(self) -> Optional[T]:
         return self._instance
 
     def set_value(self, name: str, value: Any):
@@ -92,15 +84,8 @@ class Config:
         else:
             raise ArcError("Converter must inherit from 'Base Converter'")
 
-    def get_converter(self, key):
-        if isinstance(key, type):
-            key = key.__name__
-        elif is_alias(key):
-            key = "alias"
-        else:
-            key = str(key)
-
-        return self.converters.get(key)
+    def get_converter(self, key: Union[str, type]):
+        return get_converter(key)
 
     # Arc file Methods
     def load_arc_file(self, arcfile: str):

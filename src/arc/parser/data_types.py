@@ -6,7 +6,7 @@ from arc._utils import decorate_text
 @dataclass
 class Token:
     """Data Container class. Each match made by the
-        tokenizer will result in one of these being returned
+    tokenizer will result in one of these being returned
     """
 
     type: str
@@ -26,11 +26,11 @@ class ArgNode:
 @dataclass
 class OptionNode:
     """Matches to:
-        option=value
-        option=2
-        option='value with spaces'
-        option="value with spaces"
-        option=value,with,commas
+    option=value
+    option=2
+    option='value with spaces'
+    option="value with spaces"
+    option=value,with,commas
     """
 
     name: str
@@ -43,8 +43,8 @@ class OptionNode:
 @dataclass
 class FlagNode:
     """Matches to:
-        --flag
-        --other_flag
+    --flag
+    --other_flag
     """
 
     name: str
@@ -84,9 +84,9 @@ class ScriptNode:
 @dataclass
 class UtilNode:
     """Matches to:
-        util:
-        name:
-        thing:
+    util:
+    name:
+    thing:
     """
 
     name: str

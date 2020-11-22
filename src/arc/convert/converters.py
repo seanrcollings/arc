@@ -90,7 +90,7 @@ class ListConverter(BaseConverter):
 
 class FileConverter(BaseConverter):
     """Converts a string to a file handler object
-        /path/to/a/file
+    /path/to/a/file
     """
 
     convert_to = File

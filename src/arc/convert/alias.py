@@ -12,22 +12,24 @@ Union[int, str]
 List[int]
     - i: '1,2,3,4,5,6'
     - o: [1, 2, 3, 4, 5, 6]
-
 """
 
 from typing import _GenericAlias as GenericAlias  # type: ignore
-from typing import Union, Type
+from typing import Union, Type, Any
 
-from arc import config
 from arc.errors import ConversionError
-from . import is_alias
+from . import get_converter
 
 
-def convert_alias(alias: Type[GenericAlias], value: str):
+def is_alias(alias):
+    return isinstance(alias, GenericAlias)
+
+
+def convert_alias(alias: Type[GenericAlias], value: str) -> Any:
     if not is_alias(alias):
         raise ConversionError(None, "Provided alias must inherit from GenericAlias")
 
-    origin = alias.__origin__
+    origin: str = alias.__origin__
     if origin is Union:
         return convert_union(alias, value)
     elif origin is list:
@@ -46,7 +48,7 @@ def convert_union(alias, value):
             if is_alias(union_type):
                 return convert_alias(union_type, value)
 
-            converter = config.get_converter(union_type.__name__)
+            converter = get_converter(union_type.__name__)
             if converter:
                 return converter(alias).convert(value)
         except ConversionError:
@@ -64,7 +66,7 @@ def collection_setup(collection_alias, value):
 
     value = value.replace(" ", "")
 
-    return value.split(","), config.get_converter(contains_type.__name__)
+    return value.split(","), get_converter(contains_type.__name__)
 
 
 def convert_list(alias, value):
@@ -81,10 +83,11 @@ def convert_tuple(alias, value):
     items, _ = collection_setup(alias, value)
     if (i_len := len(items)) != (a_len := len(alias.__args__)):
         raise ConversionError(
-            value=items, message=f"{alias} expects {a_len} item(s), was {i_len}",
+            value=items,
+            message=f"{alias} expects {a_len} item(s), was {i_len}",
         )
 
     return tuple(
-        config.get_converter(alias.__args__[idx].__name__)(tuple).convert_wrapper(item)
+        get_converter(alias.__args__[idx].__name__)(tuple).convert_wrapper(item)
         for idx, item in enumerate(items)
     )

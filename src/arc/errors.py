@@ -33,7 +33,7 @@ class ConversionError(ArcError):
     """Raised if a type conversion fails """
 
     def __init__(self, value, helper_text=None, message=None):
-        """ Initializes the conversion errors
+        """Initializes the conversion errors
         :param value: the value attempting to be converted
         :param helper_text: any additional helper text for the user
         """

@@ -21,7 +21,10 @@ class Table:
 
         for row in self.__rows:
             for item in row:
-                formatted_string = self.__formatter(str(item), align=">",)
+                formatted_string = self.__formatter(
+                    str(item),
+                    align=">",
+                )
                 table += formatted_string + " "
             table += "\n"
 
