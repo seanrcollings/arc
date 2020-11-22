@@ -12,25 +12,24 @@ Union[int, str]
 List[int]
     - i: '1,2,3,4,5,6'
     - o: [1, 2, 3, 4, 5, 6]
-
 """
 
 from typing import _GenericAlias as GenericAlias  # type: ignore
-from typing import Union, Type
+from typing import Union, Type, Any
 
 from arc.errors import ConversionError
-from arc import config
+from . import get_converter
 
 
 def is_alias(alias):
     return isinstance(alias, GenericAlias)
 
 
-def convert_alias(alias: Type[GenericAlias], value: str):
+def convert_alias(alias: Type[GenericAlias], value: str) -> Any:
     if not is_alias(alias):
         raise ConversionError(None, "Provided alias must inherit from GenericAlias")
 
-    origin = alias.__origin__
+    origin: str = alias.__origin__
     if origin is Union:
         return convert_union(alias, value)
     elif origin is list:
@@ -49,7 +48,7 @@ def convert_union(alias, value):
             if is_alias(union_type):
                 return convert_alias(union_type, value)
 
-            converter = config.get_converter(union_type.__name__)
+            converter = get_converter(union_type.__name__)
             if converter:
                 return converter().convert(value)
         except ConversionError:
@@ -65,7 +64,7 @@ def collection_setup(collection_alias, value):
             contains_type, message="Arc only supports shallow Collection Type Aliases"
         )
 
-    return value.split(","), config.get_converter(contains_type.__name__)
+    return value.split(","), get_converter(contains_type.__name__)
 
 
 def convert_list(alias, value):
@@ -86,6 +85,6 @@ def convert_tuple(alias, value):
         )
 
     return tuple(
-        config.get_converter(alias.__args__[idx].__name__)().convert_wrapper(item)
+        get_converter(alias.__args__[idx].__name__)().convert_wrapper(item)
         for idx, item in enumerate(items)
     )
