@@ -3,7 +3,6 @@ import os
 import time
 import functools
 from typing import Dict
-from arc import config
 
 
 class MyFormatter(logging.Formatter):
@@ -26,9 +25,7 @@ logger.addHandler(handler)
 
 
 def decorate_text(string, tcolor="32", bcolor="40", style="1"):
-    if config.decorate_text:
-        return f"\033[{style};{tcolor}m{string}\033[00m"
-    return string
+    return f"\033[{style};{tcolor}m{string}\033[00m"
 
 
 def clear():

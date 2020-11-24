@@ -9,7 +9,6 @@ if len(sys.argv) == 1:
 version = sys.argv[1]
 
 setup_file = f"""
-import os
 import setuptools
 
 with open("README.md", "r") as fh:
