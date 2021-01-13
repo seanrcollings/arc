@@ -12,31 +12,18 @@ class Option:
         if param:
             self.name = param.name
 
-            if param.annotation == param.empty:
-                self.annotation = str
-            else:
-                self.annotation = param.annotation
+            self.annotation = (
+                Any if param.annotation == param.empty else param.annotation
+            )
 
-            if is_alias(self.annotation):
-                if issubclass(self.annotation.__origin__, ArcGeneric):
-                    name = self.annotation.__origin__.__name__.lower()
-                else:
-                    name = "alias"
-            else:
-                name = self.annotation.__name__
-
-            self.converter = config.get_converter(name)
-
-            if param.default == param.empty:
-                self.default = NO_DEFAULT
-            else:
-                self.default = param.default
-
+            self.default = NO_DEFAULT if param.default == param.empty else param.default
             self.value = self.default
 
         elif data_dict:
-            self.name, self.annotation, self.default = data_dict
-            self.converter = config.get_converter(str)
+            self.name = data_dict["name"]
+            self.annotation = data_dict["annotation"]
+            self.default = data_dict["default"]
+            self.value = self.default
 
         else:
             raise ValueError(
@@ -52,7 +39,22 @@ class Option:
         if self.annotation is Any:
             return
 
-        self.value = self.converter(self.annotation).convert_wrapper(self.value)
+        name = self.get_converter_name()
+        converter = config.get_converter(name)
+
+        self.value = converter(self.annotation).convert_wrapper(self.value)
+
+    def get_converter_name(self) -> str:
+        """Returns the converter name for
+        the option's annotation
+        """
+
+        if is_alias(self.annotation):
+            if issubclass(self.annotation.__origin__, ArcGeneric):  # type: ignore
+                return self.annotation.__origin__.__name__.lower()  # type: ignore
+            else:
+                return "alias"
+        return self.annotation.__name__
 
     def cleanup(self):
         # Any special types need to implement

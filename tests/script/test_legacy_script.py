@@ -3,6 +3,7 @@ from arc.script.legacy_script import LegacyScript
 from arc.errors import ScriptError
 from arc.parser.data_types import FlagNode, OptionNode, ArgNode
 from arc.convert.converters import *
+from arc import config
 
 
 class TestLegacyScript(BaseScriptTest):
@@ -53,11 +54,25 @@ class TestLegacyScript(BaseScriptTest):
             lambda a, b, c, d, e: a,
             annotations={"b": int, "c": float, "d": bytes, "e": list},
         )
-        self.assertIs(script.options["a"].converter, StringConverter)
-        self.assertIs(script.options["b"].converter, IntConverter)
-        self.assertIs(script.options["c"].converter, FloatConverter)
-        self.assertIs(script.options["d"].converter, BytesConverter)
-        self.assertIs(script.options["e"].converter, ListConverter)
+
+        with self.assertRaises(AttributeError):
+            config.get_converter(script.options["a"].get_converter_name())
+
+        self.assertIs(
+            config.get_converter(script.options["b"].get_converter_name()), IntConverter
+        )
+        self.assertIs(
+            config.get_converter(script.options["c"].get_converter_name()),
+            FloatConverter,
+        )
+        self.assertIs(
+            config.get_converter(script.options["d"].get_converter_name()),
+            BytesConverter,
+        )
+        self.assertIs(
+            config.get_converter(script.options["e"].get_converter_name()),
+            ListConverter,
+        )
 
     def test_build_flags(self):
         script = self.create_script(lambda x, test: x, annotations={"test": bool})

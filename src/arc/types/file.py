@@ -34,7 +34,8 @@ class File(ArcGeneric[T]):
         return getattr(self.__file_handle, attr)
 
     def close(self):
-        self.__file_handle.close()
+        if self.__file_handle:
+            self.__file_handle.close()
 
     def __del__(self):
         if self.__file_handle:
