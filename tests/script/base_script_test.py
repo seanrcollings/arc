@@ -1,4 +1,5 @@
 from unittest.mock import create_autospec
+from typing import Type
 from tests.base_test import BaseTest
 
 from arc.script.script import Script
@@ -7,13 +8,13 @@ from arc.parser.data_types import ScriptNode, OptionNode, FlagNode
 
 
 class BaseScriptTest(BaseTest):
-    script_class = Script
+    script_class: Type[Script]
 
     def create_script(self, func, annotations={}, *args, **kwargs):
         if len(func.__annotations__) == 0:
             func.__annotations__ = annotations
         func = create_autospec(func)
-        return self.script_class(name="test", function=func, *args, **kwargs)
+        return self.script_class(name="test", function=func, *args, **kwargs)  # type: ignore
 
     def create_script_node(self, name="test", options=[], flags=[], args=[]):
         return ScriptNode(name, options, flags, args)

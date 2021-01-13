@@ -1,11 +1,11 @@
-import os
 import logging
-from typing import Type, Any, List, Union, TypeVar, Optional
+from typing import Type, Any, List, Union, Optional
+from pathlib import Path
+
+
 from arc.convert.converters import *
 from arc.convert import BaseConverter, converter_mapping, get_converter
 from arc.errors import ArcError, ConversionError
-
-T = TypeVar("T", bound="Config")
 
 
 class Config:
@@ -13,7 +13,7 @@ class Config:
     to instance a new object, if _instace already exists, it
     will be returned instead"""
 
-    _instance = None
+    _instance: Optional["Config"] = None
 
     # __not_preloadable lists config options that cannot be loaded
     # in an .arc file. These usually include things that require objects or
@@ -26,7 +26,7 @@ class Config:
         if cls._instance is not None:
             return cls._instance
 
-        obj = super().__new__(cls, *args, **kwargs)
+        obj = super().__new__(cls, *args, **kwargs)  # type: ignore
         cls._instance = obj
         return obj
 
@@ -45,7 +45,7 @@ class Config:
         self.converters = converter_mapping
 
     @property
-    def instance(self) -> Optional[T]:
+    def instance(self) -> Optional["Config"]:
         return self._instance
 
     def set_value(self, name: str, value: Any):
@@ -88,12 +88,20 @@ class Config:
         return get_converter(key)
 
     # Arc file Methods
-    def load_arc_file(self, arcfile: str):
+    def load_arc_file(self, arcfile: str, force=False):
         """Reads in a arc config file and parses it's contents"""
-        if self._loaded or not os.path.isfile(arcfile):
+        if arcfile.startswith("~"):
+            config_file = (Path.home() / arcfile[2:]).resolve()
+        else:
+            config_file = Path(arcfile).resolve()
+
+        if self._loaded and not force:
             return
 
-        file = open(arcfile)
+        if not config_file.is_file():
+            raise ArcError(f"File '{arcfile}' does not exist / is not a file")
+
+        file = config_file.open()
         lines = file.readlines()
         file.close()
         for line in lines:
@@ -117,7 +125,7 @@ class Config:
         if name in Config.__not_preloadable:
             raise ArcError(
                 f"'{name}' cannot be configured via the .arc file. "
-                + "If you want to configure this, do so within the Python file"
+                "If you want to configure this, do so within the Python file"
             )
 
         # Check if it needs to be converted

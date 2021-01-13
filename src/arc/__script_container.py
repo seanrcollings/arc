@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Type
+from typing import Dict
+
 import arc._utils as util
 from arc.script import script_factory
 from arc.script.script import Script
@@ -11,9 +12,9 @@ from arc.script import ScriptType
 class ScriptContainer(ABC):
     """Parent class of CLI and Utility"""
 
-    def __init__(self, arcfile=".arc", script_type=ScriptType.KEYWORD):
+    def __init__(self, arcfile="./.arc", script_type=ScriptType.KEYWORD):
         self.script_type = script_type
-        self.scripts: Dict[str, Type[Script]] = {}
+        self.scripts: Dict[str, Script] = {}
         self.script("help", script_type=ScriptType.KEYWORD)(self.helper)
 
         config.load_arc_file(arcfile)
