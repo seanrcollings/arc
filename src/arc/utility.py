@@ -1,5 +1,6 @@
 from arc.__script_container import ScriptContainer
 from arc._utils import logger
+from arc import config
 
 
 class Utility(ScriptContainer):
@@ -16,7 +17,7 @@ class Utility(ScriptContainer):
     """
 
     def __init__(self, name, *args, script_type=None, **kwargs):
-        super().__init__(*args, script_type=script_type, **kwargs)
+        super().__init__(*args, script_type=script_type, **kwargs)  # type: ignore
         self.name = name
         logger.debug("Utility %s created'", name)
 
@@ -32,13 +33,13 @@ class Utility(ScriptContainer):
         """
         print(f"\nUtility \033[93m{self.name}\033[00m")
         print(
-            "Execute this utility with",
-            f"\033[93m{self.name}\033[00m\033[92m{Config.utility_seperator}subcommand\033[00m",
+            "Execute this utility with"
+            f"\033[93m{self.name}\033[00m\033[92m{config.utility_seperator}subcommand\033[00m",
         )
 
         if len(self.scripts) > 0:
             for script_name, script in self.scripts.items():
-                print(f"\033[92m{Config.utility_seperator}{script_name}\033[00m")
+                print(f"\033[92m{config.utility_seperator}{script_name}\033[00m")
                 print(f"\t{script.doc}\n")
         else:
             print("No scripts defined")

@@ -59,14 +59,13 @@ def timer(func):
 
 
 class symbol:
-    __symbols__: Dict[str, object] = {}
-    # use object to get rid of mypy error, will actually be of type symbol
+    __symbols__: Dict[str, "symbol"] = {}
 
     def __new__(cls, name, *args, **kwargs):
         if name in cls.__symbols__:
             return cls.__symbols__[name]
 
-        obj = super().__new__(cls, *args, **kwargs)
+        obj = super().__new__(cls, *args, **kwargs)  # type: ignore
         cls.__symbols__[name] = obj
         return obj
 
