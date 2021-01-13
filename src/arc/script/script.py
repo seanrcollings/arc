@@ -6,7 +6,6 @@ from arc.parser.data_types import ScriptNode
 from .__option import Option
 from .__flag import Flag
 from .script_mixin import ScriptMixin
-from arc.types import File
 
 
 class Script(ABC, ScriptMixin):
@@ -60,9 +59,8 @@ class Script(ABC, ScriptMixin):
         on the function definition
         """
         with self.ArgBuilder(self.function) as builder:
-
             for idx, param in enumerate(builder):
-                meta = builder.getMeta(index=idx)
+                meta = builder.get_meta(index=idx)
                 self.arg_hook(param, meta)
 
             return builder.args

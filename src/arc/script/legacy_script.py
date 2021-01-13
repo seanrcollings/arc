@@ -65,9 +65,7 @@ class LegacyScript(Script, ScriptMixin):
             if option.name not in self.options:
                 if self.pass_kwargs:
                     self.options[option.name] = Option(
-                        data_dict=dict(
-                            name=option.name, annotation=str, default=NO_DEFAULT
-                        )
+                        name=option.name, annotation=str, default=NO_DEFAULT
                     )
                 else:
                     raise ScriptError(f"Option '{option.name}' not recognized")

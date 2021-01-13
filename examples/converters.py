@@ -34,18 +34,18 @@ def float_type(value: float):
     print(value)
 
 
-# python3 converters.py list value=1,2,3,4,5 -> ['1', '2', '3', '4', '5']
+# python3 converters.py list value=1,2,3,4,5 -> [1, 2, 3, 4, 5]
 # Without spaces, you don't need quotation marks
 @cli.script("list")
 def list_type(value: List[int]):
-    """Demonstrates bool conversion"""
+    """Demonstrates list conversion"""
     print(type(value))
     print(value)
 
 
 # python3 converters.py list value=/path/to/file -> File handler
 @cli.script("file")
-def file_type(value: File["w"]):
+def file_type(value: File[File.READ]):
     """Demonstrates file conversion"""
     print(type(value))
     print(value.readlines())

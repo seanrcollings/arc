@@ -12,6 +12,9 @@ from .__flag import Flag
 
 
 class ScriptMixin:
+    options: Dict[str, Option]
+    meta: Any
+
     def _match_flags(self, flag_nodes: List[FlagNode]):
         """Get's the final flag values to pass to the script
 
@@ -54,7 +57,7 @@ class ScriptMixin:
     def add_meta(self):
         if self.meta:
             self.options["meta"] = Option(
-                data_dict=dict(name="meta", annotation=Any, default=NO_DEFAULT)
+                name="meta", annotation=Any, default=NO_DEFAULT
             )
             self.options["meta"].value = self.meta
 
@@ -83,12 +86,14 @@ class ScriptMixin:
         def args(self):
             return self.__options, self.__flags
 
-        def add_arg(self, param):
+        def add_arg(self, param: inspect.Parameter):
             if param.annotation is bool:
                 self.__flags[param.name] = Flag(param)
 
             elif param.kind not in (param.VAR_KEYWORD, param.VAR_POSITIONAL):
-                self.__options[param.name] = Option(param)
+                self.__options[param.name] = Option(
+                    param.name, param.annotation, param.default
+                )
 
-        def getMeta(self, **kwargs):
+        def get_meta(self, **kwargs):
             return dict(length=self.__length, **kwargs)

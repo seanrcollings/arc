@@ -1,35 +1,22 @@
 from typing import Any
+import inspect
+
 from arc import config
 from arc.convert import is_alias
 from arc._utils import symbol
 from arc.types import needs_cleanup, ArcGeneric
 
 NO_DEFAULT = symbol("NO_DEFAULT")
+# pylint: disable=protected-access
+EMPTY = inspect._empty  # type: ignore
 
 
 class Option:
-    def __init__(self, param=None, data_dict=None):
-        if param:
-            self.name = param.name
-
-            self.annotation = (
-                Any if param.annotation == param.empty else param.annotation
-            )
-
-            self.default = NO_DEFAULT if param.default == param.empty else param.default
-            self.value = self.default
-
-        elif data_dict:
-            self.name = data_dict["name"]
-            self.annotation = data_dict["annotation"]
-            self.default = data_dict["default"]
-            self.value = self.default
-
-        else:
-            raise ValueError(
-                "Option class must be provided a Parameter"
-                + "object or a dictionary containing the information"
-            )
+    def __init__(self, name, annotation, default):
+        self.name = name
+        self.annotation = Any if annotation is EMPTY else annotation
+        self.default = NO_DEFAULT if default is EMPTY else default
+        self.value = self.default
 
     def __repr__(self):
         return f"<Option : {self.name}>"
@@ -48,7 +35,7 @@ class Option:
         """Returns the converter name for
         the option's annotation
         """
-
+        # Move this logic into convert.get_converter() ?
         if is_alias(self.annotation):
             if issubclass(self.annotation.__origin__, ArcGeneric):  # type: ignore
                 return self.annotation.__origin__.__name__.lower()  # type: ignore

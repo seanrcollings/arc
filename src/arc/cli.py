@@ -23,9 +23,10 @@ class CLI(ScriptContainer):
         string += "\n".join(c for c in self.scripts)
         string += "\nUtilities: \n"
         string += "\n\t".join(repr(self.utilities[util]) for util in self.utilities)
+
         return string
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: str, **kwargs):
         """Arc CLI driver method
 
         Tokenizes and Parses the user input, then passes
@@ -62,7 +63,7 @@ class CLI(ScriptContainer):
         self.utilities[util_name](util_node.script)
 
     @staticmethod
-    def __get_input__list(args: Tuple[str], kwargs: Dict[str, str]) -> List[str]:
+    def __get_input__list(args: Tuple[str, ...], kwargs: Dict[str, str]) -> List[str]:
         if len(args) > 0:
             input_list = list(args)
             # Could also move this out of the if statement

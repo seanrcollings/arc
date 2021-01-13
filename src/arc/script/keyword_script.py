@@ -41,7 +41,7 @@ class KeywordScript(Script, ScriptMixin):
 
             if self.__pass_kwargs and not option:
                 self.options[node.name] = option = Option(
-                    data_dict=dict(name=node.name, annotation=str, default=NO_DEFAULT)
+                    name=node.name, annotation=str, default=NO_DEFAULT
                 )
             elif not option:
                 raise ScriptError(f"Option '{node.name}' not recognized")

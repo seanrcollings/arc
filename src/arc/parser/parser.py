@@ -23,8 +23,8 @@ class Tokenizer:
         return tokens
 
     def __tokenize_one_token(self):
-        for name, regex in self.TOKEN_TYPES:
-            regex = re.compile(fr"\A({regex})")
+        for name, pattern in self.TOKEN_TYPES:
+            regex = re.compile(fr"\A({pattern})")
             match_against = self.data[0].strip()
             if match := regex.match(match_against):
                 value = match.group(1)
@@ -41,7 +41,7 @@ class Tokenizer:
 
 class Parser:
     def __init__(self, tokens):
-        self.tokens = tokens
+        self.tokens: List[types.Token] = tokens
 
     def parse(self):
         return self.parse_util()
