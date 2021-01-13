@@ -28,6 +28,8 @@ setuptools.setup(
     keywords=["CLI", "extendable", "easy"],
     packages=setuptools.find_packages("src"),
     package_dir={{"": "src"}},
+    package_data={{"arc": ["py.typed"]}},
+    zip_safe=False,
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
