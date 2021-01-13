@@ -1,8 +1,7 @@
 import os
 import shlex
-import unittest
 import subprocess
-from typing import List
+from typing import List, Optional
 from dataclasses import dataclass
 from contextlib import contextmanager
 
@@ -64,7 +63,7 @@ class Executable:
         self.code: str = self.parse_exec(exec_components)
         self.tests: List[IO] = self.parse_output(output)
         self.origin = exec_components[0].file_name
-        self.result = None
+        self.result: Optional[str] = None
         super().__init__()
 
     def execute(self):

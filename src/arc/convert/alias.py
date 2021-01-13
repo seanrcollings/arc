@@ -25,7 +25,7 @@ def is_alias(alias):
     return isinstance(alias, GenericAlias)
 
 
-def convert_alias(alias: Type[GenericAlias], value: str) -> Any:
+def convert_alias(alias: GenericAlias, value: str) -> Any:
     if not is_alias(alias):
         raise ConversionError(None, "Provided alias must inherit from GenericAlias")
 
@@ -85,6 +85,6 @@ def convert_tuple(alias, value):
         )
 
     return tuple(
-        get_converter(alias.__args__[idx].__name__)().convert_wrapper(item)
+        get_converter(alias.__args__[idx].__name__)().convert_wrapper(item)  # type: ignore
         for idx, item in enumerate(items)
     )

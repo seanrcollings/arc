@@ -17,7 +17,7 @@ class Option:
                 self.annotation = param.annotation
 
             if is_alias(self.annotation):
-                name = self.annotation.__origin__.__name__
+                name = self.annotation.__origin__.__name__  # type: ignore
             else:
                 name = self.annotation.__name__
 
@@ -47,6 +47,7 @@ class Option:
         """Converts self.value using the converter found by get_converter"""
         if self.annotation is Any:
             return
+        assert isinstance(self.value, str)
         if is_alias(self.annotation):
             self.value = convert_alias(self.annotation, self.value)
         else:
