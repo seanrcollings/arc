@@ -26,7 +26,7 @@ $ pip install -e arc
 # Quick Start
 
 ```py
-from arc import CLI 
+from arc import CLI
 
 cli = CLI()
 
@@ -64,6 +64,5 @@ $ python3 -m tests [TEST CASE]
 
 
 # TODO
-- Refactor Config object to employ instances rather than the raw class
-- Write a parser for command line args
-- Refactor BaseConverter / Converters to make more sense
+- Make the parser better / more feature rich (allow it to have context of the cli application)
+- finish File type
