@@ -4,17 +4,20 @@ import time
 import functools
 from typing import Dict
 
+from arc.color import fg, bg, effects
+from arc import config
+
 
 class MyFormatter(logging.Formatter):
     def format(self, record):
         level = record.levelno
         message = record.getMessage()
         if level == logging.DEBUG:
-            return decorate_text(message, tcolor=33)
+            return decorate_text(message, tcolor=fg.YELLOW)
         elif level == logging.INFO:
-            return decorate_text(message, tcolor=32)
+            return decorate_text(message, tcolor=fg.GREEN)
 
-        return decorate_text(message, tcolor=31)
+        return decorate_text(message, tcolor=fg.WHITE)
 
 
 logger = logging.getLogger("arc_logger")
@@ -24,8 +27,16 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-def decorate_text(string, tcolor="32", bcolor="40", style="1"):
-    return f"\033[{style};{tcolor}m{string}\033[00m"
+def decorate_text(string, tcolor=fg.GREEN, bcolor=None, style=effects.BOLD):
+    if config.decorate_text:
+        return (
+            f"{tcolor}"
+            f"{bcolor if bcolor else ''}"
+            f"{style}"
+            f"{string}"
+            f"{effects.CLEAR}"
+        )
+    return string
 
 
 def clear():

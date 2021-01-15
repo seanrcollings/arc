@@ -1,3 +1,6 @@
+from arc.color import fg, effects
+
+
 class ArcError(Exception):
     """Base Arc Exception"""
 
@@ -10,7 +13,7 @@ class ArcError(Exception):
 
     @staticmethod
     def colorize(string: str):
-        return f"\033[1;31m{string}\033[00m"
+        return f"{fg.RED}{string}{effects.CLEAR}"
 
 
 class ExecutionError(ArcError):

@@ -2,12 +2,12 @@ class Ansi(str):
     __escape = "\u001b["
 
     def __new__(cls, content, extra="m"):
-        obj = str.__new__(cls, cls.__escape + str(content) + extra)
+        obj = str.__new__(cls, f"{cls.__escape}{content}{extra}")
         obj.__init__(content)
         return obj
 
-    def __init__(self, code, *args):
-        super(Ansi).__init__()
+    def __init__(self, code, *_args):
+        super().__init__()
         self.code = code
 
     @property
