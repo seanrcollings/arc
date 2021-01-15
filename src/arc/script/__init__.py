@@ -25,7 +25,7 @@ class ScriptType:
 
     # Internal Interface, used to map the symbol
     # to the actual Class
-    _script_type_mappings = {
+    script_type_mappings = {
         KEYWORD: KeywordScript,
         POSITIONAL: PositionalScript,
         LEGACY: LegacyScript,
@@ -45,12 +45,12 @@ class ScriptType:
             raise TypeError("Script Classes MUST inherit from the base Script object")
 
         setattr(cls, type_name.upper(), symbol(type_name.upper()))
-        cls._script_type_mappings[getattr(cls, type_name.upper())] = type_class
+        cls.script_type_mappings[getattr(cls, type_name.upper())] = type_class
 
 
 def script_factory(name, function, script_type=ScriptType.KEYWORD, **kwargs):
     name = name if name else function.__name__
-    type_class = ScriptType._script_type_mappings.get(script_type)
+    type_class = ScriptType.script_type_mappings.get(script_type)
 
     if type_class is None:
         raise AttributeError(f"{script_type} is not a valid Script Type")

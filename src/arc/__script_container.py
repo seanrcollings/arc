@@ -21,9 +21,17 @@ class ScriptContainer(ABC):
 
     @abstractmethod
     def __call__(self):
-        pass
+        ...
 
     def script(self, name=None, script_type=None, **kwargs):
+        """decorator wrapper around install_script"""
+
+        def decorator(function):
+            return self.install_script(name, function, script_type, **kwargs)
+
+        return decorator
+
+    def install_script(self, name, function, script_type=None, **kwargs):
         """Installs a script to the container
         Creates a script object, appends it to
         the script container
@@ -33,23 +41,17 @@ class ScriptContainer(ABC):
         """
         # Fallback for script type:
         #   - provided arguement
-        #   - script_type of the container (if it's a util it can also inherit it's type)
+        #   - script_type of the container (if it's a util it can also inherit
+        #        it's type from it's parent)
         #   - Defaults to KEYWORD
         script_type = script_type or self.script_type or ScriptType.KEYWORD
+        script = script_factory(name, function, script_type, **kwargs)
+        self.scripts[script.name] = script
 
-        def decorator(function):
-            script = script_factory(name, function, script_type, **kwargs)
-            self.scripts[script.name] = script
-            util.logger.debug(
-                "registered '%s' script to %s", script.name, self.__class__.__name__,
-            )
-            return function
-
-        return decorator
-
-    def install_script(self, name, function, script_type=None, **kwargs):
-        """Alias function for the decorator. Makes adding scripts programmatically easier"""
-        return self.script(name, script_type, **kwargs)(function)
+        util.logger.debug(
+            "registered '%s' script to %s", script.name, self.__class__.__name__,
+        )
+        return function
 
     @util.timer
     def execute(self, script_node):
@@ -70,4 +72,4 @@ class ScriptContainer(ABC):
 
     @abstractmethod
     def helper(self):
-        pass
+        ...
