@@ -1,6 +1,7 @@
 from typing import List
 from dataclasses import dataclass
 from arc._utils import decorate_text
+from arc.color import fg, bg, effects
 
 
 @dataclass
@@ -72,7 +73,7 @@ class ScriptNode:
     def __repr__(self, level=0):
         tabs = "\t" * level
         string = (
-            f"{decorate_text('SCRIPT', tcolor='33')}\n{tabs}"
+            f"{decorate_text('SCRIPT', tcolor=bg.YELLOW)}\n{tabs}"
             f"name: {decorate_text(self.name, tcolor='32')}"
             f"\n{tabs}options: {', '.join([decorate_text(str(o)) for o in self.options])}"
             f"\n{tabs}flags: {', '.join([decorate_text(str(f)) for f in self.flags])}"
@@ -94,8 +95,8 @@ class UtilNode:
 
     def __repr__(self):
         string = (
-            f"{decorate_text('UTILITY', tcolor='33')}\n"
-            f"name: {decorate_text(self.name, tcolor='32')}"
+            f"{decorate_text('UTILITY', tcolor=fg.YELLOW)}\n"
+            f"name: {decorate_text(self.name, tcolor=bg.GREEN)}\n"
             f"\nscript: \n\t{self.script.__repr__(level=1)}"
         )
         return string

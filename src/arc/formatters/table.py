@@ -1,4 +1,5 @@
 from arc._utils import decorate_text
+from arc.color import fg, effects
 
 
 class Table:
@@ -12,7 +13,12 @@ class Table:
         table = "\n"
         table += " ".join(
             [
-                self.__formatter(header.upper(), align="^", tcolor="33", style="4")
+                self.__formatter(
+                    header.upper(),
+                    align="^",
+                    tcolor=fg.YELLOW,
+                    style=effects.UNDERLINE,
+                )
                 for header in self.__headers
             ]
         )
@@ -28,7 +34,13 @@ class Table:
         return table
 
     def __formatter(
-        self, string, align="<", type_of="s", tcolor="32", bcolor="40", style="1"
+        self,
+        string,
+        align="<",
+        type_of="s",
+        tcolor=fg.GREEN,
+        bcolor=None,
+        style=effects.BOLD,
     ):
         formatted = format(string, f"{align}{self.__column_width}{type_of}")
         return decorate_text(formatted, tcolor, bcolor, style)
