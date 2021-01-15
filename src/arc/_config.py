@@ -99,6 +99,8 @@ class Config:
             return
 
         if not config_file.is_file():
+            if arcfile == "./.arc":
+                return
             raise ArcError(f"File '{arcfile}' does not exist / is not a file")
 
         file = config_file.open()

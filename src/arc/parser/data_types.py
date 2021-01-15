@@ -73,8 +73,8 @@ class ScriptNode:
     def __repr__(self, level=0):
         tabs = "\t" * level
         string = (
-            f"{decorate_text('SCRIPT', tcolor=bg.YELLOW)}\n{tabs}"
-            f"name: {decorate_text(self.name, tcolor='32')}"
+            f"{decorate_text('SCRIPT', tcolor=fg.YELLOW)}\n{tabs}"
+            f"name: {decorate_text(self.name, tcolor=fg.YELLOW)}"
             f"\n{tabs}options: {', '.join([decorate_text(str(o)) for o in self.options])}"
             f"\n{tabs}flags: {', '.join([decorate_text(str(f)) for f in self.flags])}"
             f"\n{tabs}other args: {', '.join([decorate_text(str(a)) for a in self.args])}"
