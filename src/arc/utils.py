@@ -93,6 +93,11 @@ class symbol:
         return self.__name == other
 
 
+def indent(string: str, distance="\t", split="\n"):
+    """Indents the block of text provided by the distance"""
+    return f"{distance}" + f"{split}{distance}".join(string.split(split))
+
+
 class Helpful(ABC):
     @abstractmethod
     def helper(self):

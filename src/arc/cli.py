@@ -112,5 +112,5 @@ class CLI(ScriptContainer, utils.Helpful):
                 f"{fg.YELLOW.bright}<utility>"
                 f"{fg.GREEN.bright}{config.utility_seperator}<subcommand>{effects.CLEAR}"
             )
-            for _, utility in self.utilities.items():
+            for utility in self.utilities.values():
                 utility.helper()

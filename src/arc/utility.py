@@ -1,6 +1,5 @@
 from arc.__script_container import ScriptContainer
 from arc.utils import logger
-from arc import config
 from arc.color import fg, effects
 
 
@@ -40,7 +39,6 @@ class Utility(ScriptContainer):
         if len(self.scripts) > 0:
             print()
             for script in self.scripts.values():
-                print(config.utility_seperator, end="")
                 script.helper()
                 print()
         else:

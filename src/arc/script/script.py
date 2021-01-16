@@ -4,11 +4,12 @@ import re
 
 from arc.errors import ScriptError, ValidationError
 from arc.parser.data_types import ScriptNode
-from arc.utils import Helpful
+from arc.utils import Helpful, indent
+from arc import config
+from arc.color import fg, effects
 from .__option import Option
 from .__flag import Flag
 from .script_mixin import ScriptMixin
-from arc.color import fg, bg, effects
 
 
 class Script(Helpful, ScriptMixin):
@@ -25,9 +26,9 @@ class Script(Helpful, ScriptMixin):
 
         self.doc = None
         if self.function.__doc__ is not None:
-            doc = re.sub(r"\n\s+", "\n   ", self.function.__doc__)
-            doc = re.sub(r"\n\t+", "\n   ", doc)
-            self.doc = "   " + doc
+            doc = re.sub(r"\n\s+", "\n", self.function.__doc__)
+            doc = re.sub(r"\n\t+", "\n", doc)
+            self.doc = doc
 
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
@@ -109,12 +110,18 @@ class Script(Helpful, ScriptMixin):
             option.cleanup()
 
     def helper(self):
-        print(fg.GREEN, self.name, effects.CLEAR, sep="")
+        spaces = "  "
+        print(
+            indent(
+                f"{config.utility_seperator}{fg.GREEN}{self.name}{effects.CLEAR}",
+                spaces,
+            )
+        )
         if self.doc:
-            print(self.doc)
+            print(indent(self.doc, spaces * 3))
         else:
             obj: Helpful
-            print("   Arguments:")
+            print(f"{spaces}Arguments:")
             for obj in [*self.options.values(), *self.flags.values()]:
-                print("      ", end="")
+                print(spaces * 3, end="")
                 obj.helper()
