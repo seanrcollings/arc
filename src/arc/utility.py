@@ -1,6 +1,7 @@
 from arc.__script_container import ScriptContainer
-from arc._utils import logger
+from arc.utils import logger
 from arc import config
+from arc.color import fg, effects
 
 
 class Utility(ScriptContainer):
@@ -16,9 +17,10 @@ class Utility(ScriptContainer):
         db:createuser
     """
 
-    def __init__(self, name, *args, script_type=None, **kwargs):
-        super().__init__(*args, script_type=script_type, **kwargs)  # type: ignore
+    def __init__(self, name, description=None, script_type=None):
+        super().__init__(script_type=script_type)
         self.name = name
+        self.description = description
         logger.debug("Utility %s created'", name)
 
     def __call__(self, script_node):
@@ -29,17 +31,17 @@ class Utility(ScriptContainer):
 
     def helper(self):
         """Helper function for utilities
-        Prints out the docstrings for the utilty's scripts
-        """
-        print(f"\nUtility \033[93m{self.name}\033[00m")
-        print(
-            "Execute this utility with"
-            f"\033[93m{self.name}\033[00m\033[92m{config.utility_seperator}subcommand\033[00m",
-        )
+        Prints out the docstrings for the utilty's scripts"""
+
+        print(f"{effects.BOLD}\nUtility {fg.YELLOW}{self.name}{effects.CLEAR}")
+        if self.description:
+            print(self.description)
 
         if len(self.scripts) > 0:
-            for script_name, script in self.scripts.items():
-                print(f"\033[92m{config.utility_seperator}{script_name}\033[00m")
-                print(f"\t{script.doc}\n")
+            print()
+            for script in self.scripts.values():
+                print(config.utility_seperator, end="")
+                script.helper()
+                print()
         else:
             print("No scripts defined")

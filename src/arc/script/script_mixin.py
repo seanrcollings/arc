@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from arc.parser.data_types import FlagNode
 from arc.errors import ScriptError, ExecutionError
 
-import arc._utils as util
+import arc.utils as util
 from .__option import Option, NO_DEFAULT
 from .__flag import Flag
 

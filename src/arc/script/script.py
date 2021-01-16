@@ -1,14 +1,20 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import List, Dict, Callable, Tuple, Any
+import re
 
 from arc.errors import ScriptError, ValidationError
 from arc.parser.data_types import ScriptNode
+from arc.utils import Helpful
 from .__option import Option
 from .__flag import Flag
 from .script_mixin import ScriptMixin
+from arc.color import fg, bg, effects
 
 
-class Script(ABC, ScriptMixin):
+class Script(Helpful, ScriptMixin):
+    """Abstract Script Class, all Script types must inherit from it
+    Helpful is abstract, so this is as well"""
+
     def __init__(self, name: str, function: Callable, meta: Any = None):
 
         self.name = name
@@ -17,9 +23,11 @@ class Script(ABC, ScriptMixin):
         self.validation_errors: List[str] = []
         self.meta = meta
 
-        self.doc = "No Docstring"
+        self.doc = None
         if self.function.__doc__ is not None:
-            self.doc = self.function.__doc__.strip("\n\t ").replace("\n", "\n\t")
+            doc = re.sub(r"\n\s+", "\n   ", self.function.__doc__)
+            doc = re.sub(r"\n\t+", "\n   ", doc)
+            self.doc = "   " + doc
 
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
@@ -87,15 +95,26 @@ class Script(ABC, ScriptMixin):
         """
 
     def arg_hook(self, param, meta) -> None:
-        """build_args hook.
+        """`build_args` hook.
         Can be used to check each of the args it's creating"""
 
     def validate_input(self, script_node) -> None:
         """Helper function to check if user input is valid,
         should be overridden by child class
 
-        If it isn't valid, raise a ValidationError"""
+        If it isn't valid, raise a `ValidationError`"""
 
     def cleanup(self):
         for _, option in self.options.items():
             option.cleanup()
+
+    def helper(self):
+        print(fg.GREEN, self.name, effects.CLEAR, sep="")
+        if self.doc:
+            print(self.doc)
+        else:
+            obj: Helpful
+            print("   Arguments:")
+            for obj in [*self.options.values(), *self.flags.values()]:
+                print("      ", end="")
+                obj.helper()

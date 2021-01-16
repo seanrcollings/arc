@@ -1,4 +1,4 @@
-from arc._utils import decorate_text
+from arc.utils import decorate_text
 from arc.color import fg, effects
 
 

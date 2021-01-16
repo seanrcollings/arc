@@ -3,15 +3,16 @@ import inspect
 
 from arc import config
 from arc.convert import is_alias
-from arc._utils import symbol
+from arc.utils import symbol, Helpful
 from arc.types import needs_cleanup, ArcGeneric
+
 
 NO_DEFAULT = symbol("NO_DEFAULT")
 # pylint: disable=protected-access
 EMPTY = inspect._empty  # type: ignore
 
 
-class Option:
+class Option(Helpful):
     def __init__(self, name, annotation, default):
         self.name = name
         self.annotation = Any if annotation is EMPTY else annotation
@@ -48,3 +49,6 @@ class Option:
         # the __del__ magic method to preform cleanup
         if needs_cleanup(self.annotation):
             del self.value
+
+    def helper(self):
+        print(f"{self.name}{config.options_seperator}{self.default}")

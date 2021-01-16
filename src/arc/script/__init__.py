@@ -1,5 +1,5 @@
 from typing import Type
-from arc._utils import symbol
+from arc.utils import symbol
 from .script import Script
 from .keyword_script import KeywordScript
 from .positional_script import PositionalScript

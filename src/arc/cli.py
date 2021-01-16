@@ -2,14 +2,15 @@ import sys
 from typing import Dict, List, Tuple
 
 from arc.__script_container import ScriptContainer
-import arc._utils as util
+from arc import utils
 from arc.utility import Utility
 from arc.parser import Tokenizer, Parser, ScriptNode, UtilNode
 from arc import config
 from arc.errors import ArcError
+from arc.color import fg, effects
 
 
-class CLI(ScriptContainer):
+class CLI(ScriptContainer, utils.Helpful):
     def __init__(self, *args, utilities: list = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.utilities: Dict[str, Utility] = {}
@@ -29,13 +30,13 @@ class CLI(ScriptContainer):
     def __call__(self, *args: str, **kwargs):
         """Arc CLI driver method
 
-        Tokenizes and Parses the user input, then passes
-        on the resulting NodeTree to the correct execution method
-        """
+		Tokenizes and Parses the user input, then passes
+		on the resulting NodeTree to the correct execution method
+		"""
         input_list = self.__get_input__list(args, kwargs)
         tokens = Tokenizer(input_list).tokenize()
         parsed = Parser(tokens).parse()
-        util.logger.debug(parsed)
+        utils.logger.debug(parsed)
         # print(parsed)
 
         if isinstance(parsed, UtilNode):
@@ -48,12 +49,12 @@ class CLI(ScriptContainer):
     def __execute_utility(self, util_node: UtilNode):
         """Checks if a utility exists with provided user params
 
-        If one does exist, pass the command and user_input onto it's
-        execute method. If one doesn't exist, pass command and user_input
-        on to the global CLI execute method.
+		If one does exist, pass the command and user_input onto it's
+		execute method. If one doesn't exist, pass command and user_input
+		on to the global CLI execute method.
 
-        :param util_node: The Node tree created by the parser
-        """
+		:param util_node: The Node tree created by the parser
+		"""
 
         util_name = util_node.name
 
@@ -83,7 +84,7 @@ class CLI(ScriptContainer):
                 if utility.script_type is None:
                     utility.script_type = self.script_type
                 self.utilities[utility.name] = utility
-                util.logger.debug(f"Registered '{utility.name}' utility")
+                utils.logger.debug("Registered '%s' utility", utility.name)
             else:
                 raise ArcError(
                     "Only instances of the 'Utility'", "class can be registerd to ARC",
@@ -91,18 +92,25 @@ class CLI(ScriptContainer):
 
     def helper(self):
         """Helper List function
-        Prints out the docstrings for the CLI's scripts
-        """
-        print("Usage: python3 FILENAME [COMMAND] [ARGUEMENTS ...]\n\n",)
+		Prints out the docstrings for the CLI's scripts
+		"""
+        print(f"Usage: python3 {sys.argv[0]} [COMMAND] [ARGUMENTS ...]\n\n",)
 
-        print("Installed Scripts: \n")
+        header = effects.BOLD + effects.UNDERLINE + "{title}" + effects.CLEAR + ":\n"
+
+        print(header.format(title="Installed Scripts"))
         if len(self.scripts) > 0:
-            for script_name, script in self.scripts.items():
-                print(f"\033[92m{script_name}\033[00m\n    {script.doc}\n")
+            for _, script in self.scripts.items():
+                script.helper()
         else:
-            print("No scripts installed")
+            print("No Scripts Installed")
 
         if len(self.utilities) > 0:
-            print("\nInstalled Utilities")
+            print(f"\n{header.format(title='Installed Utilities')}")
+            print(
+                "Execute a utility with: "
+                f"{fg.YELLOW.bright}<utility>"
+                f"{fg.GREEN.bright}{config.utility_seperator}<subcommand>{effects.CLEAR}"
+            )
             for _, utility in self.utilities.items():
                 utility.helper()

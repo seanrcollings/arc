@@ -3,8 +3,9 @@ import os
 import time
 import functools
 from typing import Dict
+from abc import ABC, abstractmethod
 
-from arc.color import fg, bg, effects
+from arc.color import fg, effects
 from arc import config
 
 
@@ -60,13 +61,9 @@ def timer(func):
         start_time = time.time()
         func(*args, **kwargs)
         end_time = time.time()
-        logger.info(f"Completed in {end_time - start_time:.2f}s")
+        logger.info("Completed in %ss", round(end_time - start_time, 2))
 
     return decorator
-
-
-# def basic_func_info(func) -> str:
-#     """Generates basic info"""
 
 
 class symbol:
@@ -94,3 +91,9 @@ class symbol:
 
     def __eq__(self, other):
         return self.__name == other
+
+
+class Helpful(ABC):
+    @abstractmethod
+    def helper(self):
+        ...

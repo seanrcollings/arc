@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict
 
-import arc._utils as util
+import arc.utils as util
 from arc.script import script_factory
 from arc.script.script import Script
 from arc import config

@@ -4,7 +4,7 @@ import random
 from arc import Utility, config
 from arc.formatters.table import Table
 
-debug = Utility("debug")
+debug = Utility("debug", "Various development-centric scripts")
 
 
 @debug.script("config")

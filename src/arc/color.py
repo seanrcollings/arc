@@ -2,7 +2,7 @@ class Ansi(str):
     __escape = "\u001b["
 
     def __new__(cls, content, extra="m"):
-        obj = str.__new__(cls, f"{cls.__escape}{content}{extra}")
+        obj = str.__new__(cls, f"{cls.__escape}{content}{extra}")  # type: ignore
         obj.__init__(content)
         return obj
 
@@ -12,7 +12,7 @@ class Ansi(str):
 
     @property
     def bright(self):
-        return Ansi(self.code, ";1m")
+        return Ansi(self.code + 60)
 
     @property
     def background(self):
