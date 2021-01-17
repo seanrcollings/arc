@@ -16,11 +16,12 @@ Check out the most recent, and all, versions of Arc.
 # Future
 - Type guessing
 - Better default helper text
-- Add custom types (ie: for file objects)
+- Add more custom types (ie: for file objects)
 - Allow arbitrary nesting of utilites
 
 # v1.1
 - Added File type
+- General code improvements
 
 
 # v1.0 (First Major Version!)
