@@ -37,7 +37,6 @@ class CLI(ScriptContainer, utils.Helpful):
         tokens = Tokenizer(input_list).tokenize()
         parsed = Parser(tokens).parse()
         utils.logger.debug(parsed)
-        # print(parsed)
 
         if isinstance(parsed, UtilNode):
             self.__execute_utility(parsed)

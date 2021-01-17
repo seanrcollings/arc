@@ -1,7 +1,7 @@
 from typing import List
 from dataclasses import dataclass
 from arc.utils import decorate_text
-from arc.color import fg, bg, effects
+from arc.color import fg, bg
 
 
 @dataclass

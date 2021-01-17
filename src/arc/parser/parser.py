@@ -1,20 +1,39 @@
 import re
+from enum import Enum
 from typing import List
 
 from arc import config
 import arc.parser.data_types as types
 from arc.errors import ParserError
 
+# Parser Enhancement Project
+# Token Types
+#   - Operator (--, =, :)
+#   - Identifier (any string of text, seperated by an operator or whitespace)
+
+
+class Operator(Enum):
+    utility = config.utility_seperator
+    options = config.options_seperator
+    flag = config.flag_denoter
+
+    @classmethod
+    def get(cls, string):
+        for item in cls:
+            if item.value == string:
+                return item
+        raise ValueError(f"{string} is not a valid operator")
+
 
 class Tokenizer:
+    TOKEN_TYPES = {
+        "operator": fr"({config.flag_denoter}|{config.options_seperator}|"
+        fr"{config.utility_seperator})",
+        "identifier": r"\b\w+\b",
+    }
+
     def __init__(self, data: List[str]):
         self.data = data
-        self.TOKEN_TYPES = [
-            ("flag", fr"{config.flag_denoter}\b\w+\b"),
-            ("option", fr"\b\w+{config.options_seperator}[\w\,\.\s\\\/]+\b"),
-            ("utility", fr"\b\w+\b{config.utility_seperator}"),
-            ("script", r"\b\w+\b"),
-        ]
 
     def tokenize(self):
         tokens = []
@@ -23,7 +42,7 @@ class Tokenizer:
         return tokens
 
     def __tokenize_one_token(self):
-        for name, pattern in self.TOKEN_TYPES:
+        for kind, pattern in self.TOKEN_TYPES.items():
             regex = re.compile(fr"\A({pattern})")
             match_against = self.data[0].strip()
             if match := regex.match(match_against):
@@ -34,7 +53,10 @@ class Tokenizer:
                     self.data.pop(0)
                 else:
                     self.data[0] = self.data[0][match.end() :].strip()
-                return types.Token(name, value)
+
+                if kind == "operator":
+                    return types.Token(kind, Operator.get(value))
+                return types.Token(kind, value)
 
         raise ParserError(f"Couldn't match token on {self.data[0]}")
 
