@@ -1,6 +1,6 @@
 import re
 from enum import Enum
-from typing import List
+from typing import List, Union
 
 from arc import config
 import arc.parser.data_types as types
@@ -25,11 +25,15 @@ class Operator(Enum):
         raise ValueError(f"{string} is not a valid operator")
 
 
+IDENTIFIER = "identifier"
+OPERATOR = "operator"
+
+
 class Tokenizer:
     TOKEN_TYPES = {
-        "operator": fr"({config.flag_denoter}|{config.options_seperator}|"
+        OPERATOR: fr"({config.flag_denoter}|{config.options_seperator}|"
         fr"{config.utility_seperator})",
-        "identifier": r"\b\w+\b",
+        IDENTIFIER: r"\b\w+\b",
     }
 
     def __init__(self, data: List[str]):
@@ -66,68 +70,53 @@ class Parser:
         self.tokens: List[types.Token] = tokens
 
     def parse(self):
-        return self.parse_util()
-
-    def parse_util(self):
-        if self.peek("utility"):
-            util = self.consume("utility")
-            return types.UtilNode(
-                util.value.rstrip(config.utility_seperator), self.parse_script()
-            )
-
+        if self.peek(1) == OPERATOR:
+            return self.parse_util()
         return self.parse_script()
 
+    def parse_util(self):
+        util_name = self.consume(IDENTIFIER)
+        self.consume(OPERATOR)
+        return types.UtilNode(util_name, self.parse_script())
+
     def parse_script(self):
-        if self.peek("script"):
-            name = self.consume("script").value
-        else:
-            # for anonymous scripts
-            name = config.anon_identifier
+        script_name = self.consume(IDENTIFIER)
+        return types.ScriptNode(script_name, self.parse_body())
 
-        return types.ScriptNode(name, *self.parse_script_body())
-
-    def parse_script_body(self):
-        options = []
-        flags = []
-        args = []
-
-        for token in self.tokens.copy():
-            if token.type == "option":
-                options.append(self.parse_option(token))
-            elif token.type == "flag":
-                flags.append(self.parse_flag(token))
+    def parse_body(self):
+        args: List[Union[types.KeywordNode, types.ArgNode]] = []
+        while self.peek() is not None:
+            if self.peek(1) == OPERATOR:
+                args.append(self.parse_option())
+            elif self.peek() == OPERATOR:
+                args.append(self.parse_flag())
             else:
-                args.append(self.parse_arg(token))
+                args.append(self.parse_arg())
 
-        return options, flags, args
+        return args
 
-    def parse_option(self, token):
-        self.consume("option")
-        name, value = token.value.split(config.options_seperator)
-        return types.OptionNode(name, value)
+    def parse_option(self):
+        name = self.consume(IDENTIFIER)
+        self.consume(OPERATOR)
+        value = self.consume(IDENTIFIER)
+        return types.KeywordNode(name, value)
 
-    def parse_flag(self, token):
-        self.consume("flag")
-        return types.FlagNode(token.value.lstrip(config.flag_denoter))
+    def parse_flag(self):
+        self.consume(OPERATOR)
+        name = self.consume(IDENTIFIER)
+        return types.KeywordNode(name, "true")
 
-    def parse_arg(self, token):
-        self.consume(self.tokens[0].type)
-        return types.ArgNode(token.value)
+    def parse_arg(self):
+        return types.ArgNode(self.consume("identifier"))
 
     def consume(self, expected_type):
-        if len(self.tokens) == 0:
-            raise ParserError("No tokens to consume")
+        token = self.tokens.pop(0)
+        if token.type == expected_type:
+            return token.value
+        raise ValueError(f"Expected token of type: {expected_type}, got: {token.type}")
 
-        if (actual_type := self.tokens[0].type) == expected_type:
-            return self.tokens.pop(0)
-
-        raise ParserError(
-            "Unexpected token.",
-            f"Expected token type '{expected_type}', got '{actual_type}'",
-        )
-
-    def peek(self, expected_type):
+    def peek(self, idx: int = 0):
         try:
-            return expected_type == self.tokens[0].type
+            return self.tokens[idx].type
         except IndexError:
-            return False
+            return None
