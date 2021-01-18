@@ -105,9 +105,7 @@ $ python3 example.py raw option=val orphan --flag option="val with spaces"
 Here's the input!
 example.py raw option=val orphan --flag option=val with spaces
 ```
-# Legacy Script
-Legacy Script is the original implementation of scripts and is not reccomended for use. It's not managed as throughly as the others. It can be configure to accept both
-positional and keyword arguments.
+
 
 # Script type is inherited
 Script types can be specified on the CLI, Utility, or Script level.

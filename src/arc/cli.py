@@ -1,5 +1,6 @@
 import sys
-from typing import Dict, List, Tuple
+import shlex
+from typing import Dict, List, Tuple, Union
 
 from arc.__script_container import ScriptContainer
 from arc import utils
@@ -27,13 +28,13 @@ class CLI(ScriptContainer, utils.Helpful):
 
         return string
 
-    def __call__(self, *args: str, **kwargs):
+    def __call__(self, execute: Union[List[str], str, None] = None):
         """Arc CLI driver method
 
 		Tokenizes and Parses the user input, then passes
 		on the resulting NodeTree to the correct execution method
 		"""
-        input_list = self.__get_input__list(args, kwargs)
+        input_list = self.__get_input__list(execute)
         tokens = Tokenizer(input_list).tokenize()
         parsed = Parser(tokens).parse()
         utils.logger.debug(parsed)
@@ -63,14 +64,11 @@ class CLI(ScriptContainer, utils.Helpful):
         self.utilities[util_name](util_node.script)
 
     @staticmethod
-    def __get_input__list(args: Tuple[str, ...], kwargs: Dict[str, str]) -> List[str]:
-        if len(args) > 0:
-            input_list = list(args)
-            # Could also move this out of the if statement
-            # to provide a way to force a value on the cli
-            for key, value in kwargs.items():
-                input_list.append(key + config.options_seperator + value)
-
+    def __get_input__list(execute: Union[List[str], str, None]) -> List[str]:
+        if isinstance(execute, list):
+            input_list = execute
+        elif isinstance(execute, str):
+            input_list = shlex.split(execute)
         else:
             input_list = sys.argv[1:]
 

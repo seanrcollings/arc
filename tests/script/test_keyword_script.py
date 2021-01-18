@@ -1,5 +1,5 @@
 from tests.script.base_script_test import BaseScriptTest
-from arc.parser.data_types import FlagNode, ArgNode, OptionNode
+from arc.parser.data_types import ArgNode, KeywordNode
 from arc.script.keyword_script import KeywordScript
 from arc.errors import ScriptError
 
@@ -21,29 +21,32 @@ class TestKeywordScript(BaseScriptTest):
     def test_execute(self):
         self.script1(
             self.create_script_node(
-                options=[OptionNode("x", "2"), OptionNode("y", "3")],
+                args=[KeywordNode("x", "2"), KeywordNode("y", "3")],
             )
         )
         self.script1.function.assert_called_with(x="2", y=3, test=False)
 
         self.script1(
             self.create_script_node(
-                options=[OptionNode("x", "2"), OptionNode("y", "3")],
-                flags=[FlagNode("test")],
+                args=[
+                    KeywordNode("x", "2"),
+                    KeywordNode("y", "3"),
+                    KeywordNode("test", "true"),
+                ],
             )
         )
         self.script1.function.assert_called_with(x="2", y=3, test=True)
 
         self.script2(
             self.create_script_node(
-                options=[
-                    OptionNode("a", "test"),
-                    OptionNode("b", "2"),
-                    OptionNode("c", "2.5"),
-                    OptionNode("d", "test"),
-                    OptionNode("e", "1,2,3,4"),
-                ],
-                flags=[FlagNode("f")],
+                args=[
+                    KeywordNode("a", "test"),
+                    KeywordNode("b", "2"),
+                    KeywordNode("c", "2.5"),
+                    KeywordNode("d", "test"),
+                    KeywordNode("e", "1,2,3,4"),
+                    KeywordNode("f", "true"),
+                ]
             )
         )
         self.script2.function.assert_called_with(
@@ -70,7 +73,7 @@ class TestKeywordScript(BaseScriptTest):
 
         script(
             self.create_script_node(
-                options=[OptionNode("test1", "2"), OptionNode("test2", "4")]
+                args=[KeywordNode("test1", "2"), KeywordNode("test2", "4")]
             )
         )
         script.function.assert_called_with(test1="2", test2="4")
@@ -78,10 +81,10 @@ class TestKeywordScript(BaseScriptTest):
         script = self.create_script(lambda a, **kwargs: kwargs, annotations={"a": int})
         script(
             self.create_script_node(
-                options=[
-                    OptionNode("test1", "2"),
-                    OptionNode("test2", "4"),
-                    OptionNode("a", "2"),
+                args=[
+                    KeywordNode("test1", "2"),
+                    KeywordNode("test2", "4"),
+                    KeywordNode("a", "2"),
                 ]
             )
         )
@@ -91,5 +94,5 @@ class TestKeywordScript(BaseScriptTest):
         script = self.create_script(
             lambda a, meta: meta, annotations={"a": int}, meta={"val": 2}
         )
-        script(self.create_script_node(options=[OptionNode("a", "2")]))
+        script(self.create_script_node(args=[KeywordNode("a", "2")]))
         script.function.assert_called_with(a=2, meta={"val": 2})

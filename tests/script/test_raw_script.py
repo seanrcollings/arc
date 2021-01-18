@@ -15,7 +15,7 @@ class TestRawScript(BaseScriptTest):
             script.function.assert_called_with(*args)
 
     # Overide these because the RawScript doesn't check ANYTHING
-    def test_nonexistant_options(self):
+    def test_nonexistant_args(self):
         pass
 
     def test_nonexistant_flag(self):

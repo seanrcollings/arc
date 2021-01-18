@@ -1,7 +1,7 @@
-from typing import Dict, Any, List, Union
+from typing import Dict, Any, List, Union, cast
 from arc.errors import ScriptError, ValidationError
 
-from arc.parser.data_types import ScriptNode, OptionNode
+from arc.parser.data_types import ScriptNode, KeywordNode, ArgNode
 from .__option import Option, NO_DEFAULT
 from .script_mixin import ScriptMixin
 from .script import Script
@@ -13,34 +13,31 @@ class KeywordScript(Script, ScriptMixin):
         super().__init__(name, function, *args, **kwargs)
 
     def execute(self, script_node: ScriptNode):
-        args: Dict[str, Any] = {
-            **{key: obj.value for key, obj in self.options.items()},
-            **{key: obj.value for key, obj in self.flags.items()},
-        }
+        args: Dict[str, Any] = {key: obj.value for key, obj in self.args.items()}
 
         with self.catch():
             self.function(**args)
 
     def match_input(self, script_node: ScriptNode):
-        self.__match_options(script_node.options)
-        self._match_flags(script_node.flags)
+        args = cast(List[KeywordNode], script_node.args)
+        self.__match_options(args)
 
-    def __match_options(self, option_nodes: List[OptionNode]):
-        """Mutates self.options based on key value pairs provided in
+    def __match_options(self, option_nodes: List[KeywordNode]):
+        """Mutates self.args based on key value pairs provided in
          option nodes
 
-        :param option_nodes: list of OptionNodes from the parser
+        :param option_nodes: list of KeywordNodes from the parser
 
         :raises ScriptError:
              - if a option is present in option_nodes and
-             not in self.options
+             not in self.args
         """
 
         for node in option_nodes:
-            option: Union[Option, None] = self.options.get(node.name)
+            option: Union[Option, None] = self.args.get(node.name)
 
             if self.__pass_kwargs and not option:
-                self.options[node.name] = option = Option(
+                self.args[node.name] = option = Option(
                     name=node.name, annotation=str, default=NO_DEFAULT
                 )
             elif not option:
@@ -50,7 +47,7 @@ class KeywordScript(Script, ScriptMixin):
             option.convert()
 
         self.add_meta()
-        self.assert_options_filled()
+        self.assert_args_filled()
 
     def arg_hook(self, param, meta):
         idx = meta["index"]
@@ -73,9 +70,10 @@ class KeywordScript(Script, ScriptMixin):
             self.__pass_kwargs = True
 
     def validate_input(self, script_node: ScriptNode):
-        if len(script_node.args) > 0:
-            raise ValidationError(
-                "This script accepts arguements by keyword"
-                + " only. As a result, it will not accept input"
-                + " in the form of 'value value value'"
-            )
+        for node in script_node.args:
+            if isinstance(node, ArgNode):
+                raise ValidationError(
+                    "This script accepts arguements by keyword"
+                    " only. As a result, it will not accept input"
+                    " in the form of 'key=value key=value key=value'"
+                )

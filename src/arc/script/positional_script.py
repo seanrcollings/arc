@@ -1,6 +1,6 @@
-from typing import List, Any
+from typing import List, Any, cast
 
-from arc.parser.data_types import ScriptNode, ArgNode
+from arc.parser.data_types import ScriptNode, ArgNode, KeywordNode
 from arc.errors import ScriptError, ValidationError
 
 from .script import Script
@@ -13,10 +13,7 @@ class PositionalScript(Script, ScriptMixin):
         super().__init__(*args, **kwargs)
 
     def execute(self, script_node: ScriptNode):
-        args: List[Any] = [
-            *[obj.value for obj in self.options.values()],
-            *[obj.value for obj in self.flags.values()],
-        ]
+        args: List[Any] = [obj.value for obj in self.args.values()]
 
         if self.__pass_args:
             args += [arg.value for arg in script_node.args]
@@ -25,11 +22,11 @@ class PositionalScript(Script, ScriptMixin):
             self.function(*args)
 
     def match_input(self, script_node: ScriptNode):
-        self.__match_options(script_node.args)
-        self._match_flags(script_node.flags)
+        args = cast(List[ArgNode], script_node.args)
+        self.__match_options(args)
 
     def __match_options(self, arg_nodes: List[ArgNode]):
-        options = list(self.options.values())
+        options = list(self.args.values())
 
         for option in options:
             if len(arg_nodes) == 0:
@@ -38,7 +35,7 @@ class PositionalScript(Script, ScriptMixin):
             option.convert()
 
         self.add_meta()
-        self.assert_options_filled()
+        self.assert_args_filled()
 
     def arg_hook(self, param, meta):
         idx = meta["index"]
@@ -61,15 +58,16 @@ class PositionalScript(Script, ScriptMixin):
             self.__pass_args = True
 
     def validate_input(self, script_node: ScriptNode):
-        if len(script_node.options) > 0:
-            raise ValidationError(
-                "This script accepts arguements by position",
-                "only. As a result, it will not accept input",
-                "in the form of 'option=value'",
-            )
+        for node in script_node.args:
+            if isinstance(node, KeywordNode):
+                raise ValidationError(
+                    "This script accepts arguements by position"
+                    "only. As a result, it will not accept input"
+                    "in the form of 'option=value'"
+                )
 
-        if len(script_node.args) > len(self.options) and not self.__pass_args:
+        if len(script_node.args) > len(self.args) and not self.__pass_args:
             raise ValidationError(
                 "You passed more arguments than this script accepts.",
-                f"accepts: {self.options} | got:{len(script_node.args)}",
+                f"accepts: {self.args} | got:{len(script_node.args)}",
             )

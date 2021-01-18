@@ -26,7 +26,7 @@ class FloatConverter(BaseConverter):
         try:
             return float(value)
         except ValueError as e:
-            raise ConversionError(value, "Value must be a number (1.3, 4, 1.7)") from e
+            raise ConversionError(value, "Value must be a float (1.3, 4, 1.7)") from e
 
 
 class BytesConverter(BaseConverter):
@@ -36,14 +36,7 @@ class BytesConverter(BaseConverter):
         return value.encode()
 
 
-# !! DEPRECATED !!
-# Honestly, I don't think these will ever get called
-# Since bool annotations get matched with flags and not options
 class BoolConverter(BaseConverter):
-    convert_to = bool
-
-
-class StringBoolConverter(BaseConverter):
     """Converts a string to a boolean
     True / true - True
     False / false - False
@@ -52,12 +45,18 @@ class StringBoolConverter(BaseConverter):
     convert_to = bool
 
     def convert(self, value):
-        if value.lower() == "true":
+        if value.isnumeric():
+            return bool(int(value))
+
+        value = value.lower()
+        if value in ("true", "t"):
             return True
-        elif value.lower() == "false":
+        elif value in ("false", "f"):
             return False
 
-        raise ConversionError(value, "sbool only accepts true or false")
+        raise ConversionError(
+            value, "Value must be the string '(t)rue' or '(f)alse' or a valid integer"
+        )
 
 
 class IntBoolConverter(BaseConverter):
@@ -117,7 +116,7 @@ class AliasConverter(BaseConverter):
 
     List[int]
 
-        - i: '1,2,3,4,5,6's
+        - i: '1,2,3,4,5,6'
         - o: [1, 2, 3, 4, 5, 6]
     """
 
@@ -194,7 +193,7 @@ converter_mapping: Dict[str, Type[BaseConverter]] = {
     "int": IntConverter,
     "float": FloatConverter,
     "bytes": BytesConverter,
-    "bool": StringBoolConverter,
+    "bool": BoolConverter,
     "list": ListConverter,
     "alias": AliasConverter,
     "file": FileConverter,

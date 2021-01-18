@@ -1,37 +1,18 @@
 import sys
 import inspect
-from typing import List, Dict, Any
+from typing import Dict, Any
 from contextlib import contextmanager
 
-from arc.parser.data_types import FlagNode
+
 from arc.errors import ScriptError, ExecutionError
 
 import arc.utils as util
-from .__option import Option, NO_DEFAULT
-from .__flag import Flag
+from .__option import Option, NO_DEFAULT, EMPTY
 
 
 class ScriptMixin:
-    options: Dict[str, Option]
+    args: Dict[str, Option]
     meta: Any
-
-    def _match_flags(self, flag_nodes: List[FlagNode]):
-        """Get's the final flag values to pass to the script
-
-        Compares the FlagNodes given with self.flags
-        if they are present in both, the flag is set to True,
-        if it is absent from the Nodes it is set to false
-
-        :param flag_nodes: list of FlagNodes from the parser
-
-        :raises ScriptError: if a flag is present in FlagNodes, but
-        not in self.flags
-        """
-        for flag in flag_nodes:
-            if flag.name in self.flags:  # type: ignore
-                self.flags[flag.name].reverse()  # type: ignore
-            else:
-                raise ScriptError(f"Flag '{flag.name}' not recognized'")
 
     # HELPERS
 
@@ -40,33 +21,36 @@ class ScriptMixin:
     def catch():
         """Context Manager to catch and handle errors
         when calling the script's function"""
+        # Probably do something different when failing on an ExecutionError and
+        # when failing on a general exception
+        # Also make this functionality part of Script.__call__ because it shouldn't be optional
         try:
             util.logger.debug("---------------------------")
             yield
         except ExecutionError as e:
             print(e)
             sys.exit(1)
+        except Exception as e:
+            print(e)
         finally:
             util.logger.debug("---------------------------")
 
-    def assert_options_filled(self):
-        for option in self.options.values():
+    def assert_args_filled(self):
+        for option in self.args.values():
             if option.value is NO_DEFAULT:
                 raise ScriptError(f"No value for required option '{option.name}'")
 
     def add_meta(self):
         if self.meta:
-            self.options["meta"] = Option(
-                name="meta", annotation=Any, default=NO_DEFAULT
-            )
-            self.options["meta"].value = self.meta
+            self.args["meta"] = Option(name="meta", annotation=Any, default=NO_DEFAULT)
+            self.args["meta"].value = self.meta
 
     class ArgBuilder:
+        # Make part of the Script Object
         def __init__(self, function):
             self.__sig = inspect.signature(function)
             self.__length = len(self.__sig.parameters.values())
-            self.__options: Dict[str, Option] = {}
-            self.__flags: Dict[str, Flag] = {}
+            self.__args: Dict[str, Option] = {}
 
         def __enter__(self):
             return self
@@ -84,14 +68,15 @@ class ScriptMixin:
 
         @property
         def args(self):
-            return self.__options, self.__flags
+            return self.__args
 
         def add_arg(self, param: inspect.Parameter):
             if param.annotation is bool:
-                self.__flags[param.name] = Flag(param)
+                default = False if param.default is EMPTY else param.default
+                self.__args[param.name] = Option(param.name, param.annotation, default)
 
             elif param.kind not in (param.VAR_KEYWORD, param.VAR_POSITIONAL):
-                self.__options[param.name] = Option(
+                self.__args[param.name] = Option(
                     param.name, param.annotation, param.default
                 )
 

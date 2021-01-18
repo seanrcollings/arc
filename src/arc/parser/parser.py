@@ -6,24 +6,6 @@ from arc import config
 import arc.parser.data_types as types
 from arc.errors import ParserError
 
-# Parser Enhancement Project
-# Token Types
-#   - Operator (--, =, :)
-#   - Identifier (any string of text, seperated by an operator or whitespace)
-
-
-class Operator(Enum):
-    utility = config.utility_seperator
-    options = config.options_seperator
-    flag = config.flag_denoter
-
-    @classmethod
-    def get(cls, string):
-        for item in cls:
-            if item.value == string:
-                return item
-        raise ValueError(f"{string} is not a valid operator")
-
 
 IDENTIFIER = "identifier"
 OPERATOR = "operator"
@@ -33,7 +15,7 @@ class Tokenizer:
     TOKEN_TYPES = {
         OPERATOR: fr"({config.flag_denoter}|{config.options_seperator}|"
         fr"{config.utility_seperator})",
-        IDENTIFIER: r"\b\w+\b",
+        IDENTIFIER: r"\b[\w\,\.\s\\\/]+\b",
     }
 
     def __init__(self, data: List[str]):
@@ -58,8 +40,6 @@ class Tokenizer:
                 else:
                     self.data[0] = self.data[0][match.end() :].strip()
 
-                if kind == "operator":
-                    return types.Token(kind, Operator.get(value))
                 return types.Token(kind, value)
 
         raise ParserError(f"Couldn't match token on {self.data[0]}")
@@ -70,6 +50,9 @@ class Parser:
         self.tokens: List[types.Token] = tokens
 
     def parse(self):
+        if len(self.tokens) == 0:
+            raise ParserError("No tokens provided to parse")
+
         if self.peek(1) == OPERATOR:
             return self.parse_util()
         return self.parse_script()
@@ -110,10 +93,12 @@ class Parser:
         return types.ArgNode(self.consume("identifier"))
 
     def consume(self, expected_type):
-        token = self.tokens.pop(0)
-        if token.type == expected_type:
-            return token.value
-        raise ValueError(f"Expected token of type: {expected_type}, got: {token.type}")
+        token_type = self.tokens[0].type
+        if token_type == expected_type:
+            return self.tokens.pop(0).value
+        raise ValueError(
+            f"Expected token of type: {expected_type}, got: {self.tokens[0].type}"
+        )
 
     def peek(self, idx: int = 0):
         try:

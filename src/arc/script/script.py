@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import List, Dict, Callable, Tuple, Any
+from typing import List, Dict, Callable, Any
 import re
 
 from arc.errors import ScriptError, ValidationError
@@ -8,7 +8,6 @@ from arc.utils import Helpful, indent
 from arc import config
 from arc.color import fg, effects
 from .__option import Option
-from .__flag import Flag
 from .script_mixin import ScriptMixin
 
 
@@ -20,7 +19,7 @@ class Script(Helpful, ScriptMixin):
 
         self.name = name
         self.function: Callable = function
-        self.options, self.flags = self.build_args()
+        self.args = self.build_args()
         self.validation_errors: List[str] = []
         self.meta = meta
 
@@ -63,7 +62,7 @@ class Script(Helpful, ScriptMixin):
 
         self.cleanup()
 
-    def build_args(self) -> Tuple[Dict[str, Option], Dict[str, Flag]]:
+    def build_args(self) -> Dict[str, Option]:
         """Builds the options and flag collections based
         on the function definition
         """
@@ -106,7 +105,7 @@ class Script(Helpful, ScriptMixin):
         If it isn't valid, raise a `ValidationError`"""
 
     def cleanup(self):
-        for _, option in self.options.items():
+        for option in self.args.values():
             option.cleanup()
 
     def helper(self):
@@ -122,6 +121,6 @@ class Script(Helpful, ScriptMixin):
         else:
             obj: Helpful
             print(f"{spaces}Arguments:")
-            for obj in [*self.options.values(), *self.flags.values()]:
+            for obj in self.args.values():
                 print(spaces * 3, end="")
                 obj.helper()

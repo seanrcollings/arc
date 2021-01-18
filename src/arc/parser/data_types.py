@@ -1,7 +1,7 @@
 from typing import List, Union
 from dataclasses import dataclass
 from arc.utils import decorate_text
-from arc.color import fg, bg
+from arc.color import fg
 
 
 @dataclass
@@ -25,14 +25,6 @@ class ArgNode:
 
 @dataclass
 class KeywordNode:
-    """Matches to:
-    option=value
-    option=2
-    option='value with spaces'
-    option="value with spaces"
-    option=value,with,commas
-    """
-
     name: str
     value: str
 

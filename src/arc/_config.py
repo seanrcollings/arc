@@ -132,7 +132,7 @@ class Config:
 
         # Check if it needs to be converted
         config_converters: List[Type[BaseConverter]] = [
-            StringBoolConverter,
+            BoolConverter,
             ListConverter,
             IntConverter,
             FloatConverter,
