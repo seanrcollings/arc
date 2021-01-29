@@ -26,6 +26,5 @@ jobs:
         pip install pylint mypy
         pip install -r requirements.txt
     - name: Lint with pylint
-      continue-on-error: true
       run: |
         pylint --rcfile=.pylintrc src/arc/**
