@@ -1,6 +1,13 @@
-from typing import List, Union, Dict
+from typing import List, Union, Dict, cast
 from dataclasses import dataclass
-from arc.color import fg, effects
+from arc.color import fg, effects, bg
+
+from arc import config
+
+
+COMMAND = "command"
+FLAG = "flag"
+ARGUMENT = "argument"
 
 
 @dataclass
@@ -26,9 +33,12 @@ class ArgNode:
 class KeywordNode:
     name: str
     value: str
+    kind: str
 
-    def __repr__(self):
-        return f"{self.name}={self.value}"
+    def __str__(self):
+        if self.kind == ARGUMENT:
+            return f"{self.name}={self.value}"
+        return f"--{self.name}"
 
 
 @dataclass
@@ -36,9 +46,27 @@ class CommandNode:
     namespace: List[str]
     args: List[KeywordNode]
 
-    def __repr__(self):
-        return (
-            f"{fg.GREEN}COMMAND{effects.CLEAR}\n"
-            f"Namespace: {':'.join(self.namespace)}\n"
-            f"Arguments: {self.args}"
+    def __str__(self):
+        color_map = {
+            COMMAND: bg.GREEN,
+            FLAG: bg.YELLOW,
+            ARGUMENT: bg.BLUE,
+        }
+
+        command = (
+            f"{fg.BLACK.bright}{color_map[COMMAND]}"
+            f" {':'.join(self.namespace)} {effects.CLEAR}"
         )
+
+        args = " ".join(
+            f"{fg.BLACK.bright}{color_map[arg.kind]}" f" {arg} {effects.CLEAR}"
+            for arg in self.args
+        )
+
+        key = (
+            f"COMMAND: {color_map[COMMAND]}  {effects.CLEAR} "
+            f"ARGUMENT: {color_map[ARGUMENT]}  {effects.CLEAR}"
+            f" FLAG: {color_map[FLAG]}  {effects.CLEAR} "
+        )
+
+        return f"{command} {args}\n\n{key}"

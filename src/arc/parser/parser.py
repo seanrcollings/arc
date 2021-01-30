@@ -2,14 +2,9 @@ import re
 from typing import List, Union, cast, Dict
 
 from arc import config
-import arc.parser.data_types as types
 from arc.errors import ParserError
-from arc.color import fg, bg, effects
-
-
-COMMAND = "command"
-FLAG = "flag"
-ARGUMENT = "argument"
+from .data_types import COMMAND, FLAG, ARGUMENT
+from . import data_types as types
 
 
 class Tokenizer:
@@ -22,46 +17,6 @@ class Tokenizer:
     def __init__(self, data: List[str]):
         self.data = data
         self.tokens: List[types.Token] = []
-
-    def __str__(self):
-        token_color_map = {
-            COMMAND: bg.GREEN,
-            FLAG: bg.YELLOW,
-            ARGUMENT: bg.BLUE,
-        }
-
-        # Argument Tokens value is a dict,
-        # while others are just a string
-        fmt_value = (
-            lambda value: value
-            if isinstance(value, str)
-            else f"{value['name']}{config.options_seperator}{value['value']}"
-        )
-
-        def fmt_token(token: types.Token):
-            value = token.value
-            if token.type == COMMAND:
-                return value
-            elif token.type == ARGUMENT:
-                value = cast(Dict[str, str], value)
-                return f"{value['name']}{config.options_seperator}{value['value']}"
-            elif token.type == FLAG:
-                value = cast(Dict[str, str], value)
-                return f"{config.flag_denoter}{value['name']}"
-
-        colored = " ".join(
-            f"{fg.BLACK.bright}{token_color_map[token.type]}"
-            f" {fmt_token(token)} {effects.CLEAR}"
-            for token in self.tokens
-        )
-
-        key = (
-            f"COMMAND: {token_color_map[COMMAND]}  {effects.CLEAR} "
-            f"ARGUMENT: {token_color_map[ARGUMENT]}  {effects.CLEAR}"
-            f" FLAG: {token_color_map[FLAG]}  {effects.CLEAR} "
-        )
-
-        return f"{colored}\n\n{key}"
 
     def tokenize(self):
         while len(self.data) > 0:
@@ -122,19 +77,12 @@ class Parser:
     def parse_option(self):
         argument = self.consume(ARGUMENT)
         argument = cast(Dict[str, str], argument)
-        return types.KeywordNode(argument["name"], argument["value"])
+        return types.KeywordNode(argument["name"], argument["value"], ARGUMENT)
 
     def parse_flag(self):
-        # Need to figure what to do with flags
-        # if a user sets the flag default in a script to True
-        # passing the flag in as an argument wouldn't flip it to false
-        # Options:
-        #  - Go back the old method with a special FlagNode and Flag class
-        #  - Create a Flag symbol that is given as the value here, and is checked in
-        #     Option of that flag
         flag = self.consume(FLAG)
         flag = cast(Dict[str, str], flag)
-        return types.KeywordNode(flag["name"], "true")
+        return types.KeywordNode(flag["name"], "", FLAG)
 
     def consume(self, expected_type):
         token_type = self.tokens[0].type
