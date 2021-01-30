@@ -1,5 +1,5 @@
 import re
-from typing import List, Union
+from typing import List, Union, cast, Dict
 
 from arc import config
 import arc.parser.data_types as types
@@ -15,7 +15,7 @@ ARGUMENT = "argument"
 class Tokenizer:
     TOKEN_TYPES = {
         COMMAND: fr"\A\b((?:\w+{config.utility_seperator})+\w+)\b",
-        FLAG: fr"\A({config.flag_denoter}\b\w+)\b",
+        FLAG: fr"\A{config.flag_denoter}(?P<name>\b\w+)\b",
         ARGUMENT: fr"\A\b(?P<name>[a-zA-Z_]+\b){config.options_seperator}(?P<value>[\w\s\'\"-]+)\b",
     }
 
@@ -38,9 +38,20 @@ class Tokenizer:
             else f"{value['name']}{config.options_seperator}{value['value']}"
         )
 
+        def fmt_token(token: types.Token):
+            value = token.value
+            if token.type == COMMAND:
+                return value
+            elif token.type == ARGUMENT:
+                value = cast(Dict[str, str], value)
+                return f"{value['name']}{config.options_seperator}{value['value']}"
+            elif token.type == FLAG:
+                value = cast(Dict[str, str], value)
+                return f"{config.flag_denoter}{value['name']}"
+
         colored = " ".join(
-            f"{fg.BLACK}{token_color_map[token.type]}"
-            f" {fmt_value(token.value)} {effects.CLEAR}"
+            f"{fg.BLACK.bright}{token_color_map[token.type]}"
+            f" {fmt_token(token)} {effects.CLEAR}"
             for token in self.tokens
         )
 
@@ -62,12 +73,15 @@ class Tokenizer:
             regex = re.compile(pattern)
             match_against = self.data[0].strip()
             if match := regex.match(match_against):
+                value: Union[Dict[str, str], str]
                 if groups := match.groupdict():
                     value = groups
                 else:
                     value = match.group(1)
+
                 # Checks if we match against the
                 # entire string or just part of it
+                # We probably don't need this anymore
                 if len(match_against) == match.end():
                     self.data.pop(0)
                 else:
@@ -93,7 +107,6 @@ class Parser:
 
     def parse_command(self):
         namespace = self.consume(COMMAND).split(":")
-
         return types.CommandNode(namespace, self.parse_body())
 
     def parse_body(self):
@@ -107,16 +120,21 @@ class Parser:
         return args
 
     def parse_option(self):
-        name = self.consume(ARGUMENT)
-        return types.KeywordNode(name, value)
+        argument = self.consume(ARGUMENT)
+        argument = cast(Dict[str, str], argument)
+        return types.KeywordNode(argument["name"], argument["value"])
 
     def parse_flag(self):
-        self.consume(OPERATOR)
-        name = self.consume(IDENTIFIER)
-        return types.KeywordNode(name, "true")
-
-    def parse_arg(self):
-        return types.ArgNode(self.consume("identifier"))
+        # Need to figure what to do with flags
+        # if a user sets the flag default in a script to True
+        # passing the flag in as an argument wouldn't flip it to false
+        # Options:
+        #  - Go back the old method with a special FlagNode and Flag class
+        #  - Create a Flag symbol that is given as the value here, and is checked in
+        #     Option of that flag
+        flag = self.consume(FLAG)
+        flag = cast(Dict[str, str], flag)
+        return types.KeywordNode(flag["name"], "true")
 
     def consume(self, expected_type):
         token_type = self.tokens[0].type

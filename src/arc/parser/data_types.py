@@ -39,6 +39,6 @@ class CommandNode:
     def __repr__(self):
         return (
             f"{fg.GREEN}COMMAND{effects.CLEAR}\n"
-            f"Namespace: {self.namespace}"
+            f"Namespace: {':'.join(self.namespace)}\n"
             f"Arguments: {self.args}"
         )
