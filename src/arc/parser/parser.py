@@ -55,7 +55,7 @@ class Parser:
         if len(self.tokens) == 0:
             raise ParserError("No tokens provided to parse")
 
-        if self.peek() == COMMAND:
+        if self.peek() is COMMAND:
             return self.parse_command()
 
         raise ParserError("No Command Given")
@@ -67,9 +67,9 @@ class Parser:
     def parse_body(self):
         args: List[types.KeywordNode] = []
         while self.peek() is not None:
-            if self.peek() == FLAG:
+            if self.peek() is FLAG:
                 args.append(self.parse_flag())
-            elif self.peek() == ARGUMENT:
+            elif self.peek() is ARGUMENT:
                 args.append(self.parse_option())
 
         return args

@@ -1,13 +1,11 @@
-from typing import List, Union, Dict, cast
+from typing import List, Union, Dict
 from dataclasses import dataclass
 from arc.color import fg, effects, bg
+from arc.utils import symbol
 
-from arc import config
-
-
-COMMAND = "command"
-FLAG = "flag"
-ARGUMENT = "argument"
+COMMAND = symbol("command")
+FLAG = symbol("flags")
+ARGUMENT = symbol("arguments")
 
 
 @dataclass
@@ -16,7 +14,7 @@ class Token:
     tokenizer will result in one of these being returned
     """
 
-    type: str
+    type: symbol
     value: Union[Dict[str, str], str]
 
 
@@ -33,7 +31,7 @@ class ArgNode:
 class KeywordNode:
     name: str
     value: str
-    kind: str
+    kind: symbol
 
     def __str__(self):
         if self.kind == ARGUMENT:
