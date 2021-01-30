@@ -15,7 +15,7 @@ class Tokenizer:
     TOKEN_TYPES = {
         OPERATOR: fr"({config.flag_denoter}|{config.options_seperator}|"
         fr"{config.utility_seperator})",
-        IDENTIFIER: r"\b[\w\,\.\s\\\/]+\b",
+        IDENTIFIER: r"\b[\w\,\.\s\\\/-]+\b",
     }
 
     def __init__(self, data: List[str]):
