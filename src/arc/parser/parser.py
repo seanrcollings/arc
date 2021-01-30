@@ -1,38 +1,71 @@
 import re
-from enum import Enum
 from typing import List, Union
 
 from arc import config
 import arc.parser.data_types as types
 from arc.errors import ParserError
+from arc.color import fg, bg, effects
 
 
-IDENTIFIER = "identifier"
-OPERATOR = "operator"
+COMMAND = "command"
+FLAG = "flag"
+ARGUMENT = "argument"
 
 
 class Tokenizer:
     TOKEN_TYPES = {
-        OPERATOR: fr"({config.flag_denoter}|{config.options_seperator}|"
-        fr"{config.utility_seperator})",
-        IDENTIFIER: r"\b[\w\,\.\s\\\/-]+\b",
+        COMMAND: fr"\A\b((?:\w+{config.utility_seperator})+\w+)\b",
+        FLAG: fr"\A({config.flag_denoter}\b\w+)\b",
+        ARGUMENT: fr"\A\b(?P<name>[a-zA-Z_]+\b){config.options_seperator}(?P<value>[\w\s\'\"-]+)\b",
     }
 
     def __init__(self, data: List[str]):
         self.data = data
+        self.tokens: List[types.Token] = []
+
+    def __str__(self):
+        token_color_map = {
+            COMMAND: bg.GREEN,
+            FLAG: bg.YELLOW,
+            ARGUMENT: bg.BLUE,
+        }
+
+        # Argument Tokens value is a dict,
+        # while others are just a string
+        fmt_value = (
+            lambda value: value
+            if isinstance(value, str)
+            else f"{value['name']}{config.options_seperator}{value['value']}"
+        )
+
+        colored = " ".join(
+            f"{fg.BLACK}{token_color_map[token.type]}"
+            f" {fmt_value(token.value)} {effects.CLEAR}"
+            for token in self.tokens
+        )
+
+        key = (
+            f"COMMAND: {token_color_map[COMMAND]}  {effects.CLEAR} "
+            f"ARGUMENT: {token_color_map[ARGUMENT]}  {effects.CLEAR}"
+            f" FLAG: {token_color_map[FLAG]}  {effects.CLEAR} "
+        )
+
+        return f"{colored}\n\n{key}"
 
     def tokenize(self):
-        tokens = []
         while len(self.data) > 0:
-            tokens.append(self.__tokenize_one_token())
-        return tokens
+            self.tokens.append(self.__tokenize_one_token())
+        return self.tokens
 
     def __tokenize_one_token(self):
         for kind, pattern in self.TOKEN_TYPES.items():
-            regex = re.compile(fr"\A({pattern})")
+            regex = re.compile(pattern)
             match_against = self.data[0].strip()
             if match := regex.match(match_against):
-                value = match.group(1)
+                if groups := match.groupdict():
+                    value = groups
+                else:
+                    value = match.group(1)
                 # Checks if we match against the
                 # entire string or just part of it
                 if len(match_against) == match.end():
@@ -53,35 +86,28 @@ class Parser:
         if len(self.tokens) == 0:
             raise ParserError("No tokens provided to parse")
 
-        if self.peek(1) == OPERATOR:
-            return self.parse_util()
-        return self.parse_script()
+        if self.peek() == COMMAND:
+            return self.parse_command()
 
-    def parse_util(self):
-        util_name = self.consume(IDENTIFIER)
-        self.consume(OPERATOR)
-        return types.UtilNode(util_name, self.parse_script())
+        raise ParserError("No Command Given")
 
-    def parse_script(self):
-        script_name = self.consume(IDENTIFIER)
-        return types.ScriptNode(script_name, self.parse_body())
+    def parse_command(self):
+        namespace = self.consume(COMMAND).split(":")
+
+        return types.CommandNode(namespace, self.parse_body())
 
     def parse_body(self):
-        args: List[Union[types.KeywordNode, types.ArgNode]] = []
+        args: List[types.KeywordNode] = []
         while self.peek() is not None:
-            if self.peek(1) == OPERATOR:
-                args.append(self.parse_option())
-            elif self.peek() == OPERATOR:
+            if self.peek() == FLAG:
                 args.append(self.parse_flag())
-            else:
-                args.append(self.parse_arg())
+            elif self.peek() == ARGUMENT:
+                args.append(self.parse_option())
 
         return args
 
     def parse_option(self):
-        name = self.consume(IDENTIFIER)
-        self.consume(OPERATOR)
-        value = self.consume(IDENTIFIER)
+        name = self.consume(ARGUMENT)
         return types.KeywordNode(name, value)
 
     def parse_flag(self):
