@@ -67,6 +67,7 @@ class Config:
     def __setup_logging(self):
         logger = logging.getLogger("arc_logger")
 
+        logger.setLevel(logging.ERROR)
         if self.log:
             logger.setLevel(logging.INFO)
         if self.debug:

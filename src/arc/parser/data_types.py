@@ -1,11 +1,14 @@
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Optional
 from dataclasses import dataclass
 from arc.color import fg, effects, bg
 from arc.utils import symbol
 
+
 COMMAND = symbol("command")
 FLAG = symbol("flags")
 ARGUMENT = symbol("arguments")
+POS_ARGUMENT = symbol("positional argument")
+KEY_ARGUMENT = symbol("key argument")
 
 
 @dataclass
@@ -20,35 +23,31 @@ class Token:
 
 @dataclass
 class ArgNode:
-
-    value: str
-
-    def __repr__(self):
-        return f"<ArgNode : {self.value}>"
-
-
-@dataclass
-class KeywordNode:
-    name: str
+    name: Optional[str]
     value: str
     kind: symbol
 
     def __str__(self):
-        if self.kind == ARGUMENT:
+        if self.kind == KEY_ARGUMENT:
             return f"{self.name}={self.value}"
-        return f"--{self.name}"
+        if self.kind == POS_ARGUMENT:
+            return str(self.value)
+        if self.kind == FLAG:
+            return f"--{self.name}"
 
 
 @dataclass
 class CommandNode:
     namespace: List[str]
-    args: List[KeywordNode]
+    args: List[ArgNode]
 
     def __str__(self):
         color_map = {
             COMMAND: bg.GREEN,
             FLAG: bg.YELLOW,
             ARGUMENT: bg.BLUE,
+            POS_ARGUMENT: bg.BLUE,
+            KEY_ARGUMENT: bg.BLUE,
         }
 
         command = (

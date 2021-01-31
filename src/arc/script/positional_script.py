@@ -1,6 +1,6 @@
-from typing import List, Any, cast
+from typing import List, Any
 
-from arc.parser.data_types import CommandNode, ArgNode, KeywordNode
+from arc.parser.data_types import CommandNode, ArgNode, KEY_ARGUMENT, FLAG
 from arc.errors import ScriptError, ValidationError
 
 from .script import Script
@@ -22,8 +22,7 @@ class PositionalScript(Script, ScriptMixin):
             self.function(*args)
 
     def match_input(self, command_node: CommandNode):
-        args = cast(List[ArgNode], command_node.args)
-        self.__match_options(args)
+        self.__match_options(command_node.args)
 
     def __match_options(self, arg_nodes: List[ArgNode]):
         options = list(self.args.values())
@@ -31,8 +30,13 @@ class PositionalScript(Script, ScriptMixin):
         for option in options:
             if len(arg_nodes) == 0:
                 break
-            option.value = arg_nodes.pop(0).value
-            option.convert()
+
+            node = arg_nodes.pop(0)
+            if node.kind is FLAG:
+                option.value = not option.value
+            else:
+                option.value = node.value
+                option.convert()
 
         self.add_meta()
         self.assert_args_filled()
@@ -59,7 +63,7 @@ class PositionalScript(Script, ScriptMixin):
 
     def validate_input(self, command_node: CommandNode):
         for node in command_node.args:
-            if isinstance(node, KeywordNode):
+            if node.kind is KEY_ARGUMENT:
                 raise ValidationError(
                     "This script accepts arguements by position"
                     "only. As a result, it will not accept input"

@@ -1,7 +1,7 @@
 from typing import Dict, Any, List, Union, cast
 from arc.errors import ScriptError, ValidationError
 
-from arc.parser.data_types import CommandNode, KeywordNode, ArgNode, FLAG
+from arc.parser.data_types import CommandNode, ArgNode, FLAG, POS_ARGUMENT
 from .__option import Option, NO_DEFAULT
 from .script_mixin import ScriptMixin
 from .script import Script
@@ -19,20 +19,20 @@ class KeywordScript(Script, ScriptMixin):
             self.function(**args)
 
     def match_input(self, command_node: CommandNode):
-        args = cast(List[KeywordNode], command_node.args)
-        self.__match_options(args)
+        self.__match_options(command_node.args)
 
-    def __match_options(self, option_nodes: List[KeywordNode]):
+    def __match_options(self, option_nodes: List[ArgNode]):
         """Mutates self.args based on key value pairs provided in
          option nodes
 
-        :param option_nodes: list of KeywordNodes from the parser
+        :param option_nodes: list of ArgNodes from the parser
 
         :raises ScriptError: if a option is present in option_nodes and
         not in self.args
         """
 
         for node in option_nodes:
+            node.name = cast(str, node.name)
             option: Union[Option, None] = self.args.get(node.name)
 
             if self.__pass_kwargs and not option:
@@ -73,7 +73,7 @@ class KeywordScript(Script, ScriptMixin):
 
     def validate_input(self, command_node: CommandNode):
         for node in command_node.args:
-            if isinstance(node, ArgNode):
+            if node.kind is POS_ARGUMENT:
                 raise ValidationError(
                     "This script accepts arguements by keyword"
                     " only. As a result, it will not accept input"

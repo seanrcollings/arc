@@ -5,7 +5,7 @@ import shlex
 from arc import config
 from arc.errors import ParserError
 from arc import utils
-from .data_types import COMMAND, FLAG, ARGUMENT
+from .data_types import COMMAND, FLAG, ARGUMENT, POS_ARGUMENT, KEY_ARGUMENT
 from . import data_types as types
 
 
@@ -13,7 +13,7 @@ class Tokenizer:
     TOKEN_TYPES = {
         FLAG: fr"\A{config.flag_denoter}(?P<name>\b\w+)\b",
         ARGUMENT: fr"\A\b(?P<name>[a-zA-Z_]+\b){config.options_seperator}(?P<value>[\w\s\'\"-]+)\b",
-        COMMAND: fr"\A\b((?:(?:\w+:)+\w+)|\w+)\b",
+        COMMAND: r"\A\b((?:(?:\w+:)+\w+)|\w+)\b",
     }
 
     def __init__(self, data: List[str]):
@@ -67,24 +67,28 @@ class Parser:
         return types.CommandNode(namespace, self.parse_body())
 
     def parse_body(self):
-        args: List[types.KeywordNode] = []
+        args: List[types.ArgNode] = []
         while self.peek() is not None:
             if self.peek() is FLAG:
                 args.append(self.parse_flag())
             elif self.peek() is ARGUMENT:
                 args.append(self.parse_option())
+            elif self.peek() is COMMAND:
+                # Hack for positional args.
+                # Think of a better way to handle this
+                args.append(types.ArgNode(None, self.consume(COMMAND), POS_ARGUMENT))
 
         return args
 
     def parse_option(self):
         argument = self.consume(ARGUMENT)
         argument = cast(Dict[str, str], argument)
-        return types.KeywordNode(argument["name"], argument["value"], ARGUMENT)
+        return types.ArgNode(argument["name"], argument["value"], KEY_ARGUMENT)
 
     def parse_flag(self):
         flag = self.consume(FLAG)
         flag = cast(Dict[str, str], flag)
-        return types.KeywordNode(flag["name"], "", FLAG)
+        return types.ArgNode(flag["name"], "", FLAG)
 
     def consume(self, expected_type):
         token_type = self.tokens[0].type
