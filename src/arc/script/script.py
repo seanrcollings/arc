@@ -4,7 +4,7 @@ import re
 
 from arc.errors import ScriptError, ValidationError
 from arc.parser import CommandNode
-from arc.utils import Helpful, indent
+from arc.utils import Helpful, indent, logger
 from arc import config
 from arc.color import fg, effects
 from .__option import Option
@@ -53,6 +53,7 @@ class Script(Helpful, ScriptMixin):
 
         if len(self.validation_errors) == 0:
             self.match_input(command_node)
+            logger.debug(self.args)
             self.execute(command_node)
         else:
             raise ScriptError(

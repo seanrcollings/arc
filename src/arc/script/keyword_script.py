@@ -1,7 +1,7 @@
 from typing import Dict, Any, List, Union, cast
 from arc.errors import ScriptError, ValidationError
 
-from arc.parser.data_types import CommandNode, KeywordNode, ArgNode
+from arc.parser.data_types import CommandNode, KeywordNode, ArgNode, FLAG
 from .__option import Option, NO_DEFAULT
 from .script_mixin import ScriptMixin
 from .script import Script
@@ -42,8 +42,11 @@ class KeywordScript(Script, ScriptMixin):
             elif not option:
                 raise ScriptError(f"Option '{node.name}' not recognized")
 
-            option.value = node.value
-            option.convert()
+            if node.kind is FLAG:
+                option.value = not option.value
+            else:
+                option.value = node.value
+                option.convert()
 
         self.add_meta()
         self.assert_args_filled()
