@@ -64,6 +64,9 @@ class ScriptContainer(ABC):
 
         name = command.namespace.pop(0)
 
+        if name not in self.scripts:
+            raise ScriptError(f"Script {name} not recognized")
+
         script = self.scripts[name]
         script(command)
 

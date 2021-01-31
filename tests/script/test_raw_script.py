@@ -11,7 +11,7 @@ class TestRawScript(BaseScriptTest):
         script = self.create_script(lambda *args: args)
         args = ["exec", "test=2", "test=4"]
         with patch.object(sys, "argv", args):
-            script(self.create_script_node())
+            script(self.command_node())
             script.function.assert_called_with(*args)
 
     # Overide these because the RawScript doesn't check ANYTHING
@@ -27,6 +27,6 @@ class TestRawScript(BaseScriptTest):
         )
         args = ["exec", "test=2", "test=4"]
         with patch.object(sys, "argv", args):
-            script(self.create_script_node())
+            script(self.command_node())
 
         script.function.assert_called_with(*args, meta={"val": 2})

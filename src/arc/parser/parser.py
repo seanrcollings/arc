@@ -12,7 +12,7 @@ from . import data_types as types
 class Tokenizer:
     TOKEN_TYPES = {
         FLAG: fr"\A{config.flag_denoter}(?P<name>\b\w+)\b",
-        ARGUMENT: fr"\A\b(?P<name>[a-zA-Z_]+\b){config.options_seperator}(?P<value>[\w\s\'\"-]+)\b",
+        ARGUMENT: fr"\A\b(?P<name>[a-zA-Z_]+\b){config.options_seperator}(?P<value>[\w\s\-\,\._]+)\b",
         COMMAND: r"\A\b((?:(?:\w+:)+\w+)|\w+)\b",
     }
 
@@ -30,21 +30,16 @@ class Tokenizer:
             regex = re.compile(pattern)
             match_against = self.data[0].strip()
             if match := regex.match(match_against):
+
                 value: Union[Dict[str, str], str]
                 if groups := match.groupdict():
                     value = groups
                 else:
                     value = match.group(1)
 
-                # Checks if we match against the
-                # entire string or just part of it
-                # We probably don't need this anymore
                 if len(match_against) == match.end():
                     self.data.pop(0)
-                else:
-                    self.data[0] = self.data[0][match.end() :].strip()
-
-                return types.Token(kind, value)
+                    return types.Token(kind, value)
 
         raise ParserError(f"Couldn't match token on {self.data[0]}")
 

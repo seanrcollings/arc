@@ -1,47 +1,48 @@
 from tests.base_test import BaseTest
 from arc.parser import Parser, Tokenizer
-from arc.parser.data_types import ScriptNode, UtilNode
-from arc.errors import ParserError
+from arc.parser.data_types import CommandNode
 
 
 class TestParser(BaseTest):
-    TEST_TOKENS = Tokenizer(
+    TEST_UTIL_TOKENS = Tokenizer(
         ["util:script", "option=value", "option=value", "--flag"]
     ).tokenize()
 
+    TEST_SCRIPT_TOKENS = Tokenizer(
+        ["script", "option=value", "option=value", "--flag"]
+    ).tokenize()
+
     def test_util_parse(self):
-        tree = Parser(self.TEST_TOKENS[0:3]).parse()
-        self.assertIsInstance(tree, UtilNode)
-        self.assertEqual(tree.name, "util")
+        command = Parser(self.TEST_UTIL_TOKENS).parse()
+        self.assertIsInstance(command, CommandNode)
+        self.assertEqual(command.namespace, ["util", "script"])
 
     def test_script_parse(self):
-        tree = Parser([self.TEST_TOKENS[2]]).parse()
-        self.assertIsInstance(tree, ScriptNode)
-        self.assertEqual(tree.name, "script")
+        command = Parser(self.TEST_SCRIPT_TOKENS).parse()
+        self.assertIsInstance(command, CommandNode)
+        self.assertEqual(command.namespace, ["script"])
 
     # def test_anon_parse(self):
-    #     tree = Parser([Token("option", "option=value")]).parse()
-    #     self.assertIsInstance(tree, ScriptNode)
-    #     self.assertEqual(tree.name, "anon")
+    #     command = Parser([Token("option", "option=value")]).parse()
+    #     self.assertIsInstance(command, ScriptNode)
+    #     self.assertEqual(command.name, "anon")
 
-    #     tree = Parser(
+    #     command = Parser(
     #         [Token("utility", "util:"), Token("option", "option=value")]
     #     ).parse()
-    #     self.assertIsInstance(tree, UtilNode)
-    #     self.assertEqual(tree.script.name, "anon")
+    #     self.assertIsInstance(command, UtilNode)
+    #     self.assertEqual(command.script.name, "anon")
 
     def test_parses(self):
-        tree = Parser(self.TEST_TOKENS.copy()).parse()
-        self.assertIsInstance(tree, UtilNode)
-        self.assertIsInstance(tree.script, ScriptNode)
-        self.assertEqual(len(tree.script.args), 3)
+        command = Parser(self.TEST_UTIL_TOKENS.copy()).parse()
+        self.assertEqual(len(command.args), 3)
 
     def test_consume(self):
-        parser = Parser(self.TEST_TOKENS.copy())
+        parser = Parser(self.TEST_UTIL_TOKENS.copy())
         with self.assertRaises(ValueError):
             parser.consume("something")
 
-        for token in self.TEST_TOKENS:
+        for token in self.TEST_UTIL_TOKENS:
             self.assertEqual(token.value, parser.consume(token.type))
 
         # Since the above loop consumes all the tokens
@@ -50,8 +51,8 @@ class TestParser(BaseTest):
             parser.consume("something")
 
     def test_peek(self):
-        parser = Parser(self.TEST_TOKENS.copy())
-        for token in self.TEST_TOKENS:
+        parser = Parser(self.TEST_UTIL_TOKENS.copy())
+        for token in self.TEST_UTIL_TOKENS:
             self.assertEqual(parser.peek(), token.type)
             self.assertEqual(token.value, parser.consume(token.type))
 

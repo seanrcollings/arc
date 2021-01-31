@@ -49,8 +49,9 @@ class CLI(ScriptContainer, utils.Helpful):
         elif command_name in self.scripts:
             self.execute(command_node)
         else:
-            print(f"No utility or script with name '{command_name}' registered")
-            sys.exit(1)
+            raise ArcError(
+                f"No utility or script with name '{command_name}' registered"
+            )
 
     def __execute_utility(self, command_node: CommandNode):
         """Executes a utility

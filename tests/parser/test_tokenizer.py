@@ -1,6 +1,6 @@
 from tests.base_test import BaseTest
 from arc.parser import Tokenizer
-from arc.parser.data_types import Token
+from arc.parser.data_types import Token, COMMAND, ARGUMENT, FLAG
 
 
 class TestTokenizer(BaseTest):
@@ -10,17 +10,10 @@ class TestTokenizer(BaseTest):
             ["util:script", "option=value", "option=value", "--flag"]
         ).tokenize()
         test_tokens = [
-            Token("identifier", "util"),
-            Token("operator", ":"),
-            Token("identifier", "script"),
-            Token("identifier", "option"),
-            Token("operator", "="),
-            Token("identifier", "value"),
-            Token("identifier", "option"),
-            Token("operator", "="),
-            Token("identifier", "value"),
-            Token("operator", "--"),
-            Token("identifier", "flag"),
+            Token(COMMAND, "util:script"),
+            Token(ARGUMENT, {"name": "option", "value": "value"}),
+            Token(ARGUMENT, {"name": "option", "value": "value"}),
+            Token(FLAG, {"name": "flag"}),
         ]
         self.assertEqual(tokens, test_tokens)
 
@@ -28,34 +21,25 @@ class TestTokenizer(BaseTest):
             ["util:script", "option=value", "--flag", "option=value"]
         ).tokenize()
         test_tokens = [
-            Token("identifier", "util"),
-            Token("operator", ":"),
-            Token("identifier", "script"),
-            Token("identifier", "option"),
-            Token("operator", "="),
-            Token("identifier", "value"),
-            Token("operator", "--"),
-            Token("identifier", "flag"),
-            Token("identifier", "option"),
-            Token("operator", "="),
-            Token("identifier", "value"),
+            Token(COMMAND, "util:script"),
+            Token(ARGUMENT, {"name": "option", "value": "value"}),
+            Token(FLAG, {"name": "flag"}),
+            Token(ARGUMENT, {"name": "option", "value": "value"}),
         ]
 
         self.assertEqual(tokens, test_tokens)
 
     def test_tokenize_options(self):
         tokens = Tokenizer(
-            ["option=value", "option2=value2,value2", "option3=value with spaces"]
+            [
+                "option=value",
+                "option_two=value1,value2",
+                "option_three=thing with spaces",
+            ]
         ).tokenize()
         test_tokens = [
-            Token("identifier", "option"),
-            Token("operator", "="),
-            Token("identifier", "value"),
-            Token("identifier", "option2"),
-            Token("operator", "="),
-            Token("identifier", "value2,value2"),
-            Token("identifier", "option3"),
-            Token("operator", "="),
-            Token("identifier", "value with spaces"),
+            Token(ARGUMENT, {"name": "option", "value": "value"}),
+            Token(ARGUMENT, {"name": "option_two", "value": "value1,value2"}),
+            Token(ARGUMENT, {"name": "option_three", "value": "thing with spaces"}),
         ]
         self.assertEqual(tokens, test_tokens)
