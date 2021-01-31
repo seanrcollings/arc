@@ -1,6 +1,6 @@
 from typing import List, Any, cast
 
-from arc.parser.data_types import ScriptNode, ArgNode, KeywordNode
+from arc.parser.data_types import CommandNode, ArgNode, KeywordNode
 from arc.errors import ScriptError, ValidationError
 
 from .script import Script
@@ -12,17 +12,17 @@ class PositionalScript(Script, ScriptMixin):
         self.__pass_args = False
         super().__init__(*args, **kwargs)
 
-    def execute(self, script_node: ScriptNode):
+    def execute(self, command_node: CommandNode):
         args: List[Any] = [obj.value for obj in self.args.values()]
 
         if self.__pass_args:
-            args += [arg.value for arg in script_node.args]
+            args += [arg.value for arg in command_node.args]
 
         with self.catch():
             self.function(*args)
 
-    def match_input(self, script_node: ScriptNode):
-        args = cast(List[ArgNode], script_node.args)
+    def match_input(self, command_node: CommandNode):
+        args = cast(List[ArgNode], command_node.args)
         self.__match_options(args)
 
     def __match_options(self, arg_nodes: List[ArgNode]):
@@ -57,8 +57,8 @@ class PositionalScript(Script, ScriptMixin):
 
             self.__pass_args = True
 
-    def validate_input(self, script_node: ScriptNode):
-        for node in script_node.args:
+    def validate_input(self, command_node: CommandNode):
+        for node in command_node.args:
             if isinstance(node, KeywordNode):
                 raise ValidationError(
                     "This script accepts arguements by position"
@@ -66,8 +66,8 @@ class PositionalScript(Script, ScriptMixin):
                     "in the form of 'option=value'"
                 )
 
-        if len(script_node.args) > len(self.args) and not self.__pass_args:
+        if len(command_node.args) > len(self.args) and not self.__pass_args:
             raise ValidationError(
                 "You passed more arguments than this script accepts.",
-                f"accepts: {self.args} | got:{len(script_node.args)}",
+                f"accepts: {self.args} | got:{len(command_node.args)}",
             )

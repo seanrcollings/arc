@@ -1,7 +1,7 @@
 from typing import Dict, Any, List, Union, cast
 from arc.errors import ScriptError, ValidationError
 
-from arc.parser.data_types import ScriptNode, KeywordNode, ArgNode
+from arc.parser.data_types import CommandNode, KeywordNode, ArgNode
 from .__option import Option, NO_DEFAULT
 from .script_mixin import ScriptMixin
 from .script import Script
@@ -12,14 +12,14 @@ class KeywordScript(Script, ScriptMixin):
         self.__pass_kwargs = False
         super().__init__(name, function, *args, **kwargs)
 
-    def execute(self, script_node: ScriptNode):
+    def execute(self, command_node: CommandNode):
         args: Dict[str, Any] = {key: obj.value for key, obj in self.args.items()}
 
         with self.catch():
             self.function(**args)
 
-    def match_input(self, script_node: ScriptNode):
-        args = cast(List[KeywordNode], script_node.args)
+    def match_input(self, command_node: CommandNode):
+        args = cast(List[KeywordNode], command_node.args)
         self.__match_options(args)
 
     def __match_options(self, option_nodes: List[KeywordNode]):
@@ -28,9 +28,8 @@ class KeywordScript(Script, ScriptMixin):
 
         :param option_nodes: list of KeywordNodes from the parser
 
-        :raises ScriptError:
-             - if a option is present in option_nodes and
-             not in self.args
+        :raises ScriptError: if a option is present in option_nodes and
+        not in self.args
         """
 
         for node in option_nodes:
@@ -69,8 +68,8 @@ class KeywordScript(Script, ScriptMixin):
 
             self.__pass_kwargs = True
 
-    def validate_input(self, script_node: ScriptNode):
-        for node in script_node.args:
+    def validate_input(self, command_node: CommandNode):
+        for node in command_node.args:
             if isinstance(node, ArgNode):
                 raise ValidationError(
                     "This script accepts arguements by keyword"

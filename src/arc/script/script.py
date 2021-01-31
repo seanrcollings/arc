@@ -3,7 +3,7 @@ from typing import List, Dict, Callable, Any
 import re
 
 from arc.errors import ScriptError, ValidationError
-from arc.parser.data_types import ScriptNode
+from arc.parser import CommandNode
 from arc.utils import Helpful, indent
 from arc import config
 from arc.color import fg, effects
@@ -32,7 +32,7 @@ class Script(Helpful, ScriptMixin):
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
 
-    def __call__(self, script_node):
+    def __call__(self, command_node):
         """External interface to execute a script
 
         Handles a few things behind the scenes
@@ -42,18 +42,18 @@ class Script(Helpful, ScriptMixin):
         children classes, and will never need to be called
         directly by the child class
 
-        :param script_node: SciptNode object created by the parser
+        :param command_node: SciptNode object created by the parser
             May contain options, flags and arbitrary args
 
         """
         try:
-            self.validate_input(script_node)
+            self.validate_input(command_node)
         except ValidationError as e:
             self.validation_errors.append(str(e))
 
         if len(self.validation_errors) == 0:
-            self.match_input(script_node)
-            self.execute(script_node)
+            self.match_input(command_node)
+            self.execute(command_node)
         else:
             raise ScriptError(
                 "Pre-script validation checks failed: \n",
@@ -74,23 +74,23 @@ class Script(Helpful, ScriptMixin):
             return builder.args
 
     @abstractmethod
-    def execute(self, script_node: ScriptNode):
+    def execute(self, command_node: CommandNode):
         """Execution entry point of each script
 
-        :param script_node: SciptNode object created by the parser.
-        None of the Script classes use script_node in their implementation
+        :param command_node: SciptNode object created by the parser.
+        None of the Script classes use command_node in their implementation
         of execute, but they may need to so it passes it currently
         """
 
     @abstractmethod
-    def match_input(self, script_node: ScriptNode) -> None:
-        """Matches the input provided by script_node
+    def match_input(self, command_node: CommandNode) -> None:
+        """Matches the input provided by command_node
         with the script's options and flags. Should mutate
         state because this function returns None. For example,
         options values should be set on their respective option
         in self.options
 
-        :param script_node: ScriptNode object created by the parser
+        :param command_node: ScriptNode object created by the parser
         Has had the UtilNode stripped away if it existed
         """
 
@@ -98,7 +98,7 @@ class Script(Helpful, ScriptMixin):
         """`build_args` hook.
         Can be used to check each of the args it's creating"""
 
-    def validate_input(self, script_node) -> None:
+    def validate_input(self, command_node) -> None:
         """Helper function to check if user input is valid,
         should be overridden by child class
 

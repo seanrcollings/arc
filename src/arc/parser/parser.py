@@ -1,17 +1,19 @@
 import re
 from typing import List, Union, cast, Dict
+import shlex
 
 from arc import config
 from arc.errors import ParserError
+from arc import utils
 from .data_types import COMMAND, FLAG, ARGUMENT
 from . import data_types as types
 
 
 class Tokenizer:
     TOKEN_TYPES = {
-        COMMAND: fr"\A\b((?:\w+{config.utility_seperator})+\w+)\b",
         FLAG: fr"\A{config.flag_denoter}(?P<name>\b\w+)\b",
         ARGUMENT: fr"\A\b(?P<name>[a-zA-Z_]+\b){config.options_seperator}(?P<value>[\w\s\'\"-]+)\b",
+        COMMAND: fr"\A\b((?:(?:\w+:)+\w+)|\w+)\b",
     }
 
     def __init__(self, data: List[str]):
@@ -97,3 +99,19 @@ class Parser:
             return self.tokens[idx].type
         except IndexError:
             return None
+
+
+def parse(command: Union[List[str], str]):
+    """Convenience wrapper around the
+    tokenizer and parser.
+
+    :param command: string or list of strings to be parsed.
+    If it's a string, it will be split using shlex.split
+    """
+    if isinstance(command, str):
+        command = shlex.split(command)
+
+    tokens = Tokenizer(command).tokenize()
+    with utils.HandleException():
+        parsed = Parser(tokens).parse()
+    return parsed
