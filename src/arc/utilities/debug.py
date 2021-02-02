@@ -11,11 +11,9 @@ debug = Utility("debug", "Various development-centric scripts")
 def display_config():
     """Displays information about the current config of the Arc app"""
     config_items = [
-        ["Decorate Text", config.decorate_text, "True"],
         ["Utility Seperator", config.utility_seperator, ":"],
         ["Options Seperator", config.options_seperator, "="],
-        ["Log", config.log, "False"],
-        ["Debug", config.debug, "False"],
+        ["Log", config.loglevel, "logging.WARNING"],
         ["Anonymous Identifier", config.anon_identifier, "anon"],
         ["Converters", "See debug:converters", "-"],
     ]

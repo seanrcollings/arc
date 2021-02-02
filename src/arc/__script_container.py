@@ -1,12 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import Dict
 
-import arc.utils as util
+from arc import utils
 from arc.script import script_factory
 from arc.script.script import Script
 from arc import config
 from arc.errors import ScriptError
 from arc.script import ScriptType
+from arc.color import fg, effects
 
 
 class ScriptContainer(ABC):
@@ -48,12 +49,18 @@ class ScriptContainer(ABC):
         script = script_factory(name, function, script_type, **kwargs)
         self.scripts[script.name] = script
 
-        util.logger.debug(
-            "registered '%s' script to %s", script.name, self.__class__.__name__,
+        name = "CLI" if self.__class__.__name__ == "CLI" else f"utility {self.name}"
+
+        utils.logger.debug(
+            "%sregistered '%s' script to %s %s",
+            fg.YELLOW,
+            script.name,
+            name,
+            effects.CLEAR,
         )
         return function
 
-    @util.timer
+    @utils.timer
     def execute(self, script_node):
         """Executes the script from the user's command
 
@@ -63,12 +70,12 @@ class ScriptContainer(ABC):
         :raises ScriptError: If the command doesn't exist
 
         """
+        with utils.handle(ScriptError):
+            if script_node.name not in self.scripts:
+                raise ScriptError(f"The script '{script_node.name}' is not recognized")
 
-        if script_node.name not in self.scripts:
-            raise ScriptError(f"The script '{script_node.name}' is not recognized")
-
-        script = self.scripts[script_node.name]
-        script(script_node)
+            script = self.scripts[script_node.name]
+            script(script_node)
 
     @abstractmethod
     def helper(self):

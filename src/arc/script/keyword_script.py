@@ -1,10 +1,12 @@
-from typing import Dict, Any, List, Union
-from arc.errors import ScriptError, ValidationError
+from typing import Any, Dict, List, Union
 
-from arc.parser.data_types import ScriptNode, OptionNode
-from .__option import Option, NO_DEFAULT
-from .script_mixin import ScriptMixin
+from arc import utils
+from arc.errors import ScriptError, ValidationError
+from arc.parser.data_types import OptionNode, ScriptNode
+
+from .__option import NO_DEFAULT, Option
 from .script import Script
+from .script_mixin import ScriptMixin
 
 
 class KeywordScript(Script, ScriptMixin):
@@ -18,8 +20,7 @@ class KeywordScript(Script, ScriptMixin):
             **{key: obj.value for key, obj in self.flags.items()},
         }
 
-        with self.catch():
-            self.function(**args)
+        self.function(**args)
 
     def match_input(self, script_node: ScriptNode):
         self.__match_options(script_node.options)

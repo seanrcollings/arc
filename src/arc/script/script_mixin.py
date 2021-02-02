@@ -35,20 +35,6 @@ class ScriptMixin:
 
     # HELPERS
 
-    @staticmethod
-    @contextmanager
-    def catch():
-        """Context Manager to catch and handle errors
-        when calling the script's function"""
-        try:
-            util.logger.debug("---------------------------")
-            yield
-        except ExecutionError as e:
-            print(e)
-            sys.exit(1)
-        finally:
-            util.logger.debug("---------------------------")
-
     def assert_options_filled(self):
         for option in self.options.values():
             if option.value is NO_DEFAULT:

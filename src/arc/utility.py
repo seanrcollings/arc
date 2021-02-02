@@ -17,10 +17,10 @@ class Utility(ScriptContainer):
     """
 
     def __init__(self, name, description=None, script_type=None):
-        super().__init__(script_type=script_type)
         self.name = name
         self.description = description
-        logger.debug("Utility %s created'", name)
+        super().__init__(script_type=script_type)
+        logger.debug("%sUtility %s created %s", fg.YELLOW, name, effects.CLEAR)
 
     def __call__(self, script_node):
         self.execute(script_node)

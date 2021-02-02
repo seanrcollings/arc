@@ -22,11 +22,11 @@ class Config:
     # so probably not.
     __not_preloadable = ["converters"]
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls):
         if cls._instance is not None:
             return cls._instance
 
-        obj = super().__new__(cls, *args, **kwargs)  # type: ignore
+        obj = super().__new__(cls)
         cls._instance = obj
         return obj
 
@@ -37,12 +37,12 @@ class Config:
         self.utility_seperator: str = ":"
         self.options_seperator: str = "="
         self.flag_denoter: str = "--"
-        self.log: bool = False
-        self.debug: bool = False
-        self.decorate_text: bool = True
+        self.loglevel: int = logging.WARNING
         self.anon_identifier: str = "anon"
 
         self.converters = converter_mapping
+
+        self.__setup_logging()
 
     @property
     def instance(self) -> Optional["Config"]:
@@ -66,11 +66,18 @@ class Config:
 
     def __setup_logging(self):
         logger = logging.getLogger("arc_logger")
+        levels = (
+            logging.DEBUG,
+            logging.INFO,
+            logging.WARNING,
+            logging.ERROR,
+            logging.CRITICAL,
+        )
 
-        if self.log:
-            logger.setLevel(logging.INFO)
-        if self.debug:
-            logger.setLevel(logging.DEBUG)
+        if self.loglevel not in levels:
+            raise ValueError(f"`{self.loglevel}` not a valid logging level")
+
+        logger.setLevel(self.loglevel)
 
     # Converter Methods
     def add_converter(self, obj: Type[BaseConverter]):
@@ -133,9 +140,9 @@ class Config:
         # Check if it needs to be converted
         config_converters: List[Type[BaseConverter]] = [
             StringBoolConverter,
-            ListConverter,
             IntConverter,
             FloatConverter,
+            ListConverter,
         ]
 
         for converter in config_converters:

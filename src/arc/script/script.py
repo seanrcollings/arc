@@ -1,18 +1,19 @@
-from abc import abstractmethod
-from typing import List, Dict, Callable, Tuple, Any
 import re
+import sys
+from abc import abstractmethod
+from typing import Any, Callable, Dict, List, Tuple
 
-from arc.errors import ScriptError, ValidationError
+from arc import config, utils
+from arc.color import effects, fg
+from arc.errors import ExecutionError, ScriptError, ValidationError
 from arc.parser.data_types import ScriptNode
-from arc.utils import Helpful, indent
-from arc import config
-from arc.color import fg, effects
-from .__option import Option
+
 from .__flag import Flag
+from .__option import Option
 from .script_mixin import ScriptMixin
 
 
-class Script(Helpful, ScriptMixin):
+class Script(utils.Helpful, ScriptMixin):
     """Abstract Script Class, all Script types must inherit from it
     Helpful is abstract, so this is as well"""
 
@@ -54,7 +55,13 @@ class Script(Helpful, ScriptMixin):
 
         if len(self.validation_errors) == 0:
             self.match_input(script_node)
-            self.execute(script_node)
+            try:
+                utils.logger.debug("---------------------------")
+                self.execute(script_node)
+            except ExecutionError as e:
+                print(e)
+            finally:
+                utils.logger.debug("---------------------------")
         else:
             raise ScriptError(
                 "Pre-script validation checks failed: \n",
@@ -112,15 +119,15 @@ class Script(Helpful, ScriptMixin):
     def helper(self):
         spaces = "  "
         print(
-            indent(
+            utils.indent(
                 f"{config.utility_seperator}{fg.GREEN}{self.name}{effects.CLEAR}",
                 spaces,
             )
         )
         if self.doc:
-            print(indent(self.doc, spaces * 3))
+            print(utils.indent(self.doc, spaces * 3))
         else:
-            obj: Helpful
+            obj: utils.Helpful
             print(f"{spaces}Arguments:")
             for obj in [*self.options.values(), *self.flags.values()]:
                 print(spaces * 3, end="")
