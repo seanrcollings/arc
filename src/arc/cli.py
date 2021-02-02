@@ -85,7 +85,12 @@ class CLI(ScriptContainer, utils.Helpful):
                 if utility.script_type is None:
                     utility.script_type = self.script_type
                 self.utilities[utility.name] = utility
-                utils.logger.debug("Registered '%s' utility", utility.name)
+                utils.logger.debug(
+                    "%sRegistered '%s' utility %s",
+                    fg.YELLOW,
+                    utility.name,
+                    effects.CLEAR,
+                )
             else:
                 raise ArcError(
                     "Only instances of the 'Utility'" "class can be registerd to ARC",

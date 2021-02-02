@@ -7,6 +7,7 @@ from arc.script.script import Script
 from arc import config
 from arc.errors import ScriptError
 from arc.script import ScriptType
+from arc.color import fg, effects
 
 
 class ScriptContainer(ABC):
@@ -48,8 +49,14 @@ class ScriptContainer(ABC):
         script = script_factory(name, function, script_type, **kwargs)
         self.scripts[script.name] = script
 
+        name = "CLI" if self.__class__.__name__ == "CLI" else f"utility {self.name}"
+
         utils.logger.debug(
-            "registered '%s' script to %s", script.name, self.__class__.__name__,
+            "%sregistered '%s' script to %s %s",
+            fg.YELLOW,
+            script.name,
+            name,
+            effects.CLEAR,
         )
         return function
 

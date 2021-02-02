@@ -1,7 +1,10 @@
 from typing import List
 from dataclasses import dataclass
-from arc.utils import decorate_text
 from arc.color import fg, bg, effects
+
+
+def decorate_text(text: str, tcolor=fg.WHITE):
+    return f"{tcolor}{text}{effects.CLEAR}"
 
 
 @dataclass

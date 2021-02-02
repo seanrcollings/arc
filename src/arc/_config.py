@@ -38,7 +38,6 @@ class Config:
         self.options_seperator: str = "="
         self.flag_denoter: str = "--"
         self.loglevel: int = logging.WARNING
-        self.decorate_text: bool = True
         self.anon_identifier: str = "anon"
 
         self.converters = converter_mapping

@@ -1,4 +1,3 @@
-from arc.utils import decorate_text
 from arc.color import fg, effects
 
 
@@ -39,8 +38,8 @@ class Table:
         align="<",
         type_of="s",
         tcolor=fg.GREEN,
-        bcolor=None,
+        bcolor="",
         style=effects.BOLD,
     ):
         formatted = format(string, f"{align}{self.__column_width}{type_of}")
-        return decorate_text(formatted, tcolor, bcolor, style)
+        return f"{tcolor}{bcolor}{style}{formatted}{effects.CLEAR}"
