@@ -2,16 +2,17 @@ from abc import abstractmethod
 from typing import List, Dict, Callable, Any
 import re
 
-from arc.errors import ScriptError, ValidationError
-from arc.parser import CommandNode
-from arc.utils import Helpful, indent, logger
-from arc import config
-from arc.color import fg, effects
+
+from arc import config, utils
+from arc.color import effects, fg
+from arc.errors import ExecutionError, ScriptError, ValidationError
+from arc.parser.data_types import CommandNode
+
 from .__option import Option
 from .script_mixin import ScriptMixin
 
 
-class Script(Helpful, ScriptMixin):
+class Script(utils.Helpful, ScriptMixin):
     """Abstract Script Class, all Script types must inherit from it
     Helpful is abstract, so this is as well"""
 
@@ -53,8 +54,13 @@ class Script(Helpful, ScriptMixin):
 
         if len(self.validation_errors) == 0:
             self.match_input(command_node)
-            logger.debug(self.args)
-            self.execute(command_node)
+            try:
+                utils.logger.debug("---------------------------")
+                self.execute(command_node)
+            except ExecutionError as e:
+                print(e)
+            finally:
+                utils.logger.debug("---------------------------")
         else:
             raise ScriptError(
                 "Pre-script validation checks failed: \n",
@@ -112,15 +118,15 @@ class Script(Helpful, ScriptMixin):
     def helper(self):
         spaces = "  "
         print(
-            indent(
+            utils.indent(
                 f"{config.utility_seperator}{fg.GREEN}{self.name}{effects.CLEAR}",
                 spaces,
             )
         )
         if self.doc:
-            print(indent(self.doc, spaces * 3))
+            print(utils.indent(self.doc, spaces * 3))
         else:
-            obj: Helpful
+            obj: utils.Helpful
             print(f"{spaces}Arguments:")
             for obj in self.args.values():
                 print(spaces * 3, end="")

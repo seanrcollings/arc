@@ -1,12 +1,8 @@
-import sys
 import inspect
 from typing import Dict, Any
-from contextlib import contextmanager
 
+from arc.errors import ScriptError
 
-from arc.errors import ScriptError, ExecutionError
-
-import arc.utils as util
 from .__option import Option, NO_DEFAULT, EMPTY
 
 
@@ -15,25 +11,6 @@ class ScriptMixin:
     meta: Any
 
     # HELPERS
-
-    @staticmethod
-    @contextmanager
-    def catch():
-        """Context Manager to catch and handle errors
-        when calling the script's function"""
-        # Probably do something different when failing on an ExecutionError and
-        # when failing on a general exception
-        # Also make this functionality part of Script.__call__ because it shouldn't be optional
-        try:
-            util.logger.debug("---------------------------")
-            yield
-        except ExecutionError as e:
-            print(e)
-            sys.exit(1)
-        except Exception as e:
-            print(e)
-        finally:
-            util.logger.debug("---------------------------")
 
     def assert_args_filled(self):
         for option in self.args.values():

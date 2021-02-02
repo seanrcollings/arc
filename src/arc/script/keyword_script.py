@@ -1,10 +1,11 @@
-from typing import Dict, Any, List, Union, cast
-from arc.errors import ScriptError, ValidationError
+from typing import Any, Dict, List, Union, cast
 
-from arc.parser.data_types import CommandNode, ArgNode, FLAG, POS_ARGUMENT
-from .__option import Option, NO_DEFAULT
-from .script_mixin import ScriptMixin
+from arc.errors import ScriptError, ValidationError
+from arc.parser.data_types import FLAG, POS_ARGUMENT, ArgNode, CommandNode
+
+from .__option import NO_DEFAULT, Option
 from .script import Script
+from .script_mixin import ScriptMixin
 
 
 class KeywordScript(Script, ScriptMixin):
@@ -15,8 +16,7 @@ class KeywordScript(Script, ScriptMixin):
     def execute(self, command_node: CommandNode):
         args: Dict[str, Any] = {key: obj.value for key, obj in self.args.items()}
 
-        with self.catch():
-            self.function(**args)
+        self.function(**args)
 
     def match_input(self, command_node: CommandNode):
         self.__match_options(command_node.args)

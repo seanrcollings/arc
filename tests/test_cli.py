@@ -1,9 +1,9 @@
+from unittest import mock
 from tests.base_test import BaseTest
 from arc.errors import ArcError
 from arc import Utility
 
 
-# pylint: disable=protected-access, missing-function-docstring
 class TestCLI(BaseTest):
     def setUp(self):
         self.cli = self.create_cli()
@@ -22,6 +22,7 @@ class TestCLI(BaseTest):
         self.cli("func2 x=2")
         self.cli.scripts["func2"].function.assert_called_with(x=2)
 
-    def test_nonexistant_utility(self):
+    @mock.patch("arc.utils.handle")
+    def test_nonexistant_utility(self, _):
         with self.assertRaises(ArcError):
             self.cli("doesnotexist:func1 x=2")

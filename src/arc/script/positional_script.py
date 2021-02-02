@@ -18,8 +18,7 @@ class PositionalScript(Script, ScriptMixin):
         if self.__pass_args:
             args += [arg.value for arg in command_node.args]
 
-        with self.catch():
-            self.function(*args)
+        self.function(*args)
 
     def match_input(self, command_node: CommandNode):
         self.__match_options(command_node.args)

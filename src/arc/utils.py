@@ -1,47 +1,20 @@
+import functools
 import logging
 import os
-import time
-import functools
-import traceback
 import sys
-from typing import Dict, Type
+import time
+import traceback
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
+from typing import Dict, Type
 
-
-from arc.color import fg, effects
 from arc import config
-
-
-class MyFormatter(logging.Formatter):
-    def format(self, record):
-        level = record.levelno
-        message = record.getMessage()
-        if level == logging.DEBUG:
-            return decorate_text(message, tcolor=fg.YELLOW)
-        elif level == logging.INFO:
-            return decorate_text(message, tcolor=fg.GREEN)
-
-        return decorate_text(message, tcolor=fg.WHITE)
-
 
 logger = logging.getLogger("arc_logger")
 handler = logging.StreamHandler()
-formatter = MyFormatter()
+formatter = logging.Formatter()
 handler.setFormatter(formatter)
 logger.addHandler(handler)
-
-
-def decorate_text(string, tcolor=fg.GREEN, bcolor=None, style=effects.BOLD):
-    if config.decorate_text:
-        return (
-            f"{tcolor}"
-            f"{bcolor if bcolor else ''}"
-            f"{style}"
-            f"{string}"
-            f"{effects.CLEAR}"
-        )
-    return string
 
 
 def clear():
@@ -113,7 +86,7 @@ def handle(*exceptions: Type[Exception], exit_code=1):
     try:
         yield
     except exceptions as e:
-        if config.debug:
+        if config.loglevel == logging.DEBUG:
             logger.debug(
                 "".join(
                     traceback.format_exception(

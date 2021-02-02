@@ -68,10 +68,15 @@ class CLI(ScriptContainer, utils.Helpful):
                 if utility.script_type is None:
                     utility.script_type = self.script_type
                 self.utilities[utility.name] = utility
-                utils.logger.debug("Registered '%s' utility", utility.name)
+                utils.logger.debug(
+                    "%sRegistered '%s' utility %s",
+                    fg.YELLOW,
+                    utility.name,
+                    effects.CLEAR,
+                )
             else:
                 raise ArcError(
-                    "Only instances of the 'Utility'", "class can be registerd to ARC",
+                    "Only instances of the 'Utility'" "class can be registerd to ARC",
                 )
 
     def helper(self):
@@ -93,8 +98,8 @@ class CLI(ScriptContainer, utils.Helpful):
             print(f"\n{header.format(title='Installed Utilities')}")
             print(
                 "Execute a utility with: "
-                f"{fg.YELLOW.bright}<utility>"
-                f"{fg.GREEN.bright}{config.utility_seperator}<subcommand>{effects.CLEAR}"
+                f"{fg.YELLOW.bright}<utility>{config.utility_seperator}"
+                f"{fg.GREEN.bright}<subcommand>{effects.CLEAR}"
             )
             for utility in self.utilities.values():
                 utility.helper()
