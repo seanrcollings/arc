@@ -4,7 +4,7 @@ import time
 import functools
 import traceback
 import sys
-from typing import Dict
+from typing import Dict, Type
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 
@@ -109,12 +109,12 @@ class Helpful(ABC):
 
 
 @contextmanager
-def HandleException():
+def handle(*exceptions: Type[Exception], exit_code=1):
     try:
         yield
-    except Exception as e:
+    except exceptions as e:
         if config.debug:
-            logger.exception(
+            logger.debug(
                 "".join(
                     traceback.format_exception(
                         etype=type(e), value=e, tb=e.__traceback__
@@ -123,4 +123,4 @@ def HandleException():
             )
         else:
             print(e)
-        sys.exit(1)
+        sys.exit(exit_code)

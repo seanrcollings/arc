@@ -38,8 +38,8 @@ class Config:
         self.options_seperator: str = "="
         self.flag_denoter: str = "--"
         self.log: bool = False
-        self.debug: bool = True
-        self.decorate_text: bool = True
+        self.debug: bool = False
+        self.decorate_text: bool = False
         self.anon_identifier: str = "anon"
 
         self.converters = converter_mapping

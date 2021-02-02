@@ -28,8 +28,14 @@ class ValidationError(ArcError):
     """Raised when there is an error in validating script input"""
 
 
+class TokenizerError(ArcError):
+    def __init__(self, token):
+        self.token = token
+        super().__init__(f"Couldn't match on token: `{self.token}`")
+
+
 class ParserError(ArcError):
-    """Raised when there is an error in the parser"""
+    """Raised when there is an error parsing the token stream"""
 
 
 class ConversionError(ArcError):

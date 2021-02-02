@@ -3,13 +3,23 @@ from typing import List, Union, cast, Dict
 import shlex
 
 from arc import config
-from arc.errors import ParserError
+from arc.errors import ParserError, TokenizerError
 from arc import utils
 from .data_types import COMMAND, FLAG, ARGUMENT, POS_ARGUMENT, KEY_ARGUMENT
 from . import data_types as types
 
 
 class Tokenizer:
+    """
+    Arc Tokenizer class
+
+    :param data: List of strings to parse. Can split a normal string with shlex.split()
+
+    ### Attributes
+    data: Data to be parsed
+    tokens: List of Tokens
+    """
+
     TOKEN_TYPES = {
         FLAG: fr"\A{config.flag_denoter}(?P<name>\b\w+)\b",
         ARGUMENT: fr"\A\b(?P<name>[a-zA-Z_]+\b){config.options_seperator}(?P<value>[\w\s\-\,\._]+)\b",
@@ -41,7 +51,7 @@ class Tokenizer:
                     self.data.pop(0)
                     return types.Token(kind, value)
 
-        raise ParserError(f"Couldn't match token on {self.data[0]}")
+        raise TokenizerError(self.data[0])
 
 
 class Parser:
@@ -110,7 +120,7 @@ def parse(command: Union[List[str], str]):
     if isinstance(command, str):
         command = shlex.split(command)
 
-    tokens = Tokenizer(command).tokenize()
-    with utils.HandleException():
+    with utils.handle(TokenizerError, ParserError):
+        tokens = Tokenizer(command).tokenize()
         parsed = Parser(tokens).parse()
     return parsed
