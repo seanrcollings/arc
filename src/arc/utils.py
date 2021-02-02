@@ -2,8 +2,12 @@ import logging
 import os
 import time
 import functools
-from typing import Dict
+import traceback
+import sys
+from typing import Dict, Type
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
+
 
 from arc.color import fg, effects
 from arc import config
@@ -102,3 +106,21 @@ class Helpful(ABC):
     @abstractmethod
     def helper(self):
         ...
+
+
+@contextmanager
+def handle(*exceptions: Type[Exception], exit_code=1):
+    try:
+        yield
+    except exceptions as e:
+        if config.debug:
+            logger.debug(
+                "".join(
+                    traceback.format_exception(
+                        etype=type(e), value=e, tb=e.__traceback__
+                    )
+                )
+            )
+        else:
+            print(e)
+        sys.exit(exit_code)

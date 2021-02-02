@@ -39,7 +39,7 @@ class Config:
         self.flag_denoter: str = "--"
         self.log: bool = False
         self.debug: bool = False
-        self.decorate_text: bool = True
+        self.decorate_text: bool = False
         self.anon_identifier: str = "anon"
 
         self.converters = converter_mapping
@@ -67,6 +67,7 @@ class Config:
     def __setup_logging(self):
         logger = logging.getLogger("arc_logger")
 
+        logger.setLevel(logging.ERROR)
         if self.log:
             logger.setLevel(logging.INFO)
         if self.debug:
@@ -132,7 +133,7 @@ class Config:
 
         # Check if it needs to be converted
         config_converters: List[Type[BaseConverter]] = [
-            StringBoolConverter,
+            BoolConverter,
             ListConverter,
             IntConverter,
             FloatConverter,

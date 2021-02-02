@@ -1,7 +1,14 @@
-from typing import List
+from typing import List, Union, Dict, Optional
 from dataclasses import dataclass
-from arc.utils import decorate_text
-from arc.color import fg, bg, effects
+from arc.color import fg, effects, bg
+from arc.utils import symbol
+
+
+COMMAND = symbol("command")
+FLAG = symbol("flags")
+ARGUMENT = symbol("arguments")
+POS_ARGUMENT = symbol("positional argument")
+KEY_ARGUMENT = symbol("key argument")
 
 
 @dataclass
@@ -10,93 +17,53 @@ class Token:
     tokenizer will result in one of these being returned
     """
 
-    type: str
-    value: str
+    type: symbol
+    value: Union[Dict[str, str], str]
 
 
 @dataclass
 class ArgNode:
-    """Matches to anything that isn't a flag or value"""
-
+    name: Optional[str]
     value: str
+    kind: symbol
 
-    def __repr__(self):
-        return f"<ArgNode : {self.value}>"
-
-
-@dataclass
-class OptionNode:
-    """Matches to:
-    option=value
-    option=2
-    option='value with spaces'
-    option="value with spaces"
-    option=value,with,commas
-    """
-
-    name: str
-    value: str
-
-    def __repr__(self):
-        return f"{self.name}={self.value}"
+    def __str__(self):
+        if self.kind == KEY_ARGUMENT:
+            return f"{self.name}={self.value}"
+        if self.kind == POS_ARGUMENT:
+            return str(self.value)
+        if self.kind == FLAG:
+            return f"--{self.name}"
 
 
 @dataclass
-class FlagNode:
-    """Matches to:
-    --flag
-    --other_flag
-    """
-
-    name: str
-
-    def __repr__(self):
-        return f"--{self.name}"
-
-
-@dataclass
-class ScriptNode:
-    """Matches to:
-        name
-        script
-        thing
-    Will match to any valid string,
-    and as such it must be checked last
-    in the tokenizer
-    """
-
-    name: str
-    options: List[OptionNode]
-    flags: List[FlagNode]
+class CommandNode:
+    namespace: List[str]
     args: List[ArgNode]
 
-    def __repr__(self, level=0):
-        tabs = "\t" * level
-        string = (
-            f"{decorate_text('SCRIPT', tcolor=fg.YELLOW)}\n{tabs}"
-            f"name: {decorate_text(self.name, tcolor=fg.YELLOW)}"
-            f"\n{tabs}options: {', '.join([decorate_text(str(o)) for o in self.options])}"
-            f"\n{tabs}flags: {', '.join([decorate_text(str(f)) for f in self.flags])}"
-            f"\n{tabs}other args: {', '.join([decorate_text(str(a)) for a in self.args])}"
+    def __str__(self):
+        color_map = {
+            COMMAND: bg.GREEN,
+            FLAG: bg.YELLOW,
+            ARGUMENT: bg.BLUE,
+            POS_ARGUMENT: bg.BLUE,
+            KEY_ARGUMENT: bg.BLUE,
+        }
+
+        command = (
+            f"{fg.BLACK.bright}{color_map[COMMAND]}"
+            f" {':'.join(self.namespace)} {effects.CLEAR}"
         )
-        return string
 
-
-@dataclass
-class UtilNode:
-    """Matches to:
-    util:
-    name:
-    thing:
-    """
-
-    name: str
-    script: ScriptNode
-
-    def __repr__(self):
-        string = (
-            f"{decorate_text('UTILITY', tcolor=fg.YELLOW)}\n"
-            f"name: {decorate_text(self.name, tcolor=bg.GREEN)}\n"
-            f"\nscript: \n\t{self.script.__repr__(level=1)}"
+        args = " ".join(
+            f"{fg.BLACK.bright}{color_map[arg.kind]}" f" {arg} {effects.CLEAR}"
+            for arg in self.args
         )
-        return string
+
+        key = (
+            f"COMMAND: {color_map[COMMAND]}  {effects.CLEAR} "
+            f"ARGUMENT: {color_map[ARGUMENT]}  {effects.CLEAR}"
+            f" FLAG: {color_map[FLAG]}  {effects.CLEAR} "
+        )
+
+        return f"{command} {args}\n\n{key}"

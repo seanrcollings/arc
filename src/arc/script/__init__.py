@@ -1,10 +1,9 @@
-from typing import Type
+from typing import Type, Dict
 from arc.utils import symbol
 from .script import Script
 from .keyword_script import KeywordScript
 from .positional_script import PositionalScript
 from .raw_script import RawScript
-from .legacy_script import LegacyScript
 
 
 class ScriptType:
@@ -17,18 +16,14 @@ class ScriptType:
     # PositionalScript - options passed in order: option1 option2 option3
     POSITIONAL = symbol("POSITIONAL")
 
-    # LegacyScript - legacy implementation of script object
-    LEGACY = symbol("LEGACY")
-
     # RawScript - Doesn't do anything, just passes values along to the script
     RAW = symbol("RAW")
 
     # Internal Interface, used to map the symbol
     # to the actual Class
-    script_type_mappings = {
+    script_type_mappings: Dict[symbol, Type[Script]] = {
         KEYWORD: KeywordScript,
         POSITIONAL: PositionalScript,
-        LEGACY: LegacyScript,
         RAW: RawScript,
     }
 
@@ -49,7 +44,7 @@ class ScriptType:
 
 
 def script_factory(name, function, script_type=ScriptType.KEYWORD, **kwargs):
-    name = name if name else function.__name__
+    name = name or function.__name__
     type_class = ScriptType.script_type_mappings.get(script_type)
 
     if type_class is None:

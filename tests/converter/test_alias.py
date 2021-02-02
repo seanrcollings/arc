@@ -18,8 +18,8 @@ class TestAliasConverter(BaseTest):
     def test_union_alias(self):
         self.assertEqual(ca(Union[int, str]).convert("1234"), 1234)
         self.assertEqual(ca(Union[int, str]).convert("1,234"), "1,234")
-        self.assertEqual(ca(Union[int, bool]).convert(","), True)
-        self.assertEqual(ca(Union[int, bool]).convert(""), False)
+        self.assertEqual(ca(Union[int, bool]).convert("true"), True)
+        self.assertEqual(ca(Union[int, bool]).convert("false"), False)
         self.assertEqual(ca(Union[str, int]).convert("1234"), "1234")
         self.assertEqual(
             ca(Union[List[int], int]).convert("1,2,3,4,5"), [1, 2, 3, 4, 5]
@@ -32,7 +32,7 @@ class TestAliasConverter(BaseTest):
         lst = ca(List[str]).convert("word,word,word")
         self.assertEqual(lst, ["word", "word", "word"])
 
-        lst = ca(List[bool]).convert("afeaf,afeaf,")
+        lst = ca(List[bool]).convert("true,true,false")
         self.assertEqual(lst, [True, True, False])
 
     def test_set_alias(self):
@@ -45,7 +45,7 @@ class TestAliasConverter(BaseTest):
         st = ca(Set[str]).convert("word,word,word")
         self.assertEqual(st, {"word", "word", "word"})
 
-        st = ca(Set[bool]).convert("afeaf,afeaf,")
+        st = ca(Set[bool]).convert("true,true,false")
         self.assertEqual(st, {True, True, False})
 
     def test_tuple_alias(self):

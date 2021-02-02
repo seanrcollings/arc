@@ -7,7 +7,7 @@ from arc.utils import symbol, Helpful
 from arc.types import needs_cleanup, ArcGeneric
 
 
-NO_DEFAULT = symbol("NO_DEFAULT")
+NO_DEFAULT = symbol("No Default")
 # pylint: disable=protected-access
 EMPTY = inspect._empty  # type: ignore
 
@@ -36,7 +36,7 @@ class Option(Helpful):
         """Returns the converter name for
         the option's annotation
         """
-        # Move this logic into convert.get_converter() ?
+
         if is_alias(self.annotation):
             if issubclass(self.annotation.__origin__, ArcGeneric):  # type: ignore
                 return self.annotation.__origin__.__name__.lower()  # type: ignore

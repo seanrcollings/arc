@@ -8,8 +8,6 @@ __all__ = [
     "IntConverter",
     "FloatConverter",
     "BoolConverter",
-    "StringBoolConverter",
-    "IntBoolConverter",
     "ListConverter",
     "FileConverter",
 ]

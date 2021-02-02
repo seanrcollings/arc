@@ -1,9 +1,6 @@
-from unittest.mock import patch, MagicMock
 from tests.base_test import BaseTest
-from arc.errors import ArcError
 
 
-# pylint: disable=protected-access, missing-function-docstring
 class TestConverters(BaseTest):
     def setUp(self):
         self.cli = self.create_cli()
@@ -40,6 +37,20 @@ class TestConverters(BaseTest):
         )
         self.cli("list test=1,2,3,4")
         func.assert_called_with(test=["1", "2", "3", "4"])
+
+    def test_bool(self):
+        func = self.create_script(
+            self.cli, "bool", lambda yes: yes, annotations={"yes": bool}
+        )
+        true_values = [1, 2, 111, "true", "t"]
+        for value in true_values:
+            self.cli(f"bool yes={value}")
+            func.assert_called_with(yes=True)
+
+        false_values = [0, "false", "f"]
+        for value in false_values:
+            self.cli(f"bool yes={value}")
+            func.assert_called_with(yes=False)
 
     # def test_invalid_converters(self):
     #     func = MagicMock()

@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, create_autospec
+from unittest.mock import create_autospec
 from tests.base_test import BaseTest
 from arc.errors import ScriptError
 

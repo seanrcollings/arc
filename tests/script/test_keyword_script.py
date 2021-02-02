@@ -1,5 +1,5 @@
 from tests.script.base_script_test import BaseScriptTest
-from arc.parser.data_types import FlagNode, ArgNode, OptionNode
+from arc.parser.data_types import ArgNode, KEY_ARGUMENT, POS_ARGUMENT
 from arc.script.keyword_script import KeywordScript
 from arc.errors import ScriptError
 
@@ -20,30 +20,33 @@ class TestKeywordScript(BaseScriptTest):
 
     def test_execute(self):
         self.script1(
-            self.create_script_node(
-                options=[OptionNode("x", "2"), OptionNode("y", "3")],
+            self.command_node(
+                args=[ArgNode("x", "2", KEY_ARGUMENT), ArgNode("y", "3", KEY_ARGUMENT)],
             )
         )
         self.script1.function.assert_called_with(x="2", y=3, test=False)
 
         self.script1(
-            self.create_script_node(
-                options=[OptionNode("x", "2"), OptionNode("y", "3")],
-                flags=[FlagNode("test")],
+            self.command_node(
+                args=[
+                    ArgNode("x", "2", KEY_ARGUMENT),
+                    ArgNode("y", "3", KEY_ARGUMENT),
+                    ArgNode("test", "true", KEY_ARGUMENT),
+                ],
             )
         )
         self.script1.function.assert_called_with(x="2", y=3, test=True)
 
         self.script2(
-            self.create_script_node(
-                options=[
-                    OptionNode("a", "test"),
-                    OptionNode("b", "2"),
-                    OptionNode("c", "2.5"),
-                    OptionNode("d", "test"),
-                    OptionNode("e", "1,2,3,4"),
-                ],
-                flags=[FlagNode("f")],
+            self.command_node(
+                args=[
+                    ArgNode("a", "test", KEY_ARGUMENT),
+                    ArgNode("b", "2", KEY_ARGUMENT),
+                    ArgNode("c", "2.5", KEY_ARGUMENT),
+                    ArgNode("d", "test", KEY_ARGUMENT),
+                    ArgNode("e", "1,2,3,4", KEY_ARGUMENT),
+                    ArgNode("f", "true", KEY_ARGUMENT),
+                ]
             )
         )
         self.script2.function.assert_called_with(
@@ -59,29 +62,32 @@ class TestKeywordScript(BaseScriptTest):
 
     def test_validate_input(self):
         with self.assertRaises(ScriptError):
-            self.script1(self.create_script_node(args=[ArgNode("test")]))
+            self.script1(self.command_node(args=[ArgNode("", "test", POS_ARGUMENT)]))
         self.assertEqual(len(self.script1.validation_errors), 1)
 
     def test_kwargs(self):
         script = self.create_script(lambda **kwargs: kwargs)
 
-        script(self.create_script_node())
+        script(self.command_node())
         script.function.assert_called_with()
 
         script(
-            self.create_script_node(
-                options=[OptionNode("test1", "2"), OptionNode("test2", "4")]
+            self.command_node(
+                args=[
+                    ArgNode("test1", "2", KEY_ARGUMENT),
+                    ArgNode("test2", "4", KEY_ARGUMENT),
+                ]
             )
         )
         script.function.assert_called_with(test1="2", test2="4")
 
         script = self.create_script(lambda a, **kwargs: kwargs, annotations={"a": int})
         script(
-            self.create_script_node(
-                options=[
-                    OptionNode("test1", "2"),
-                    OptionNode("test2", "4"),
-                    OptionNode("a", "2"),
+            self.command_node(
+                args=[
+                    ArgNode("test1", "2", KEY_ARGUMENT),
+                    ArgNode("test2", "4", KEY_ARGUMENT),
+                    ArgNode("a", "2", KEY_ARGUMENT),
                 ]
             )
         )
@@ -91,5 +97,5 @@ class TestKeywordScript(BaseScriptTest):
         script = self.create_script(
             lambda a, meta: meta, annotations={"a": int}, meta={"val": 2}
         )
-        script(self.create_script_node(options=[OptionNode("a", "2")]))
+        script(self.command_node(args=[ArgNode("a", "2", KEY_ARGUMENT)]))
         script.function.assert_called_with(a=2, meta={"val": 2})
