@@ -17,7 +17,7 @@ class MyFormatter(logging.Formatter):
         level = record.levelno
         message = record.getMessage()
         if level == logging.DEBUG:
-            return decorate_text(message, tcolor=fg.YELLOW)
+            return message
         elif level == logging.INFO:
             return decorate_text(message, tcolor=fg.GREEN)
 

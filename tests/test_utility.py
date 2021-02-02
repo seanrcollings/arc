@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, create_autospec
+from unittest.mock import create_autospec, patch
 from tests.base_test import BaseTest
 from arc.errors import ScriptError
 
@@ -25,7 +25,8 @@ class TestUtility(BaseTest):
         self.cli("util:func2 x=4")
         self.cli.utilities["util"].scripts["func2"].function.assert_called_with(x=4)
 
-    def test_nonexistant_script(self):
+    @patch("arc.utils.handle")
+    def test_nonexistant_script(self, _):
         with self.assertRaises(ScriptError):
             self.cli("util:doesnotexist")
 

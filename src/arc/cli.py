@@ -37,12 +37,13 @@ class CLI(ScriptContainer, utils.Helpful):
         tokens = Tokenizer(input_list).tokenize()
         parsed = Parser(tokens).parse()
         utils.logger.debug(parsed)
-        # print(parsed)
 
         if isinstance(parsed, UtilNode):
-            self.__execute_utility(parsed)
+            with utils.handle(ArcError):
+                self.__execute_utility(parsed)
         elif isinstance(parsed, ScriptNode):
-            self.execute(parsed)
+            with utils.handle(ArcError):
+                self.execute(parsed)
         else:
             raise RuntimeError("You shouldn't be here. Please report this bug")
 
@@ -87,7 +88,7 @@ class CLI(ScriptContainer, utils.Helpful):
                 utils.logger.debug("Registered '%s' utility", utility.name)
             else:
                 raise ArcError(
-                    "Only instances of the 'Utility'", "class can be registerd to ARC",
+                    "Only instances of the 'Utility'" "class can be registerd to ARC",
                 )
 
     def helper(self):
@@ -109,8 +110,8 @@ class CLI(ScriptContainer, utils.Helpful):
             print(f"\n{header.format(title='Installed Utilities')}")
             print(
                 "Execute a utility with: "
-                f"{fg.YELLOW.bright}<utility>"
-                f"{fg.GREEN.bright}{config.utility_seperator}<subcommand>{effects.CLEAR}"
+                f"{fg.YELLOW.bright}<utility>{config.utility_seperator}"
+                f"{fg.GREEN.bright}<subcommand>{effects.CLEAR}"
             )
             for utility in self.utilities.values():
                 utility.helper()

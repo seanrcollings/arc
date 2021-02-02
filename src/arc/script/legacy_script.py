@@ -34,8 +34,7 @@ class LegacyScript(Script, ScriptMixin):
                 "*args specified in script definition",
             )
 
-        with self.catch():
-            self.function(*posargs, **kwargs)
+        self.function(*posargs, **kwargs)
 
     def match_input(self, script_node: ScriptNode):
         # __match* methods mutate a state object
