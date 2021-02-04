@@ -14,15 +14,6 @@ class Color(str):
     def bright(self):
         return Color(self.code + 60)
 
-    @property
-    def background(self):
-        if (self.code >= 30 and self.code < 38) or (
-            self.code >= 90 and self.code < 108
-        ):
-            return Color(self.code + 10)
-
-        raise AttributeError(f"{self} does not have attribute 'background'")
-
 
 # pylint: disable=bad-whitespace
 # fmt: off
@@ -44,14 +35,14 @@ class fg:
 
 
 class bg:
-    BLACK   = Color(30).background
-    RED     = Color(31).background
-    GREEN   = Color(32).background
-    YELLOW  = Color(33).background
-    BLUE    = Color(34).background
-    MAGENTA = Color(35).background
-    CYAN    = Color(36).background
-    WHITE   = Color(37).background
+    BLACK   = Color(40)
+    RED     = Color(41)
+    GREEN   = Color(42)
+    YELLOW  = Color(43)
+    BLUE    = Color(44)
+    MAGENTA = Color(45)
+    CYAN    = Color(46)
+    WHITE   = Color(47)
 
     @staticmethod
     def rgb(red: int = 0, green: int = 0, blue: int = 0):
