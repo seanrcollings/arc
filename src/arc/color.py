@@ -1,8 +1,8 @@
-class Ansi(str):
-    __escape = "\u001b["
+class Color(str):
+    ESCAPE = "\033["
 
     def __new__(cls, content, extra="m"):
-        obj = str.__new__(cls, f"{cls.__escape}{content}{extra}")  # type: ignore
+        obj = str.__new__(cls, f"{cls.ESCAPE}{content}{extra}")  # type: ignore
         obj.__init__(content)
         return obj
 
@@ -12,44 +12,59 @@ class Ansi(str):
 
     @property
     def bright(self):
-        return Ansi(self.code + 60)
+        return Color(self.code + 60)
 
     @property
     def background(self):
-        if self.code >= 30 and self.code < 39:
-            return Ansi(self.code + 10)
+        if (self.code >= 30 and self.code < 38) or (
+            self.code >= 90 and self.code < 108
+        ):
+            return Color(self.code + 10)
 
-        raise AttributeError(f"{self.code} does not have attribute 'background'")
+        raise AttributeError(f"{self} does not have attribute 'background'")
 
 
 # pylint: disable=bad-whitespace
 # fmt: off
 class fg:
-    BLACK   = Ansi(30)
-    RED     = Ansi(31)
-    GREEN   = Ansi(32)
-    YELLOW  = Ansi(33)
-    BLUE    = Ansi(34)
-    MAGENTA = Ansi(35)
-    CYAN    = Ansi(36)
-    WHITE   = Ansi(37)
+    BLACK   = Color(30)
+    RED     = Color(31)
+    GREEN   = Color(32)
+    YELLOW  = Color(33)
+    BLUE    = Color(34)
+    MAGENTA = Color(35)
+    CYAN    = Color(36)
+    WHITE   = Color(37)
+
+    @staticmethod
+    def rgb(red: int = 0, green: int = 0, blue: int = 0):
+        '''Returns the **foreground** ansi escape
+        sequence for the provided rgb values'''
+        return f"\033[38;2;{red};{green};{blue}m"
+
 
 class bg:
-    BLACK   = Ansi(30).background
-    RED     = Ansi(31).background
-    GREEN   = Ansi(32).background
-    YELLOW  = Ansi(33).background
-    BLUE    = Ansi(34).background
-    MAGENTA = Ansi(35).background
-    CYAN    = Ansi(36).background
-    WHITE   = Ansi(37).background
+    BLACK   = Color(30).background
+    RED     = Color(31).background
+    GREEN   = Color(32).background
+    YELLOW  = Color(33).background
+    BLUE    = Color(34).background
+    MAGENTA = Color(35).background
+    CYAN    = Color(36).background
+    WHITE   = Color(37).background
+
+    @staticmethod
+    def rgb(red: int = 0, green: int = 0, blue: int = 0):
+        '''Returns the **background** ansi escape
+        sequence for the provided rgb values'''
+        return f"\033[48;2;{red};{green};{blue}m"
 
 
 class effects:
-    CLEAR         = Ansi(0)
-    BOLD          = Ansi(1)
-    ITALIC        = Ansi(3)
-    UNDERLINE     = Ansi(4)
-    STRIKETHROUGH = Ansi(9)
+    CLEAR         = Color(0)
+    BOLD          = Color(1)
+    ITALIC        = Color(3)
+    UNDERLINE     = Color(4)
+    STRIKETHROUGH = Color(9)
 
 # fmt: on
