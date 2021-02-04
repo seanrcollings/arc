@@ -1,11 +1,13 @@
 from typing import List
 from arc.color import effects, fg
 
-from . import UIBase
+from . import UIBase, state
 from . import keys
 
 
 class SelectionMenu(UIBase):
+    selected_index = state(0)
+
     def __init__(
         self,
         options: List[str],
@@ -18,7 +20,6 @@ class SelectionMenu(UIBase):
         self.options: list = options
         self.format_str: str = format_str
         self.selected_format_str: str = selected_format_str
-        self.selected_index = 0
 
         super().__init__()
 
@@ -27,24 +28,18 @@ class SelectionMenu(UIBase):
             value = int(chr(key))
             if value < len(self.options):
                 self.selected_index = value
-                return True
 
         elif key in keys.ENTER_TUP:
             self.done((self.selected_index, self.options[self.selected_index]))
-            return False
 
         elif key in (keys.w, keys.k, keys.UP) and self.selected_index > 0:
             self.selected_index -= 1
-            return True
 
         elif (
             key in (keys.s, keys.j, keys.DOWN)
             and self.selected_index < len(self.options) - 1
         ):
             self.selected_index += 1
-            return True
-
-        return False
 
     def render(self):
         print(f"Press {fg.YELLOW}q{effects.CLEAR} to quit")

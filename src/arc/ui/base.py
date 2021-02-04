@@ -68,7 +68,7 @@ class UIBase(abc.ABC, UIMixin):
         if key == keys.q:
             self.running = False
         else:
-            self.should_update = self.update(key)
+            self.update(key)
 
     def update(self, key: Union[int, Tuple[int, ...]]) -> bool:
         """Determines whether or not the
@@ -146,3 +146,20 @@ class AUIBase(abc.ABC, UIMixin):
         """Renders out the UI element
         is called every time `update` return true
         """
+
+
+class StateDescriptor:
+    def __init__(self, value):
+        self.value = value
+
+    def __get__(self, obj, objtype=None):
+        return self.value
+
+    def __set__(self, obj, value):
+        if value != self.value:
+            obj.should_update = True
+            self.value = value
+
+
+def state(initial=None):
+    return StateDescriptor(initial)
