@@ -1,50 +1,85 @@
-import datetime
+import abc
 import sys
-import threading
+import asyncio
+import tty
+import termios
+from typing import Tuple, Union, cast, Any
 
 from . import utils
 from . import keys
+from . import streams
 
 
-class UIBase:
+class UIBase(abc.ABC):
     def __init__(self):
         self.should_update = True
         self.running = True
-        self.update_thread = threading.Thread(target=self.__update)
-        self.render_thread = threading.Thread(target=self.__render)
+        self.__old_settings = termios.tcgetattr(sys.stdin.fileno())
+        self.reader = None
+        self.writer = None
+        self.return_value = None
 
     def run(self):
-        self.update_thread.start()
-        self.render_thread.start()
+        self.setup()
+        try:
+            asyncio.get_event_loop().run_until_complete(
+                asyncio.wait([self.__update(), self.__render()])
+            )
+        except KeyboardInterrupt:
+            ...
 
-    def stop(self):
+        self.teardown()
+        return self.return_value
+
+    def setup(self):
+        fd = sys.stdin.fileno()
+        tty.setcbreak(fd)
+        utils.hide_cursor()
+        utils.clear()
+
+    def teardown(self):
+        fd = sys.stdin.fileno()
+        termios.tcsetattr(fd, termios.TCSADRAIN, self.__old_settings)
+        utils.clear()
+        utils.show_cursor()
+        utils.home_pos()
+
+    def done(self, value: Any = None):
+        self.return_value = value
         self.running = False
-        # self.update_thread.join()
-        # self.render_thread.join()
 
-    def __update(self):
+    async def getkey(self, i: int = 1) -> Union[int, Tuple[int, ...]]:
+        reader = cast(streams.StandardStreamReader, self.reader)
+        data = await reader.read(i)
+        key = ord(data.decode("utf-8"))
+        return key
+
+    async def __update(self):
+        if not self.reader or self.writer:
+            self.reader, self.writer = await streams.get_streams()
+
         while self.running:
-            key = ord(utils.getch())
+            key = await self.getkey()
             if key == keys.q:
-                self.stop()
-                sys.exit(0)
-            self.should_update = self.update(key)
+                self.running = False
+            else:
+                self.should_update = await self.update(key)
 
-    def update(self, key: int) -> bool:
+    async def update(self, key: Union[int, Tuple[int, ...]]) -> bool:
         """Determines whether or not the
         next render cycle should occur.
         """
-        return True
+        return False
 
-    def __render(self):
-        utils.clear()
+    async def __render(self):
         while self.running:
-            utils.home_pos()
             if self.should_update:
-                self.render()
+                utils.home_pos()
+                await self.render()
+            await asyncio.sleep(0.016)
 
-    def render(self):
+    @abc.abstractmethod
+    async def render(self):
         """Renders out the UI element
         is called every time `update` return true
         """
-        print(datetime.datetime.now())

@@ -50,6 +50,14 @@ def home_pos():
     send("\u001b[H")
 
 
+def hide_cursor():
+    send("\x1b[?25l")
+
+
+def show_cursor():
+    print("\x1b[?25h")
+
+
 class Move:
     @classmethod
     def up(cls, val: int):
