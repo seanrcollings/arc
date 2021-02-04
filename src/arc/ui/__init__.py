@@ -1,1 +1,1 @@
-from .base import UIBase
+from .base import AUIBase, UIBase

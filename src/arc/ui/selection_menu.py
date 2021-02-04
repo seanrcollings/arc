@@ -22,7 +22,7 @@ class SelectionMenu(UIBase):
 
         super().__init__()
 
-    async def update(self, key):
+    def update(self, key):
         if key in keys.NUMBERS:
             value = int(chr(key))
             if value < len(self.options):
@@ -33,17 +33,20 @@ class SelectionMenu(UIBase):
             self.done((self.selected_index, self.options[self.selected_index]))
             return False
 
-        elif key in (keys.w, keys.k) and self.selected_index > 0:
+        elif key in (keys.w, keys.k, keys.UP) and self.selected_index > 0:
             self.selected_index -= 1
             return True
 
-        elif key in (keys.s, keys.j) and self.selected_index < len(self.options) - 1:
+        elif (
+            key in (keys.s, keys.j, keys.DOWN)
+            and self.selected_index < len(self.options) - 1
+        ):
             self.selected_index += 1
             return True
 
         return False
 
-    async def render(self):
+    def render(self):
         print(f"Press {fg.YELLOW}q{effects.CLEAR} to quit")
         for index, string in enumerate(self.options):
             if index == self.selected_index:
