@@ -32,7 +32,6 @@ Check out the most recent, and all, versions of Arc.
 - Added File type
 - General code improvements
 
-
 # v1.0 (First Major Version!)
 - Implmented different [ScriptTypes](./scripts/script_types.md) that interpret input differently
 - Added supprot for Type Alias conversions, like `List[int]` currently only supports Union, List, Set, and Tuple Alias
