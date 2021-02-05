@@ -2,6 +2,7 @@
 Check out the most recent, and all, versions of Arc.
 - [ARC - A Regular CLI: Change Log](#arc---a-regular-cli-change-log)
 - [Future](#future)
+- [v1.2](#v12)
 - [v1.1](#v11)
 - [v1.0 (First Major Version!)](#v10-first-major-version)
 - [v0.9 (Improved Parsing)](#v09-improved-parsing)
@@ -16,8 +17,16 @@ Check out the most recent, and all, versions of Arc.
 # Future
 - Type guessing
 - Better default helper text
-- Add more custom types (ie: for file objects)
 - Allow arbitrary nesting of utilites
+
+# v1.2
+- Improved Error handling
+  - replaced `debug` and `log` config options with a single `loglevel` that expects one of the standard python loglevels (`loggin.DEBUG`, `logging.WARNING` etc...)
+  - When `loglevel` is not set explictly, it is set to `logging.WARNGING`. All exceptions will just log the error message. When set to debug, tracebacks will be logged along with error messages
+- Added UI package and a basic `SelectionMenu` class. Check [here](./ui.md) for details.
+- Modified the `color` module
+  - Removed the `background` method on foreground colors. Now bacground colors are only available through the `bg` class
+  - added an `rgb` function to both `fg` and `bg` which take in values for Red, Green, and Blue in range [0, 255]
 
 # v1.1
 - Added File type
