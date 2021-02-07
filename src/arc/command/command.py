@@ -8,10 +8,10 @@ from arc.errors import ExecutionError, ScriptError, ValidationError
 from arc.parser.data_types import CommandNode
 
 from .__option import Option
-from .script_mixin import ScriptMixin
+from .command_mixin import CommandMixin
 
 
-class Command(utils.Helpful, ScriptMixin):
+class Command(utils.Helpful, CommandMixin):
     """Abstract Commad Class, all Command types must inherit from it
     Helpful is abstract, so this is as well"""
 

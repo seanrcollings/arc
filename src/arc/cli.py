@@ -20,10 +20,10 @@ class CLI(Command):
 
     def __init__(self, arcfile="./.arc"):
         super().__init__("cli", lambda: ...)
-        self.arcfile = arcfile
+        config.load_arc_file(arcfile)
 
     def __call__(self, execute: Optional[str] = None):
-        run(self, execute, self.arcfile)
+        run(self, execute)
 
     def command(self, *args, **kwargs):
         return self.subcommand(*args, **kwargs)

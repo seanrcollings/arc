@@ -5,10 +5,10 @@ from arc.parser.data_types import FLAG, POS_ARGUMENT, ArgNode, CommandNode
 
 from .__option import NO_DEFAULT, Option
 from .command import Command
-from .script_mixin import ScriptMixin
+from .command_mixin import CommandMixin
 
 
-class KeywordCommand(Command, ScriptMixin):
+class KeywordCommand(Command, CommandMixin):
     def __init__(self, name, function, *args, **kwargs):
         self.__pass_kwargs = False
         super().__init__(name, function, *args, **kwargs)

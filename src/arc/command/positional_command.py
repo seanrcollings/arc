@@ -4,10 +4,10 @@ from arc.parser.data_types import CommandNode, ArgNode, KEY_ARGUMENT, FLAG
 from arc.errors import ScriptError, ValidationError
 
 from .command import Command
-from .script_mixin import ScriptMixin
+from .command_mixin import CommandMixin
 
 
-class PositionalCommand(Command, ScriptMixin):
+class PositionalCommand(Command, CommandMixin):
     def __init__(self, *args, **kwargs):
         self.__pass_args = False
         super().__init__(*args, **kwargs)

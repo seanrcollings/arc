@@ -6,7 +6,7 @@ from arc.errors import ScriptError
 from .__option import Option, NO_DEFAULT, EMPTY
 
 
-class ScriptMixin:
+class CommandMixin:
     args: Dict[str, Option]
     meta: Any
 
