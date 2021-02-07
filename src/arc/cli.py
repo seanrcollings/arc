@@ -11,7 +11,7 @@ from . import utils
 
 class CLI(Command):
     """The CLI class is now implemented as a subclass
-    of the Command class and realliy just acts as a
+    of the Command class and reality just acts as a
     conveneince wrapper around Command creation and
     the run function.
 

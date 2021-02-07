@@ -37,12 +37,13 @@ class Command(utils.Helpful, CommandMixin):
         """decorator wrapper around install_script"""
 
         def decorator(function):
-            return self.install_script(name, function, command_type, **kwargs)
+            command = self.create_command(name, function, command_type, **kwargs)
+            return self.install_command(command)
 
         return decorator
 
-    def install_script(self, name, function, command_type=None, **kwargs):
-        """Installs a command to the container
+    def create_command(self, name, function, command_type=None, **kwargs):
+        """Creates a command object of provided command_type
 
         Fallback for script type:
           - provided arguement
@@ -58,7 +59,11 @@ class Command(utils.Helpful, CommandMixin):
         )
 
         command_type = command_type or CommandType.get_command_type(self)
-        command = command_factory(name, function, command_type, **kwargs)
+        return command_factory(name, function, command_type, **kwargs)
+
+    def install_command(self, command: "Command"):
+        """Installs a command object as a subcommands
+        of the current object"""
         self.subcommands[command.name] = command
 
         utils.logger.debug(
