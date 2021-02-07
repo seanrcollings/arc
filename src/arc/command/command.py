@@ -2,7 +2,6 @@ from abc import abstractmethod
 from typing import List, Dict, Callable, Any
 import re
 
-
 from arc import config, utils
 from arc.color import effects, fg
 from arc.errors import ExecutionError, ScriptError, ValidationError
@@ -12,14 +11,15 @@ from .__option import Option
 from .script_mixin import ScriptMixin
 
 
-class Script(utils.Helpful, ScriptMixin):
-    """Abstract Script Class, all Script types must inherit from it
+class Command(utils.Helpful, ScriptMixin):
+    """Abstract Commad Class, all Command types must inherit from it
     Helpful is abstract, so this is as well"""
 
     def __init__(self, name: str, function: Callable, meta: Any = None):
-
         self.name = name
         self.function: Callable = function
+        self.subcommands: Dict[str, Command] = {}
+
         self.args = self.build_args()
         self.validation_errors: List[str] = []
         self.meta = meta
@@ -33,8 +33,69 @@ class Script(utils.Helpful, ScriptMixin):
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
 
-    def __call__(self, command_node):
-        """External interface to execute a script
+    def subcommand(self, name=None, command_type=None, **kwargs):
+        """decorator wrapper around install_script"""
+
+        def decorator(function):
+            return self.install_script(name, function, command_type, **kwargs)
+
+        return decorator
+
+    def install_script(self, name, function, command_type=None, **kwargs):
+        """Installs a command to the container
+
+        Fallback for script type:
+          - provided arguement
+          - command_type of the container (if it's a util it can also inherit
+               it's type from it's parent)
+          - Defaults to KEYWORD
+
+        :returns: the Command object
+        """
+        from . import (  # pylint: disable=import-outside-toplevel
+            command_factory,
+            CommandType,
+        )
+
+        command_type = command_type or CommandType.get_command_type(self)
+        command = command_factory(name, function, command_type, **kwargs)
+        self.subcommands[command.name] = command
+
+        utils.logger.debug(
+            "%sregistered '%s' script to %s %s",
+            fg.YELLOW,
+            command.name,
+            self.name,
+            effects.CLEAR,
+        )
+
+        return command
+
+    def build_args(self) -> Dict[str, Option]:
+        """Builds the options and flag collections based
+        on the function definition
+        """
+        with self.ArgBuilder(self.function) as builder:
+            for idx, param in enumerate(builder):
+                meta = builder.get_meta(index=idx)
+                self.arg_hook(param, meta)
+
+            return builder.args
+
+    def run(self, command_node: CommandNode):
+        """External interface to execute a command"""
+        if command_node.empty_namespace():
+            return self.call_wrapper(command_node)
+        else:
+            subcommand_name = command_node.namespace.pop(0)
+            if subcommand_name not in self.subcommands:
+                raise ScriptError(f"The subcommand '{subcommand_name}' not found.")
+
+            subcommand = self.subcommands[subcommand_name]
+            return subcommand.run(command_node)
+
+    def call_wrapper(self, command_node):
+        """
 
         Handles a few things behind the scenes
             - calls self.validate_input
@@ -68,17 +129,6 @@ class Script(utils.Helpful, ScriptMixin):
             )
 
         self.cleanup()
-
-    def build_args(self) -> Dict[str, Option]:
-        """Builds the options and flag collections based
-        on the function definition
-        """
-        with self.ArgBuilder(self.function) as builder:
-            for idx, param in enumerate(builder):
-                meta = builder.get_meta(index=idx)
-                self.arg_hook(param, meta)
-
-            return builder.args
 
     @abstractmethod
     def execute(self, command_node: CommandNode):

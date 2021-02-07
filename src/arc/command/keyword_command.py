@@ -4,11 +4,11 @@ from arc.errors import ScriptError, ValidationError
 from arc.parser.data_types import FLAG, POS_ARGUMENT, ArgNode, CommandNode
 
 from .__option import NO_DEFAULT, Option
-from .script import Script
+from .command import Command
 from .script_mixin import ScriptMixin
 
 
-class KeywordScript(Script, ScriptMixin):
+class KeywordCommand(Command, ScriptMixin):
     def __init__(self, name, function, *args, **kwargs):
         self.__pass_kwargs = False
         super().__init__(name, function, *args, **kwargs)

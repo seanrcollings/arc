@@ -1,105 +1,58 @@
 import sys
-from typing import Dict, List, Union
+from typing import List, Union, Optional
 
-from arc.__script_container import ScriptContainer
-from arc import utils
-from arc.utility import Utility
-from arc.parser import parse, CommandNode
+from arc.parser import parse
 from arc import config
-from arc.errors import ArcError
-from arc.color import fg, effects
 
 
-class CLI(ScriptContainer, utils.Helpful):
-    def __init__(self, *args, utilities: list = None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.utilities: Dict[str, Utility] = {}
+from .command import Command
+from . import utils
 
-        if utilities is not None:
-            self.install_utilities(*utilities)
 
-    def __repr__(self):
-        string: str = "---ARC CLI---\n"
-        string += "Scripts: \n"
-        string += "\n".join(c for c in self.scripts)
-        string += "\nUtilities: \n"
-        string += "\n\t".join(repr(self.utilities[util]) for util in self.utilities)
+class CLI(Command):
+    """The CLI class is now implemented as a subclass
+    of the Command class and realliy just acts as a
+    conveneince wrapper around Command creation and
+    the run function.
 
-        return string
+    :param arcfile: arc config file to load. defaults to ./.arc
+    """
 
-    def __call__(self, execute: Union[List[str], str, None] = None):
-        """Arc CLI driver method
+    def __init__(self, arcfile="./.arc"):
+        super().__init__("cli", lambda: ...)
+        self.arcfile = arcfile
 
-		Tokenizes and Parses the user input, then passes
-		on the resulting NodeTree to the correct execution method
+    def __call__(self, execute: Optional[str] = None):
+        run(self, execute, self.arcfile)
 
-        Checks if a utility exists with provided user params
-		If one does exist, pass the command and user_input onto it's
-		execute method. If one doesn't exist, pass command and user_input
-		on to the global CLI execute method.
-		"""
-        input_list = execute if execute else sys.argv[1:]
-        command_node = parse(input_list)
-        utils.logger.debug(command_node)
+    def command(self, *args, **kwargs):
+        return self.subcommand(*args, **kwargs)
 
-        command_name = command_node.namespace[0]
+    def execute(self, _):
+        ...
 
-        if command_name in self.utilities:
-            self.__execute_utility(command_node)
-        elif command_name in self.scripts:
-            self.execute(command_node)
-        else:
-            raise ArcError(
-                f"No utility or script with name '{command_name}' registered"
-            )
-
-    def __execute_utility(self, command_node: CommandNode):
-        """Executes a utility
-		:param util_node: The Node tree created by the parser
-		"""
-
-        command_name = command_node.namespace.pop(0)
-        self.utilities[command_name](command_node)
-
-    def install_utilities(self, *utilities):
-        """Installs a series of utilities to the CLI"""
-        for utility in utilities:
-            if isinstance(utility, Utility):
-                if utility.script_type is None:
-                    utility.script_type = self.script_type
-                self.utilities[utility.name] = utility
-                utils.logger.debug(
-                    "%sRegistered '%s' utility %s",
-                    fg.YELLOW,
-                    utility.name,
-                    effects.CLEAR,
-                )
-            else:
-                raise ArcError(
-                    "Only instances of the 'Utility'" "class can be registerd to ARC",
-                )
+    def match_input(self, _):
+        ...
 
     def helper(self):
-        """Helper List function
-		Prints out the docstrings for the CLI's scripts
-		"""
-        print(f"Usage: python3 {sys.argv[0]} [COMMAND] [ARGUMENTS ...]\n\n",)
+        print("helper")
 
-        header = effects.BOLD + effects.UNDERLINE + "{title}" + effects.CLEAR + ":\n"
 
-        print(header.format(title="Installed Scripts"))
-        if len(self.scripts) > 0:
-            for _, script in self.scripts.items():
-                script.helper()
-        else:
-            print("No Scripts Installed")
+def run(
+    command: Command, execute: Optional[str] = None, arcfile: Optional[str] = None,
+):
+    """Core function of the ARC API.
+    Loads up the config file, parses the user input
+    And then passes control over to the `command` object.
 
-        if len(self.utilities) > 0:
-            print(f"\n{header.format(title='Installed Utilities')}")
-            print(
-                "Execute a utility with: "
-                f"{fg.YELLOW.bright}<utility>{config.utility_seperator}"
-                f"{fg.GREEN.bright}<subcommand>{effects.CLEAR}"
-            )
-            for utility in self.utilities.values():
-                utility.helper()
+    :param command: command object to run
+    :param execute: string to parse and execute. If it's not provided
+    sys.argv will be used
+    :param arcfile: file path to an arc config file to load
+    """
+    if arcfile:
+        config.load_arc_file(arcfile)
+    user_input: Union[List[str], str] = execute if execute else sys.argv[1:]
+    command_node = parse(user_input)
+    utils.logger.debug(command_node)
+    command.run(command_node)

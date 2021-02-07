@@ -1,10 +1,10 @@
 import sys
 
 from arc.parser.data_types import CommandNode
-from .script import Script
+from .command import Command
 
 
-class RawScript(Script):
+class RawCommand(Command):
     def execute(self, _command_node: CommandNode):
         if self.meta:
             self.function(*sys.argv, meta=self.meta)

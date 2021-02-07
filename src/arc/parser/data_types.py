@@ -67,3 +67,6 @@ class CommandNode:
         )
 
         return f"{command} {args}\n\n{key}"
+
+    def empty_namespace(self):
+        return len(self.namespace) == 0
