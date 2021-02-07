@@ -42,6 +42,17 @@ class Command(utils.Helpful, CommandMixin):
 
         return decorator
 
+    def base(self):
+        """Decorator to replace the function
+        of self
+        """
+
+        def decorator(function):
+            self.function = function
+            return self
+
+        return decorator
+
     def create_command(self, name, function, command_type=None, **kwargs):
         """Creates a command object of provided command_type
 
@@ -67,7 +78,7 @@ class Command(utils.Helpful, CommandMixin):
         self.subcommands[command.name] = command
 
         utils.logger.debug(
-            "%sregistered '%s' script to %s %s",
+            "%sregistered '%s' command to %s %s",
             fg.YELLOW,
             command.name,
             self.name,
@@ -100,7 +111,8 @@ class Command(utils.Helpful, CommandMixin):
             return subcommand.run(command_node)
 
     def call_wrapper(self, command_node):
-        """
+        """functionality wrapped around
+        actually calling self.function
 
         Handles a few things behind the scenes
             - calls self.validate_input
