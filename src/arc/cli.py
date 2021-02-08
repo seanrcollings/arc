@@ -5,11 +5,11 @@ from arc.parser import parse
 from arc import config
 
 
-from .command import Command
+from .command import KeywordCommand, Command
 from . import utils
 
 
-class CLI(Command):
+class CLI(KeywordCommand):
     """The CLI class is now implemented as a subclass
     of the Command class and reality just acts as a
     conveneince wrapper around Command creation and
@@ -18,8 +18,8 @@ class CLI(Command):
     :param arcfile: arc config file to load. defaults to ./.arc
     """
 
-    def __init__(self, arcfile="./.arc"):
-        super().__init__("cli", lambda: ...)
+    def __init__(self, name="cli", arcfile="./.arc"):
+        super().__init__(name, lambda: ...)
         config.load_arc_file(arcfile)
 
     def __call__(self, execute: Optional[str] = None):
