@@ -82,7 +82,7 @@ class ListConverter(BaseConverter):
 
     convert_to = list
 
-    def convert(self, value):
+    def convert(self, value: str):
         if "," in value:
             return value.replace(" ", "").split(",")
         raise ConversionError(

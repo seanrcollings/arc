@@ -1,10 +1,10 @@
 import os
-from arc import Utility
+from arc import group
 
-files = Utility("files")
+files = group("files")
 
 
-@files.script("create")
+@files.subcommand("create")
 def create(filename):
     """Creates a a specified file
     :param filename: file to be created
@@ -12,7 +12,7 @@ def create(filename):
     open(filename, "w+").close()
 
 
-@files.script("read")
+@files.subcommand("read")
 def read(filename):
     """Reads a specified file
     :param filename: file to be read
@@ -21,7 +21,7 @@ def read(filename):
         print(file.read())
 
 
-@files.script("append")
+@files.subcommand("append")
 def append(filename, write):
     """Appends text to the specified file
     :param filename: file to be appended to
@@ -31,7 +31,7 @@ def append(filename, write):
         file.write(write)
 
 
-@files.script("delete")
+@files.subcommand("delete")
 def delete(filename):
     """Deletes a specified file
     :param filename: file to be deleted

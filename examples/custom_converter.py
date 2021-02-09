@@ -41,7 +41,7 @@ cli = CLI()
 config.add_converter(CircleConverter)
 
 
-@cli.script("circle")
+@cli.command()
 def circle(new_circle: Circle):
     """Displays some info about the circle object the script is passed"""
     print(new_circle)

@@ -4,16 +4,18 @@ import re
 
 from arc import config, utils
 from arc.color import effects, fg
-from arc.errors import ExecutionError, ScriptError, ValidationError
+from arc.errors import ExecutionError, CommandError, ValidationError
 from arc.parser.data_types import CommandNode
 
 from .__option import Option
-from .command_mixin import CommandMixin
+from .helpers import ArgBuilder
 
 
-class Command(utils.Helpful, CommandMixin):
+class Command(utils.Helpful):
     """Abstract Commad Class, all Command types must inherit from it
     Helpful is abstract, so this is as well"""
+
+    __name__: str
 
     def __init__(self, name: str, function: Callable, meta: Any = None):
         self.name = name
@@ -33,11 +35,17 @@ class Command(utils.Helpful, CommandMixin):
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
 
+    def __call__(self, *args, **kwargs):
+        return self.function(*args, **kwargs)
+
     def subcommand(self, name=None, command_type=None, **kwargs):
         """decorator wrapper around install_script"""
 
         def decorator(function):
-            command = self.create_command(name, function, command_type, **kwargs)
+            command_name = name or function.__name__
+            command = self.create_command(
+                command_name, function, command_type, **kwargs
+            )
             return self.install_command(command)
 
         return decorator
@@ -73,7 +81,7 @@ class Command(utils.Helpful, CommandMixin):
         return command_factory(name, function, command_type, **kwargs)
 
     def install_command(self, command: "Command"):
-        """Installs a command object as a subcommands
+        """Installs a command object as a subcommand
         of the current object"""
         self.subcommands[command.name] = command
 
@@ -91,7 +99,7 @@ class Command(utils.Helpful, CommandMixin):
         """Builds the options and flag collections based
         on the function definition
         """
-        with self.ArgBuilder(self.function) as builder:
+        with ArgBuilder(self.function) as builder:
             for idx, param in enumerate(builder):
                 meta = builder.get_meta(index=idx)
                 self.arg_hook(param, meta)
@@ -105,7 +113,7 @@ class Command(utils.Helpful, CommandMixin):
         else:
             subcommand_name = command_node.namespace.pop(0)
             if subcommand_name not in self.subcommands:
-                raise ScriptError(f"The subcommand '{subcommand_name}' not found.")
+                raise CommandError(f"The subcommand '{subcommand_name}' not found.")
 
             subcommand = self.subcommands[subcommand_name]
             return subcommand.run(command_node)
@@ -140,7 +148,7 @@ class Command(utils.Helpful, CommandMixin):
             finally:
                 utils.logger.debug("---------------------------")
         else:
-            raise ScriptError(
+            raise CommandError(
                 "Pre-script validation checks failed: \n",
                 "\n".join(self.validation_errors),
             )

@@ -1,29 +1,28 @@
 from io import StringIO
 from unittest.mock import patch
-from tests.base_test import BaseTest
+from unittest import TestCase
 from arc.utilities.debug import debug
+from arc import CLI
 
 
-class TestDebug(BaseTest):
+class TestDebug(TestCase):
     """For now, just test if these execute at all, not what they return"""
 
     def setUp(self):
-        self.cli = self.create_cli(utilities=[debug])
+        self.cli = CLI()
+        self.cli.install_command(debug)
 
     def test_installed(self):
-        assert debug is self.cli.utilities[debug.name]
+        assert debug is self.cli.subcommands[debug.name]
 
     @patch("sys.stdout", new_callable=StringIO)
-    def test_config(self, mock_out):
-        with patch("sys.argv", new=["dir", "debug:config"]):
-            self.cli()
+    def test_config(self, _):
+        self.cli("debug:config")
 
     @patch("sys.stdout", new_callable=StringIO)
-    def test_converters(self, mock_out):
-        with patch("sys.argv", new=["dir", "debug:converters"]):
-            self.cli()
+    def test_converters(self, _):
+        self.cli("debug:converters")
 
     @patch("sys.stdout", new_callable=StringIO)
-    def test_arcfile(self, mock_out):
-        with patch("sys.argv", new=["dir", "debug:arcfile"]):
-            self.cli()
+    def test_arcfile(self, _):
+        self.cli("debug:arcfile")

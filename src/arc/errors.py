@@ -20,7 +20,7 @@ class ExecutionError(ArcError):
     """Raised if there is a problem during the execution of a script"""
 
 
-class ScriptError(ArcError):
+class CommandError(ArcError):
     """Raised when there is an error in the creation of a script"""
 
 

@@ -1,28 +1,40 @@
-from unittest import mock
-from tests.base_test import BaseTest
-from arc.errors import ArcError
-from arc import Utility
+from unittest import TestCase, mock
+
+from arc import CLI, group
+from arc.errors import CommandError
+
+from .mock import mock_command
 
 
-class TestCLI(BaseTest):
+class TestCLI(TestCase):
     def setUp(self):
-        self.cli = self.create_cli()
+        self.cli = mock_command("cli", CLI)
 
-    def test_register_utilities(self):
-        util1 = Utility("util1")
-        util2 = Utility("util2")
-        self.cli.install_utilities(util1, util2)
-        self.assertIn(util1, self.cli.utilities.values())
-        self.assertIn(util2, self.cli.utilities.values())
+        @self.cli.subcommand()
+        def func1(x):
+            ...
 
-    def test_execute(self):
-        self.cli("func1 x=2")
-        self.cli.scripts["func1"].function.assert_called_with(x="2")
+        @self.cli.subcommand()
+        def func2(x: int):
+            ...
 
-        self.cli("func2 x=2")
-        self.cli.scripts["func2"].function.assert_called_with(x=2)
+    def test_install_group(self):
+        g1 = group("g1")
+        self.cli.install_command(g1)
+        self.assertIn(g1, self.cli.subcommands.values())
+
+        g2 = group("g2")
+        self.cli.install_command(g2)
+        self.assertIn(g2, self.cli.subcommands.values())
+
+    # def test_execute(self):
+    #     self.cli("func1 x=2")
+    #     self.cli.subcommands["func1"].function.assert_called_with(x="2")
+
+    #     self.cli("func2 x=2")
+    #     self.cli.subcommands["func2"].function.assert_called_with(x=2)
 
     @mock.patch("arc.utils.handle")
-    def test_nonexistant_utility(self, _):
-        with self.assertRaises(ArcError):
-            self.cli("doesnotexist:func1 x=2")
+    def test_nonexistant_command(self, _):
+        with self.assertRaises(CommandError):
+            self.cli("doesnotexist x=2")

@@ -22,7 +22,7 @@ class Tokenizer:
 
     TOKEN_TYPES = {
         FLAG: fr"\A{config.flag_denoter}(?P<name>\b\w+)\b",
-        ARGUMENT: fr"\A\b(?P<name>[a-zA-Z_]+\b){config.options_seperator}(?P<value>[\w\s\-\,\._]+)\b",
+        ARGUMENT: fr"\A\b(?P<name>[a-zA-Z_0-9]+\b){config.options_seperator}(?P<value>[\w\s\-\,\._]+)",
         COMMAND: r"\A\b((?:(?:\w+:)+\w+)|\w+)\b",
     }
 

@@ -10,4 +10,5 @@ __all__ = [
     "BoolConverter",
     "ListConverter",
     "FileConverter",
+    "AliasConverter",
 ]

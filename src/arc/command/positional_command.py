@@ -1,10 +1,10 @@
 from typing import List, Any
 
 from arc.parser.data_types import CommandNode, ArgNode, KEY_ARGUMENT, FLAG
-from arc.errors import ScriptError, ValidationError
+from arc.errors import CommandError, ValidationError
 
 from .command import Command
-from .command_mixin import CommandMixin
+from .helpers import CommandMixin
 
 
 class PositionalCommand(Command, CommandMixin):
@@ -44,7 +44,7 @@ class PositionalCommand(Command, CommandMixin):
         idx = meta["index"]
 
         if param.kind is param.VAR_KEYWORD:
-            raise ScriptError(
+            raise CommandError(
                 "Positional Arc scripts do not allow **kwargs.",
                 "If you wish to use it, change the script type to KEYWORD",
                 "in @cli.script. However, be aware that this will",
@@ -53,7 +53,7 @@ class PositionalCommand(Command, CommandMixin):
 
         if param.kind is param.VAR_POSITIONAL:
             if idx != meta["length"] - 1:
-                raise ScriptError(
+                raise CommandError(
                     "The variable postional arguement (*args)",
                     "must be the last argument of the script",
                 )

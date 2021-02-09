@@ -1,9 +1,9 @@
-from tests.base_test import BaseTest
+from unittest import TestCase
 from arc.parser import Parser, Tokenizer
 from arc.parser.data_types import CommandNode
 
 
-class TestParser(BaseTest):
+class TestParser(TestCase):
     TEST_UTIL_TOKENS = Tokenizer(
         ["util:script", "option=value", "option=value", "--flag"]
     ).tokenize()

@@ -1,61 +1,49 @@
-from tests.base_test import BaseTest
+from unittest import TestCase
+from arc.convert import *
+from arc.errors import ConversionError
 
 
-class TestConverters(BaseTest):
-    def setUp(self):
-        self.cli = self.create_cli()
-
-    def test_string(self):
-        func = self.create_script(self.cli, "string", lambda name: name)
-        self.cli("string name=Sean")
-        func.assert_called_with(name="Sean")
-
+class TestConverters(TestCase):
     def test_int(self):
-        func = self.create_script(
-            self.cli, "int", lambda number: number, annotations={"number": int}
-        )
-        self.cli("int number=5")
-        func.assert_called_with(number=5)
+        self.assertEqual(IntConverter(int).convert("1"), 1)
+        self.assertEqual(IntConverter(int).convert("2"), 2)
+        self.assertEqual(IntConverter(int).convert("213131"), 213131)
+
+        with self.assertRaises(ConversionError):
+            IntConverter(int).convert("no numbers")
 
     def test_float(self):
-        func = self.create_script(
-            self.cli, "float", lambda number: number, annotations={"number": float}
-        )
-        self.cli("float number=4.5")
-        func.assert_called_with(number=4.5)
+        self.assertEqual(FloatConverter(float).convert("1"), 1.0)
+        self.assertEqual(FloatConverter(float).convert("1.2"), 1.2)
+        self.assertEqual(FloatConverter(float).convert("2.32"), 2.32)
+        self.assertEqual(FloatConverter(float).convert("213.131"), 213.131)
+
+        with self.assertRaises(ConversionError):
+            FloatConverter(float).convert("no numbers")
 
     def test_byte(self):
-        func = self.create_script(
-            self.cli, "byte", lambda string: string, annotations={"string": bytes}
-        )
-        self.cli("byte string=hello")
-        func.assert_called_with(string=b"hello")
+        self.assertEqual(BytesConverter(bytes).convert("string"), b"string")
 
     def test_list(self):
-        func = self.create_script(
-            self.cli, "list", lambda test: test, annotations={"test": list}
-        )
-        self.cli("list test=1,2,3,4")
-        func.assert_called_with(test=["1", "2", "3", "4"])
+        self.assertEqual(ListConverter(list).convert("1,2,3"), ["1", "2", "3"])
+        self.assertEqual(ListConverter(list).convert("a,b,c"), ["a", "b", "c"])
+
+        with self.assertRaises(ConversionError):
+            ListConverter(list).convert("no commas")
 
     def test_bool(self):
-        func = self.create_script(
-            self.cli, "bool", lambda yes: yes, annotations={"yes": bool}
-        )
-        true_values = [1, 2, 111, "true", "t"]
-        for value in true_values:
-            self.cli(f"bool yes={value}")
-            func.assert_called_with(yes=True)
+        self.assertEqual(BoolConverter(bool).convert("0"), False)
+        self.assertEqual(BoolConverter(bool).convert("1"), True)
 
-        false_values = [0, "false", "f"]
-        for value in false_values:
-            self.cli(f"bool yes={value}")
-            func.assert_called_with(yes=False)
+        self.assertEqual(BoolConverter(bool).convert("True"), True)
+        self.assertEqual(BoolConverter(bool).convert("T"), True)
+        self.assertEqual(BoolConverter(bool).convert("true"), True)
+        self.assertEqual(BoolConverter(bool).convert("t"), True)
 
-    # def test_invalid_converters(self):
-    #     func = MagicMock()
-    #     with self.assertRaises(ArcError):
-    #         self.cli.script(name="string",
-    #                    options=["<str:name><int:name>"])(function=func)
-    #     with self.assertRaises(ArcError):
-    #         self.cli.script(name="string", options=["<str::name>"])(function=func)
+        self.assertEqual(BoolConverter(bool).convert("False"), False)
+        self.assertEqual(BoolConverter(bool).convert("F"), False)
+        self.assertEqual(BoolConverter(bool).convert("false"), False)
+        self.assertEqual(BoolConverter(bool).convert("f"), False)
+
+        with self.assertRaises(ConversionError):
+            BoolConverter(bool).convert("ainfeainfeain")

@@ -1,11 +1,11 @@
 from http.client import HTTPSConnection
 
-from arc import Utility
+from arc import group
 
-https = Utility("https")
+https = group("https")
 
 
-@https.script("get")
+@https.subcommand()
 def get(url, endpoint):
     conn = HTTPSConnection(url)
     conn.request("GET", endpoint)

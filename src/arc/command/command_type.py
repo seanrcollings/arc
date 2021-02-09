@@ -42,7 +42,7 @@ class CommandType:
     @classmethod
     def get_command_type(cls, command: Command):
         for command_type, command_class in cls.command_type_mappings.items():
-            if isinstance(command, command_class):
+            if isinstance(command, command_class) or command is command_class:
                 return command_type
 
 

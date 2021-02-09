@@ -1,10 +1,10 @@
 from typing import List, Set, Tuple, Dict, Union
-from tests.base_test import BaseTest
+from unittest import TestCase
 from arc.errors import ConversionError
 from arc.convert import AliasConverter as ca
 
 
-class TestAliasConverter(BaseTest):
+class TestAliasConverter(TestCase):
     def test_unsupported_type(self):
         with self.assertRaises(ConversionError):
             ca(Dict[str, int]).convert("")

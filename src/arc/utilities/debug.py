@@ -1,13 +1,13 @@
 import os
 import random
 
-from arc import Utility, config
+from arc import group, config
 from arc.formatters.table import Table
 
-debug = Utility("debug", "Various development-centric scripts")
+debug = group("debug")
 
 
-@debug.script("config")
+@debug.subcommand("config")
 def display_config():
     """Displays information about the current config of the Arc app"""
     config_items = [
@@ -24,7 +24,7 @@ def display_config():
     print(table)
 
 
-@debug.script("converters")
+@debug.subcommand("converters")
 def converters():
     """Displays information aboubt the currently accessible converters"""
     filler_words = ["foo", "bar", "baz", "buzz"]  # Randomly pick for filler information
@@ -41,7 +41,7 @@ def converters():
     print(table)
 
 
-@debug.script("arcfile")
+@debug.subcommand("arcfile")
 def arcfile():
     """Prints the contents of the .arc file in the CWD"""
     if os.path.isfile(".arc"):

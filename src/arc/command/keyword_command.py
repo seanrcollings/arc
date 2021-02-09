@@ -1,11 +1,11 @@
 from typing import Any, Dict, List, Union, cast
 
-from arc.errors import ScriptError, ValidationError
+from arc.errors import CommandError, ValidationError
 from arc.parser.data_types import FLAG, POS_ARGUMENT, ArgNode, CommandNode
 
 from .__option import NO_DEFAULT, Option
 from .command import Command
-from .command_mixin import CommandMixin
+from .helpers import CommandMixin
 
 
 class KeywordCommand(Command, CommandMixin):
@@ -40,7 +40,7 @@ class KeywordCommand(Command, CommandMixin):
                     name=node.name, annotation=str, default=NO_DEFAULT
                 )
             elif not option:
-                raise ScriptError(f"Option '{node.name}' not recognized")
+                raise CommandError(f"Option '{node.name}' not recognized")
 
             if node.kind is FLAG:
                 option.value = not option.value
@@ -55,7 +55,7 @@ class KeywordCommand(Command, CommandMixin):
         idx = meta["index"]
 
         if param.kind is param.VAR_POSITIONAL:
-            raise ScriptError(
+            raise CommandError(
                 "Keyword Arc scripts do not allow *args.",
                 "If you wish to use it, change the script type to POSITIONAL",
                 "However, be aware that this will",
@@ -64,7 +64,7 @@ class KeywordCommand(Command, CommandMixin):
 
         if param.kind is param.VAR_KEYWORD:
             if idx != meta["length"] - 1:
-                raise ScriptError(
+                raise CommandError(
                     "The variable keyword arguement (**kwargs)",
                     "must be the last argument of the script",
                 )
