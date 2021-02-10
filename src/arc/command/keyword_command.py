@@ -6,6 +6,7 @@ from arc.parser.data_types import FLAG, POS_ARGUMENT, ArgNode, CommandNode
 from .__option import NO_DEFAULT, Option
 from .command import Command
 from .helpers import CommandMixin
+from .context import Context
 
 
 class KeywordCommand(Command, CommandMixin):
@@ -48,11 +49,15 @@ class KeywordCommand(Command, CommandMixin):
                 option.value = node.value
                 option.convert()
 
-        self.add_meta()
+        self.add_context()
         self.assert_args_filled()
 
     def arg_hook(self, param, meta):
         idx = meta["index"]
+
+        if param.annotation is Context:
+            self.context_arg_name = param.name
+            return
 
         if param.kind is param.VAR_POSITIONAL:
             raise CommandError(

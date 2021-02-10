@@ -37,7 +37,7 @@ class PositionalCommand(Command, CommandMixin):
                 option.value = node.value
                 option.convert()
 
-        self.add_meta()
+        self.add_context()
         self.assert_args_filled()
 
     def arg_hook(self, param, meta):

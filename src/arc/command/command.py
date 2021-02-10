@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import List, Dict, Callable, Any
+from typing import List, Dict, Callable, Optional
 import re
 
 from arc import config, utils
@@ -17,14 +17,16 @@ class Command(utils.Helpful):
 
     __name__: str
 
-    def __init__(self, name: str, function: Callable, meta: Any = None):
+    def __init__(self, name: str, function: Callable, context: Optional[Dict] = None):
         self.name = name
         self.function: Callable = function
         self.subcommands: Dict[str, Command] = {}
 
-        self.args = self.build_args()
         self.validation_errors: List[str] = []
-        self.meta = meta
+        self.context = context or {}
+        self.context_arg_name: Optional[str] = None
+
+        self.args = self.build_args()
 
         self.doc = None
         if self.function.__doc__ is not None:
@@ -83,6 +85,7 @@ class Command(utils.Helpful):
     def install_command(self, command: "Command"):
         """Installs a command object as a subcommand
         of the current object"""
+        command.context = self.context | command.context  # type: ignore
         self.subcommands[command.name] = command
 
         utils.logger.debug(

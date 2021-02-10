@@ -5,6 +5,6 @@ from .raw_command import RawCommand
 from .command_type import CommandType, command_factory
 
 
-def namespace(name: str, command_type=CommandType.KEYWORD):
+def namespace(name: str, command_type=CommandType.KEYWORD, **kwargs):
     """Creates a Command Group"""
-    return command_factory(name, lambda: ..., command_type)
+    return command_factory(name, lambda: ..., command_type, **kwargs)
