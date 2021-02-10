@@ -9,7 +9,7 @@ from arc import CLI
 from arc import ScriptType as st
 cli = CLI()
 
-@cli.script("greeting", st.KEYWORD) # Since it is the default, specifying here is optional
+@cli.subcommand(greeting", st.KEYWORD) # Since it is the default, specifying here is optional
 def test(name="Jotaro Kujo"):
     print(f"Greeting, {name}!")
 
@@ -26,7 +26,7 @@ from arc import ScriptType as st
 
 cli = CLI()
 
-@cli.script("greeting", st.KEYWORD)
+@cli.subcommand(greeting", st.KEYWORD)
 def test(name="Jotaro Kujo", **kwargs):
     print(f"Greeting, {name}!")
     if len(kwargs) > 0:
@@ -52,7 +52,7 @@ from arc import ScriptType as st
 
 cli = CLI()
 
-@cli.script("greeting", st.POSITIONAL)
+@cli.subcommand(greeting", st.POSITIONAL)
 def test(name="Jotaro Kujo"):
     print(f"Greeting, {name}!")
 
@@ -69,7 +69,7 @@ from arc import ScriptType as st
 
 cli = CLI()
 
-@cli.script("greeting", st.POSITIONAL)
+@cli.subcommand(greeting", st.POSITIONAL)
 def test(name="Jotaro Kujo", *args):
     print(f"Greeting, {name}!")
     if len(args) > 0:
@@ -93,7 +93,7 @@ from arc import ScriptType as st
 
 cli = CLI()
 
-@cli.script("raw", st.RAW)
+@cli.subcommand(raw", st.RAW)
 def test(*args):
     print("Here the input!")
     print(*args)
@@ -116,7 +116,7 @@ cli = CLI(script_type=st.KEYWORD) # At CLI level
 
 util = Utility("name", script_type=st.POSITIONAL) # at Utility level
 
-@cli.script("greeting", st.RAW)  # At Script level
+@cli.subcommand(greeting", st.RAW)  # At Script level
 def greeting(*args):
     print(args)
 ```
@@ -131,7 +131,7 @@ cli = CLI(utilities=[util], script_type=st.POSITIONAL)
 # since util doesn't specify a script type,
 # when it's registered it inherits it form the CLI
 
-@util.script("greeting") # This script's script type would also be Positional
+@util.subcommand(greeting") # This script's script type would also be Positional
 def greeting(*args):
     print(args)
 
@@ -143,7 +143,7 @@ from arc import CLI, Utility, ScriptType as st
 
 util = Utility("name") # util is created with Default script type
 
-@util.script("greeting") # This script is created with the util's script type
+@util.subcommand(greeting") # This script is created with the util's script type
 def greeting(**kwargs):
     print(args)
 
@@ -162,7 +162,7 @@ util3 = Utility("name3")
 cli = CLI(utilities=[util, util2, util3], script_type=st.POSITIONAL)
 # all would recieve the POSITIONAL script type
 
-@util.script("greeting") # This script's script type would be Positional
+@util.subcommand(greeting") # This script's script type would be Positional
 def greeting(*args):
     print(args)
 

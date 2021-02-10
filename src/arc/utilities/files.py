@@ -1,7 +1,7 @@
 import os
-from arc import group
+from arc import namespace
 
-files = group("files")
+files = namespace("files")
 
 
 @files.subcommand("create")

@@ -1,7 +1,7 @@
-from arc import CLI, group
+from arc import CLI, namespace
 
 cli = CLI()
-converse = group("converse")
+converse = namespace("converse")
 cli.install_command(converse)
 
 

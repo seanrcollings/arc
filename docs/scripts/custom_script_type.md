@@ -71,7 +71,7 @@ st.add_script_type("test", TestScript) # "test".upper() will act as your identif
 cli = CLI()
 
 
-@cli.script("test", st.TEST)
+@cli.subcommand(test", st.TEST)
 def test(arg1, arg2):
     pass
 

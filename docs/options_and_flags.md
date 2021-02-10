@@ -9,7 +9,7 @@ Let's take our example from before, and add an option the user can type in to be
 from arc import CLI
 cli = CLI()
 
-@cli.script()
+@cli.command()
 def greet(name):
     '''Command that greets someone'''
     print(f"Hello, {name}!")
@@ -36,7 +36,7 @@ If you add a default value to the arguement, the option becomes optional
 from arc import CLI
 cli = CLI()
 
-@cli.script()
+@cli.command()
 def greet(name="Joseph Joestar"):
     '''Command that greets someone'''
     print(f"Hello, {name}!")
@@ -57,7 +57,7 @@ Flags are specified by giving a function argument a `bool` type hint. Flags look
 from arc import CLI
 cli = CLI()
 
-@cli.script("hello")
+@cli.subcommand(hello")
 def hello(name, reverse: bool):
     '''Command that prints greets someone'''
     if reverse:

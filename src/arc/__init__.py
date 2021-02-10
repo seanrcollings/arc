@@ -4,6 +4,6 @@ config = Config()
 
 # # pylint: disable=wrong-import-position
 from arc.cli import CLI, run
-from arc.command import CommandType, group
+from arc.command import CommandType, namespace
 
 __version__ = "1.0.1"

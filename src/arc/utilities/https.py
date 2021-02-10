@@ -1,8 +1,8 @@
 from http.client import HTTPSConnection
 
-from arc import group
+from arc import namespace
 
-https = group("https")
+https = namespace("https")
 
 
 @https.subcommand()

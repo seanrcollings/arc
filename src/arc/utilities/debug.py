@@ -1,10 +1,10 @@
 import os
 import random
 
-from arc import group, config
+from arc import namespace, config
 from arc.formatters.table import Table
 
-debug = group("debug")
+debug = namespace("debug")
 
 
 @debug.subcommand("config")

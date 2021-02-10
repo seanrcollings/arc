@@ -40,7 +40,7 @@ from arc import CLI
 
 cli = CLI()
 
-@cli.script("number_type")
+@cli.subcommand(number_type")
 def number_type(number: int):
     '''Prints the type of a number'''
     print(type(number))
@@ -58,7 +58,7 @@ $ python3 example.py number_type number=5
 from arc import CLI
 cli = CLI()
 
-@cli.script("float_type")
+@cli.subcommand(float_type")
 def float_type(number: float):
     '''Prints the type of a float'''
     print(type(number))
@@ -113,7 +113,7 @@ from arc.convert.input import convert_to_int
 
 cli = CLI()
 
-@cli.script("example")
+@cli.subcommand(example")
 def example():
   cool_number = convert_to_int("Please enter a number: ")
   print(type(cool_number)) # '<class : int>'

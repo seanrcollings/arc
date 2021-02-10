@@ -8,7 +8,7 @@ from arc import CLI
 from arc.types import File
 cli = CLI()
 
-@cli.script()
+@cli.command()
 def file_test(file=File[File.READ]): # file will be of custom type File, but has the same interface as the TextIOWrapper returned by open()
     print(file.readlines())
 ```
@@ -24,7 +24,7 @@ from arc import CLI
 from arc.types import File
 cli = CLI()
 
-@cli.script()
+@cli.command()
 def file_test(file=File[File.READ]):
     print(file.readlines())
     file.close()

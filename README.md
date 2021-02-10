@@ -30,7 +30,7 @@ from arc import CLI
 
 cli = CLI()
 
-@cli.script("hello")
+@cli.command("hello")
 def hello():
     print("Hello, World!")
 

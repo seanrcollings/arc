@@ -16,7 +16,7 @@ from arc import CLI
 
 cli = CLI()
 
-@cli.script()
+@cli.command()
 def hello_world():
     print("Hello World!")
 

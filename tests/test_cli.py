@@ -1,6 +1,6 @@
 from unittest import TestCase, mock
 
-from arc import CLI, group
+from arc import CLI, namespace
 from arc.errors import CommandError
 
 from .mock import mock_command
@@ -19,11 +19,11 @@ class TestCLI(TestCase):
             ...
 
     def test_install_group(self):
-        g1 = group("g1")
+        g1 = namespace("g1")
         self.cli.install_command(g1)
         self.assertIn(g1, self.cli.subcommands.values())
 
-        g2 = group("g2")
+        g2 = namespace("g2")
         self.cli.install_command(g2)
         self.assertIn(g2, self.cli.subcommands.values())
 

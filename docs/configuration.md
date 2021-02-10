@@ -16,7 +16,7 @@ from arc import CLI, Config
 Config.log = True
 cli = CLI()
 
-@cli.script("hello")
+@cli.subcommand(hello")
 def hello():
     '''Command that prints Hello World'''
     print("Hello, World!")
