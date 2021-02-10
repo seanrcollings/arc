@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import List, Dict, Callable, Optional
+from typing import List, Dict, Callable, Optional, Tuple
 import re
 
 from arc import config, utils
@@ -9,6 +9,16 @@ from arc.parser.data_types import CommandNode
 
 from .__option import Option
 from .helpers import ArgBuilder
+from .context import Context
+
+
+class FunctionWrapper:
+    def __init__(self, command, function):
+        self.command = command
+        self.function = function
+
+    def __call__(self, *args, **kwargs):
+        ...
 
 
 class Command(utils.Helpful):
@@ -24,9 +34,15 @@ class Command(utils.Helpful):
 
         self.validation_errors: List[str] = []
         self.context = context or {}
-        self.context_arg_name: Optional[str] = None
 
-        self.args = self.build_args()
+        # arc_args are special argumetnts
+        # that arc will inject into the
+        # function call. These cannot be provide
+        # by the execution string and are matched
+        # by type
+        self.args, self.arc_args = self.build_args()
+        if context_option := self.arc_args.get("context"):
+            context_option.value = Context(self.context)
 
         self.doc = None
         if self.function.__doc__ is not None:
@@ -98,8 +114,8 @@ class Command(utils.Helpful):
 
         return command
 
-    def build_args(self) -> Dict[str, Option]:
-        """Builds the options and flag collections based
+    def build_args(self) -> Tuple[Dict[str, Option], Dict[str, Option]]:
+        """Builds the args and arc_args collections based
         on the function definition
         """
         with ArgBuilder(self.function) as builder:
@@ -107,7 +123,7 @@ class Command(utils.Helpful):
                 meta = builder.get_meta(index=idx)
                 self.arg_hook(param, meta)
 
-            return builder.args
+            return builder.args, builder.arc_args
 
     def run(self, command_node: CommandNode):
         """External interface to execute a command"""

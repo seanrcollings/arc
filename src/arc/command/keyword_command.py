@@ -6,7 +6,6 @@ from arc.parser.data_types import FLAG, POS_ARGUMENT, ArgNode, CommandNode
 from .__option import NO_DEFAULT, Option
 from .command import Command
 from .helpers import CommandMixin
-from .context import Context
 
 
 class KeywordCommand(Command, CommandMixin):
@@ -16,6 +15,7 @@ class KeywordCommand(Command, CommandMixin):
 
     def execute(self, command_node: CommandNode):
         args: Dict[str, Any] = {key: obj.value for key, obj in self.args.items()}
+        args.update({obj.name: obj.value for obj in self.arc_args.values()})
 
         self.function(**args)
 
@@ -33,15 +33,15 @@ class KeywordCommand(Command, CommandMixin):
         """
 
         for node in option_nodes:
-            node.name = cast(str, node.name)
-            option: Union[Option, None] = self.args.get(node.name)
+            name = cast(str, node.name)
+            option: Union[Option, None] = self.args.get(name)
 
             if self.__pass_kwargs and not option:
-                self.args[node.name] = option = Option(
-                    name=node.name, annotation=str, default=NO_DEFAULT
+                self.args[name] = option = Option(
+                    name=name, annotation=str, default=NO_DEFAULT
                 )
             elif not option:
-                raise CommandError(f"Option '{node.name}' not recognized")
+                raise CommandError(f"Option '{name}' not recognized")
 
             if node.kind is FLAG:
                 option.value = not option.value
@@ -49,15 +49,10 @@ class KeywordCommand(Command, CommandMixin):
                 option.value = node.value
                 option.convert()
 
-        self.add_context()
         self.assert_args_filled()
 
     def arg_hook(self, param, meta):
         idx = meta["index"]
-
-        if param.annotation is Context:
-            self.context_arg_name = param.name
-            return
 
         if param.kind is param.VAR_POSITIONAL:
             raise CommandError(

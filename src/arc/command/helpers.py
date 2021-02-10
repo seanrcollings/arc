@@ -17,19 +17,13 @@ class CommandMixin:
             if option.value is NO_DEFAULT:
                 raise CommandError(f"No value for required option '{option.name}'")
 
-    def add_context(self):
-        if self.context and self.context_arg_name:
-            self.args[self.context_arg_name] = arg = Option(
-                name="context", annotation=Any, default=NO_DEFAULT
-            )
-            arg.value = Context(self.context)
-
 
 class ArgBuilder:
     def __init__(self, function):
         self.__sig = inspect.signature(function)
         self.__length = len(self.__sig.parameters.values())
         self.__args: Dict[str, Option] = {}
+        self.__arc_args: Dict[str, Option] = {}
 
     def __enter__(self):
         return self
@@ -49,11 +43,17 @@ class ArgBuilder:
     def args(self):
         return self.__args
 
+    @property
+    def arc_args(self):
+        return self.__arc_args
+
     def add_arg(self, param: inspect.Parameter):
         if param.annotation is Context:
-            return
+            self.__arc_args["context"] = Option(
+                param.name, param.annotation, NO_DEFAULT
+            )
 
-        if param.annotation is bool:
+        elif param.annotation is bool:
             default = False if param.default is EMPTY else param.default
             self.__args[param.name] = Option(param.name, param.annotation, default)
 

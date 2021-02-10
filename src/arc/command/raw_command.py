@@ -6,10 +6,9 @@ from .command import Command
 
 class RawCommand(Command):
     def execute(self, _command_node: CommandNode):
-        if self.meta:
-            self.function(*sys.argv, meta=self.meta)
-        else:
-            self.function(*sys.argv)
+        self.function(
+            *sys.argv, {obj.name: obj.value for obj in self.arc_args.values()}
+        )
 
     def match_input(self, _command_node: CommandNode):
         ...
