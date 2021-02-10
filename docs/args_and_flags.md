@@ -1,9 +1,9 @@
-# Options and Flags
+# Arguments and Flags
 
-## Command Options
-When it comes to CLI's you need to be able to accept user input. Arc will look at the arguements that the function accepts to determine the possible options for the script.
+## Command Argumaents
+When it comes to CLI's you need to be able to accept user input. Arc will look at the arguements that the function accepts to determine the possible arguments for the command.
 
-Let's take our example from before, and add an option the user can type in to be printed instead of "Hello, World!"
+Let's take our example from before, and add an option so the user can enter in a name instead of "Hello, World!"
 
 ```py
 from arc import CLI
@@ -21,8 +21,8 @@ $ python3 example.py greet name=Sean
 Hello, Sean!
 ```
 
-Easy as that! Options are specified on the command line with `[OPTION_NAME]=[OPTION_VALUE]`.
-All options specified in the options list will be passed to the function as arguement with the same name.
+Easy as that! Arguments are specified on the command line with `[OPTION_NAME]=[OPTION_VALUE]`.
+All arguments specified in the arguments list will be passed to the function as arguement with the same name.
 
 In the above example, the `name` option is required for the command execute.
 
@@ -49,6 +49,9 @@ $ python3 example.py greet
 Hello, Joseph Joestar!
 ```
 
+## Type Conversion
+Arc supports argument type conversion. Refer to [docs/converters.md](./converters.md) for more information
+
 ## Flags
 Flags are specified by giving a function argument a `bool` type hint. Flags look like your typical unix command line switch `--flag_name`.
 
@@ -72,9 +75,16 @@ $ python3 example.py hello name=Sean
 Hello, Sean!
 ```
 
-The script prints exactly the same, just as before, now adding the flag
+The command prints exactly the same, just as before, now adding the flag
 ```out
 $ python3 example.py hello name=Sean --reverse
 Hello, naeS!
 ```
 
+By default, flags are considered `False` when not passed, and `True` when passed. This can be swapped by providing the arguments with the default value of `True`
+
+Note that flags are actually get syntatic suguar for arguments, so writing:
+```
+$ python3 example.py hello name=Sean reverse=true
+```
+Would have the same result

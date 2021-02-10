@@ -5,22 +5,22 @@ from arc.parser.data_types import CommandNode
 
 class TestParser(TestCase):
     TEST_UTIL_TOKENS = Tokenizer(
-        ["util:script", "option=value", "option=value", "--flag"]
+        ["util:command", "option=value", "option=value", "--flag"]
     ).tokenize()
 
     TEST_SCRIPT_TOKENS = Tokenizer(
-        ["script", "option=value", "option=value", "--flag"]
+        ["command", "option=value", "option=value", "--flag"]
     ).tokenize()
 
     def test_util_parse(self):
         command = Parser(self.TEST_UTIL_TOKENS).parse()
         self.assertIsInstance(command, CommandNode)
-        self.assertEqual(command.namespace, ["util", "script"])
+        self.assertEqual(command.namespace, ["util", "command"])
 
     def test_script_parse(self):
         command = Parser(self.TEST_SCRIPT_TOKENS).parse()
         self.assertIsInstance(command, CommandNode)
-        self.assertEqual(command.namespace, ["script"])
+        self.assertEqual(command.namespace, ["command"])
 
     # def test_anon_parse(self):
     #     command = Parser([Token("option", "option=value")]).parse()
@@ -31,7 +31,7 @@ class TestParser(TestCase):
     #         [Token("utility", "util:"), Token("option", "option=value")]
     #     ).parse()
     #     self.assertIsInstance(command, UtilNode)
-    #     self.assertEqual(command.script.name, "anon")
+    #     self.assertEqual(command.command.name, "anon")
 
     def test_parses(self):
         command = Parser(self.TEST_UTIL_TOKENS.copy()).parse()

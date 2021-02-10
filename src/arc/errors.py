@@ -17,15 +17,15 @@ class ArcError(Exception):
 
 
 class ExecutionError(ArcError):
-    """Raised if there is a problem during the execution of a script"""
+    """Raised if there is a problem during the execution of a command"""
 
 
 class CommandError(ArcError):
-    """Raised when there is an error in the creation of a script"""
+    """Raised when there is an error in the creation of a command"""
 
 
 class ValidationError(ArcError):
-    """Raised when there is an error in validating script input"""
+    """Raised when there is an error in validating command input"""
 
 
 class TokenizerError(ArcError):

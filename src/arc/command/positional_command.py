@@ -46,8 +46,8 @@ class PositionalCommand(Command, CommandMixin):
         if param.kind is param.VAR_KEYWORD:
             raise CommandError(
                 "Positional Arc scripts do not allow **kwargs.",
-                "If you wish to use it, change the script type to KEYWORD",
-                "in @cli.script. However, be aware that this will",
+                "If you wish to use it, change the command type to KEYWORD",
+                "in @cli.command. However, be aware that this will",
                 "make ALL options passed by keyword rather than position",
             )
 
@@ -55,7 +55,7 @@ class PositionalCommand(Command, CommandMixin):
             if idx != meta["length"] - 1:
                 raise CommandError(
                     "The variable postional arguement (*args)",
-                    "must be the last argument of the script",
+                    "must be the last argument of the command",
                 )
 
             self.__pass_args = True
@@ -64,13 +64,13 @@ class PositionalCommand(Command, CommandMixin):
         for node in command_node.args:
             if node.kind is KEY_ARGUMENT:
                 raise ValidationError(
-                    "This script accepts arguements by position"
+                    "This command accepts arguements by position"
                     "only. As a result, it will not accept input"
                     "in the form of 'option=value'"
                 )
 
         if len(command_node.args) > len(self.args) and not self.__pass_args:
             raise ValidationError(
-                "You passed more arguments than this script accepts.",
+                "You passed more arguments than this command accepts.",
                 f"accepts: {self.args} | got:{len(command_node.args)}",
             )

@@ -7,10 +7,10 @@ class TestTokenizer(TestCase):
     def test_tokenize(self):
         """'Test basic tokenizing behavior"""
         tokens = Tokenizer(
-            ["util:script", "option=value", "option2=value", "--flag"]
+            ["util:command", "option=value", "option2=value", "--flag"]
         ).tokenize()
         test_tokens = [
-            Token(COMMAND, "util:script"),
+            Token(COMMAND, "util:command"),
             Token(ARGUMENT, {"name": "option", "value": "value"}),
             Token(ARGUMENT, {"name": "option2", "value": "value"}),
             Token(FLAG, {"name": "flag"}),
@@ -19,7 +19,7 @@ class TestTokenizer(TestCase):
 
         tokens = Tokenizer(
             [
-                "util:script",
+                "util:command",
                 "option1=value",
                 "--flag",
                 "option=value",
@@ -28,7 +28,7 @@ class TestTokenizer(TestCase):
             ]
         ).tokenize()
         test_tokens = [
-            Token(COMMAND, "util:script"),
+            Token(COMMAND, "util:command"),
             Token(ARGUMENT, {"name": "option1", "value": "value"}),
             Token(FLAG, {"name": "flag"}),
             Token(ARGUMENT, {"name": "option", "value": "value"}),

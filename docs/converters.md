@@ -29,7 +29,7 @@
 
 
 ## Use
-Typically, you don't want numbers, booleans, lists, represented as just strings. Arc provides type conversions that will convert the input to your desired type before passing it on to the script. If you've used Flask before, it's URL converters way in essentially the same way. If no converter is specified, the StringConverter is used by default.
+Typically, you don't want numbers, booleans, lists, represented as just strings. Arc provides type conversions that will convert the input to your desired type before passing it on to the command. If you've used Flask before, it's URL converters way in essentially the same way. If no converter is specified, the StringConverter is used by default.
 
 The type to convert input to is specified by Python's builin type hinting system
 
@@ -40,7 +40,7 @@ from arc import CLI
 
 cli = CLI()
 
-@cli.subcommand(number_type")
+@cli.subcommand()
 def number_type(number: int):
     '''Prints the type of a number'''
     print(type(number))
@@ -58,7 +58,7 @@ $ python3 example.py number_type number=5
 from arc import CLI
 cli = CLI()
 
-@cli.subcommand(float_type")
+@cli.subcommand()
 def float_type(number: float):
     '''Prints the type of a float'''
     print(type(number))
@@ -96,9 +96,9 @@ A converter class must define:
 
 To add a converter to the list of available ones:
 ```py
-from arc import Config
-cli = CLI()
-Config.add_converter(CircleConverter)
+from arc import config
+
+config.add_converter(CircleConverter)
 ```
 
 See a full example in [examples/custom_converter.py](/examples/custom_converter.py)
@@ -106,7 +106,7 @@ See a full example in [examples/custom_converter.py](/examples/custom_converter.
 Pre-made converters defined in [src/arc/converter/converters.py](/src/arc/converter/converters.py)
 
 ## Input Converter Functions
-Arc also allows you to use it's converter functionality when gathering user input from within a script
+Arc also allows you to use it's converter functionality when gathering user input from within a command
 ```py
 from arc import CLI
 from arc.convert.input import convert_to_int
@@ -122,4 +122,4 @@ cli()
 ```
 Note that all convereters in `Config.converter` will have a function associated with it. This includes all custom converters. The functions will be named `convert_to_<indicator>`
 
-Note that if the script defines a custom converter, it's respective input function will need to be imported after it is added to `Config.converter` otherwise it doesn't yet exist to import.
+Note that if the command defines a custom converter, it's respective input function will need to be imported after it is added to `Config.converter` otherwise it doesn't yet exist to import.

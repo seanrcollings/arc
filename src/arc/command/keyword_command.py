@@ -57,7 +57,7 @@ class KeywordCommand(Command, CommandMixin):
         if param.kind is param.VAR_POSITIONAL:
             raise CommandError(
                 "Keyword Arc scripts do not allow *args.",
-                "If you wish to use it, change the script type to POSITIONAL",
+                "If you wish to use it, change the command type to POSITIONAL",
                 "However, be aware that this will",
                 "make ALL options passed by position rather than keyword",
             )
@@ -66,7 +66,7 @@ class KeywordCommand(Command, CommandMixin):
             if idx != meta["length"] - 1:
                 raise CommandError(
                     "The variable keyword arguement (**kwargs)",
-                    "must be the last argument of the script",
+                    "must be the last argument of the command",
                 )
 
             self.__pass_kwargs = True
@@ -75,7 +75,7 @@ class KeywordCommand(Command, CommandMixin):
         for node in command_node.args:
             if node.kind is POS_ARGUMENT:
                 raise ValidationError(
-                    "This script accepts arguements by keyword"
+                    "This command accepts arguements by keyword"
                     " only. As a result, it will not accept input"
                     " in the form of 'key=value key=value key=value'"
                 )

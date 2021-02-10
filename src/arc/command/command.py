@@ -64,7 +64,7 @@ class Command(utils.Helpful):
     def create_command(self, name, function, command_type=None, **kwargs):
         """Creates a command object of provided command_type
 
-        Fallback for script type:
+        Fallback for command type:
           - provided arguement
           - command_type of the container (if it's a util it can also inherit
                it's type from it's parent)
@@ -149,7 +149,7 @@ class Command(utils.Helpful):
                 utils.logger.debug("---------------------------")
         else:
             raise CommandError(
-                "Pre-script validation checks failed: \n",
+                "Pre-command validation checks failed: \n",
                 "\n".join(self.validation_errors),
             )
 
@@ -157,17 +157,17 @@ class Command(utils.Helpful):
 
     @abstractmethod
     def execute(self, command_node: CommandNode):
-        """Execution entry point of each script
+        """Execution entry point of each command
 
         :param command_node: SciptNode object created by the parser.
-        None of the Script classes use command_node in their implementation
+        None of the Command classes use command_node in their implementation
         of execute, but they may need to so it passes it currently
         """
 
     @abstractmethod
     def match_input(self, command_node: CommandNode) -> None:
         """Matches the input provided by command_node
-        with the script's options and flags. Should mutate
+        with the command's options and flags. Should mutate
         state because this function returns None. For example,
         options values should be set on their respective option
         in self.options

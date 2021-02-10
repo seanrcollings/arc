@@ -11,7 +11,7 @@ def greet(name="Joseph Joestar"):
     # to the function with the same name.
     # Since it's given a default value, it's optional
     """Command that greets someone"""  # Docstrings are used for the 'help' command
-    # Script body
+    # Command body
     print(f"Hello, {name}!")
 
 
