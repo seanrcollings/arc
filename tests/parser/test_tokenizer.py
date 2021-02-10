@@ -1,6 +1,6 @@
 from unittest import TestCase
 from arc.parser import Tokenizer
-from arc.parser.data_types import Token, COMMAND, ARGUMENT, FLAG
+from arc.parser.data_types import Token, COMMAND, KEY_ARGUMENT, FLAG, POS_ARGUMENT
 
 
 class TestTokenizer(TestCase):
@@ -11,8 +11,8 @@ class TestTokenizer(TestCase):
         ).tokenize()
         test_tokens = [
             Token(COMMAND, "util:command"),
-            Token(ARGUMENT, {"name": "option", "value": "value"}),
-            Token(ARGUMENT, {"name": "option2", "value": "value"}),
+            Token(KEY_ARGUMENT, {"name": "option", "value": "value"}),
+            Token(KEY_ARGUMENT, {"name": "option2", "value": "value"}),
             Token(FLAG, {"name": "flag"}),
         ]
         self.assertEqual(tokens, test_tokens)
@@ -29,11 +29,11 @@ class TestTokenizer(TestCase):
         ).tokenize()
         test_tokens = [
             Token(COMMAND, "util:command"),
-            Token(ARGUMENT, {"name": "option1", "value": "value"}),
+            Token(KEY_ARGUMENT, {"name": "option1", "value": "value"}),
             Token(FLAG, {"name": "flag"}),
-            Token(ARGUMENT, {"name": "option", "value": "value"}),
-            Token(COMMAND, "value"),
-            Token(COMMAND, "value,with,commas"),
+            Token(KEY_ARGUMENT, {"name": "option", "value": "value"}),
+            Token(POS_ARGUMENT, "value"),
+            Token(POS_ARGUMENT, "value,with,commas"),
         ]
 
         self.assertEqual(tokens, test_tokens)
@@ -41,14 +41,16 @@ class TestTokenizer(TestCase):
     def test_tokenize_options(self):
         tokens = Tokenizer(
             [
+                "command",
                 "option1=value",
                 "option_two=value1,value2",
                 "option_three=thing with spaces",
             ]
         ).tokenize()
         test_tokens = [
-            Token(ARGUMENT, {"name": "option1", "value": "value"}),
-            Token(ARGUMENT, {"name": "option_two", "value": "value1,value2"}),
-            Token(ARGUMENT, {"name": "option_three", "value": "thing with spaces"}),
+            Token(COMMAND, "command"),
+            Token(KEY_ARGUMENT, {"name": "option1", "value": "value"}),
+            Token(KEY_ARGUMENT, {"name": "option_two", "value": "value1,value2"}),
+            Token(KEY_ARGUMENT, {"name": "option_three", "value": "thing with spaces"}),
         ]
         self.assertEqual(tokens, test_tokens)

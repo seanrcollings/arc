@@ -29,9 +29,9 @@ class ValidationError(ArcError):
 
 
 class TokenizerError(ArcError):
-    def __init__(self, token):
+    def __init__(self, token, mode):
         self.token = token
-        super().__init__(f"Couldn't match on token: `{self.token}`")
+        super().__init__(f"Couldn't match on token: `{self.token}` in {mode}")
 
 
 class ParserError(ArcError):

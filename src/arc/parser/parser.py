@@ -5,7 +5,14 @@ import shlex
 from arc import config
 from arc.errors import ParserError, TokenizerError
 from arc import utils
-from .data_types import COMMAND, FLAG, ARGUMENT, POS_ARGUMENT, KEY_ARGUMENT
+from .data_types import (
+    COMMAND,
+    FLAG,
+    ARGUMENT,
+    POS_ARGUMENT,
+    KEY_ARGUMENT,
+    TokenizerMode,
+)
 from . import data_types as types
 
 
@@ -21,24 +28,35 @@ class Tokenizer:
     """
 
     TOKEN_TYPES = {
-        FLAG: fr"\A{config.flag_denoter}(?P<name>\b\w+)\b",
-        ARGUMENT: fr"\A\b(?P<name>[a-zA-Z_0-9]+\b){config.options_seperator}(?P<value>[\w\s\-\,\._]+)",
-        COMMAND: r"\A\b((?:(?:\w+:)+\w+)|\w+)\b",
+        TokenizerMode.COMMAND: {COMMAND: r"\A\b((?:(?:\w+:)+\w+)|\w+)$",},
+        TokenizerMode.BODY: {
+            FLAG: fr"\A{config.flag_denoter}(?P<name>\b\w+)$",
+            KEY_ARGUMENT: fr"\A\b(?P<name>[a-zA-Z_0-9]+\b){config.options_seperator}(?P<value>.+)$",
+            POS_ARGUMENT: r"\A\b(.+)$",
+        },
     }
 
     def __init__(self, data: List[str]):
         self.data = data
         self.tokens: List[types.Token] = []
+        self.mode = TokenizerMode.COMMAND
 
     def tokenize(self):
         while len(self.data) > 0:
-            self.tokens.append(self.__tokenize_one_token())
+            if token := self.__tokenize_one_token():
+                self.tokens.append(token)
         return self.tokens
 
     def __tokenize_one_token(self):
-        for kind, pattern in self.TOKEN_TYPES.items():
+        for kind, pattern in self.TOKEN_TYPES[self.mode].items():
             regex = re.compile(pattern)
             match_against = self.data[0].strip()
+
+            if self.mode == TokenizerMode.COMMAND:
+                # Wether or not there's a match, after
+                # the first attempt we need to switch to BODY
+                self.mode = TokenizerMode.BODY
+
             if match := regex.match(match_against):
 
                 value: Union[Dict[str, str], str]
@@ -51,7 +69,10 @@ class Tokenizer:
                     self.data.pop(0)
                     return types.Token(kind, value)
 
-        raise TokenizerError(self.data[0])
+        # we only want to raise an error if we're in the body
+        # mode because at some point we may need to parse
+        # something without a command
+        raise TokenizerError(self.data[0], self.mode)
 
 
 class Parser:
@@ -68,7 +89,7 @@ class Parser:
         raise ParserError("No Command Given")
 
     def parse_command(self):
-        namespace = self.consume(COMMAND).split(":")
+        namespace = cast(str, self.consume(COMMAND)).split(":")
         return types.CommandNode(namespace, self.parse_body())
 
     def parse_body(self):
@@ -76,17 +97,16 @@ class Parser:
         while self.peek() is not None:
             if self.peek() is FLAG:
                 args.append(self.parse_flag())
-            elif self.peek() is ARGUMENT:
+            elif self.peek() is KEY_ARGUMENT:
                 args.append(self.parse_option())
-            elif self.peek() is COMMAND:
-                # Hack for positional args.
-                # Think of a better way to handle this
-                args.append(types.ArgNode(None, self.consume(COMMAND), POS_ARGUMENT))
+            elif self.peek() is POS_ARGUMENT:
+                arg = cast(str, self.consume(POS_ARGUMENT))
+                args.append(types.ArgNode(None, arg, POS_ARGUMENT))
 
         return args
 
     def parse_option(self):
-        argument = self.consume(ARGUMENT)
+        argument = self.consume(KEY_ARGUMENT)
         argument = cast(Dict[str, str], argument)
         return types.ArgNode(argument["name"], argument["value"], KEY_ARGUMENT)
 

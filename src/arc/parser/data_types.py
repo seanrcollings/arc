@@ -1,7 +1,13 @@
 from typing import List, Union, Dict, Optional
 from dataclasses import dataclass
+from enum import Enum
 from arc.color import fg, effects, bg
 from arc.utils import symbol
+
+
+class TokenizerMode(Enum):
+    COMMAND = symbol("command")
+    BODY = symbol("body")
 
 
 COMMAND = symbol("command")

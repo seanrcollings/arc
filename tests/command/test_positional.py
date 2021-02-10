@@ -23,7 +23,7 @@ class TestPositionalCommand(BaseCommandTest):
             val1=["string", "string"], val2=2.6
         )
 
-        run(self.command, "has_args2 'string,string', 2.6")
+        run(self.command, "has_args2 'string,string' 2.6")
         self.command.subcommands["has_args2"].function.assert_called_with(
             val1=["string", "string"], val2=2.6
         )
