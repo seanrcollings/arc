@@ -18,7 +18,7 @@ class PositionalCommand(Command, CommandMixin):
         if self.__pass_args:
             args += [arg.value for arg in command_node.args]
 
-        self.function(*args, **{obj.name: obj.value for obj in self.arc_args.values()})
+        self.function(*args, **self.arc_args)
 
     def match_input(self, command_node: CommandNode):
         self.__match_options(command_node.args)

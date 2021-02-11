@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import List, Dict, Callable, Optional, Tuple
+from typing import List, Dict, Callable, Optional, Tuple, Any
 import re
 
 from arc import config, utils
@@ -40,10 +40,7 @@ class Command(utils.Helpful):
         # function call. These cannot be provide
         # by the execution string and are matched
         # by type
-        self.args, self.arc_args = self.build_args()
-        if context_option := self.arc_args.get("context"):
-            context_option.value = Context(self.context)
-
+        self.args, self.__arc_args = self.build_args()
         self.doc = None
         if self.function.__doc__ is not None:
             doc = re.sub(r"\n\s+", "\n", self.function.__doc__)
@@ -55,6 +52,13 @@ class Command(utils.Helpful):
 
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
+
+    @property
+    def arc_args(self) -> dict:
+        if context := self.__arc_args.get("context"):
+            context.value = Context(self.context)
+
+        return dict({arg.name: arg.value for arg in self.__arc_args.values()})
 
     def subcommand(self, name=None, command_type=None, **kwargs):
         """decorator wrapper around install_script"""

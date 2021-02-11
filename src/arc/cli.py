@@ -18,8 +18,10 @@ class CLI(KeywordCommand):
     :param arcfile: arc config file to load. defaults to ./.arc
     """
 
-    def __init__(self, name="cli", function=lambda: ..., arcfile="./.arc"):
-        super().__init__(name, function)
+    def __init__(
+        self, name="cli", function=lambda: ..., arcfile="./.arc", context=None
+    ):
+        super().__init__(name, function, context)
         config.load_arc_file(arcfile)
 
     def __call__(self, execute: Optional[str] = None):

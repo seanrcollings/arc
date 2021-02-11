@@ -10,11 +10,11 @@ class MockedCommand(Command):
 
     def create_command(self, name, function, command_type=None, **kwargs):
         cls = CommandType.command_type_mappings.get(command_type) or type(self).mro()[2]
-        return mock_command(name, cls, function)
+        return mock_command(name, cls, function, **kwargs)
 
 
 def mock_command(
-    name: str = "mock", cls: Type[Command] = KeywordCommand, func=lambda: ...
+    name: str = "mock", cls: Type[Command] = KeywordCommand, func=lambda: ..., **kwargs
 ) -> MockedCommand:
     mocked = type(f"Mocked{cls.__name__}", (MockedCommand, cls), {})
-    return mocked(name, create_autospec(func))
+    return mocked(name, create_autospec(func), **kwargs)
