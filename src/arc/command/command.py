@@ -1,8 +1,8 @@
 from abc import abstractmethod
 from typing import List, Dict, Callable, Any
-import re
+import textwrap
 
-from arc import config, utils
+from arc import utils
 from arc.color import effects, fg
 from arc.errors import ExecutionError, CommandError, ValidationError
 from arc.parser.data_types import CommandNode
@@ -27,16 +27,16 @@ class Command(utils.Helpful):
         self.meta = meta
 
         self.doc = None
-        if self.function.__doc__ is not None:
-            doc = re.sub(r"\n\s+", "\n", self.function.__doc__)
-            doc = re.sub(r"\n\t+", "\n", doc)
-            self.doc = doc
+        if (doc := self.function.__doc__) is not None:
+            self.doc = textwrap.dedent(doc)
 
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
 
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
+
+    # CLI Builder Methods
 
     def subcommand(self, name=None, command_type=None, **kwargs):
         """decorator wrapper around install_script"""
@@ -78,12 +78,16 @@ class Command(utils.Helpful):
         )
 
         command_type = command_type or CommandType.get_command_type(self)
-        return command_factory(name, function, command_type, **kwargs)
+        command = command_factory(name, function, command_type, **kwargs)
+        return command
 
     def install_command(self, command: "Command"):
         """Installs a command object as a subcommand
         of the current object"""
         self.subcommands[command.name] = command
+
+        if "help" not in self.subcommands and self.name != "help":
+            self.add_helper()
 
         utils.logger.debug(
             "%sregistered '%s' command to %s %s",
@@ -105,6 +109,8 @@ class Command(utils.Helpful):
                 self.arg_hook(param, meta)
 
             return builder.args
+
+    # Command Execution Methods
 
     def run(self, command_node: CommandNode):
         """External interface to execute a command"""
@@ -186,23 +192,24 @@ class Command(utils.Helpful):
 
         If it isn't valid, raise a `ValidationError`"""
 
+    # Utils
+
     def cleanup(self):
         for option in self.args.values():
             option.cleanup()
 
-    def helper(self):
-        spaces = "  "
-        print(
-            utils.indent(
-                f"{config.utility_seperator}{fg.GREEN}{self.name}{effects.CLEAR}",
-                spaces,
-            )
-        )
+    def add_helper(self):
+        helper_command = self.create_command("help", self.helper)
+        self.install_command(helper_command)
+
+    def helper(self, level=0):
+        """helper doc"""
+        indent = "    " * level
+        print(textwrap.indent(self.name, indent))
         if self.doc:
-            print(utils.indent(self.doc, spaces * 3))
-        else:
-            obj: utils.Helpful
-            print(f"{spaces}Arguments:")
-            for obj in self.args.values():
-                print(spaces * 3, end="")
-                obj.helper()
+            print(textwrap.indent(self.doc, indent))
+
+        if len(self.subcommands) > 0:
+            print(textwrap.indent("Subcomands:\n", indent))
+            for command in self.subcommands.values():
+                command.helper(level + 1)

@@ -80,9 +80,6 @@ class Parser:
         self.tokens: List[types.Token] = tokens
 
     def parse(self):
-        if len(self.tokens) == 0:
-            raise ParserError("No tokens provided to parse")
-
         if self.peek() is COMMAND:
             return self.parse_command()
 

@@ -29,7 +29,6 @@ class Option(Helpful):
 
         name = self.get_converter_name()
         converter = config.get_converter(name)
-
         self.value = converter(self.annotation).convert_wrapper(self.value)
 
     def get_converter_name(self) -> str:
