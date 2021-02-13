@@ -52,11 +52,13 @@ class Command(utils.Helpful):
 
     def base(self):
         """Decorator to replace the function
-        of self
+        of the current command
         """
 
         def decorator(function):
             self.function = function
+            if (doc := self.function.__doc__) is not None:
+                self.doc = textwrap.dedent(doc)
             return self
 
         return decorator
@@ -195,8 +197,8 @@ class Command(utils.Helpful):
     # Utils
 
     def cleanup(self):
-        for option in self.args.values():
-            option.cleanup()
+        for arg in self.args.values():
+            arg.cleanup()
 
     def add_helper(self):
         helper_command = self.create_command("help", self.helper)
@@ -207,9 +209,13 @@ class Command(utils.Helpful):
         indent = "    " * level
         print(textwrap.indent(self.name, indent))
         if self.doc:
-            print(textwrap.indent(self.doc, indent))
+            print(textwrap.indent(self.doc, indent + "  "))
 
         if len(self.subcommands) > 0:
-            print(textwrap.indent("Subcomands:\n", indent))
+            print(
+                textwrap.indent(
+                    f"{fg.GREEN}Subcomands:{effects.CLEAR}\n", indent + "  "
+                )
+            )
             for command in self.subcommands.values():
                 command.helper(level + 1)

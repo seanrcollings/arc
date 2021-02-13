@@ -50,4 +50,4 @@ class Option(Helpful):
             del self.value
 
     def helper(self):
-        print(f"{self.name}{config.options_seperator}{self.default}")
+        print(f"{self.name}{config.arg_assignment}{self.default}")

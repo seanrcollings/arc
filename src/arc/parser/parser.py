@@ -31,7 +31,7 @@ class Tokenizer:
         TokenizerMode.COMMAND: {COMMAND: r"\A\b((?:(?:\w+:)+\w+)|\w+)$",},
         TokenizerMode.BODY: {
             FLAG: fr"\A{config.flag_denoter}(?P<name>\b\w+)$",
-            KEY_ARGUMENT: fr"\A\b(?P<name>[a-zA-Z_0-9]+\b){config.options_seperator}(?P<value>.+)$",
+            KEY_ARGUMENT: fr"\A\b(?P<name>[a-zA-Z_0-9]+\b){config.arg_assignment}(?P<value>.+)$",
             POS_ARGUMENT: r"\A\b(.+)$",
         },
     }

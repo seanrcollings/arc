@@ -1,10 +1,10 @@
 from io import StringIO
 from unittest.mock import patch
 from unittest import TestCase
-from examples.groups import cli, converse
+from examples.namespaces import cli, converse
 
 
-class TestGroups(TestCase):
+class TestNamespace(TestCase):
     def test_installed(self):
         assert cli.subcommands[converse.name] is converse
 

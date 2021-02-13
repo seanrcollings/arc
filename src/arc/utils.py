@@ -77,7 +77,7 @@ def indent(string: str, distance="\t", split="\n"):
 
 class Helpful(ABC):
     @abstractmethod
-    def helper(self):
+    def helper(self, level: int):
         ...
 
 

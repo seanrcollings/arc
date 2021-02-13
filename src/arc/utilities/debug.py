@@ -11,8 +11,8 @@ debug = namespace("debug")
 def display_config():
     """Displays information about the current config of the Arc app"""
     config_items = [
-        ["Utility Seperator", config.utility_seperator, ":"],
-        ["Options Seperator", config.options_seperator, "="],
+        ["Utility Seperator", config.namespace_sep, ":"],
+        ["Options Seperator", config.arg_assignment, "="],
         ["Log", config.loglevel, "logging.WARNING"],
         ["Anonymous Identifier", config.anon_identifier, "anon"],
         ["Converters", "See debug:converters", "-"],

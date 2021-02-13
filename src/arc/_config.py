@@ -34,8 +34,8 @@ class Config:
         self._loaded = False
 
         # Set defaults
-        self.utility_seperator: str = ":"
-        self.options_seperator: str = "="
+        self.namespace_sep: str = ":"
+        self.arg_assignment: str = "="
         self.flag_denoter: str = "--"
         self.loglevel: int = logging.WARNING
         self.anon_identifier: str = "anon"
