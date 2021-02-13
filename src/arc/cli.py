@@ -2,11 +2,10 @@ import sys
 from typing import List, Union, Optional
 
 from arc.parser import parse
-from arc import config
+from arc import config, utils
 
-
+from .color import effects
 from .command import KeywordCommand, Command
-from . import utils
 
 
 class CLI(KeywordCommand):
@@ -34,8 +33,13 @@ class CLI(KeywordCommand):
     def match_input(self, _):
         ...
 
-    def helper(self):
-        print("helper")
+    def helper(self, level: int = 0):
+        """Displays this help.
+        """
+        print(f"Usage: python3 {__file__} [COMMAND] [ARGUMENTS ...]\n\n")
+        print(f"{effects.UNDERLINE}{effects.BOLD}Commands:{effects.CLEAR}\n")
+        for command in self.subcommands.values():
+            command.helper(level)
 
 
 def run(

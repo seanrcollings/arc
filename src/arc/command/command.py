@@ -2,7 +2,7 @@ from abc import abstractmethod
 from typing import List, Dict, Callable, Any
 import textwrap
 
-from arc import utils
+from arc import utils, config
 from arc.color import effects, fg
 from arc.errors import ExecutionError, CommandError, ValidationError
 from arc.parser.data_types import CommandNode
@@ -19,6 +19,7 @@ class Command(utils.Helpful):
 
     def __init__(self, name: str, function: Callable, meta: Any = None):
         self.name = name
+        self.namespace: List[str] = []
         self.function: Callable = function
         self.subcommands: Dict[str, Command] = {}
 
@@ -148,13 +149,14 @@ class Command(utils.Helpful):
 
         if len(self.validation_errors) == 0:
             self.match_input(command_node)
+            BAR = "\u2500" * 40
             try:
-                utils.logger.debug("---------------------------")
+                utils.logger.debug(BAR)
                 self.execute(command_node)
             except ExecutionError as e:
                 print(e)
             finally:
-                utils.logger.debug("---------------------------")
+                utils.logger.debug(BAR)
         else:
             raise CommandError(
                 "Pre-command validation checks failed: \n",
@@ -204,18 +206,26 @@ class Command(utils.Helpful):
         helper_command = self.create_command("help", self.helper)
         self.install_command(helper_command)
 
-    def helper(self, level=0):
+    def helper(self, level: int = 0):
         """helper doc"""
+        sep = config.namespace_sep
         indent = "    " * level
-        print(textwrap.indent(self.name, indent))
+        name = f"{fg.GREEN}{self.name}{effects.CLEAR}"
+        if level == 0:
+            print(textwrap.indent(name, indent))
+        else:
+            print(textwrap.indent(sep + name, indent))
+
         if self.doc:
             print(textwrap.indent(self.doc, indent + "  "))
 
         if len(self.subcommands) > 0:
             print(
                 textwrap.indent(
-                    f"{fg.GREEN}Subcomands:{effects.CLEAR}\n", indent + "  "
+                    f"{effects.BOLD}{effects.UNDERLINE}Subcomands:{effects.CLEAR}",
+                    indent + "  ",
                 )
             )
             for command in self.subcommands.values():
-                command.helper(level + 1)
+                if command.name != "help":
+                    command.helper(level + 1)
