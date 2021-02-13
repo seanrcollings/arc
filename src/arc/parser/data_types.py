@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 from arc.color import fg, effects, bg
 from arc.utils import symbol
+from arc.formatters import Box
 
 
 class TokenizerMode(Enum):
@@ -72,7 +73,7 @@ class CommandNode:
             f" FLAG: {color_map[FLAG]}  {effects.CLEAR} "
         )
 
-        return f"{command} {args}\n\n{key}"
+        return str(Box(f"{command} {args}\n\n{key}"))
 
     def empty_namespace(self):
         return len(self.namespace) == 0
