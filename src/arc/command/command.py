@@ -96,7 +96,7 @@ class Command(utils.Helpful):
     def install_command(self, command: "Command"):
         """Installs a command object as a subcommand
         of the current object"""
-        command.context = self.context | command.context
+        command.propagate_context(self.context)
         self.subcommands[command.name] = command
 
         if "help" not in self.subcommands and self.name != "help":
@@ -206,6 +206,11 @@ class Command(utils.Helpful):
         If it isn't valid, raise a `ValidationError`"""
 
     # Utils
+
+    def propagate_context(self, new_context):
+        self.context = new_context | self.context
+        for command in self.subcommands.values():
+            command.propagate_context(self.context)
 
     def cleanup(self):
         for arg in self.args.values():
