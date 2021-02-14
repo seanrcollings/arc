@@ -2,7 +2,7 @@ import os
 import random
 
 from arc import namespace, config
-from arc.formatters.table import Table
+from arc.formatters import Table, Box
 
 debug = namespace("debug")
 
@@ -21,7 +21,7 @@ def display_config():
     table = Table(
         headers=["name", "value", "default"], rows=config_items, column_width=25
     )
-    print(table)
+    print(Box(str(table)))
 
 
 @debug.subcommand("converters")
@@ -38,7 +38,7 @@ def converters():
         rows=converter_rows,
         column_width=30,
     )
-    print(table)
+    print(Box(str(table)))
 
 
 @debug.subcommand("arcfile")
