@@ -6,7 +6,7 @@ from . import keys
 
 
 class SelectionMenu(UIBase):
-    selected_index = state(0)
+    selected_index = state()
 
     def __init__(
         self,
@@ -17,6 +17,7 @@ class SelectionMenu(UIBase):
         + "({index}) {string}"
         + effects.CLEAR,
     ):
+        self.selected_index = 0
         self.options: list = options
         self.format_str: str = format_str
         self.selected_format_str: str = selected_format_str

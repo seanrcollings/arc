@@ -2,6 +2,7 @@
 Check out the most recent, and all, versions of Arc.
 - [ARC - A Regular CLI: Change Log](#arc---a-regular-cli-change-log)
 - [Future](#future)
+- [v1.2.1](#v121)
 - [v1.2](#v12)
 - [v1.1](#v11)
 - [v1.0 (First Major Version!)](#v10-first-major-version)
@@ -18,6 +19,9 @@ Check out the most recent, and all, versions of Arc.
 - Type guessing
 - Better default helper text
 - Allow arbitrary nesting of utilites
+
+# v1.2.1
+- Fixed a bug with the `SelectionMenu` UI where state from a previous class instance would persist into a new class instance
 
 # v1.2
 - Improved Error handling
