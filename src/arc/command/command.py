@@ -93,6 +93,9 @@ class Command(utils.Helpful):
         command = command_factory(name, function, command_type, **kwargs)
         return command
 
+    def install_commands(self, *commands):
+        return tuple(self.install_command(command) for command in commands)
+
     def install_command(self, command: "Command"):
         """Installs a command object as a subcommand
         of the current object"""
