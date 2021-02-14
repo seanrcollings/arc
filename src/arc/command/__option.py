@@ -2,9 +2,9 @@ from typing import Any
 import inspect
 
 from arc import config
-from arc.convert import is_alias
 from arc.utils import symbol, Helpful
-from arc.types import needs_cleanup, ArcGeneric
+from arc.types import needs_cleanup
+from arc.convert import convert
 
 
 NO_DEFAULT = symbol("No Default")
@@ -23,25 +23,12 @@ class Option(Helpful):
         return f"<Option : {self.name}>"
 
     def convert(self):
-        """Converts self.value using the converter found by get_converter"""
+        """Converts self.value using the
+        converter associated with self.annotation"""
         if self.annotation is Any:
             return
 
-        name = self.get_converter_name()
-        converter = config.get_converter(name)
-        self.value = converter(self.annotation).convert_wrapper(self.value)
-
-    def get_converter_name(self) -> str:
-        """Returns the converter name for
-        the option's annotation
-        """
-
-        if is_alias(self.annotation):
-            if issubclass(self.annotation.__origin__, ArcGeneric):  # type: ignore
-                return self.annotation.__origin__.__name__.lower()  # type: ignore
-            else:
-                return "alias"
-        return self.annotation.__name__
+        self.value = convert(self.value, self.annotation)
 
     def cleanup(self):
         # Any special types need to implement
@@ -49,5 +36,5 @@ class Option(Helpful):
         if needs_cleanup(self.annotation):
             del self.value
 
-    def helper(self):
+    def helper(self, level: int = 0):
         print(f"{self.name}{config.arg_assignment}{self.default}")

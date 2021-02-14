@@ -23,22 +23,3 @@ class BaseConverter(ABC):
         converter is supposed to convert the
         value into
         """
-
-    def convert_wrapper(self, value: str):
-        """Try except wrapper for conversion method
-
-        Convert method wrapper for catching
-        ConversionErrors. Will display the info
-        passed to the ConversionError by the
-        converter
-        """
-        try:
-            value = self.convert(value)
-
-        except ConversionError as e:
-            print(f"Value: {e.value} could not be converted to '{self.convert_to}'")
-            if e.helper_text is not None:
-                print(e.helper_text)
-            sys.exit(1)
-
-        return value

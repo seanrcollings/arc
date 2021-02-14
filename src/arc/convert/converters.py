@@ -183,7 +183,7 @@ class AliasConverter(BaseConverter):
             )
 
         return tuple(
-            get_converter(alias.__args__[idx].__name__)(tuple).convert_wrapper(item)  # type: ignore
+            get_converter(alias.__args__[idx].__name__)(tuple).convert(item)  # type: ignore
             for idx, item in enumerate(items)
         )
 
