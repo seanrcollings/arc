@@ -9,12 +9,18 @@ from contextlib import contextmanager
 from typing import Dict, Type
 
 from arc import config
+from arc.errors import NoOpError
+from arc.color import fg, effects
 
 logger = logging.getLogger("arc_logger")
 handler = logging.StreamHandler()
 formatter = logging.Formatter()
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+
+
+def no_op():
+    raise NoOpError()
 
 
 def clear():
@@ -38,7 +44,12 @@ def timer(func):
         start_time = time.time()
         func(*args, **kwargs)
         end_time = time.time()
-        logger.info("Completed in %ss", round(end_time - start_time, 2))
+        logger.info(
+            "%sCompleted in %ss%s",
+            fg.GREEN,
+            round(end_time - start_time, 2),
+            effects.CLEAR,
+        )
 
     return decorator
 

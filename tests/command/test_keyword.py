@@ -2,7 +2,6 @@ from unittest import mock
 
 from arc import run
 from arc.command import KeywordCommand
-from arc.command.command import Command
 from arc.errors import CommandError, ValidationError
 
 from .base import BaseCommandTest
@@ -46,5 +45,5 @@ class TestKeywordCommand(BaseCommandTest):
         with self.assertRaises(CommandError):
             run(self.command, "doesnotexist")
 
-        with self.assertRaises(CommandError):
+        with self.assertRaises(ValidationError):
             run(self.command, "has_args1 string 2")

@@ -64,9 +64,10 @@ class PositionalCommand(Command, CommandMixin):
         for node in command_node.args:
             if node.kind is KEY_ARGUMENT:
                 raise ValidationError(
-                    "This command accepts arguements by position"
-                    "only. As a result, it will not accept input"
-                    "in the form of 'option=value'"
+                    "This command is configured to"
+                    " only accept arguments by position.\n"
+                    f"You passed in `{node}` "
+                    f"instead, pass in: `{node.value}`"
                 )
 
         if len(command_node.args) > len(self.args) and not self.__pass_args:

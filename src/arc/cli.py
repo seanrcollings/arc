@@ -6,6 +6,7 @@ from arc import config, utils
 
 from .color import effects
 from .command import KeywordCommand, Command
+from .errors import CommandError
 
 
 class CLI(KeywordCommand):
@@ -17,12 +18,12 @@ class CLI(KeywordCommand):
     :param arcfile: arc config file to load. defaults to ./.arc
     """
 
-    def __init__(self, name="cli", function=lambda: ..., arcfile="./.arc"):
+    def __init__(self, name="cli", function=utils.no_op, arcfile="./.arc"):
         super().__init__(name, function)
         config.load_arc_file(arcfile)
 
     def __call__(self, execute: Optional[str] = None):
-        run(self, execute)
+        return run(self, execute)
 
     def command(self, *args, **kwargs):
         return self.subcommand(*args, **kwargs)
@@ -59,4 +60,5 @@ def run(
     user_input: Union[List[str], str] = execute if execute else sys.argv[1:]
     command_node = parse(user_input)
     utils.logger.debug(command_node)
-    command.run(command_node)
+    with utils.handle(CommandError):
+        return command.run(command_node)

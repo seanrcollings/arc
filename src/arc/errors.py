@@ -20,6 +20,11 @@ class ExecutionError(ArcError):
     """Raised if there is a problem during the execution of a command"""
 
 
+class NoOpError(ExecutionError):
+    """Sepcial Execution to raise when
+    the specific namespace CANT be executed"""
+
+
 class CommandError(ArcError):
     """Raised when there is an error in the creation of a command"""
 
@@ -31,7 +36,7 @@ class ValidationError(ArcError):
 class TokenizerError(ArcError):
     def __init__(self, token, mode):
         self.token = token
-        super().__init__(f"Couldn't match on token: `{self.token}` in {mode}")
+        super().__init__(f"Unable to understand: `{self.token}` in comamnd string")
 
 
 class ParserError(ArcError):
