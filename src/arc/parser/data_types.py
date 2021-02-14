@@ -11,11 +11,11 @@ class TokenizerMode(Enum):
     BODY = symbol("body")
 
 
-COMMAND = symbol("command")
-FLAG = symbol("flags")
-ARGUMENT = symbol("arguments")
-POS_ARGUMENT = symbol("positional argument")
-KEY_ARGUMENT = symbol("key argument")
+COMMAND: symbol = symbol("command")
+FLAG: symbol = symbol("flags")
+ARGUMENT: symbol = symbol("arguments")
+POS_ARGUMENT: symbol = symbol("positional argument")
+KEY_ARGUMENT: symbol = symbol("key argument")
 
 
 @dataclass

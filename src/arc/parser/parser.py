@@ -8,7 +8,6 @@ from arc import utils
 from .data_types import (
     COMMAND,
     FLAG,
-    ARGUMENT,
     POS_ARGUMENT,
     KEY_ARGUMENT,
     TokenizerMode,
