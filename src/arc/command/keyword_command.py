@@ -15,6 +15,7 @@ class KeywordCommand(Command, CommandMixin):
 
     def execute(self, command_node: CommandNode):
         args: Dict[str, Any] = {key: obj.value for key, obj in self.args.items()}
+        args.update(self.arc_args)
 
         self.function(**args)
 
@@ -32,15 +33,15 @@ class KeywordCommand(Command, CommandMixin):
         """
 
         for node in option_nodes:
-            node.name = cast(str, node.name)
-            option: Union[Option, None] = self.args.get(node.name)
+            name = cast(str, node.name)
+            option: Union[Option, None] = self.args.get(name)
 
             if self.__pass_kwargs and not option:
-                self.args[node.name] = option = Option(
-                    name=node.name, annotation=str, default=NO_DEFAULT
+                self.args[name] = option = Option(
+                    name=name, annotation=str, default=NO_DEFAULT
                 )
             elif not option:
-                raise CommandError(f"Option '{node.name}' not recognized")
+                raise CommandError(f"Option '{name}' not recognized")
 
             if node.kind is FLAG:
                 option.value = not option.value
@@ -48,7 +49,6 @@ class KeywordCommand(Command, CommandMixin):
                 option.value = node.value
                 option.convert()
 
-        self.add_meta()
         self.assert_args_filled()
 
     def arg_hook(self, param, meta):

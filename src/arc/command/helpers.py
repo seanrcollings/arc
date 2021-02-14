@@ -1,26 +1,21 @@
 import inspect
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from arc.errors import CommandError
 
 from .__option import Option, NO_DEFAULT, EMPTY
+from .context import Context
 
 
 class CommandMixin:
     args: Dict[str, Option]
-    meta: Any
-
-    # HELPERS
+    context: Dict[str, Any]
+    context_arg_name: Optional[str]
 
     def assert_args_filled(self):
         for option in self.args.values():
             if option.value is NO_DEFAULT:
                 raise CommandError(f"No value for required option '{option.name}'")
-
-    def add_meta(self):
-        if self.meta:
-            self.args["meta"] = Option(name="meta", annotation=Any, default=NO_DEFAULT)
-            self.args["meta"].value = self.meta
 
 
 class ArgBuilder:
@@ -28,6 +23,7 @@ class ArgBuilder:
         self.__sig = inspect.signature(function)
         self.__length = len(self.__sig.parameters.values())
         self.__args: Dict[str, Option] = {}
+        self.__arc_args: Dict[str, Option] = {}
 
     def __enter__(self):
         return self
@@ -47,8 +43,17 @@ class ArgBuilder:
     def args(self):
         return self.__args
 
+    @property
+    def arc_args(self):
+        return self.__arc_args
+
     def add_arg(self, param: inspect.Parameter):
-        if param.annotation is bool:
+        if param.annotation is Context:
+            self.__arc_args["context"] = Option(
+                param.name, param.annotation, NO_DEFAULT
+            )
+
+        elif param.annotation is bool:
             default = False if param.default is EMPTY else param.default
             self.__args[param.name] = Option(param.name, param.annotation, default)
 

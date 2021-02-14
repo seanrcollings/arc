@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import List, Dict, Callable, Any
+from typing import Dict, Callable, Optional, Tuple
 import textwrap
 
 from arc import utils, config
@@ -9,6 +9,7 @@ from arc.parser.data_types import CommandNode
 
 from .__option import Option
 from .helpers import ArgBuilder
+from .context import Context
 
 
 class Command(utils.Helpful):
@@ -17,14 +18,19 @@ class Command(utils.Helpful):
 
     __name__: str
 
-    def __init__(self, name: str, function: Callable, meta: Any = None):
+    def __init__(self, name: str, function: Callable, context: Optional[Dict] = None):
         self.name = name
         self.function: Callable = function
         self.subcommands: Dict[str, Command] = {}
 
-        self.args: Dict[str, Option] = self.build_args()
-        self.meta = meta
+        self.context = context or {}
 
+        # arc_args are special argumetnts
+        # that arc will inject into the
+        # function call. These cannot be provide
+        # by the execution string and are matched
+        # by type
+        self.args, self.__arc_args = self.build_args()
         self.doc = None
         if (doc := self.function.__doc__) is not None:
             self.doc = textwrap.dedent(doc)
@@ -35,7 +41,12 @@ class Command(utils.Helpful):
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
 
-    # CLI Builder Methods
+    @property
+    def arc_args(self) -> dict:
+        if context := self.__arc_args.get("context"):
+            context.value = Context(self.context)
+
+        return dict({arg.name: arg.value for arg in self.__arc_args.values()})
 
     def subcommand(self, name=None, command_type=None, **kwargs):
         """decorator wrapper around install_script"""
@@ -85,6 +96,7 @@ class Command(utils.Helpful):
     def install_command(self, command: "Command"):
         """Installs a command object as a subcommand
         of the current object"""
+        command.context = self.context | command.context  # type: ignore
         self.subcommands[command.name] = command
 
         if "help" not in self.subcommands and self.name != "help":
@@ -100,8 +112,8 @@ class Command(utils.Helpful):
 
         return command
 
-    def build_args(self) -> Dict[str, Option]:
-        """Builds the options and flag collections based
+    def build_args(self) -> Tuple[Dict[str, Option], Dict[str, Option]]:
+        """Builds the args and arc_args collections based
         on the function definition
         """
         with ArgBuilder(self.function) as builder:
@@ -109,7 +121,7 @@ class Command(utils.Helpful):
                 meta = builder.get_meta(index=idx)
                 self.arg_hook(param, meta)
 
-            return builder.args
+            return builder.args, builder.arc_args
 
     # Command Execution Methods
     def run(self, command_node: CommandNode):
