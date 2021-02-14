@@ -1,7 +1,7 @@
 from unittest import mock
 from arc import run
 from arc.command import PositionalCommand
-from arc.errors import CommandError
+from arc.errors import CommandError, ValidationError
 
 from .base import BaseCommandTest
 
@@ -44,5 +44,5 @@ class TestPositionalCommand(BaseCommandTest):
         with self.assertRaises(CommandError):
             run(self.command, "doesnotexist")
 
-        with self.assertRaises(CommandError):
+        with self.assertRaises(ValidationError):
             run(self.command, "has_args1 val=string")
