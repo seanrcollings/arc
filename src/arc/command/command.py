@@ -19,12 +19,10 @@ class Command(utils.Helpful):
 
     def __init__(self, name: str, function: Callable, meta: Any = None):
         self.name = name
-        self.namespace: List[str] = []
         self.function: Callable = function
         self.subcommands: Dict[str, Command] = {}
 
-        self.args = self.build_args()
-        self.validation_errors: List[str] = []
+        self.args: Dict[str, Option] = self.build_args()
         self.meta = meta
 
         self.doc = None
@@ -118,7 +116,7 @@ class Command(utils.Helpful):
     def run(self, command_node: CommandNode):
         """External interface to execute a command"""
         if command_node.empty_namespace():
-            return self.call_wrapper(command_node)
+            return self.__execute(command_node)
         else:
             subcommand_name = command_node.namespace.pop(0)
             if subcommand_name not in self.subcommands:
@@ -127,9 +125,10 @@ class Command(utils.Helpful):
             subcommand = self.subcommands[subcommand_name]
             return subcommand.run(command_node)
 
-    def call_wrapper(self, command_node):
+    def __execute(self, command_node):
         """functionality wrapped around
-        actually calling self.function
+        the public execute. Called by
+        the run function
 
         Handles a few things behind the scenes
             - calls self.validate_input
@@ -142,26 +141,18 @@ class Command(utils.Helpful):
             May contain options, flags and arbitrary args
 
         """
-        try:
+        with utils.handle(ValidationError):
             self.validate_input(command_node)
-        except ValidationError as e:
-            self.validation_errors.append(str(e))
 
-        if len(self.validation_errors) == 0:
-            self.match_input(command_node)
-            BAR = "\u2500" * 40
-            try:
-                utils.logger.debug(BAR)
-                self.execute(command_node)
-            except ExecutionError as e:
-                print(e)
-            finally:
-                utils.logger.debug(BAR)
-        else:
-            raise CommandError(
-                "Pre-command validation checks failed: \n",
-                "\n".join(self.validation_errors),
-            )
+        self.match_input(command_node)
+        BAR = "\u2500" * 40
+        try:
+            utils.logger.debug(BAR)
+            self.execute(command_node)
+        except ExecutionError as e:
+            print(e)
+        finally:
+            utils.logger.debug(BAR)
 
         self.cleanup()
 

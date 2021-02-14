@@ -75,7 +75,9 @@ class KeywordCommand(Command, CommandMixin):
         for node in command_node.args:
             if node.kind is POS_ARGUMENT:
                 raise ValidationError(
-                    "This command accepts arguements by keyword"
-                    " only. As a result, it will not accept input"
-                    " in the form of 'key=value key=value key=value'"
+                    "This command is configured to"
+                    " only accept arguments by keyword.\n"
+                    f"You passed in '{node}' "
+                    f"instead, pass in: 'arg_name={node}'\n"
+                    "check 'help' for possible arguments"
                 )
