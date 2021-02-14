@@ -73,7 +73,12 @@ class CommandNode:
             f" FLAG: {color_map[FLAG]}  {effects.CLEAR} "
         )
 
-        return str(Box(f"{command} {args}\n\n{key}", justify="left"))
+        return str(
+            Box(
+                f"{command} {args}\n\n{key}",
+                padding={"left": 2, "right": 2, "top": 1, "bottom": 1},
+            )
+        )
 
     def empty_namespace(self):
         return len(self.namespace) == 0
