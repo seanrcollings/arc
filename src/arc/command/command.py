@@ -4,7 +4,7 @@ import textwrap
 
 from arc import utils, config
 from arc.color import effects, fg
-from arc.errors import ExecutionError, CommandError, ValidationError
+from arc.errors import ExecutionError, CommandError, ValidationError, NoOpError
 from arc.parser.data_types import CommandNode
 
 from .__option import Option
@@ -149,6 +149,12 @@ class Command(utils.Helpful):
         try:
             utils.logger.debug(BAR)
             self.execute(command_node)
+        except NoOpError as e:
+            print(
+                fg.RED + "This namespace cannot be executed. "
+                f"Check '[...]:{self.name}:help' for possible subcommands"
+                + effects.CLEAR
+            )
         except ExecutionError as e:
             print(e)
         finally:

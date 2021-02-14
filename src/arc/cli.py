@@ -18,7 +18,7 @@ class CLI(KeywordCommand):
     :param arcfile: arc config file to load. defaults to ./.arc
     """
 
-    def __init__(self, name="cli", function=lambda: ..., arcfile="./.arc"):
+    def __init__(self, name="cli", function=utils.no_op, arcfile="./.arc"):
         super().__init__(name, function)
         config.load_arc_file(arcfile)
 

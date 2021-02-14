@@ -20,6 +20,11 @@ class ExecutionError(ArcError):
     """Raised if there is a problem during the execution of a command"""
 
 
+class NoOpError(ExecutionError):
+    """Sepcial Execution to raise when
+    the specific namespace CANT be executed"""
+
+
 class CommandError(ArcError):
     """Raised when there is an error in the creation of a command"""
 

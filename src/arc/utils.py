@@ -9,12 +9,17 @@ from contextlib import contextmanager
 from typing import Dict, Type
 
 from arc import config
+from arc.errors import NoOpError
 
 logger = logging.getLogger("arc_logger")
 handler = logging.StreamHandler()
 formatter = logging.Formatter()
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+
+
+def no_op():
+    raise NoOpError()
 
 
 def clear():
