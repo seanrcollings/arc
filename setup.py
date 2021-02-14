@@ -5,14 +5,14 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="arc-cli",
-    version="2.0",
+    version="2.0.1",
     license="MIT",
     author="Sean Collings",
     author_email="sean@seanrcollings.com",
     description="A Regular CLI",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    download_url=f"https://github.com/seanrcollings/arc/archive/v2.0tar.gz",
+    download_url=f"https://github.com/seanrcollings/arc/archive/v2.0.1tar.gz",
     url="https://github.com/seanrcollings/arc",
     keywords=["CLI", "extendable", "easy"],
     packages=setuptools.find_packages("src"),

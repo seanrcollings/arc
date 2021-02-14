@@ -7,6 +7,12 @@ Check out the most recent, and all, versions of Arc.
 - [v1.2.1](#v121)
 - [v1.2](#v12)
 
+- [ARC - A Regular CLI: Change Log](#arc---a-regular-cli-change-log)
+- [Future](#future)
+- [v2.0.1](#v201)
+- [v2.0 (Big Changes)](#v20-big-changes)
+- [v1.2.1](#v121)
+- [v1.2](#v12)
 - [v1.1](#v11)
 - [v1.0 (First Major Version!)](#v10-first-major-version)
 - [v0.9 (Improved Parsing)](#v09-improved-parsing)
@@ -23,6 +29,9 @@ Check out the most recent, and all, versions of Arc.
 - Better default helper text
 - Allow arbitrary nesting of utilites
 
+# v2.0.1
+- Fixed an issue where installing subcommands into a namespace, then installing that namespace into parent would cause the context to not propagate properly.
+- Added `Command#install_commands` as a wrapper around `Command#install_command` for installing multiple commands at once. Returns a tuple containing all the command objects
 
 # v2.0 (Big Changes)
 - Renamed scripts to comands
