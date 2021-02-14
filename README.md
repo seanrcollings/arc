@@ -36,12 +36,12 @@ def hello():
 
 cli()
 ```
-Reference [getting started](docs/getting_started.md) for more info
 
 ```
 $ python example.py hello
 Hello, World!
 ```
+Reference [getting started](docs/getting_started.md) for more info
 
 # Tests
 Run the full test suite with
@@ -55,14 +55,8 @@ $ python3 -m tests [TEST CASE]
 ```
 
 
-
-
 # My Goals
 - Make a fully functioning, easy to use CLI creator
 - Teach myself how to upload and maintain package on PyPi
 - Do not rely on **any** third party packages (crazy, I know)
 
-
-# TODO
-- Make the parser better / more feature rich (allow it to have context of the cli application)
-- finish File type
