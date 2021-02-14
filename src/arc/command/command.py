@@ -112,7 +112,6 @@ class Command(utils.Helpful):
             return builder.args
 
     # Command Execution Methods
-
     def run(self, command_node: CommandNode):
         """External interface to execute a command"""
         if command_node.empty_namespace():
@@ -125,6 +124,7 @@ class Command(utils.Helpful):
             subcommand = self.subcommands[subcommand_name]
             return subcommand.run(command_node)
 
+    @utils.timer
     def __execute(self, command_node):
         """functionality wrapped around
         the public execute. Called by
