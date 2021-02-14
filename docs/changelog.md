@@ -2,6 +2,7 @@
 Check out the most recent, and all, versions of Arc.
 - [ARC - A Regular CLI: Change Log](#arc---a-regular-cli-change-log)
 - [Future](#future)
+- [v2.0 (Big Changes)](#v20-big-changes)
 - [v1.1](#v11)
 - [v1.0 (First Major Version!)](#v10-first-major-version)
 - [v0.9 (Improved Parsing)](#v09-improved-parsing)
@@ -18,6 +19,17 @@ Check out the most recent, and all, versions of Arc.
 - Better default helper text
 - Add more custom types (ie: for file objects)
 - Allow arbitrary nesting of utilites
+
+# v2.0 (Big Changes)
+- Renamed scripts to comands
+- Ditched the Concept of scripts and script containers. Commands contain their own subcommands
+- Commands can be arbitrarily nested
+- added `namespace` function for creating a subcommand not attached to the CLI
+- Got rid of the Utility class (use `namespace`) instead
+- Added `context`
+- Improved parser
+- Tons of general code improvement
+
 
 # v1.1
 - Added File type

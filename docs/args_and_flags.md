@@ -83,7 +83,7 @@ Hello, naeS!
 
 By default, flags are considered `False` when not passed, and `True` when passed. This can be swapped by providing the arguments with the default value of `True`
 
-Note that flags are actually get syntatic suguar for arguments, so writing:
+Note that flags are actually just syntatic suguar for arguments, so writing:
 ```
 $ python3 example.py hello name=Sean reverse=true
 ```

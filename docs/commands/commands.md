@@ -19,7 +19,7 @@ def hello():
 ```
 
 ## Running the Command
-To run the command, you can pass it into the `run` function exported by ARC 
+To run the command, you can pass it into the `run` function exported by ARC
 ```py x
 run(foo)
 ```
@@ -59,7 +59,7 @@ def hello():
 
 @hello.subcommand() # use the hello namespace as this command's parent
 def night():
-    '''Command to greet people later 
+    '''Command to greet people later
     in the day'''
     print("Good evening good sir!")
 
@@ -71,9 +71,9 @@ $ python example.py hello:night
 Good evening good sir!
 ```
 
-Each level of nesting from the namespace that was ran needs to be fully qaulified. Since the `night` command is in the namespace of `hello` which is in turn in the namespace of `foo` (the top level namespace) then the command is ran with `hello:night`. If we added another command in the `hello` namespace called `bar` it could be called with `hello:bar`. If we added it in the `night` namespace, it would be called with `hello:night:bar`
+Each level of nesting from the namespace that was ran needs to be fully qualified. Since the `night` command is in the namespace of `hello` which is in turn in the namespace of `foo` (the top level namespace) then the command is ran with `hello:night`. If we added another command in the `hello` namespace called `bar` it could be called with `hello:bar`. If we added it in the `night` namespace, it would be called with `hello:night:bar`
 
-That's about all there is to it! You could add another command nested in the `hello` namespace, or another deeply nested command under the `night` namespace. There really is no hard limit to how far commands can be nested, but I would recommend to stick to 3 or fewer. Namespaces should be used to indicate that commands show some relation to each other, but serve a different function. If you need to modify the way a single command behaves, use [args and flags](./args_and_flags) for that. 
+That's about all there is to it! You could add another command nested in the `hello` namespace, or another deeply nested command under the `night` namespace. There really is no hard limit to how far commands can be nested, but I would recommend to stick to 3 or fewer. Namespaces should be used to indicate that commands show some relation to each other, but serve a different function. If you need to modify the way a single command behaves, use [args and flags](../args_and_flags.md) for that.
 
 # What's the CLI object about then?
 If you've read the README or getting started, you would have seen a `CLI` object being used to make commands. The CLI object essentially acts as a "top level namespace" for your tool and a convenience wrapper around calling the `run` function. We could use the CLI to rewrite the previous example as follows:
@@ -90,7 +90,7 @@ def hello():
 
 @hello.subcommand()
 def night():
-    '''Command to greet people later 
+    '''Command to greet people later
     in the day'''
     print("Good evening good sir!")
 
@@ -114,7 +114,7 @@ from arc import namespace
 
 db = namespace("db") # the name we provide here is what will be used to navigate into this namespace
 
-@db.subcommand() 
+@db.subcommand()
 def create():
    ...
 

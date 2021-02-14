@@ -1,7 +1,5 @@
-import sys
 from typing import Any
 from abc import ABC, abstractmethod
-from arc.errors import ConversionError
 
 
 class BaseConverter(ABC):
