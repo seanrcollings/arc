@@ -23,7 +23,7 @@ class Command(utils.Helpful):
         self.function: Callable = function
         self.subcommands: Dict[str, Command] = {}
 
-        self.context = context or {}
+        self.context: dict = context or {}
 
         # arc_args are special argumetnts
         # that arc will inject into the

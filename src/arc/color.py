@@ -3,7 +3,7 @@ class Color(str):
 
     def __new__(cls, content, extra="m"):
 
-        obj = str.__new__(cls, f"{cls.__escape}{content}{extra}")  # type: ignore
+        obj = str.__new__(cls, f"{cls.ESCAPE}{content}{extra}")  # type: ignore
         return obj
 
     def __init__(self, code, *_args):
