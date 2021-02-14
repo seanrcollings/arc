@@ -1,4 +1,6 @@
 import re
+import shutil
+import textwrap
 
 
 def clean(string):
@@ -20,36 +22,30 @@ styles = {
     }
 }
 
+justifications = {
+    "left": "<",
+    "center": "^",
+    "right": ">",
+}
+
 
 class Box:
-    def __init__(self, string: str, style: str = "regular"):
+    def __init__(self, string: str, style: str = "regular", justify: str = "left"):
         self.string = string
         self.__style = styles[style]
+        self.__justify = justifications[justify]
 
     def __str__(self):
         cleaned = (clean(string) for string in self.string.split("\n"))
         width = len(max(cleaned, key=len)) + 4
+        term_width, _ = shutil.get_terminal_size()
+        width = min(width, term_width)
 
-        top = self.horizontal_line(width, "top")
-
-        content = "\n".join(
-            f"{self.style['vertical']}  {line:<{width - 2}}{self.style['vertical']}"
-            for line in self.string.split("\n")
+        content = "".join(
+            self.format_line(line, width) for line in self.string.split("\n")
         )
 
-        content = ""
-        for line in self.string.split("\n"):
-            # Uses the clean string for calculating the nessecary
-            # amount of padding on the right, but we want the color, so
-            # just re.sub it back in after
-            clean_line = clean(line)
-            formatted = (
-                f"{self.style['vertical']}  "
-                f"{clean_line:<{width - 2}}{self.style['vertical']}\n"
-            )
-            regex = re.compile(clean_line)
-            content += regex.sub(line, formatted)
-
+        top = self.horizontal_line(width, "top")
         bottom = self.horizontal_line(width, "bot")
         return f"{top}\n{content}{bottom}"
 
@@ -69,3 +65,16 @@ class Box:
                 self.style["corners"][f"{side}-right"],
             )
         )
+
+    def format_line(self, line: str, width: int):
+        # Uses the clean string for calculating the nessecary
+        # amount of padding on the right, but we want the color, so
+        # just re.sub it back in after
+        clean_line = clean(line)
+        formatted = (
+            f"{self.style['vertical']}"
+            f"{clean_line:{self.__justify}{width}}{self.style['vertical']}\n"
+        )
+        regex = re.compile(clean_line)
+        formatted = regex.sub(line, formatted)
+        return formatted
