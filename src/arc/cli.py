@@ -24,7 +24,8 @@ class CLI(KeywordCommand):
         super().__init__(name, function, context)
         config.load_arc_file(arcfile)
 
-    def __call__(self, execute: Optional[str] = None):
+    # pylint: disable=arguments-differ
+    def __call__(self, execute: Optional[str] = None):  # type: ignore
         return run(self, execute)
 
     def command(self, *args, **kwargs):

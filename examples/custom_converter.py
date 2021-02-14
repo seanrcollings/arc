@@ -34,7 +34,7 @@ class CircleConverter(BaseConverter):
             radius = int(value)
             return Circle(radius=radius)
 
-        raise ConversionError(value, "Circle must be an whole number integer")
+        raise ConversionError(value, "Circle radius must be an whole number integer")
 
 
 cli = CLI()
