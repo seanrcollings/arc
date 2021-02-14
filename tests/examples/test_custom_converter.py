@@ -1,13 +1,12 @@
 from io import StringIO
 from unittest.mock import patch
-from tests.base_test import BaseTest
-from examples.custom_converter import config, CircleConverter, Circle, cli
+from unittest import TestCase
+from examples.custom_converter import Circle, cli
 
 
-class TestCustomConverter(BaseTest):
+class TestCustomConverter(TestCase):
     @patch("sys.stdout", new_callable=StringIO)
     def test_command(self, mock_out):
         circle = Circle(4)
-        with patch("sys.argv", new=["dir", "circle", "new_circle=4"]):
-            cli()
+        cli("circle new_circle=4")
         assert mock_out.getvalue().strip() == str(circle)

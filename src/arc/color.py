@@ -2,8 +2,8 @@ class Color(str):
     ESCAPE = "\033["
 
     def __new__(cls, content, extra="m"):
+
         obj = str.__new__(cls, f"{cls.ESCAPE}{content}{extra}")  # type: ignore
-        obj.__init__(content)
         return obj
 
     def __init__(self, code, *_args):

@@ -1,5 +1,5 @@
 import importlib
-from tests.base_test import BaseTest
+from unittest import TestCase
 from arc import config
 from arc.convert import BaseConverter
 from arc.convert import input as inp
@@ -12,7 +12,7 @@ class TestConverter(BaseConverter):
         return int(value)
 
 
-class TestInputConverters(BaseTest):
+class TestInputConverters(TestCase):
     def test_all(self):
         importlib.reload(inp)
         for name, converter in config.converters.items():

@@ -1,122 +1,67 @@
 import sys
-from typing import Dict, List, Tuple
+from typing import List, Union, Optional
 
-from arc.__script_container import ScriptContainer
-from arc import utils
-from arc.utility import Utility
-from arc.parser import Tokenizer, Parser, ScriptNode, UtilNode
-from arc import config
-from arc.errors import ArcError
-from arc.color import fg, effects
+from arc.parser import parse
+from arc import config, utils
+
+from .color import effects
+from .command import KeywordCommand, Command
+from .errors import CommandError
 
 
-class CLI(ScriptContainer, utils.Helpful):
-    def __init__(self, *args, utilities: list = None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.utilities: Dict[str, Utility] = {}
+class CLI(KeywordCommand):
+    """The CLI class is now implemented as a subclass
+    of the Command class and reality just acts as a
+    conveneince wrapper around Command creation and
+    the run function.
 
-        if utilities is not None:
-            self.install_utilities(*utilities)
+    :param arcfile: arc config file to load. defaults to ./.arc
+    """
 
-    def __repr__(self):
-        string: str = "---ARC CLI---\n"
-        string += "Scripts: \n"
-        string += "\n".join(c for c in self.scripts)
-        string += "\nUtilities: \n"
-        string += "\n\t".join(repr(self.utilities[util]) for util in self.utilities)
+    def __init__(
+        self, name="cli", function=utils.no_op, arcfile="./.arc", context=None
+    ):
+        super().__init__(name, function, context)
+        config.load_arc_file(arcfile)
 
-        return string
+    # pylint: disable=arguments-differ
+    def __call__(self, execute: Optional[str] = None):  # type: ignore
+        return run(self, execute)
 
-    def __call__(self, *args: str, **kwargs):
-        """Arc CLI driver method
+    def command(self, *args, **kwargs):
+        return self.subcommand(*args, **kwargs)
 
-		Tokenizes and Parses the user input, then passes
-		on the resulting NodeTree to the correct execution method
-		"""
-        input_list = self.__get_input__list(args, kwargs)
-        tokens = Tokenizer(input_list).tokenize()
-        parsed = Parser(tokens).parse()
-        utils.logger.debug(parsed)
+    def execute(self, _):
+        ...
 
-        if isinstance(parsed, UtilNode):
-            with utils.handle(ArcError):
-                self.__execute_utility(parsed)
-        elif isinstance(parsed, ScriptNode):
-            with utils.handle(ArcError):
-                self.execute(parsed)
-        else:
-            raise RuntimeError("You shouldn't be here. Please report this bug")
+    def match_input(self, _):
+        ...
 
-    def __execute_utility(self, util_node: UtilNode):
-        """Checks if a utility exists with provided user params
+    def helper(self, level: int = 0):
+        """Displays this help.
+        """
+        print(f"Usage: python3 {__file__} [COMMAND] [ARGUMENTS ...]\n\n")
+        print(f"{effects.UNDERLINE}{effects.BOLD}Commands:{effects.CLEAR}\n")
+        for command in self.subcommands.values():
+            command.helper(level)
 
-		If one does exist, pass the command and user_input onto it's
-		execute method. If one doesn't exist, pass command and user_input
-		on to the global CLI execute method.
 
-		:param util_node: The Node tree created by the parser
-		"""
+def run(
+    command: Command, execute: Optional[str] = None, arcfile: Optional[str] = None,
+):
+    """Core function of the ARC API.
+    Loads up the config file, parses the user input
+    And then passes control over to the `command` object.
 
-        util_name = util_node.name
-
-        if util_name not in self.utilities:
-            raise ArcError(f"The utility '{util_name}' is not recognized")
-
-        self.utilities[util_name](util_node.script)
-
-    @staticmethod
-    def __get_input__list(args: Tuple[str, ...], kwargs: Dict[str, str]) -> List[str]:
-        if len(args) > 0:
-            input_list = list(args)
-            # Could also move this out of the if statement
-            # to provide a way to force a value on the cli
-            for key, value in kwargs.items():
-                input_list.append(key + config.options_seperator + value)
-
-        else:
-            input_list = sys.argv[1:]
-
-        return input_list
-
-    def install_utilities(self, *utilities):
-        """Installs a series of utilities to the CLI"""
-        for utility in utilities:
-            if isinstance(utility, Utility):
-                if utility.script_type is None:
-                    utility.script_type = self.script_type
-                self.utilities[utility.name] = utility
-                utils.logger.debug(
-                    "%sRegistered '%s' utility %s",
-                    fg.YELLOW,
-                    utility.name,
-                    effects.CLEAR,
-                )
-            else:
-                raise ArcError(
-                    "Only instances of the 'Utility'" "class can be registerd to ARC",
-                )
-
-    def helper(self):
-        """Helper List function
-		Prints out the docstrings for the CLI's scripts
-		"""
-        print(f"Usage: python3 {sys.argv[0]} [COMMAND] [ARGUMENTS ...]\n\n",)
-
-        header = effects.BOLD + effects.UNDERLINE + "{title}" + effects.CLEAR + ":\n"
-
-        print(header.format(title="Installed Scripts"))
-        if len(self.scripts) > 0:
-            for _, script in self.scripts.items():
-                script.helper()
-        else:
-            print("No Scripts Installed")
-
-        if len(self.utilities) > 0:
-            print(f"\n{header.format(title='Installed Utilities')}")
-            print(
-                "Execute a utility with: "
-                f"{fg.YELLOW.bright}<utility>{config.utility_seperator}"
-                f"{fg.GREEN.bright}<subcommand>{effects.CLEAR}"
-            )
-            for utility in self.utilities.values():
-                utility.helper()
+    :param command: command object to run
+    :param execute: string to parse and execute. If it's not provided
+    sys.argv will be used
+    :param arcfile: file path to an arc config file to load
+    """
+    if arcfile:
+        config.load_arc_file(arcfile)
+    user_input: Union[List[str], str] = execute if execute else sys.argv[1:]
+    command_node = parse(user_input)
+    utils.logger.debug(command_node)
+    with utils.handle(CommandError):
+        return command.run(command_node)

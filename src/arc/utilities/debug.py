@@ -1,30 +1,30 @@
 import os
 import random
 
-from arc import Utility, config
-from arc.formatters.table import Table
+from arc import namespace, config
+from arc.formatters import Table, Box
 
-debug = Utility("debug", "Various development-centric scripts")
+debug = namespace("debug")
 
 
-@debug.script("config")
+@debug.subcommand("config")
 def display_config():
     """Displays information about the current config of the Arc app"""
     config_items = [
-        ["Utility Seperator", config.utility_seperator, ":"],
-        ["Options Seperator", config.options_seperator, "="],
+        ["Namespace Seperator", config.namespace_sep, ":"],
+        ["Argument Assignment", config.arg_assignment, "="],
+        ["Flag Denoter", config.flag_denoter, "--"],
         ["Log", config.loglevel, "logging.WARNING"],
-        ["Anonymous Identifier", config.anon_identifier, "anon"],
         ["Converters", "See debug:converters", "-"],
     ]
 
     table = Table(
         headers=["name", "value", "default"], rows=config_items, column_width=25
     )
-    print(table)
+    print(Box(str(table)))
 
 
-@debug.script("converters")
+@debug.subcommand("converters")
 def converters():
     """Displays information aboubt the currently accessible converters"""
     filler_words = ["foo", "bar", "baz", "buzz"]  # Randomly pick for filler information
@@ -38,10 +38,10 @@ def converters():
         rows=converter_rows,
         column_width=30,
     )
-    print(table)
+    print(Box(str(table)))
 
 
-@debug.script("arcfile")
+@debug.subcommand("arcfile")
 def arcfile():
     """Prints the contents of the .arc file in the CWD"""
     if os.path.isfile(".arc"):

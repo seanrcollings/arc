@@ -6,7 +6,7 @@
   - [Running the CLI](#running-the-cli)
   - [Putting it together](#putting-it-together)
   - [Help Command](#help-command)
-  - [Command Options & Flags](#command-options--flags)
+  - [Arc Features](#arc-features)
 
 
 # Creating a CLI
@@ -18,10 +18,10 @@ cli = CLI()
 ```
 
 ## Creating a Command
-Commands are created using Python decorators. A function becomes a command using the `cli.script()` decorator. You can pass a name into the script decorator. If there isn't an explicit name, the function's name will be used This will be the name used to execute the command.
+Commands are created using Python decorators. A function becomes a command using the `cli.comand()` decorator. You can pass a name into the command decorator. If there isn't an explicit name, the function's name will be used This will be the name used to execute the command.
 
 ```py 2
-@cli.script("hello")
+@cli.comand("hello")
 def hello():
     print("Hello, World!")
 ```
@@ -39,7 +39,7 @@ from arc import CLI
 
 cli = CLI()
 
-@cli.script("hello")
+@cli.comand("hello")
 def hello():
     '''Command that prints Hello World'''
     print("Hello, World!")
@@ -68,18 +68,17 @@ hello
     Command that prints Hello World
 ```
 
-If you want a more specific help command, simpley over ride the builtin one with a script of your own
-```py 
-@cli.script("help")
+If you want a more specific help command, simpley over ride the builtin one with a command of your own
+```py
+@cli.comand("help")
 def helper():
     # print out your helper :)
 ```
 
 
 ## Arc Features
+- [Commands](./commands.md)
 - [Options and Flags](./options_and_flags.md)
 - [Converters](./converters.md)
-- [Special Script Names](./special_script_names.md)
-- [Utilities](./utilities.md)
-- [Script Types](./scripts/scripts.md)
+- [Command Types](./scripts/scripts.md)
 

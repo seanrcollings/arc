@@ -11,7 +11,7 @@ cli = CLI(utilities=[converse])
 # can also use cli.install_utilities(converse) for the same effect
 
 # regular cli command
-@cli.script("greet")
+@cli.subcommand(greet")
 def cli_greet(name="Joseph Joestar"):
     '''Command that greets someone CLI command'''
     print(f"Hello, {name}!")
@@ -19,7 +19,7 @@ def cli_greet(name="Joseph Joestar"):
 
 
 # utility command
-@converse.script("greet")
+@converse.subcommand(greet")
 def utility_greet(name="Jotaro Kujo"):
     '''Command that greets someone utility command'''
     print(f"Howdy, {name}!")

@@ -13,15 +13,17 @@ os.chdir(dirname)
 # Tests
 # pylint: disable=unused-import, wrong-import-position, unused-wildcard-import, wildcard-import
 from tests.test_cli import TestCLI
-from tests.test_utility import TestUtility
-from tests.script import *
+from tests.test_group import TestGroup
+from tests.command import *
 from tests.converter import *
 
 from tests.examples import *
 
 from tests.utilities import *
 from tests.parser import *
-from tests.docs import *
+from tests.test_context import *
+
+# from tests.docs import *
 
 if __name__ == "__main__":
     unittest.main()

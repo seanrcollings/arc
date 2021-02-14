@@ -1,42 +1,78 @@
 import re
-from typing import List
+from typing import List, Union, cast, Dict
+import shlex
 
 from arc import config
-import arc.parser.data_types as types
-from arc.errors import ParserError
+from arc.errors import ParserError, TokenizerError
+from arc import utils
+from .data_types import (
+    COMMAND,
+    FLAG,
+    ARGUMENT,
+    POS_ARGUMENT,
+    KEY_ARGUMENT,
+    TokenizerMode,
+)
+from . import data_types as types
 
 
 class Tokenizer:
+    """
+    Arc Tokenizer class
+
+    :param data: List of strings to parse. Can split a normal string with shlex.split()
+
+    ### Attributes
+    data: Data to be parsed
+    tokens: List of Tokens
+    """
+
+    TOKEN_TYPES = {
+        TokenizerMode.COMMAND: {COMMAND: r"\A\b((?:(?:\w+:)+\w+)|\w+)$",},
+        TokenizerMode.BODY: {
+            FLAG: fr"\A{config.flag_denoter}(?P<name>\b\w+)$",
+            KEY_ARGUMENT: fr"\A\b(?P<name>[a-zA-Z_0-9]+\b){config.arg_assignment}(?P<value>.+)$",
+            POS_ARGUMENT: r"\A\b(.+)$",
+        },
+    }
+
     def __init__(self, data: List[str]):
         self.data = data
-        self.TOKEN_TYPES = [
-            ("flag", fr"{config.flag_denoter}\b\w+\b"),
-            ("option", fr"\b\w+{config.options_seperator}[\w\,\.\s\\\/]+\b"),
-            ("utility", fr"\b\w+\b{config.utility_seperator}"),
-            ("script", r"\b\w+\b"),
-        ]
+        self.tokens: List[types.Token] = []
+        self.mode = TokenizerMode.COMMAND
 
     def tokenize(self):
-        tokens = []
         while len(self.data) > 0:
-            tokens.append(self.__tokenize_one_token())
-        return tokens
+            if token := self.__tokenize_one_token():
+                self.tokens.append(token)
+        return self.tokens
 
     def __tokenize_one_token(self):
-        for name, pattern in self.TOKEN_TYPES:
-            regex = re.compile(fr"\A({pattern})")
+        for kind, pattern in self.TOKEN_TYPES[self.mode].items():
+            regex = re.compile(pattern)
             match_against = self.data[0].strip()
+
+            if self.mode == TokenizerMode.COMMAND:
+                # Wether or not there's a match, after
+                # the first attempt we need to switch to BODY
+                self.mode = TokenizerMode.BODY
+
             if match := regex.match(match_against):
-                value = match.group(1)
-                # Checks if we match against the
-                # entire string or just part of it
+
+                value: Union[Dict[str, str], str]
+                if groups := match.groupdict():
+                    value = groups
+                else:
+                    value = match.group(1)
+
                 if len(match_against) == match.end():
                     self.data.pop(0)
-                else:
-                    self.data[0] = self.data[0][match.end() :].strip()
-                return types.Token(name, value)
+                    return types.Token(kind, value)
 
-        raise ParserError(f"Couldn't match token on {self.data[0]}")
+        # we only want to raise an error if we're in the body
+        # mode because at some point we may need to parse
+        # something without a command
+        raise TokenizerError(self.data[0], self.mode)
 
 
 class Parser:
@@ -44,68 +80,64 @@ class Parser:
         self.tokens: List[types.Token] = tokens
 
     def parse(self):
-        return self.parse_util()
+        if self.peek() is COMMAND:
+            return self.parse_command()
 
-    def parse_util(self):
-        if self.peek("utility"):
-            util = self.consume("utility")
-            return types.UtilNode(
-                util.value.rstrip(config.utility_seperator), self.parse_script()
-            )
+        raise ParserError("No Command Given")
 
-        return self.parse_script()
+    def parse_command(self):
+        namespace = cast(str, self.consume(COMMAND)).split(":")
+        return types.CommandNode(namespace, self.parse_body())
 
-    def parse_script(self):
-        if self.peek("script"):
-            name = self.consume("script").value
-        else:
-            # for anonymous scripts
-            name = config.anon_identifier
+    def parse_body(self):
+        args: List[types.ArgNode] = []
+        while self.peek() is not None:
+            if self.peek() is FLAG:
+                args.append(self.parse_flag())
+            elif self.peek() is KEY_ARGUMENT:
+                args.append(self.parse_option())
+            elif self.peek() is POS_ARGUMENT:
+                arg = cast(str, self.consume(POS_ARGUMENT))
+                args.append(types.ArgNode(None, arg, POS_ARGUMENT))
 
-        return types.ScriptNode(name, *self.parse_script_body())
+        return args
 
-    def parse_script_body(self):
-        options = []
-        flags = []
-        args = []
+    def parse_option(self):
+        argument = self.consume(KEY_ARGUMENT)
+        argument = cast(Dict[str, str], argument)
+        return types.ArgNode(argument["name"], argument["value"], KEY_ARGUMENT)
 
-        for token in self.tokens.copy():
-            if token.type == "option":
-                options.append(self.parse_option(token))
-            elif token.type == "flag":
-                flags.append(self.parse_flag(token))
-            else:
-                args.append(self.parse_arg(token))
-
-        return options, flags, args
-
-    def parse_option(self, token):
-        self.consume("option")
-        name, value = token.value.split(config.options_seperator)
-        return types.OptionNode(name, value)
-
-    def parse_flag(self, token):
-        self.consume("flag")
-        return types.FlagNode(token.value.lstrip(config.flag_denoter))
-
-    def parse_arg(self, token):
-        self.consume(self.tokens[0].type)
-        return types.ArgNode(token.value)
+    def parse_flag(self):
+        flag = self.consume(FLAG)
+        flag = cast(Dict[str, str], flag)
+        return types.ArgNode(flag["name"], "", FLAG)
 
     def consume(self, expected_type):
-        if len(self.tokens) == 0:
-            raise ParserError("No tokens to consume")
-
-        if (actual_type := self.tokens[0].type) == expected_type:
-            return self.tokens.pop(0)
-
-        raise ParserError(
-            "Unexpected token.",
-            f"Expected token type '{expected_type}', got '{actual_type}'",
+        token_type = self.tokens[0].type
+        if token_type == expected_type:
+            return self.tokens.pop(0).value
+        raise ValueError(
+            f"Expected token of type: {expected_type}, got: {self.tokens[0].type}"
         )
 
-    def peek(self, expected_type):
+    def peek(self, idx: int = 0):
         try:
-            return expected_type == self.tokens[0].type
+            return self.tokens[idx].type
         except IndexError:
-            return False
+            return None
+
+
+def parse(command: Union[List[str], str]):
+    """Convenience wrapper around the
+    tokenizer and parser.
+
+    :param command: string or list of strings to be parsed.
+    If it's a string, it will be split using shlex.split
+    """
+    if isinstance(command, str):
+        command = shlex.split(command)
+
+    with utils.handle(TokenizerError, ParserError):
+        tokens = Tokenizer(command).tokenize()
+        parsed = Parser(tokens).parse()
+    return parsed

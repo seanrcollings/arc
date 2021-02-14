@@ -26,7 +26,7 @@ class FloatConverter(BaseConverter):
         try:
             return float(value)
         except ValueError as e:
-            raise ConversionError(value, "Value must be a number (1.3, 4, 1.7)") from e
+            raise ConversionError(value, "Value must be a float (1.3, 4, 1.7)") from e
 
 
 class BytesConverter(BaseConverter):
@@ -36,14 +36,7 @@ class BytesConverter(BaseConverter):
         return value.encode()
 
 
-# !! DEPRECATED !!
-# Honestly, I don't think these will ever get called
-# Since bool annotations get matched with flags and not options
 class BoolConverter(BaseConverter):
-    convert_to = bool
-
-
-class StringBoolConverter(BaseConverter):
     """Converts a string to a boolean
     True / true - True
     False / false - False
@@ -52,12 +45,18 @@ class StringBoolConverter(BaseConverter):
     convert_to = bool
 
     def convert(self, value):
-        if value.lower() == "true":
+        if value.isnumeric():
+            return bool(int(value))
+
+        value = value.lower()
+        if value in ("true", "t"):
             return True
-        elif value.lower() == "false":
+        elif value in ("false", "f"):
             return False
 
-        raise ConversionError(value, "sbool only accepts true or false")
+        raise ConversionError(
+            value, "Value must be the string '(t)rue' or '(f)alse' or a valid integer"
+        )
 
 
 class IntBoolConverter(BaseConverter):
@@ -83,7 +82,7 @@ class ListConverter(BaseConverter):
 
     convert_to = list
 
-    def convert(self, value):
+    def convert(self, value: str):
         if "," in value:
             return value.replace(" ", "").split(",")
         raise ConversionError(
@@ -117,7 +116,7 @@ class AliasConverter(BaseConverter):
 
     List[int]
 
-        - i: '1,2,3,4,5,6's
+        - i: '1,2,3,4,5,6'
         - o: [1, 2, 3, 4, 5, 6]
     """
 
@@ -184,7 +183,7 @@ class AliasConverter(BaseConverter):
             )
 
         return tuple(
-            get_converter(alias.__args__[idx].__name__)(tuple).convert_wrapper(item)  # type: ignore
+            get_converter(alias.__args__[idx].__name__)(tuple).convert(item)  # type: ignore
             for idx, item in enumerate(items)
         )
 
@@ -195,8 +194,6 @@ converter_mapping: Dict[str, Type[BaseConverter]] = {
     "float": FloatConverter,
     "bytes": BytesConverter,
     "bool": BoolConverter,
-    "sbool": StringBoolConverter,
-    "ibool": IntBoolConverter,
     "list": ListConverter,
     "alias": AliasConverter,
     "file": FileConverter,

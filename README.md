@@ -7,7 +7,7 @@ A tool for building easy, and highly extendable CLI systems for Python 3.8
 - [Utilities](docs/utilities.md)
 - [Type Converters](docs/converters.md)
 - [Context Managers](docs/context_mangers.md)
-- [Special Script Names](docs/special_script_names.md)
+- [Special Command Names](docs/special_script_names.md)
 - [Configuration](docs/configuration.md)
 
 # Installation
@@ -30,7 +30,7 @@ from arc import CLI
 
 cli = CLI()
 
-@cli.script("hello")
+@cli.command("hello")
 def hello():
     print("Hello, World!")
 

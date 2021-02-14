@@ -17,19 +17,30 @@ class ArcError(Exception):
 
 
 class ExecutionError(ArcError):
-    """Raised if there is a problem during the execution of a script"""
+    """Raised if there is a problem during the execution of a command"""
 
 
-class ScriptError(ArcError):
-    """Raised when there is an error in the creation of a script"""
+class NoOpError(ExecutionError):
+    """Sepcial Execution to raise when
+    the specific namespace CANT be executed"""
+
+
+class CommandError(ArcError):
+    """Raised when there is an error in the creation of a command"""
 
 
 class ValidationError(ArcError):
-    """Raised when there is an error in validating script input"""
+    """Raised when there is an error in validating command input"""
+
+
+class TokenizerError(ArcError):
+    def __init__(self, token, mode):
+        self.token = token
+        super().__init__(f"Unable to understand: `{self.token}` in comamnd string")
 
 
 class ParserError(ArcError):
-    """Raised when there is an error in the parser"""
+    """Raised when there is an error parsing the token stream"""
 
 
 class ConversionError(ArcError):

@@ -1,5 +1,5 @@
 import logging
-from typing import Type, Any, List, Union, Optional
+from typing import Type, List, Union
 from pathlib import Path
 
 
@@ -8,63 +8,42 @@ from arc.convert import BaseConverter, converter_mapping, get_converter
 from arc.errors import ArcError, ConversionError
 
 
-class Config:
-    """Arc Config object. Singleton object, when attempting
-    to instance a new object, if _instace already exists, it
-    will be returned instead"""
-
-    _instance: Optional["Config"] = None
-
-    # __not_preloadable lists config options that cannot be loaded
-    # in an .arc file. These usually include things that require objects or
-    # classes to be loaded with them, like converters. Could potentially
-    # allow things like that to be loaded dynamically but that sound annoying
-    # so probably not.
-    __not_preloadable = ["converters"]
-
-    def __new__(cls):
-        if cls._instance is not None:
-            return cls._instance
-
-        obj = super().__new__(cls)
-        cls._instance = obj
-        return obj
-
+class ManagedConfigValue:
     def __init__(self):
-        self._loaded = False
+        self.value = None
+        self.type = None
+        self.name = None
 
-        # Set defaults
-        self.utility_seperator: str = ":"
-        self.options_seperator: str = "="
-        self.flag_denoter: str = "--"
-        self.loglevel: int = logging.WARNING
-        self.anon_identifier: str = "anon"
+    def __set_name__(self, owner, name):
+        self.name = name
 
-        self.converters = converter_mapping
+    def __get__(self, obj, objtype=None):
+        return self.value
 
-        self.__setup_logging()
+    def __set__(self, obj, value):
+        if self.type is None:
+            self.type = type(value)
 
-    @property
-    def instance(self) -> Optional["Config"]:
-        return self._instance
-
-    def set_value(self, name: str, value: Any):
-        if name in self.__dict__:
-            # Check that the types match
-            current_type = type(getattr(self, name))
-            if not isinstance(value, current_type):
-                raise ArcError(
-                    (
-                        f"Config {name} must be set to type:"
-                        f"'{current_type}'"
-                        f"\nProvided type: {type(value)}"
-                    )
+        if not isinstance(value, self.type):
+            raise ArcError(
+                (
+                    f"Config {self.name} must be of type: "
+                    f"{self.type}"
+                    f"\nProvided type: {type(value)}"
                 )
+            )
+        self.value = value
 
-        setattr(self, name, value)
-        self.__setup_logging()
+        self._post_set()
 
-    def __setup_logging(self):
+    def _post_set(self):
+        """Used to check / process self.value
+        should be defined in subclass
+        """
+
+
+class ManagedLogging(ManagedConfigValue):
+    def _post_set(self):
         logger = logging.getLogger("arc_logger")
         levels = (
             logging.DEBUG,
@@ -74,10 +53,39 @@ class Config:
             logging.CRITICAL,
         )
 
-        if self.loglevel not in levels:
-            raise ValueError(f"`{self.loglevel}` not a valid logging level")
+        if self.value not in levels:
+            raise ValueError(f"`{self.value}` not a valid logging level")
 
-        logger.setLevel(self.loglevel)
+        logger.setLevel(self.value)
+
+
+class Config:
+    """Arc Config object. Singleton object, when attempting
+    to instance a new object, if _instace already exists, it
+    will be returned instead"""
+
+    # __not_preloadable lists config options that cannot be loaded
+    # in an .arc file. These usually include things that require objects or
+    # classes to be loaded with them, like converters. Could potentially
+    # allow things like that to be loaded dynamically but that sound annoying
+    # so probably not.
+    __not_preloadable = ["converters"]
+
+    namespace_sep = ManagedConfigValue()
+    arg_assignment = ManagedConfigValue()
+    flag_denoter = ManagedConfigValue()
+    loglevel = ManagedLogging()
+    converters = ManagedConfigValue()
+
+    def __init__(self):
+        self._loaded = False
+
+        # Set defaults
+        self.namespace_sep = ":"
+        self.arg_assignment = "="
+        self.flag_denoter = "--"
+        self.loglevel = logging.WARNING
+        self.converters = converter_mapping
 
     # Converter Methods
     def add_converter(self, obj: Type[BaseConverter]):
@@ -97,10 +105,7 @@ class Config:
     # Arc file Methods
     def load_arc_file(self, arcfile: str, force=False):
         """Reads in a arc config file and parses it's contents"""
-        if arcfile.startswith("~"):
-            config_file = (Path.home() / arcfile[2:]).resolve()
-        else:
-            config_file = Path(arcfile).resolve()
+        config_file = Path(arcfile).expanduser().resolve()
 
         if self._loaded and not force:
             return
@@ -139,8 +144,8 @@ class Config:
 
         # Check if it needs to be converted
         config_converters: List[Type[BaseConverter]] = [
-            StringBoolConverter,
             IntConverter,
+            BoolConverter,
             FloatConverter,
             ListConverter,
         ]
@@ -152,4 +157,4 @@ class Config:
             except ConversionError:
                 continue
 
-        self.set_value(name, value)
+        setattr(self, name, value)
