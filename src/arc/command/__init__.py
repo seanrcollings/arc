@@ -10,4 +10,4 @@ from .context import Context
 
 def namespace(name: str, command_type=CommandType.KEYWORD, **kwargs):
     """Creates a Command Group"""
-    return command_factory(name, utils.no_op, command_type)
+    return command_factory(name, utils.no_op, command_type, **kwargs)

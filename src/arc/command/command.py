@@ -96,7 +96,7 @@ class Command(utils.Helpful):
     def install_command(self, command: "Command"):
         """Installs a command object as a subcommand
         of the current object"""
-        command.context = self.context | command.context  # type: ignore
+        command.context = self.context | command.context
         self.subcommands[command.name] = command
 
         if "help" not in self.subcommands and self.name != "help":
