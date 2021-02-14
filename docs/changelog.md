@@ -2,7 +2,11 @@
 Check out the most recent, and all, versions of Arc.
 - [ARC - A Regular CLI: Change Log](#arc---a-regular-cli-change-log)
 - [Future](#future)
+
 - [v2.0 (Big Changes)](#v20-big-changes)
+- [v1.2.1](#v121)
+- [v1.2](#v12)
+
 - [v1.1](#v11)
 - [v1.0 (First Major Version!)](#v10-first-major-version)
 - [v0.9 (Improved Parsing)](#v09-improved-parsing)
@@ -17,8 +21,8 @@ Check out the most recent, and all, versions of Arc.
 # Future
 - Type guessing
 - Better default helper text
-- Add more custom types (ie: for file objects)
 - Allow arbitrary nesting of utilites
+
 
 # v2.0 (Big Changes)
 - Renamed scripts to comands
@@ -31,10 +35,22 @@ Check out the most recent, and all, versions of Arc.
 - Tons of general code improvement
 
 
+# v1.2.1
+- Fixed a bug with the `SelectionMenu` UI where state from a previous class instance would persist into a new class instance
+
+# v1.2
+- Improved Error handling
+  - replaced `debug` and `log` config options with a single `loglevel` that expects one of the standard python loglevels (`loggin.DEBUG`, `logging.WARNING` etc...)
+  - When `loglevel` is not set explictly, it is set to `logging.WARNGING`. All exceptions will just log the error message. When set to debug, tracebacks will be logged along with error messages
+- Added UI package and a basic `SelectionMenu` class. Check [here](./ui.md) for details.
+- Modified the `color` module
+  - Removed the `background` method on foreground colors. Now bacground colors are only available through the `bg` class
+  - added an `rgb` function to both `fg` and `bg` which take in values for Red, Green, and Blue in range [0, 255]
+
+
 # v1.1
 - Added File type
 - General code improvements
-
 
 # v1.0 (First Major Version!)
 - Implmented different [ScriptTypes](./scripts/script_types.md) that interpret input differently
