@@ -9,4 +9,4 @@ from arc.errors import NoOpError
 
 NO_OP = NoOpError()
 
-__version__ = "2.0.1"
+__version__ = "2.0.2"
