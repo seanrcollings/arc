@@ -1,6 +1,7 @@
 from arc import run
 from arc.command import RawCommand
 
+
 from .base import BaseCommandTest
 
 
