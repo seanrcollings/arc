@@ -52,3 +52,14 @@ class TestContext(TestCase):
         self.mock.install_command(test_namespace)
         run(self.mock, "test_namespace:test")
         test.function.assert_called_with(ctx=Context({"test": 1, "test2": 2}))
+
+    def test_custom_context(self):
+        class CustomContext(Context):
+            ...
+
+        @self.mock.subcommand()
+        def custom(ctx: CustomContext):
+            ...
+
+        run(self.mock, "custom")
+        custom.function.assert_called_with(ctx=CustomContext({"test": 1}))

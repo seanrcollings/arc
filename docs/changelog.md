@@ -1,14 +1,10 @@
 # ARC - A Regular CLI: Change Log
 Check out the most recent, and all, versions of Arc.
-- [ARC - A Regular CLI: Change Log](#arc---a-regular-cli-change-log)
-- [Future](#future)
-
-- [v2.0 (Big Changes)](#v20-big-changes)
-- [v1.2.1](#v121)
-- [v1.2](#v12)
 
 - [ARC - A Regular CLI: Change Log](#arc---a-regular-cli-change-log)
 - [Future](#future)
+- [v2.1.0](#v210)
+- [v2.0.2](#v202)
 - [v2.0.1](#v201)
 - [v2.0 (Big Changes)](#v20-big-changes)
 - [v1.2.1](#v121)
@@ -28,6 +24,12 @@ Check out the most recent, and all, versions of Arc.
 - Type guessing
 - Better default helper text
 - Allow arbitrary nesting of utilites
+
+# v2.1.0
+- Context can now be subclassed for typing and extra functionality
+
+# v2.0.2
+- Calling `Command#base` now internal data based on the new function provided
 
 # v2.0.1
 - Fixed an issue where installing subcommands into a namespace, then installing that namespace into parent would cause the context to not propagate properly.
