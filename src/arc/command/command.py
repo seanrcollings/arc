@@ -11,6 +11,8 @@ from .__option import Option
 from .helpers import ArgBuilder
 from .context import Context
 
+# TODO: Add function wrapper with decorator and @functools.wraps() for some pre-call operations
+
 
 class Command(utils.Helpful):
     """Abstract Commad Class, all Command types must inherit from it
@@ -39,7 +41,7 @@ class Command(utils.Helpful):
     @property
     def arc_args(self) -> dict:
         if context := self.__arc_args.get("context"):
-            context.value = Context(self.context)
+            context.value = context.annotation(self.context)
 
         return dict({arg.name: arg.value for arg in self.__arc_args.values()})
 

@@ -48,7 +48,7 @@ class ArgBuilder:
         return self.__arc_args
 
     def add_arg(self, param: inspect.Parameter):
-        if param.annotation is Context:
+        if Context in param.annotation.mro():
             self.__arc_args["context"] = Option(
                 param.name, param.annotation, NO_DEFAULT
             )
