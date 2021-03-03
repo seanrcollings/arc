@@ -1,6 +1,6 @@
 from arc._config import Config
 
-config = Config()
+config: Config = Config()
 
 # # pylint: disable=wrong-import-position
 from arc.cli import CLI, run

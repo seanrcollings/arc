@@ -8,6 +8,16 @@ from .command_type import CommandType, command_factory
 from .context import Context
 
 
-def namespace(name: str, command_type=CommandType.KEYWORD, **kwargs):
-    """Creates a Command Group"""
-    return command_factory(name, utils.no_op, command_type, **kwargs)
+def namespace(
+    name: str, function=None, command_type=CommandType.KEYWORD, **kwargs
+) -> Command:
+    """Creates a Command namespace.
+
+    :param name: name of the namespace / command
+    :param function: optional function to be used
+        when calling the namespace directly, defaults to no_op
+    :param command_type: Type of the command, defaults to KEYWORD
+    :param context: dict of context values to be used in this namespace and below
+    """
+    function = function or utils.no_op
+    return command_factory(name, function, command_type, **kwargs)
