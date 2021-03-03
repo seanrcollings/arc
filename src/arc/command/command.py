@@ -18,22 +18,17 @@ class Command(utils.Helpful):
 
     __name__: str
 
+    context: dict
+    args: Dict[str, Option]
+    __arc_args: Dict[str, Option]
+    doc: Optional[str]
+
     def __init__(self, name: str, function: Callable, context: Optional[Dict] = None):
         self.name = name
         self.function: Callable = function
         self.subcommands: Dict[str, Command] = {}
-
-        self.context: dict = context or {}
-
-        # arc_args are special argumetnts
-        # that arc will inject into the
-        # function call. These cannot be provide
-        # by the execution string and are matched
-        # by type
-        self.args, self.__arc_args = self.build_args()
-        self.doc = None
-        if (doc := self.function.__doc__) is not None:
-            self.doc = textwrap.dedent(doc)
+        self.context = context or {}
+        self.__func_init()
 
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
@@ -48,6 +43,25 @@ class Command(utils.Helpful):
 
         return dict({arg.name: arg.value for arg in self.__arc_args.values()})
 
+    def __func_init(self):
+        """Intilization that relates to the command's wrapped function
+        This init must be called on object instantiation and on calling
+        `@command.base()` to insure that all arc features are still available
+        """
+        # arc_args are special argumetnts
+        # that arc will inject into the
+        # function call. These cannot be provide
+        # by the execution string and are matched
+        # by type
+
+        args: tuple = self.build_args()
+        self.args = args[0]
+        self.__arc_args = args[1]
+
+        self.doc = None
+        if (doc := self.function.__doc__) is not None:
+            self.doc = textwrap.dedent(doc)
+
     def subcommand(self, name=None, command_type=None, **kwargs):
         """decorator wrapper around install_script"""
 
@@ -60,15 +74,15 @@ class Command(utils.Helpful):
 
         return decorator
 
-    def base(self):
+    def base(self, context: Optional[dict] = None):
         """Decorator to replace the function
         of the current command
         """
 
         def decorator(function):
             self.function = function
-            if (doc := self.function.__doc__) is not None:
-                self.doc = textwrap.dedent(doc)
+            self.propagate_context(context)
+            self.__func_init()
             return self
 
         return decorator
