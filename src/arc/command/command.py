@@ -195,7 +195,7 @@ class Command(utils.Helpful):
     def execute(self, command_node: CommandNode):
         """Execution entry point of each command
 
-        :param command_node: SciptNode object created by the parser.
+        :param command_node: CommandNode object created by the parser.
         None of the Command classes use command_node in their implementation
         of execute, but they may need to so it passes it currently
         """
