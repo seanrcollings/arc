@@ -1,5 +1,4 @@
 # Arguments and Flags
-
 ## Command Argumaents
 When it comes to CLI's you need to be able to accept user input. Arc will look at the arguements that the function accepts to determine the possible arguments for the command.
 
@@ -60,7 +59,7 @@ Flags are specified by giving a function argument a `bool` type hint. Flags look
 from arc import CLI
 cli = CLI()
 
-@cli.subcommand(hello")
+@cli.subcommand()
 def hello(name, reverse: bool):
     '''Command that prints greets someone'''
     if reverse:
@@ -88,3 +87,29 @@ Note that flags are actually just syntatic suguar for arguments, so writing:
 $ python3 example.py hello name=Sean reverse=true
 ```
 Would have the same result
+
+
+## Kebab Case
+Arc also supports using `kebab-case` for command names, arguments, and flags. For example:
+```py
+from arc import CLI
+cli = CLI()
+
+@cli.subcommand()
+def hello_kebab(fist_name, reverse_name: bool):
+    '''Command that prints greets someone'''
+    if reverse:
+        name = name[::-1]
+    print(f"Hello, {name}!")
+
+cli()
+```
+We could execute this like we would normally
+```
+$ python3 example.py hello_kebab first_name=Sean --reverse_name
+```
+Or we could replace it with `kebab-case`
+```
+$ python3 example.py hello-kebab first-name=Sean --reverse-name
+```
+Both are equally valid and have the same result

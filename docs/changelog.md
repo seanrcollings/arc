@@ -27,6 +27,7 @@ Check out the most recent, and all, versions of Arc.
 
 # v2.1.0
 - Context can now be subclassed for typing and extra functionality
+- Arc support kebab-case on the command line
 
 # v2.0.2
 - Calling `Command#base` now internal data based on the new function provided
