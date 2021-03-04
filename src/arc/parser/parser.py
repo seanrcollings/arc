@@ -10,7 +10,6 @@ from .data_types import (
     FLAG,
     POS_ARGUMENT,
     KEY_ARGUMENT,
-    Token,
     TokenizerMode,
 )
 from . import data_types as types
