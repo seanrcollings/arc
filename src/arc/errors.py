@@ -36,7 +36,7 @@ class ValidationError(ArcError):
 class TokenizerError(ArcError):
     def __init__(self, token, mode):
         self.token = token
-        super().__init__(f"Unable to understand: `{self.token}` in comamnd string")
+        super().__init__(f"Unable to understand: `{self.token}` in command string")
 
 
 class ParserError(ArcError):
