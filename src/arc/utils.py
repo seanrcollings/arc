@@ -34,24 +34,29 @@ def clear():
         os.system("clear")
 
 
-def timer(func):
+def timer(name):
     """Decorator for timing functions
     will only time if config.debug is set to True
     """
 
-    @functools.wraps(func)
-    def decorator(*args, **kwargs):
-        start_time = time.time()
-        func(*args, **kwargs)
-        end_time = time.time()
-        logger.info(
-            "%sCompleted in %ss%s",
-            fg.GREEN,
-            round(end_time - start_time, 2),
-            effects.CLEAR,
-        )
+    def wrapper(func):
+        @functools.wraps(func)
+        def decorator(*args, **kwargs):
+            start_time = time.time()
+            return_value = func(*args, **kwargs)
+            end_time = time.time()
+            logger.info(
+                "%sCompleted %s in %ss%s",
+                fg.GREEN,
+                name,
+                round(end_time - start_time, 5),
+                effects.CLEAR,
+            )
+            return return_value
 
-    return decorator
+        return decorator
+
+    return wrapper
 
 
 class symbol:

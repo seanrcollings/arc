@@ -1,10 +1,12 @@
 import sys
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Iterable, Generator
+from importlib import import_module
+from pathlib import Path
 
 from arc.parser import parse
 from arc import config, utils
 
-from .color import effects
+from .color import effects, fg
 from .command import KeywordCommand, Command
 from .errors import CommandError
 
@@ -14,13 +16,15 @@ class CLI(KeywordCommand):
     of the Command class and reality just acts as a
     conveneince wrapper around Command creation and
     the run function.
-
-    :param arcfile: arc config file to load. defaults to ./.arc
     """
 
     def __init__(
         self, name="cli", function=utils.no_op, arcfile="./.arc", context=None
     ):
+        """Creates a CLI object.
+
+        :param arcfile: arc config file to load. defaults to ./.arc
+        :param context: dict of key value pairs to pass to children as context"""
         super().__init__(name, function, context)
         config.load_arc_file(arcfile)
 
@@ -37,6 +41,10 @@ class CLI(KeywordCommand):
     def match_input(self, _):
         ...
 
+    @utils.timer("Autoloading")
+    def autoload(self, *paths: str):
+        Autoload(paths, self).load()
+
     def helper(self, level: int = 0):
         """Displays this help.
         """
@@ -44,6 +52,62 @@ class CLI(KeywordCommand):
         print(f"{effects.UNDERLINE}{effects.BOLD}Commands:{effects.CLEAR}\n")
         for command in self.subcommands.values():
             command.helper(level)
+
+
+class Autoload:
+    def __init__(self, paths: Iterable[str], parent: Command):
+        self.paths = paths
+        self.parent = parent
+
+    def load(self):
+        for path in self.__load_files(self.paths):
+            utils.logger.debug("Autoloading %s%s%s", fg.YELLOW, path, effects.CLEAR)
+            for command in self.load_commands(path):
+                if command.name in self.parent.subcommands:
+                    raise CommandError(
+                        f"Namespace {command.name} already exists on {self.parent}\n"
+                        "Autoloaded namespaces cannot overwrite prexisting namespaces"
+                    )
+
+                self.parent.install_command(command)
+
+    def __load_files(self, paths: Iterable[str]):
+        for filepath in paths:
+            path = self.path(filepath)
+            if not path:
+                continue
+
+            if path.name.startswith("__"):
+                continue
+
+            if path.is_dir():
+                yield from self.__load_files(path.iterdir())  # type: ignore
+            else:
+                yield path
+
+    def load_commands(self, path: Path) -> Generator[Command, None, None]:
+        sys.path.append(str(path.parent))
+        module = import_module(path.stem)
+        module_objects = (
+            getattr(module, name) for name in dir(module) if not name.startswith("__")
+        )
+        for obj in module_objects:
+            if isinstance(obj, type):
+                continue
+
+            try:
+                if Command in obj.__class__.mro() and obj.__namespace__:
+                    yield obj
+            except AttributeError:
+                continue
+
+    @staticmethod
+    def path(filepath: str) -> Optional[Path]:
+        path = Path(filepath)
+        path = path.expanduser().resolve()
+        if path.exists():
+            return path
+        return None
 
 
 def run(
