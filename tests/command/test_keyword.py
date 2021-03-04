@@ -47,3 +47,20 @@ class TestKeywordCommand(BaseCommandTest):
 
         with self.assertRaises(ValidationError):
             run(self.command, "has_args1 string 2")
+
+    def test_kebab_case(self):
+        @self.command.subcommand()
+        def has_kebab(test_value: int, test_flag: bool):
+            ...
+
+        run(self.command, "has_kebab test_value=2")
+        has_kebab.function.assert_called_with(test_value=2, test_flag=False)
+
+        run(self.command, "has-kebab test-value=2")
+        has_kebab.function.assert_called_with(test_value=2, test_flag=False)
+
+        run(self.command, "has-kebab test-value=2 --test_flag")
+        has_kebab.function.assert_called_with(test_value=2, test_flag=True)
+
+        run(self.command, "has-kebab test-value=2 --test-flag")
+        has_kebab.function.assert_called_with(test_value=2, test_flag=True)

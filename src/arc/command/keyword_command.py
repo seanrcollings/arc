@@ -44,7 +44,7 @@ class KeywordCommand(Command, CommandMixin):
                 raise CommandError(f"Option '{name}' not recognized")
 
             if node.kind is FLAG:
-                option.value = not option.value
+                option.value = not option.default
             else:
                 option.value = node.value
                 option.convert()
@@ -65,7 +65,7 @@ class KeywordCommand(Command, CommandMixin):
         if param.kind is param.VAR_KEYWORD:
             if idx != meta["length"] - 1:
                 raise CommandError(
-                    "The variable keyword arguement (**kwargs)",
+                    "The variable keyword argument (**kwargs)",
                     "must be the last argument of the command",
                 )
 

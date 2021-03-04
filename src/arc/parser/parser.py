@@ -10,9 +10,12 @@ from .data_types import (
     FLAG,
     POS_ARGUMENT,
     KEY_ARGUMENT,
+    Token,
     TokenizerMode,
 )
 from . import data_types as types
+
+IDENT = r"[a-zA-Z-_0-9]+"
 
 
 class Tokenizer:
@@ -27,10 +30,10 @@ class Tokenizer:
     """
 
     TOKEN_TYPES = {
-        TokenizerMode.COMMAND: {COMMAND: r"\A\b((?:(?:\w+:)+\w+)|\w+)$",},
+        TokenizerMode.COMMAND: {COMMAND: fr"\A\b((?:(?:{IDENT}:)+{IDENT})|{IDENT})$",},
         TokenizerMode.BODY: {
-            FLAG: fr"\A{config.flag_denoter}(?P<name>\b\w+)$",
-            KEY_ARGUMENT: fr"\A\b(?P<name>[a-zA-Z_0-9]+\b){config.arg_assignment}(?P<value>.+)$",
+            FLAG: fr"\A{config.flag_denoter}(?P<name>\b{IDENT})$",
+            KEY_ARGUMENT: fr"\A\b(?P<name>{IDENT}\b){config.arg_assignment}(?P<value>.+)$",
             POS_ARGUMENT: r"\A\b(.+)$",
         },
     }
@@ -43,7 +46,8 @@ class Tokenizer:
     def tokenize(self):
         while len(self.data) > 0:
             if token := self.__tokenize_one_token():
-                self.tokens.append(token)
+                if token is not None:
+                    self.tokens.append(token)
         return self.tokens
 
     def __tokenize_one_token(self):
@@ -51,27 +55,29 @@ class Tokenizer:
             regex = re.compile(pattern)
             match_against = self.data[0].strip()
 
-            if self.mode == TokenizerMode.COMMAND:
-                # Wether or not there's a match, after
-                # the first attempt we need to switch to BODY
-                self.mode = TokenizerMode.BODY
-
             if match := regex.match(match_against):
-
-                value: Union[Dict[str, str], str]
-                if groups := match.groupdict():
-                    value = groups
-                else:
-                    value = match.group(1)
+                value = self.__get_value(match)
 
                 if len(match_against) == match.end():
                     self.data.pop(0)
+                    if self.mode == TokenizerMode.COMMAND:
+                        self.mode = TokenizerMode.BODY
                     return types.Token(kind, value)
 
-        # we only want to raise an error if we're in the body
-        # mode because at some point we may need to parse
-        # something without a command
-        raise TokenizerError(self.data[0], self.mode)
+        if self.mode == TokenizerMode.COMMAND:
+            self.mode = TokenizerMode.BODY
+        else:
+            # we only want to raise an error if we're in the body
+            # mode because at some point we may need to parse
+            # something without a command
+            raise TokenizerError(self.data[0], self.mode)
+
+    @staticmethod
+    def __get_value(match: re.Match) -> Union[Dict[str, str], str]:
+        if groups := match.groupdict():
+            return groups
+
+        return match.group(1)
 
 
 class Parser:
@@ -85,17 +91,20 @@ class Parser:
         raise ParserError("No Command Given")
 
     def parse_command(self):
-        namespace = cast(str, self.consume(COMMAND)).split(":")
+        namespace = [
+            n.replace("-", "_") for n in cast(str, self.consume(COMMAND)).split(":")
+        ]
         return types.CommandNode(namespace, self.parse_body())
 
     def parse_body(self):
         args: List[types.ArgNode] = []
         while self.peek() is not None:
-            if self.peek() is FLAG:
+            token = self.peek()
+            if token is FLAG:
                 args.append(self.parse_flag())
-            elif self.peek() is KEY_ARGUMENT:
+            elif token is KEY_ARGUMENT:
                 args.append(self.parse_option())
-            elif self.peek() is POS_ARGUMENT:
+            elif token is POS_ARGUMENT:
                 arg = cast(str, self.consume(POS_ARGUMENT))
                 args.append(types.ArgNode(None, arg, POS_ARGUMENT))
 
@@ -104,12 +113,14 @@ class Parser:
     def parse_option(self):
         argument = self.consume(KEY_ARGUMENT)
         argument = cast(Dict[str, str], argument)
-        return types.ArgNode(argument["name"], argument["value"], KEY_ARGUMENT)
+        return types.ArgNode(
+            argument["name"].replace("-", "_"), argument["value"], KEY_ARGUMENT
+        )
 
     def parse_flag(self):
         flag = self.consume(FLAG)
         flag = cast(Dict[str, str], flag)
-        return types.ArgNode(flag["name"], "", FLAG)
+        return types.ArgNode(flag["name"].replace("-", "_"), "", FLAG)
 
     def consume(self, expected_type):
         token_type = self.tokens[0].type
