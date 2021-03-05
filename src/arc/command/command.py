@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from typing import Dict, Callable, Optional, Tuple
 import textwrap
+import functools
 
 from arc import utils, config
 from arc.color import effects, fg
@@ -9,8 +10,6 @@ from arc.parser.data_types import CommandNode
 
 from .__option import Option
 from .helpers import ArgBuilder
-
-# TODO: Add function wrapper with decorator and @functools.wraps() for some pre-call operations
 
 
 class Command(utils.Helpful):
@@ -38,7 +37,7 @@ class Command(utils.Helpful):
 
     def __init__(self, name: str, function: Callable, context: Optional[Dict] = None):
         self.name = name
-        self.function: Callable = function
+        self.function: Callable = self.function_wrapper(function)
         self.subcommands: Dict[str, Command] = {}
         self.context = context or {}
         self.__func_init()
@@ -55,6 +54,27 @@ class Command(utils.Helpful):
             context.value = context.annotation(self.context)
 
         return dict({arg.name: arg.value for arg in self.__hidden_args.values()})
+
+    def function_wrapper(self, function):
+        @functools.wraps(function)
+        @utils.timer("Command Execution")
+        def wrapper(*args, **kwargs):
+            BAR = "\u2500" * 40
+            try:
+                utils.logger.debug(BAR)
+                return function(*args, **kwargs, **self.hidden_args)
+            except NoOpError as e:
+                print(
+                    fg.RED + "This namespace cannot be executed. "
+                    f"Check '[...]:{self.name}:help' for possible subcommands"
+                    + effects.CLEAR
+                )
+            except ExecutionError as e:
+                print(e)
+            finally:
+                utils.logger.debug(BAR)
+
+        return wrapper
 
     def __func_init(self):
         """Intilization that relates to the command's wrapped function
@@ -88,7 +108,7 @@ class Command(utils.Helpful):
         """
 
         def decorator(function):
-            self.function = function
+            self.function = self.function_wrapper(function)
             self.propagate_context(context)
             self.__func_init()
             return self
@@ -154,7 +174,10 @@ class Command(utils.Helpful):
     def run(self, command_node: CommandNode):
         """External interface to execute a command"""
         if command_node.empty_namespace():
-            return self.__execute(command_node)
+            self.pre_execute(command_node)
+            value = self.execute(command_node)
+            return self.post_execute(value)
+
         else:
             subcommand_name = command_node.namespace.pop(0)
             if subcommand_name not in self.subcommands:
@@ -163,43 +186,20 @@ class Command(utils.Helpful):
             subcommand = self.subcommands[subcommand_name]
             return subcommand.run(command_node)
 
-    @utils.timer("Command Execution")
-    def __execute(self, command_node):
-        """functionality wrapped around
-        the public execute. Called by
-        the run function
+    def pre_execute(self, command_node: CommandNode):
+        """Pre Command Execution hook.
+        By default, handles a few things behind the scenes
+            - calls `validate_input`
+            - calls `match_input`
 
-        Handles a few things behind the scenes
-            - calls self.validate_input
-            - calls self.match_input
         Both of these can be defined in the
         children classes, and will never need to be called
-        directly by the child class
+        directly by the child class"""
 
-        :param command_node: SciptNode object created by the parser
-            May contain options, flags and arbitrary args
-
-        """
         with utils.handle(ValidationError):
             self.validate_input(command_node)
 
         self.match_input(command_node)
-        BAR = "\u2500" * 40
-        try:
-            utils.logger.debug(BAR)
-            self.execute(command_node)
-        except NoOpError as e:
-            print(
-                fg.RED + "This namespace cannot be executed. "
-                f"Check '[...]:{self.name}:help' for possible subcommands"
-                + effects.CLEAR
-            )
-        except ExecutionError as e:
-            print(e)
-        finally:
-            utils.logger.debug(BAR)
-
-        self.cleanup()
 
     @abstractmethod
     def execute(self, command_node: CommandNode):
@@ -209,6 +209,17 @@ class Command(utils.Helpful):
         None of the Command classes use command_node in their implementation
         of execute, but they may need to so it passes it currently
         """
+
+    def post_execute(self, value):
+        """Post Command Execution Hook
+        by default calls `cleanup` and
+        returns the provided value
+
+        :param value: return value of the command
+
+        """
+        self.cleanup()
+        return value
 
     @abstractmethod
     def match_input(self, command_node: CommandNode) -> None:
@@ -235,7 +246,7 @@ class Command(utils.Helpful):
     # Utils
 
     def propagate_context(self, new_context):
-        self.context = new_context | self.context
+        self.context = (new_context or {}) | self.context
         for command in self.subcommands.values():
             command.propagate_context(self.context)
 
