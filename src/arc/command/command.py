@@ -1,15 +1,15 @@
 from abc import abstractmethod
-from typing import Dict, Callable, Optional, Tuple
+from typing import Dict, Callable, Optional, Tuple, Any
 import textwrap
-import functools
+
 
 from arc import utils, config
 from arc.color import effects, fg
-from arc.errors import ExecutionError, CommandError, ValidationError, NoOpError
+from arc.errors import CommandError, ValidationError
 from arc.parser.data_types import CommandNode
 
 from .__option import Option
-from .helpers import ArgBuilder
+from .helpers import ArgBuilder, FunctionWrapper
 
 
 class Command(utils.Helpful):
@@ -24,6 +24,8 @@ class Command(utils.Helpful):
     # command via `namespace()`
     __autoload__: bool = False
 
+    function = FunctionWrapper()
+    _function: Any
     context: dict
     args: Dict[str, Option]
 
@@ -32,15 +34,15 @@ class Command(utils.Helpful):
     # function call. These cannot be provided
     # by the execution string and are matched
     # by type annotation
-    __hidden_args: Dict[str, Option]
+    _hidden_args: Dict[str, Option]
     doc: Optional[str]
 
     def __init__(self, name: str, function: Callable, context: Optional[Dict] = None):
         self.name = name
-        self.function: Callable = self.function_wrapper(function)
+        self.args = {}  # KeywordCommand Freaks out if this isn't here
+        self.function = function
         self.subcommands: Dict[str, Command] = {}
         self.context = context or {}
-        self.__func_init()
 
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
@@ -50,45 +52,10 @@ class Command(utils.Helpful):
 
     @property
     def hidden_args(self) -> dict:
-        if context := self.__hidden_args.get("context"):
+        if context := self._hidden_args.get("context"):
             context.value = context.annotation(self.context)
 
-        return dict({arg.name: arg.value for arg in self.__hidden_args.values()})
-
-    def function_wrapper(self, function):
-        @functools.wraps(function)
-        @utils.timer("Command Execution")
-        def wrapper(*args, **kwargs):
-            BAR = "\u2500" * 40
-            try:
-                utils.logger.debug(BAR)
-                return function(*args, **kwargs, **self.hidden_args)
-            except NoOpError as e:
-                print(
-                    fg.RED + "This namespace cannot be executed. "
-                    f"Check '[...]:{self.name}:help' for possible subcommands"
-                    + effects.CLEAR
-                )
-            except ExecutionError as e:
-                print(e)
-            finally:
-                utils.logger.debug(BAR)
-
-        return wrapper
-
-    def __func_init(self):
-        """Intilization that relates to the command's wrapped function
-        This init must be called on object instantiation and on calling
-        `@command.base()` to insure that all arc features are still available
-        """
-
-        args: tuple = self.build_args()
-        self.args = args[0]
-        self.__hidden_args = args[1]
-
-        self.doc = None
-        if (doc := self.function.__doc__) is not None:
-            self.doc = textwrap.dedent(doc)
+        return dict({arg.name: arg.value for arg in self._hidden_args.values()})
 
     def subcommand(self, name=None, command_type=None, **kwargs):
         """decorator wrapper around install_script"""
@@ -108,9 +75,8 @@ class Command(utils.Helpful):
         """
 
         def decorator(function):
-            self.function = self.function_wrapper(function)
+            self.function = function
             self.propagate_context(context)
-            self.__func_init()
             return self
 
         return decorator
