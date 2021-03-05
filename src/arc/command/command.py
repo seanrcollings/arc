@@ -18,7 +18,12 @@ class Command(utils.Helpful):
     Helpful is abstract, so this is as well"""
 
     __name__: str
-    __namespace__: bool = False
+
+    # Used to indicate that this command can be
+    # autoladed by invoking cli.autoload(...)
+    # is automatcially set when creating a
+    # command via `namespace()`
+    __autoload__: bool = False
 
     context: dict
     args: Dict[str, Option]

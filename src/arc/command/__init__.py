@@ -21,5 +21,5 @@ def namespace(
     """
     function = function or utils.no_op
     command = command_factory(name, function, command_type, **kwargs)
-    command.__namespace__ = True
+    command.__autoload__ = True
     return command

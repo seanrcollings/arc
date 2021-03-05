@@ -21,8 +21,10 @@ class CLI(KeywordCommand):
     def __init__(self, name="cli", function=utils.no_op, arcfile=".arc", context=None):
         """Creates a CLI object.
 
+        :param name: name of the CLI, will be used in the help command
         :param arcfile: arc config file to load. defaults to ./.arc
         :param context: dict of key value pairs to pass to children as context"""
+
         super().__init__(name, function, context)
         config.load_arc_file(arcfile)
 
@@ -33,6 +35,10 @@ class CLI(KeywordCommand):
     def command(self, *args, **kwargs):
         return self.subcommand(*args, **kwargs)
 
+    # Need to stub these in
+    # because Command is abstract,
+    # but they shouldn't every be called
+    # (at least right now: https://github.com/seanrcollings/arc/issues/63)
     def execute(self, _):
         ...
 
@@ -46,7 +52,7 @@ class CLI(KeywordCommand):
     def helper(self, level: int = 0):
         """Displays this help.
         """
-        print(f"Usage: python3 {__file__} [COMMAND] [ARGUMENTS ...]\n\n")
+        print(f"Usage: {self.name} <COMMAND> [ARGUMENTS ...]\n\n")
         print(f"{effects.UNDERLINE}{effects.BOLD}Commands:{effects.CLEAR}\n")
         for command in self.subcommands.values():
             command.helper(level)
@@ -60,7 +66,7 @@ class Autoload:
     def load(self):
         for path in self.__load_files(self.paths):
             utils.logger.debug("Autoloading %s%s%s", fg.YELLOW, path, effects.CLEAR)
-            for command in self.load_commands(path):
+            for command in self.__load_commands(path):
                 if command.name in self.parent.subcommands:
                     raise CommandError(
                         f"Namespace {command.name} already exists on {self.parent}\n"
@@ -83,7 +89,7 @@ class Autoload:
             else:
                 yield path
 
-    def load_commands(self, path: Path) -> Generator[Command, None, None]:
+    def __load_commands(self, path: Path) -> Generator[Command, None, None]:
         sys.path.append(str(path.parent))
         module = import_module(path.stem)
         module_objects = (
@@ -94,7 +100,7 @@ class Autoload:
                 continue
 
             try:
-                if Command in obj.__class__.mro() and obj.__namespace__:
+                if Command in obj.__class__.mro() and obj.__autoload__:
                     yield obj
             except AttributeError:
                 continue
