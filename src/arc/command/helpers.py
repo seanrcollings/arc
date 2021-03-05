@@ -23,7 +23,7 @@ class ArgBuilder:
         self.__sig = inspect.signature(function)
         self.__length = len(self.__sig.parameters.values())
         self.__args: Dict[str, Option] = {}
-        self.__arc_args: Dict[str, Option] = {}
+        self.__hidden_args: Dict[str, Option] = {}
 
     def __enter__(self):
         return self
@@ -44,12 +44,12 @@ class ArgBuilder:
         return self.__args
 
     @property
-    def arc_args(self):
-        return self.__arc_args
+    def hidden_args(self):
+        return self.__hidden_args
 
     def add_arg(self, param: inspect.Parameter):
         if Context in param.annotation.mro():
-            self.__arc_args["context"] = Option(
+            self.__hidden_args["context"] = Option(
                 param.name, param.annotation, NO_DEFAULT
             )
 

@@ -27,7 +27,13 @@ class Command(utils.Helpful):
 
     context: dict
     args: Dict[str, Option]
-    __arc_args: Dict[str, Option]
+
+    # hidden_args are special argumetnts
+    # that arc will inject into the
+    # function call. These cannot be provided
+    # by the execution string and are matched
+    # by type annotation
+    __hidden_args: Dict[str, Option]
     doc: Optional[str]
 
     def __init__(self, name: str, function: Callable, context: Optional[Dict] = None):
@@ -44,26 +50,21 @@ class Command(utils.Helpful):
         return self.function(*args, **kwargs)
 
     @property
-    def arc_args(self) -> dict:
-        if context := self.__arc_args.get("context"):
+    def hidden_args(self) -> dict:
+        if context := self.__hidden_args.get("context"):
             context.value = context.annotation(self.context)
 
-        return dict({arg.name: arg.value for arg in self.__arc_args.values()})
+        return dict({arg.name: arg.value for arg in self.__hidden_args.values()})
 
     def __func_init(self):
         """Intilization that relates to the command's wrapped function
         This init must be called on object instantiation and on calling
         `@command.base()` to insure that all arc features are still available
         """
-        # arc_args are special argumetnts
-        # that arc will inject into the
-        # function call. These cannot be provide
-        # by the execution string and are matched
-        # by type
 
         args: tuple = self.build_args()
         self.args = args[0]
-        self.__arc_args = args[1]
+        self.__hidden_args = args[1]
 
         self.doc = None
         if (doc := self.function.__doc__) is not None:
@@ -147,7 +148,7 @@ class Command(utils.Helpful):
                 meta = builder.get_meta(index=idx)
                 self.arg_hook(param, meta)
 
-            return builder.args, builder.arc_args
+            return builder.args, builder.hidden_args
 
     # Command Execution Methods
     def run(self, command_node: CommandNode):

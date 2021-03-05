@@ -15,7 +15,7 @@ class KeywordCommand(Command, CommandMixin):
 
     def execute(self, command_node: CommandNode):
         args: Dict[str, Any] = {key: obj.value for key, obj in self.args.items()}
-        args.update(self.arc_args)
+        args.update(self.hidden_args)
 
         self.function(**args)
 
