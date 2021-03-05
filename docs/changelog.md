@@ -3,6 +3,7 @@ Check out the most recent, and all, versions of Arc.
 
 - [ARC - A Regular CLI: Change Log](#arc---a-regular-cli-change-log)
 - [Future](#future)
+- [v2.2.0](#v220)
 - [v2.1.0](#v210)
 - [v2.0.2](#v202)
 - [v2.0.1](#v201)
@@ -24,6 +25,9 @@ Check out the most recent, and all, versions of Arc.
 - Type guessing
 - Better default helper text
 - Allow arbitrary nesting of utilites
+
+# v2.2.0
+- Adds Command autoloading support
 
 # v2.1.0
 - Context can now be subclassed for typing and extra functionality
