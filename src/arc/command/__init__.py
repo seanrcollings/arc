@@ -20,4 +20,6 @@ def namespace(
     :param context: dict of context values to be used in this namespace and below
     """
     function = function or utils.no_op
-    return command_factory(name, function, command_type, **kwargs)
+    command = command_factory(name, function, command_type, **kwargs)
+    command.__autoload__ = True
+    return command

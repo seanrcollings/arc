@@ -1,5 +1,5 @@
 from unittest import TestCase
-from typing import Type, List, Dict
+from typing import Type, List
 from arc.command import Command
 from ..mock import mock_command
 

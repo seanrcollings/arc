@@ -9,7 +9,6 @@ from arc.parser.data_types import CommandNode
 
 from .__option import Option
 from .helpers import ArgBuilder
-from .context import Context
 
 # TODO: Add function wrapper with decorator and @functools.wraps() for some pre-call operations
 
@@ -19,6 +18,12 @@ class Command(utils.Helpful):
     Helpful is abstract, so this is as well"""
 
     __name__: str
+
+    # Used to indicate that this command can be
+    # autoladed by invoking cli.autoload(...)
+    # is automatcially set when creating a
+    # command via `namespace()`
+    __autoload__: bool = False
 
     context: dict
     args: Dict[str, Option]
@@ -122,9 +127,11 @@ class Command(utils.Helpful):
             self.add_helper()
 
         utils.logger.debug(
-            "%sregistered '%s' command to %s %s",
+            "Registered %s%s%s command to %s%s%s",
             fg.YELLOW,
             command.name,
+            effects.CLEAR,
+            fg.YELLOW,
             self.name,
             effects.CLEAR,
         )
@@ -155,7 +162,7 @@ class Command(utils.Helpful):
             subcommand = self.subcommands[subcommand_name]
             return subcommand.run(command_node)
 
-    @utils.timer
+    @utils.timer("Command Execution")
     def __execute(self, command_node):
         """functionality wrapped around
         the public execute. Called by
