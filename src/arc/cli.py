@@ -18,9 +18,7 @@ class CLI(KeywordCommand):
     the run function.
     """
 
-    def __init__(
-        self, name="cli", function=utils.no_op, arcfile="./.arc", context=None
-    ):
+    def __init__(self, name="cli", function=utils.no_op, arcfile=".arc", context=None):
         """Creates a CLI object.
 
         :param arcfile: arc config file to load. defaults to ./.arc
