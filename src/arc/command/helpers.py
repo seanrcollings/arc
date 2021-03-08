@@ -119,8 +119,7 @@ class FunctionWrapper:
     def wrapper(self, function, command: Command):
         """Actually where a command's function executes
         provides some wrapping functionality around the function
-        call
-        """
+        call"""
 
         @functools.wraps(function)
         @utils.timer("Command Execution")

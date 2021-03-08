@@ -1,10 +1,8 @@
 import sys
-from typing import cast
 
 from arc.types import ArcGeneric
 from arc.errors import ConversionError
 
-from .base_converter import BaseConverter
 from .converters import *
 
 __all__ = [

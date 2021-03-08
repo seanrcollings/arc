@@ -25,7 +25,7 @@ class Command(utils.Helpful):
     __autoload__: bool = False
 
     function = FunctionWrapper()
-    _function: Any
+    _function: Any  # Set by the FunctionWrapper
     context: dict
     args: Dict[str, Option]
 
@@ -57,8 +57,10 @@ class Command(utils.Helpful):
 
         return dict({arg.name: arg.value for arg in self._hidden_args.values()})
 
+    ### CLI Building ###
+
     def subcommand(self, name=None, command_type=None, **kwargs):
-        """decorator wrapper around install_script"""
+        """decorator wrapper around `create_command` and `install_command`"""
 
         def decorator(function):
             command_name = name or function.__name__
@@ -71,8 +73,7 @@ class Command(utils.Helpful):
 
     def base(self, context: Optional[dict] = None):
         """Decorator to replace the function
-        of the current command
-        """
+        of the current command"""
 
         def decorator(function):
             self.function = function
@@ -86,9 +87,8 @@ class Command(utils.Helpful):
 
         Fallback for command type:
           - provided arguement
-          - command_type of the container (if it's a util it can also inherit
-               it's type from it's parent)
-          - Defaults to KEYWORD
+          - command_type of the parent namespace
+          - KeywordCommand
 
         :returns: the Command object
         """
@@ -136,7 +136,8 @@ class Command(utils.Helpful):
 
             return builder.args, builder.hidden_args
 
-    # Command Execution Methods
+    ### Execution ###
+
     def run(self, command_node: CommandNode):
         """External interface to execute a command"""
         if command_node.empty_namespace():
@@ -209,7 +210,7 @@ class Command(utils.Helpful):
 
         If it isn't valid, raise a `ValidationError`"""
 
-    # Utils
+    ### Helpers ###
 
     def propagate_context(self, new_context):
         self.context = (new_context or {}) | self.context
