@@ -5,7 +5,7 @@ from . import KeywordCommand, PositionalCommand, RawCommand, Command
 
 class CommandType:
     # External Command Type Interface.
-    # Doesn't have any direct access to thes Command Types
+    # Doesn't have any direct access to the actual Command Types
 
     # KeywordCommand - options passed like so: option=value
     KEYWORD = symbol("KEYWORD")
@@ -18,7 +18,7 @@ class CommandType:
 
     # Internal Interface, used to map the symbol
     # to the actual Class
-    command_type_mappings: Dict[symbol, Type["Command"]] = {
+    command_type_mappings: Dict[symbol, Type[Command]] = {
         KEYWORD: KeywordCommand,
         POSITIONAL: PositionalCommand,
         RAW: RawCommand,

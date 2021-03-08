@@ -6,9 +6,7 @@ from .command import Command
 
 class RawCommand(Command):
     def execute(self, _command_node: CommandNode):
-        self.function(
-            *sys.argv, {obj.name: obj.value for obj in self.hidden_args.values()}
-        )
+        self.function(*sys.argv)
 
     def match_input(self, _command_node: CommandNode):
         ...

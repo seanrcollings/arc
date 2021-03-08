@@ -1,16 +1,15 @@
 from abc import abstractmethod
-from typing import Dict, Callable, Optional, Tuple
+from typing import Dict, Callable, Optional, Tuple, Any
 import textwrap
+
 
 from arc import utils, config
 from arc.color import effects, fg
-from arc.errors import ExecutionError, CommandError, ValidationError, NoOpError
+from arc.errors import CommandError, ValidationError
 from arc.parser.data_types import CommandNode
 
 from .__option import Option
-from .helpers import ArgBuilder
-
-# TODO: Add function wrapper with decorator and @functools.wraps() for some pre-call operations
+from .helpers import ArgBuilder, FunctionWrapper
 
 
 class Command(utils.Helpful):
@@ -25,6 +24,8 @@ class Command(utils.Helpful):
     # command via `namespace()`
     __autoload__: bool = False
 
+    function = FunctionWrapper()
+    _function: Any  # Set by the FunctionWrapper
     context: dict
     args: Dict[str, Option]
 
@@ -33,15 +34,15 @@ class Command(utils.Helpful):
     # function call. These cannot be provided
     # by the execution string and are matched
     # by type annotation
-    __hidden_args: Dict[str, Option]
+    _hidden_args: Dict[str, Option]
     doc: Optional[str]
 
     def __init__(self, name: str, function: Callable, context: Optional[Dict] = None):
         self.name = name
-        self.function: Callable = function
+        self.args = {}  # KeywordCommand Freaks out if this isn't here
+        self.function = function
         self.subcommands: Dict[str, Command] = {}
         self.context = context or {}
-        self.__func_init()
 
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
@@ -51,27 +52,15 @@ class Command(utils.Helpful):
 
     @property
     def hidden_args(self) -> dict:
-        if context := self.__hidden_args.get("context"):
+        if context := self._hidden_args.get("context"):
             context.value = context.annotation(self.context)
 
-        return dict({arg.name: arg.value for arg in self.__hidden_args.values()})
+        return dict({arg.name: arg.value for arg in self._hidden_args.values()})
 
-    def __func_init(self):
-        """Intilization that relates to the command's wrapped function
-        This init must be called on object instantiation and on calling
-        `@command.base()` to insure that all arc features are still available
-        """
-
-        args: tuple = self.build_args()
-        self.args = args[0]
-        self.__hidden_args = args[1]
-
-        self.doc = None
-        if (doc := self.function.__doc__) is not None:
-            self.doc = textwrap.dedent(doc)
+    ### CLI Building ###
 
     def subcommand(self, name=None, command_type=None, **kwargs):
-        """decorator wrapper around install_script"""
+        """decorator wrapper around `create_command` and `install_command`"""
 
         def decorator(function):
             command_name = name or function.__name__
@@ -84,13 +73,11 @@ class Command(utils.Helpful):
 
     def base(self, context: Optional[dict] = None):
         """Decorator to replace the function
-        of the current command
-        """
+        of the current command"""
 
         def decorator(function):
             self.function = function
             self.propagate_context(context)
-            self.__func_init()
             return self
 
         return decorator
@@ -100,9 +87,8 @@ class Command(utils.Helpful):
 
         Fallback for command type:
           - provided arguement
-          - command_type of the container (if it's a util it can also inherit
-               it's type from it's parent)
-          - Defaults to KEYWORD
+          - command_type of the parent namespace
+          - KeywordCommand
 
         :returns: the Command object
         """
@@ -150,11 +136,15 @@ class Command(utils.Helpful):
 
             return builder.args, builder.hidden_args
 
-    # Command Execution Methods
+    ### Execution ###
+
     def run(self, command_node: CommandNode):
         """External interface to execute a command"""
         if command_node.empty_namespace():
-            return self.__execute(command_node)
+            self.pre_execute(command_node)
+            value = self.execute(command_node)
+            return self.post_execute(value)
+
         else:
             subcommand_name = command_node.namespace.pop(0)
             if subcommand_name not in self.subcommands:
@@ -163,43 +153,20 @@ class Command(utils.Helpful):
             subcommand = self.subcommands[subcommand_name]
             return subcommand.run(command_node)
 
-    @utils.timer("Command Execution")
-    def __execute(self, command_node):
-        """functionality wrapped around
-        the public execute. Called by
-        the run function
+    def pre_execute(self, command_node: CommandNode):
+        """Pre Command Execution hook.
+        By default, handles a few things behind the scenes
+            - calls `validate_input`
+            - calls `match_input`
 
-        Handles a few things behind the scenes
-            - calls self.validate_input
-            - calls self.match_input
         Both of these can be defined in the
         children classes, and will never need to be called
-        directly by the child class
+        directly by the child class"""
 
-        :param command_node: SciptNode object created by the parser
-            May contain options, flags and arbitrary args
-
-        """
         with utils.handle(ValidationError):
             self.validate_input(command_node)
 
         self.match_input(command_node)
-        BAR = "\u2500" * 40
-        try:
-            utils.logger.debug(BAR)
-            self.execute(command_node)
-        except NoOpError as e:
-            print(
-                fg.RED + "This namespace cannot be executed. "
-                f"Check '[...]:{self.name}:help' for possible subcommands"
-                + effects.CLEAR
-            )
-        except ExecutionError as e:
-            print(e)
-        finally:
-            utils.logger.debug(BAR)
-
-        self.cleanup()
 
     @abstractmethod
     def execute(self, command_node: CommandNode):
@@ -209,6 +176,17 @@ class Command(utils.Helpful):
         None of the Command classes use command_node in their implementation
         of execute, but they may need to so it passes it currently
         """
+
+    def post_execute(self, value):
+        """Post Command Execution Hook
+        by default calls `cleanup` and
+        returns the provided value
+
+        :param value: return value of the command
+
+        """
+        self.cleanup()
+        return value
 
     @abstractmethod
     def match_input(self, command_node: CommandNode) -> None:
@@ -232,10 +210,10 @@ class Command(utils.Helpful):
 
         If it isn't valid, raise a `ValidationError`"""
 
-    # Utils
+    ### Helpers ###
 
     def propagate_context(self, new_context):
-        self.context = new_context | self.context
+        self.context = (new_context or {}) | self.context
         for command in self.subcommands.values():
             command.propagate_context(self.context)
 
