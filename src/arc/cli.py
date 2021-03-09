@@ -26,7 +26,7 @@ class CLI(KeywordCommand):
         :param context: dict of key value pairs to pass to children as context"""
 
         super().__init__(name, function, context)
-        config.load_arc_file(arcfile)
+        config.from_file(arcfile)
 
     # pylint: disable=arguments-differ
     def __call__(self, execute: Optional[str] = None):  # type: ignore
@@ -127,7 +127,7 @@ def run(
     :param arcfile: file path to an arc config file to load
     """
     if arcfile:
-        config.load_arc_file(arcfile)
+        config.from_file(arcfile)
     user_input: Union[List[str], str] = execute if execute else sys.argv[1:]
     command_node = parse(user_input)
     utils.logger.debug(command_node)

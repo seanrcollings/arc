@@ -84,15 +84,18 @@ class Parser:
         self.tokens: List[types.Token] = tokens
 
     def parse(self):
-        if self.peek() is COMMAND:
-            return self.parse_command()
+        return self.parse_command()
+        # if self.peek() is COMMAND:
 
-        raise ParserError("No Command Given")
+        # raise ParserError("No Command Given")
 
     def parse_command(self):
-        namespace = [
-            n.replace("-", "_") for n in cast(str, self.consume(COMMAND)).split(":")
-        ]
+        namespace = []
+        if self.peek() is COMMAND:
+            namespace = [
+                n.replace("-", "_") for n in cast(str, self.consume(COMMAND)).split(":")
+            ]
+
         return types.CommandNode(namespace, self.parse_body())
 
     def parse_body(self):
@@ -136,7 +139,7 @@ class Parser:
             return None
 
 
-def parse(command: Union[List[str], str]):
+def parse(command: Union[List[str], str]) -> types.CommandNode:
     """Convenience wrapper around the
     tokenizer and parser.
 

@@ -1,2 +1,0 @@
-log=False
-debug=False

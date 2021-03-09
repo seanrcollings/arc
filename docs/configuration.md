@@ -55,6 +55,6 @@ Arc will default to looking for a file called .arc in the current directory. But
 ```py x
 from arc import CLI, config, run
 cli = CLI(arcfile="myacrfile") # most common one
-config.load_arc_file("myarcfile") # useful when not using the CLI object
+config.from_file("myarcfile") # useful when not using the CLI object
 run(namespace, arcfile="myarcfile") # not generally reccomended
 ```
