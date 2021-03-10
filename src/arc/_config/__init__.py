@@ -1,11 +1,5 @@
-from arc.convert import converter_mapping
 from .config import Config
+from .base import ConfigBase
+from .helpers import ConfigValue, ManagedLogging
 
-
-config: Config = Config(
-    namespace_sep=":",
-    arg_assignment="=",
-    flag_denoter="--",
-    loglevel=30,
-    converters=converter_mapping,
-)
+config: Config = Config()
