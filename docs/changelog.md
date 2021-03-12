@@ -28,6 +28,9 @@ Check out the most recent, and all, versions of Arc.
 
 # v2.2.0
 - Adds Command autoloading support
+- Beefed up the Config
+  - Config is internally more rigidly defined
+  - Exposes it's functionality for making tool-related config objects
 
 # v2.1.0
 - Context can now be subclassed for typing and extra functionality
