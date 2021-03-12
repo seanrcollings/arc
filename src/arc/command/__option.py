@@ -1,7 +1,7 @@
 from typing import Any
 import inspect
 
-from arc import config
+from arc import arc_config
 from arc.utils import symbol, Helpful
 from arc.types import needs_cleanup
 from arc.convert import convert
@@ -37,4 +37,4 @@ class Option(Helpful):
             del self.value
 
     def helper(self, level: int = 0):
-        print(f"{self.name}{config.arg_assignment}{self.default}")
+        print(f"{self.name}{arc_config.arg_assignment}{self.default}")

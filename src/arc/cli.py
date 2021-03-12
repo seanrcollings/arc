@@ -4,7 +4,7 @@ from importlib import import_module
 from pathlib import Path
 
 from arc.parser import parse
-from arc import config, utils
+from arc import arc_config, utils
 
 from .color import effects, fg
 from .command import KeywordCommand, Command
@@ -26,7 +26,7 @@ class CLI(KeywordCommand):
         :param context: dict of key value pairs to pass to children as context"""
 
         super().__init__(name, function, context)
-        config.load_arc_file(arcfile)
+        arc_config.from_file(arcfile)
 
     # pylint: disable=arguments-differ
     def __call__(self, execute: Optional[str] = None):  # type: ignore
@@ -123,11 +123,12 @@ def run(
 
     :param command: command object to run
     :param execute: string to parse and execute. If it's not provided
-    sys.argv will be used
-    :param arcfile: file path to an arc config file to load
+        sys.argv will be used
+    :param arcfile: file path to an arc config file to load,
+        will ignore if path does not exsit
     """
     if arcfile:
-        config.load_arc_file(arcfile)
+        arc_config.from_file(arcfile)
     user_input: Union[List[str], str] = execute if execute else sys.argv[1:]
     command_node = parse(user_input)
     utils.logger.debug(command_node)

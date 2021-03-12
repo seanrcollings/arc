@@ -2,7 +2,7 @@ import re
 from typing import List, Union, cast, Dict
 import shlex
 
-from arc import config
+from arc import arc_config
 from arc.errors import ParserError, TokenizerError
 from arc import utils
 from .data_types import (
@@ -31,8 +31,8 @@ class Tokenizer:
     TOKEN_TYPES = {
         TokenizerMode.COMMAND: {COMMAND: fr"\A\b((?:(?:{IDENT}:)+{IDENT})|{IDENT})$",},
         TokenizerMode.BODY: {
-            FLAG: fr"\A{config.flag_denoter}(?P<name>\b{IDENT})$",
-            KEY_ARGUMENT: fr"\A\b(?P<name>{IDENT}\b){config.arg_assignment}(?P<value>.+)$",
+            FLAG: fr"\A{arc_config.flag_denoter}(?P<name>\b{IDENT})$",
+            KEY_ARGUMENT: fr"\A\b(?P<name>{IDENT}\b){arc_config.arg_assignment}(?P<value>.+)$",
             POS_ARGUMENT: r"\A\b(.+)$",
         },
     }
@@ -84,15 +84,18 @@ class Parser:
         self.tokens: List[types.Token] = tokens
 
     def parse(self):
-        if self.peek() is COMMAND:
-            return self.parse_command()
+        return self.parse_command()
+        # if self.peek() is COMMAND:
 
-        raise ParserError("No Command Given")
+        # raise ParserError("No Command Given")
 
     def parse_command(self):
-        namespace = [
-            n.replace("-", "_") for n in cast(str, self.consume(COMMAND)).split(":")
-        ]
+        namespace = []
+        if self.peek() is COMMAND:
+            namespace = [
+                n.replace("-", "_") for n in cast(str, self.consume(COMMAND)).split(":")
+            ]
+
         return types.CommandNode(namespace, self.parse_body())
 
     def parse_body(self):
@@ -136,7 +139,7 @@ class Parser:
             return None
 
 
-def parse(command: Union[List[str], str]):
+def parse(command: Union[List[str], str]) -> types.CommandNode:
     """Convenience wrapper around the
     tokenizer and parser.
 

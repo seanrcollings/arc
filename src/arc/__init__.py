@@ -1,8 +1,7 @@
-from arc._config import Config
+from arc.config import arc_config
 
-config: Config = Config()
 
-# # pylint: disable=wrong-import-position
+# pylint: disable=wrong-import-position
 from arc.cli import CLI, run
 from arc.command import CommandType, namespace, Context
 from arc.errors import NoOpError

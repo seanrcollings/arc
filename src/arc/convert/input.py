@@ -1,4 +1,4 @@
-from arc import config
+from arc import arc_config
 
 
 def base_input_func(prompt: str, converter):
@@ -8,5 +8,5 @@ def base_input_func(prompt: str, converter):
 
 # Dynamicaly creates a function for each of the converters
 # defined in Config.converters.
-for name, converter in config.converters.items():
+for name, converter in arc_config.converters.items():
     globals()[f"input_to_{name}"] = lambda p, c=converter: base_input_func(p, c)

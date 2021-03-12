@@ -1,7 +1,7 @@
 import os
 import random
 
-from arc import namespace, config
+from arc import namespace, arc_config
 from arc.formatters import Table, Box
 
 debug = namespace("debug")
@@ -11,10 +11,10 @@ debug = namespace("debug")
 def display_config():
     """Displays information about the current config of the Arc app"""
     config_items = [
-        ["Namespace Seperator", config.namespace_sep, ":"],
-        ["Argument Assignment", config.arg_assignment, "="],
-        ["Flag Denoter", config.flag_denoter, "--"],
-        ["Log", config.loglevel, "logging.WARNING"],
+        ["Namespace Seperator", arc_config.namespace_sep, ":"],
+        ["Argument Assignment", arc_config.arg_assignment, "="],
+        ["Flag Denoter", arc_config.flag_denoter, "--"],
+        ["Log", arc_config.loglevel, "logging.WARNING"],
         ["Converters", "See debug:converters", "-"],
     ]
 
@@ -30,7 +30,7 @@ def converters():
     filler_words = ["foo", "bar", "baz", "buzz"]  # Randomly pick for filler information
     converter_rows = [
         [v.__name__, v.convert_to, f"{random.choice(filler_words)} : {k}"]
-        for (k, v) in config.converters.items()
+        for (k, v) in arc_config.converters.items()
     ]
 
     table = Table(
