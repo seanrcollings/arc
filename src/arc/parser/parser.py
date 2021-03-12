@@ -33,7 +33,7 @@ class Tokenizer:
         TokenizerMode.BODY: {
             FLAG: fr"\A{arc_config.flag_denoter}(?P<name>\b{IDENT})$",
             KEY_ARGUMENT: fr"\A\b(?P<name>{IDENT}\b){arc_config.arg_assignment}(?P<value>.+)$",
-            POS_ARGUMENT: r"\A\b(.+)$",
+            POS_ARGUMENT: r"\A(.+)$",
         },
     }
 

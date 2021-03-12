@@ -31,6 +31,7 @@ Check out the most recent, and all, versions of Arc.
 - Beefed up the Config
   - Config is internally more rigidly defined
   - Exposes it's functionality for making tool-related config objects
+- Fixed issue with emojis not being parsed properly (probably happened with other Unicode characters too)
 
 # v2.1.0
 - Context can now be subclassed for typing and extra functionality
