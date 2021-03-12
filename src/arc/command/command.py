@@ -3,7 +3,7 @@ from typing import Dict, Callable, Optional, Tuple, Any
 import textwrap
 
 
-from arc import utils, config
+from arc import utils, arc_config
 from arc.color import effects, fg
 from arc.errors import CommandError, ValidationError
 from arc.parser.data_types import CommandNode
@@ -227,7 +227,7 @@ class Command(utils.Helpful):
 
     def helper(self, level: int = 0):
         """helper doc"""
-        sep = config.namespace_sep
+        sep = arc_config.namespace_sep
         indent = "    " * level
         name = f"{fg.GREEN}{self.name}{effects.CLEAR}"
         if level == 0:

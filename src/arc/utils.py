@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from typing import Dict, Type
 
-from arc import config
+from arc import arc_config
 from arc.errors import NoOpError
 from arc.color import fg, effects
 
@@ -102,7 +102,7 @@ def handle(*exceptions: Type[Exception], exit_code=1):
     try:
         yield
     except exceptions as e:
-        if config.loglevel == logging.DEBUG:
+        if arc_config.loglevel == logging.DEBUG:
             logger.debug(
                 "".join(
                     traceback.format_exception(

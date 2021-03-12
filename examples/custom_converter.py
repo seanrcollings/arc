@@ -1,6 +1,6 @@
 from math import pi
 from arc.convert import BaseConverter, ConversionError
-from arc import CLI, config
+from arc import CLI, arc_config
 
 
 # Custom Circle object
@@ -38,7 +38,7 @@ class CircleConverter(BaseConverter):
 
 
 cli = CLI()
-config.add_converter(CircleConverter)
+arc_config.add_converter(CircleConverter)
 
 
 @cli.command()

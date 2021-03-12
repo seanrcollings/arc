@@ -1,4 +1,4 @@
-from arc._config import config
+from arc.config import arc_config
 
 
 # pylint: disable=wrong-import-position

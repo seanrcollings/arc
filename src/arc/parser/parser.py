@@ -2,7 +2,7 @@ import re
 from typing import List, Union, cast, Dict
 import shlex
 
-from arc import config
+from arc import arc_config
 from arc.errors import ParserError, TokenizerError
 from arc import utils
 from .data_types import (
@@ -31,8 +31,8 @@ class Tokenizer:
     TOKEN_TYPES = {
         TokenizerMode.COMMAND: {COMMAND: fr"\A\b((?:(?:{IDENT}:)+{IDENT})|{IDENT})$",},
         TokenizerMode.BODY: {
-            FLAG: fr"\A{config.flag_denoter}(?P<name>\b{IDENT})$",
-            KEY_ARGUMENT: fr"\A\b(?P<name>{IDENT}\b){config.arg_assignment}(?P<value>.+)$",
+            FLAG: fr"\A{arc_config.flag_denoter}(?P<name>\b{IDENT})$",
+            KEY_ARGUMENT: fr"\A\b(?P<name>{IDENT}\b){arc_config.arg_assignment}(?P<value>.+)$",
             POS_ARGUMENT: r"\A\b(.+)$",
         },
     }
