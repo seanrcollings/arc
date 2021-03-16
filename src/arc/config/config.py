@@ -12,6 +12,7 @@ class Config(ConfigBase):
     namespace_sep: str = ":"
     arg_assignment: str = "="
     flag_denoter: str = "--"
+    mode: str = "debug"
     loglevel: ManagedLogging = ManagedLogging("arc_logger")
     converters: Dict[str, Type[BaseConverter]] = converter_mapping
 

@@ -29,7 +29,9 @@ class Tokenizer:
     """
 
     TOKEN_TYPES = {
-        TokenizerMode.COMMAND: {COMMAND: fr"\A\b((?:(?:{IDENT}:)+{IDENT})|{IDENT})$",},
+        TokenizerMode.COMMAND: {
+            COMMAND: fr"\A\b((?:(?:{IDENT}:)+{IDENT})|{IDENT}:?)$",
+        },
         TokenizerMode.BODY: {
             FLAG: fr"\A{arc_config.flag_denoter}(?P<name>\b{IDENT})$",
             KEY_ARGUMENT: fr"\A\b(?P<name>{IDENT}\b){arc_config.arg_assignment}(?P<value>.+)$",
@@ -139,6 +141,7 @@ class Parser:
             return None
 
 
+@utils.timer("Parsing")
 def parse(command: Union[List[str], str]) -> types.CommandNode:
     """Convenience wrapper around the
     tokenizer and parser.
