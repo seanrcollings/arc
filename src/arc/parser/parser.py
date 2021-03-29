@@ -54,7 +54,7 @@ class Tokenizer:
     def __tokenize_one_token(self):
         for kind, pattern in self.TOKEN_TYPES[self.mode].items():
             regex = re.compile(pattern)
-            match_against = self.data[0].strip()
+            match_against = self.data[0]
 
             if match := regex.match(match_against):
                 value = self.__get_value(match)
