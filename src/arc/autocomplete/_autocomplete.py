@@ -1,7 +1,7 @@
 import sys
 from arc import namespace as ns, CommandType as ct, Context
 from arc.command import Command
-from arc.parser import parse, CommandNode
+from arc.parser import parse
 
 # TODO
 # - Create a utils file for some helpful functions
@@ -44,24 +44,27 @@ def init(shell_name: str, ctx: Context):
     if shell_name == "fish":
         sys.stdout.write(
             f"complete -f -c {ctx.init['completions_for']} --arguments "
-            f"'({ctx.init['completions_from']} _autocomplete:fish command_str=(commandline) --shell)'"
+            f"'({ctx.init['completions_from']} _autocomplete:fish "
+            f"command_str=(commandline) cursor_pos=(string length (commandline -cp)) --shell)'"
         )
 
 
 @autocomplete.subcommand()
-def fish(command_str: str, shell: bool, ctx: Context):
+def fish(command_str: str, cursor_pos: int, shell: bool, ctx: Context):
     if shell:
         strings = command_str.split(" ")[1:]
     else:
         strings = command_str.split(" ")
 
     with open("buffer.txt", "w+") as file:
-        file.write(command_str)
+        file.write(f"'{command_str}'")
+        file.write("\n")
+        file.write(str(cursor_pos))
+        file.write("\n")
+        file.write(str(sys.argv))
 
-    maybe_break(shell)()
-    node = parse(strings)
+    node = parse(list(strings))
     namespace, command = current_namespace(ctx.cli, node.namespace)
-    maybe_break(shell)()
 
     for name, option in command.args.items():
         if option.annotation == bool:
@@ -69,8 +72,8 @@ def fish(command_str: str, shell: bool, ctx: Context):
         else:
             print(f"{name}=\t{option.annotation.__name__}")
 
-    # maybe_break(buffer)()
-    if len(node.args) == 0:
+    maybe_break(shell)()
+    if len(strings) == 0 or (len(node.args) == 0 and not len(command_str) < cursor_pos):
         for name, subcommand in command.subcommands.items():
             if name in ("_autocomplete", "help"):
                 continue
