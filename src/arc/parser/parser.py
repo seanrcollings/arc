@@ -68,6 +68,7 @@ class Tokenizer:
         if self.mode == TokenizerMode.COMMAND:
             self.mode = TokenizerMode.BODY
         else:
+            breakpoint()
             # we only want to raise an error if we're in the body
             # mode because at some point we may need to parse
             # something without a command
@@ -142,7 +143,7 @@ class Parser:
 
 
 @utils.timer("Parsing")
-def parse(command: Union[List[str], str]) -> types.CommandNode:
+def parse(command: Union[List[str], str], handle=True) -> types.CommandNode:
     """Convenience wrapper around the
     tokenizer and parser.
 
@@ -152,7 +153,7 @@ def parse(command: Union[List[str], str]) -> types.CommandNode:
     if isinstance(command, str):
         command = shlex.split(command)
 
-    with utils.handle(TokenizerError, ParserError):
+    with utils.handle(TokenizerError, ParserError, handle=handle):
         tokens = Tokenizer(command).tokenize()
         parsed = Parser(tokens).parse()
     return parsed

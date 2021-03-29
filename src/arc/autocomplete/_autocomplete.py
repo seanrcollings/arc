@@ -1,7 +1,7 @@
 import sys
 from arc import namespace as ns, CommandType as ct, Context
 from arc.command import Command
-from arc.parser import parse
+from arc.parser import parse, CommandNode
 
 # TODO
 # - Create a utils file for some helpful functions
@@ -45,26 +45,26 @@ def init(shell_name: str, ctx: Context):
         sys.stdout.write(
             f"complete -f -c {ctx.init['completions_for']} --arguments "
             f"'({ctx.init['completions_from']} _autocomplete:fish "
-            f"command_str=(commandline) cursor_pos=(string length (commandline -cp)) --shell)'"
+            f"command_str=(commandline) --shell)'"
         )
 
 
 @autocomplete.subcommand()
-def fish(command_str: str, cursor_pos: int, shell: bool, ctx: Context):
+def fish(command_str: str, shell: bool, ctx: Context):
+    ends_in_space = command_str[-1] == " "
+    command_str = command_str.strip()
     if shell:
         strings = command_str.split(" ")[1:]
     else:
         strings = command_str.split(" ")
 
-    with open("buffer.txt", "w+") as file:
-        file.write(f"'{command_str}'")
-        file.write("\n")
-        file.write(str(cursor_pos))
-        file.write("\n")
-        file.write(str(sys.argv))
-
-    node = parse(list(strings))
-    namespace, command = current_namespace(ctx.cli, node.namespace)
+    if command_str == "":
+        node = CommandNode([], [])
+        namespace = [""]
+        command = ctx.cli
+    else:
+        node = parse(list(strings))
+        namespace, command = current_namespace(ctx.cli, node.namespace)
 
     for name, option in command.args.items():
         if option.annotation == bool:
@@ -72,8 +72,8 @@ def fish(command_str: str, cursor_pos: int, shell: bool, ctx: Context):
         else:
             print(f"{name}=\t{option.annotation.__name__}")
 
-    maybe_break(shell)()
-    if len(strings) == 0 or (len(node.args) == 0 and not len(command_str) < cursor_pos):
+    # maybe_break(shell)()
+    if (len(node.args) == 0 and not ends_in_space) or command == ctx.cli:
         for name, subcommand in command.subcommands.items():
             if name in ("_autocomplete", "help"):
                 continue
