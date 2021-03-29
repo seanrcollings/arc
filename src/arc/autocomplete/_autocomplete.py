@@ -44,30 +44,33 @@ def init(shell_name: str, ctx: Context):
     if shell_name == "fish":
         sys.stdout.write(
             f"complete -f -c {ctx.init['completions_for']} --arguments "
-            f"'({ctx.init['completions_from']} _autocomplete:fish command_str=(commandline -p) --buffer)'"
+            f"'({ctx.init['completions_from']} _autocomplete:fish command_str=(commandline) --shell)'"
         )
 
 
-@autocomplete.subcommand(context={"ends_in_space": sys.argv[-1][-1] == " "})
-def fish(command_str: str, buffer: bool, ctx: Context):
-    if buffer:
+@autocomplete.subcommand()
+def fish(command_str: str, shell: bool, ctx: Context):
+    if shell:
         strings = command_str.split(" ")[1:]
     else:
         strings = command_str.split(" ")
 
-    maybe_break(buffer)()
+    with open("buffer.txt", "w+") as file:
+        file.write(command_str)
+
+    maybe_break(shell)()
     node = parse(strings)
     namespace, command = current_namespace(ctx.cli, node.namespace)
-    maybe_break(buffer)()
+    maybe_break(shell)()
 
     for name, option in command.args.items():
         if option.annotation == bool:
             print(f"--{name}\t FLAG")
         else:
-            print(f"{name}=\t{option.annotation}")
+            print(f"{name}=\t{option.annotation.__name__}")
 
     # maybe_break(buffer)()
-    if len(node.args) == 0 and not ctx.ends_in_space:
+    if len(node.args) == 0:
         for name, subcommand in command.subcommands.items():
             if name in ("_autocomplete", "help"):
                 continue

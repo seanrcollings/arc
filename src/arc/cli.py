@@ -37,7 +37,7 @@ class CLI(KeywordCommand):
 
     # Need to stub these in
     # because Command is abstract,
-    # but they shouldn't every be called
+    # but they shouldn't ever be called
     # (at least right now: https://github.com/seanrcollings/arc/issues/63)
     def execute(self, _):
         ...
