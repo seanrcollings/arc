@@ -1,8 +1,7 @@
 import sys
+import os
 import shlex
 from arc import namespace as ns, CommandType as ct, Context
-from arc.command import Command
-from arc.parser import parse, CommandNode
 
 from ._autocomplete import AutoComplete
 
@@ -14,32 +13,7 @@ from ._autocomplete import AutoComplete
 #     and the command line (use sed to cut the name of the command off?)
 
 
-def maybe_break(buffer):
-    if not buffer:
-        return breakpoint
-    else:
-        return lambda: ...
-
-
 autocomplete = ns("_autocomplete")
-
-
-def current_namespace(
-    command: Command, namespace: list[str]
-) -> tuple[list[str], Command]:
-    """Takes in a command object and navigates down
-    it's subcommand tree via the namespace list,
-    when a namespace isn't a valid subcommand,
-    it will break out and return the last valid one"""
-    curr_namespace: list[str] = []
-    for name in namespace:
-        if name in command.subcommands:
-            curr_namespace.append(name)
-            command = command.subcommands[name]
-        else:
-            break
-
-    return curr_namespace, command
 
 
 @autocomplete.subcommand(command_type=ct.POSITIONAL)
@@ -50,10 +24,22 @@ def init(shell_name: str, ctx: Context):
             f"'({ctx.init['completions_from']} _autocomplete:fish "
             f"command_str=(commandline))'"
         )
+    elif shell_name == "bash":
+        sys.stdout.write(
+            f"complete -C '{ctx.init['completions_from']} _autocomplete:bash' "
+            f"{ctx.init['completions_for']}"
+        )
 
 
 @autocomplete.subcommand()
 def fish(command_str: str, ctx: Context):
     completer = AutoComplete(ctx.cli, command_str)
+    completer.complete()
+    print(*completer.completions, sep="\n")
+
+
+@autocomplete.subcommand(command_type=ct.POSITIONAL)
+def bash(ctx: Context, *args):
+    completer = AutoComplete(ctx.cli, os.getenv("COMP_LINE", ""))
     completer.complete()
     print(*completer.completions, sep="\n")

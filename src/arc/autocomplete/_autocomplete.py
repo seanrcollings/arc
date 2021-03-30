@@ -20,11 +20,9 @@ class AutoComplete:
         self.cli = cli
         # if the first token is the name of the tool, we
         # can just discard it
-
         self.command_str = command_str.lstrip(self.cli.name).lstrip(" ")
-        # breakpoint()
         self.completions: list[Completion] = []
-        # breakpoint()
+
         if self.command_str in ("", " "):
             self.suggest_subcommands = True
             self.node = CommandNode([], [])

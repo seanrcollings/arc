@@ -55,6 +55,10 @@ class Tokenizer:
         for kind, pattern in self.TOKEN_TYPES[self.mode].items():
             regex = re.compile(pattern)
             match_against = self.data[0]
+            # empty tokens are ignored
+            if match_against == "":
+                self.data.pop(0)
+                return None
 
             if match := regex.match(match_against):
                 value = self.__get_value(match)
@@ -68,7 +72,6 @@ class Tokenizer:
         if self.mode == TokenizerMode.COMMAND:
             self.mode = TokenizerMode.BODY
         else:
-            breakpoint()
             # we only want to raise an error if we're in the body
             # mode because at some point we may need to parse
             # something without a command
