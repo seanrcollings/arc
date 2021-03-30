@@ -1,17 +1,8 @@
 import sys
 import os
-import shlex
 from arc import namespace as ns, CommandType as ct, Context
 
 from ._autocomplete import AutoComplete
-
-# TODO
-# - Create a utils file for some helpful functions
-# - change up the fish init so that the command also recieves the current cursor position
-# - Use that current cursor position to determine if we should be providing subcommand auto completion
-# - Come up with a better way to manage the difference between executing the autocomplte directly,
-#     and the command line (use sed to cut the name of the command off?)
-
 
 autocomplete = ns("_autocomplete")
 
@@ -39,7 +30,7 @@ def fish(command_str: str, ctx: Context):
 
 
 @autocomplete.subcommand(command_type=ct.POSITIONAL)
-def bash(ctx: Context, *args):
+def bash(*args, ctx: Context):
     completer = AutoComplete(ctx.cli, os.getenv("COMP_LINE", ""))
     completer.complete()
-    print(*completer.completions, sep="\n")
+    print(*(completion.value for completion in completer.completions), sep="\n")
