@@ -48,12 +48,12 @@ def init(shell_name: str, ctx: Context):
         sys.stdout.write(
             f"complete -f -c {ctx.init['completions_for']} --arguments "
             f"'({ctx.init['completions_from']} _autocomplete:fish "
-            f"command_str=(commandline) --shell)'"
+            f"command_str=(commandline))'"
         )
 
 
 @autocomplete.subcommand()
-def fish(command_str: str, shell: bool, ctx: Context):
-    completer = AutoComplete(ctx.cli, shlex.split(command_str))
+def fish(command_str: str, ctx: Context):
+    completer = AutoComplete(ctx.cli, command_str)
     completer.complete()
-    print("\n".join(str(completion) for completion in completer.completions))
+    print(*completer.completions, sep="\n")

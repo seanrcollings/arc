@@ -16,21 +16,24 @@ class Completion:
 
 
 class AutoComplete:
-    def __init__(self, cli: Command, tokens: list[str]):
+    def __init__(self, cli: Command, command_str: str):
         self.cli = cli
         # if the first token is the name of the tool, we
         # can just discard it
-        self.tokens = tokens[1:] if tokens[0] == self.cli.name else tokens
+
+        self.command_str = command_str.lstrip(self.cli.name).lstrip(" ")
+        # breakpoint()
         self.completions: list[Completion] = []
-        if utils.is_empty(self.tokens):
-            self.ends_in_space = False
+        # breakpoint()
+        if self.command_str in ("", " "):
+            self.suggest_subcommands = True
             self.node = CommandNode([], [])
             self.namespace: list[str] = []
             self.command = self.cli
         else:
-            self.ends_in_space = self.tokens[-1][-1] == " "
-            self.tokens[-1] = self.tokens[-1].strip()
-            self.node = parse(list(self.tokens))
+            self.suggest_subcommands = self.command_str[-1] != " "
+            self.command_str = self.command_str.strip()
+            self.node = parse(self.command_str)
             self.namespace, self.command = utils.current_namespace(
                 self.cli, self.node.namespace
             )
@@ -50,15 +53,15 @@ class AutoComplete:
 
     def complete_subcommands(self):
         if (
-            len(self.node.args) == 0 and not self.ends_in_space
+            len(self.node.args) == 0 and self.suggest_subcommands
         ) or self.command == self.cli:
-            for name, subcommand in self.command.subcommands.items():
-                if name in ("_autocomplete", "help"):
-                    continue
 
-                name = (
-                    f"{':'.join(self.namespace)}:{name}"
-                    if len(self.namespace) > 0
-                    else name
-                )
-                self.completions.append(Completion(name, subcommand.doc or ""))
+            for name, subcommand in self.command.subcommands.items():
+                if name not in ("_autocomplete", "help"):
+
+                    name = (
+                        f"{':'.join(self.namespace)}:{name}"
+                        if len(self.namespace) > 0
+                        else name
+                    )
+                    self.completions.append(Completion(name, subcommand.doc or ""))
