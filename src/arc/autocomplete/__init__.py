@@ -21,7 +21,7 @@ def init(shell_name: str, ctx: Context):
     #         f"{ctx.init['completions_for']}"
     #     )
     else:
-        raise ExecutionError("Autocompltetion currently only supported in: fish")
+        raise ExecutionError("Autocompletion currently only supported in fish")
 
 
 @autocomplete.subcommand()
