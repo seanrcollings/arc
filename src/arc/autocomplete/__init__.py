@@ -1,6 +1,6 @@
 import sys
 import os
-from arc import namespace as ns, CommandType as ct, Context
+from arc import namespace as ns, CommandType as ct, Context, ExecutionError
 
 from ._autocomplete import AutoComplete
 
@@ -15,11 +15,13 @@ def init(shell_name: str, ctx: Context):
             f"'({ctx.init['completions_from']} _autocomplete:fish "
             f"command_str=(commandline))'"
         )
-    elif shell_name == "bash":
-        sys.stdout.write(
-            f"complete -C '{ctx.init['completions_from']} _autocomplete:bash' "
-            f"{ctx.init['completions_for']}"
-        )
+    # elif shell_name == "bash":
+    #     sys.stdout.write(
+    #         f"complete -C '{ctx.init['completions_from']} _autocomplete:bash' "
+    #         f"{ctx.init['completions_for']}"
+    #     )
+    else:
+        raise ExecutionError("Autocompltetion currently only supported in: fish")
 
 
 @autocomplete.subcommand()
