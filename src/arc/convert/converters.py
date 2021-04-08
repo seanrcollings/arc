@@ -1,12 +1,13 @@
 from typing import Dict, Type, Optional, Union, Any
 from typing import _GenericAlias as GenericAlias  # type: ignore
+from enum import Enum
 
-from arc.convert.base_converter import BaseConverter
+from arc.convert.base_converter import BaseConverter, TypeConverter
 from arc.convert import ConversionError
 from arc.types.file import File
 
 
-class StringConverter(BaseConverter):
+class StringConverter(TypeConverter, BaseConverter):
     convert_to = str
 
 
@@ -188,6 +189,23 @@ class AliasConverter(BaseConverter):
         )
 
 
+class EnumConverter(BaseConverter):
+    convert_to = Enum
+
+    def convert(self, value):
+        if value.isnumeric():
+            value = int(value)
+
+        try:
+            return self.annotation(value)
+        except ValueError as e:
+            raise ConversionError(
+                value,
+                f"The value '{value}' is not acceptable.\n"
+                f"Acceptable values: {', '.join(str(data.value) for data in self.annotation)}",
+            ) from e
+
+
 converter_mapping: Dict[str, Type[BaseConverter]] = {
     "str": StringConverter,
     "int": IntConverter,
@@ -197,6 +215,7 @@ converter_mapping: Dict[str, Type[BaseConverter]] = {
     "list": ListConverter,
     "alias": AliasConverter,
     "file": FileConverter,
+    "enum": EnumConverter,
 }
 
 
@@ -208,3 +227,7 @@ def get_converter(key: Union[str, type]) -> Optional[Type[BaseConverter]]:
 
 def is_alias(alias):
     return isinstance(alias, GenericAlias)
+
+
+def is_enum(annotation: type):
+    return Enum in annotation.mro()
