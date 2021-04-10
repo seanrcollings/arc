@@ -1,5 +1,5 @@
 appdirs==1.4.4
--e git+git@github.com:seanrcollings/arc.git@f1ea5ae3e1fef5ef0c2dc7053a0e78e2a6ab7f46#egg=arc_cli
+-e ./
 astroid==2.4.1
 attrs==20.1.0
 black==19.10b0
