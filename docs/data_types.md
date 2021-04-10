@@ -4,6 +4,8 @@
 Typically, you don't want numbers, booleans, lists, represented as just strings. Arc provides type conversions that will convert the input to your desired type before passing it on to the command. If you've used Flask before, it's URL converters work in essentially the same way. If no type is specified, the input will be left as a string
 
 
+# Builtins
+
 ## Examples
 ### Int Conversion
 ```py
@@ -43,7 +45,7 @@ $ python3 example.py float_type number=5.3
 ```
 Check [examples/converters.py](/examples/converters.py) for full examples of builtin types
 
-
+# Standard Lib Types
 ## Enum Type
 You can use the Python standard library Enum to define a specific subset of acceptable values to an argument.
 ```py
@@ -76,6 +78,7 @@ You painted the walls the bloodiest of reds
 ```
 Since red is a defined value on the `Color` enumeration.
 
+# Custom Types
 ## File Type
 A file type will take in a file path and return a file handler object
 ```py x
@@ -101,7 +104,7 @@ from arc.types import File
 cli = CLI()
 
 @cli.command()
-def file_test(file=File[File.READ]):
+def file_test(file: File[File.READ]):
     print(file.readlines())
     file.close()
 
@@ -116,6 +119,26 @@ def file_test(file=File[File.READ]):
 ```
 
 
+## Range Type
+The range type can assure that the user's input is within a specific value range
+```py
+from typing import Literal
+from arc import CLI
+from arc.types import Range
+
+cli = CLI()
+
+@cli.command()
+def range_test(value: Range[Literal[1], Litearl[10]]):
+    print(value)
+    print(type(value))
+    print(val + 2)
+```
+The above example will only allows values between 1 and 10 (like the builtin this is inclusive on the minimum end and exclusive on the maximum end). While the type of `value` will be Range, Range is a subclass of `int` and so can be treated as such.
+
+There are a couple of useful methods to note on the Range.
+- `range` - returns a builtin `range()` with the provided minimums and maximums
+- `range_with_picked` - Generator that returns a tuple pair of the value and whether or not that value was the one picked by the user.
 
 
 

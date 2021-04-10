@@ -1,6 +1,6 @@
 import sys
 
-from arc.types import ArcGeneric
+from arc.types import ArcType
 from arc.color import fg, effects
 from arc.errors import ConversionError, ArcError
 
@@ -17,6 +17,7 @@ __all__ = [
     "FileConverter",
     "AliasConverter",
     "EnumConverter",
+    "RangeConverter",
 ]
 
 
@@ -64,9 +65,10 @@ def __get_converter_name(annotation) -> str:
     """
 
     if is_alias(annotation):
-        if issubclass(annotation.__origin__, ArcGeneric):  # type: ignore
+        if issubclass(annotation.__origin__, ArcType):  # type: ignore
             return annotation.__origin__.__name__.lower()  # type: ignore
         return "alias"
     elif is_enum(annotation):
         return "enum"
+
     return annotation.__name__

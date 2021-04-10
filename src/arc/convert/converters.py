@@ -4,7 +4,8 @@ from enum import Enum
 
 from arc.convert.base_converter import BaseConverter, TypeConverter
 from arc.convert import ConversionError
-from arc.types.file import File
+from arc.errors import ArcError
+from arc.types import File, Range
 
 
 class StringConverter(TypeConverter, BaseConverter):
@@ -206,6 +207,42 @@ class EnumConverter(BaseConverter):
             ) from e
 
 
+class RangeConverter(BaseConverter):
+    convert_to = Range
+    _range: Optional[tuple[int, int]] = None
+
+    def convert(self, value: str):
+        error = ConversionError(value, f"Must be an integer in range: {self.range}")
+
+        if not value.isnumeric():
+            raise error
+
+        int_value = int(value)
+        smallest, largest = self.range
+        if not (int_value >= smallest and int_value < largest):
+            raise error
+
+        return Range(int_value, smallest, largest)
+
+    @property
+    def range(self):
+        if self._range is None:
+            smallest, largest = self.annotation.__args__
+            if is_alias(smallest):
+                smallest = smallest.__args__[0]
+            if is_alias(largest):
+                largest = largest.__args__[0]
+
+            if isinstance(smallest, int) and isinstance(largest, int):
+                self._range = smallest, largest
+            else:
+                raise ArcError(
+                    f"The min and max of a range must be integers: {smallest, largest}"
+                )
+
+        return self._range
+
+
 converter_mapping: Dict[str, Type[BaseConverter]] = {
     "str": StringConverter,
     "int": IntConverter,
@@ -215,6 +252,7 @@ converter_mapping: Dict[str, Type[BaseConverter]] = {
     "list": ListConverter,
     "alias": AliasConverter,
     "file": FileConverter,
+    "range": RangeConverter,
     "enum": EnumConverter,
 }
 

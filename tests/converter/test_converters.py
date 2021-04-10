@@ -1,7 +1,10 @@
 from unittest import TestCase
+from typing import Literal
 from enum import Enum, IntEnum
+
 from arc.convert import *
-from arc.errors import ConversionError
+from arc.errors import ConversionError, ArcError
+from arc.types import Range
 
 
 class TestConverters(TestCase):
@@ -90,3 +93,17 @@ class TestConverters(TestCase):
 
         with self.assertRaises(ConversionError):
             EnumConverter(Numbers).convert("4")
+
+    def test_range(self):
+        self.assertEqual(RangeConverter(Range[Literal[1], Literal[10]]).convert("2"), 2)
+        self.assertEqual(RangeConverter(Range[Literal[1], Literal[10]]).convert("1"), 1)
+        self.assertEqual(RangeConverter(Range[Literal[1], Literal[10]]).convert("8"), 8)
+
+        with self.assertRaises(ConversionError):
+            RangeConverter(Range[Literal[1], Literal[10]]).convert("10")
+
+        with self.assertRaises(ConversionError):
+            RangeConverter(Range[Literal[5], Literal[10]]).convert("3")
+
+        with self.assertRaises(ArcError):
+            RangeConverter(Range[Literal[5], Literal["string"]]).convert("3")
