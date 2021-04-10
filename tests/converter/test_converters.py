@@ -1,4 +1,5 @@
 from unittest import TestCase
+from enum import Enum, IntEnum
 from arc.convert import *
 from arc.errors import ConversionError
 
@@ -47,3 +48,45 @@ class TestConverters(TestCase):
 
         with self.assertRaises(ConversionError):
             BoolConverter(bool).convert("ainfeainfeain")
+
+    def test_enum(self):
+        class Color(Enum):
+            RED = "red"
+            GREEN = "green"
+            BLUE = "blue"
+
+        self.assertEqual(EnumConverter(Color).convert("red"), Color.RED)
+        self.assertEqual(EnumConverter(Color).convert("green"), Color.GREEN)
+        self.assertEqual(EnumConverter(Color).convert("blue"), Color.BLUE)
+
+        with self.assertRaises(ConversionError):
+            EnumConverter(Color).convert("yellow")
+
+        with self.assertRaises(ConversionError):
+            EnumConverter(Color).convert("2")
+
+    def test_numbered_enum(self):
+        class Numbers(Enum):
+            ONE = 1
+            TWO = 2
+            THREE = 3
+
+        self.assertEqual(EnumConverter(Numbers).convert("1"), Numbers.ONE)
+        self.assertEqual(EnumConverter(Numbers).convert("2"), Numbers.TWO)
+        self.assertEqual(EnumConverter(Numbers).convert("3"), Numbers.THREE)
+
+        with self.assertRaises(ConversionError):
+            EnumConverter(Numbers).convert("4")
+
+    def test_int_enum(self):
+        class Numbers(IntEnum):
+            ONE = 1
+            TWO = 2
+            THREE = 3
+
+        self.assertEqual(EnumConverter(Numbers).convert("1"), Numbers.ONE)
+        self.assertEqual(EnumConverter(Numbers).convert("2"), Numbers.TWO)
+        self.assertEqual(EnumConverter(Numbers).convert("3"), Numbers.THREE)
+
+        with self.assertRaises(ConversionError):
+            EnumConverter(Numbers).convert("4")

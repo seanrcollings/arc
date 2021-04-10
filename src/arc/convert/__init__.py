@@ -1,9 +1,11 @@
 import sys
 
 from arc.types import ArcGeneric
-from arc.errors import ConversionError
+from arc.color import fg, effects
+from arc.errors import ConversionError, ArcError
 
 from .converters import *
+from .converters import get_converter, is_alias, is_enum
 
 __all__ = [
     "StringConverter",
@@ -14,21 +16,41 @@ __all__ = [
     "ListConverter",
     "FileConverter",
     "AliasConverter",
+    "EnumConverter",
 ]
 
 
-def convert(value, kind):
-    name = __get_converter_name(kind)
-    converter_cls = get_converter(name)
+def convert(value, kind, name: Optional[str] = None):
+    """Converts the provided string to the provided type
+
+    :param value: value to convert
+    :param kind: type to attempt the convertion to
+    :param name: optional descrive name of the argument
+    """
+    converter_name = __get_converter_name(kind)
+    converter_cls = get_converter(converter_name)
 
     if converter_cls is not None:
         converter = converter_cls(kind)
+    else:
+        raise ArcError(f"No converter found for type: {kind}")
 
     try:
         value = converter.convert(value)
 
     except ConversionError as e:
-        print(f"Value: {e.value} could not be converted to '{converter.convert_to}'")
+        if name:
+            error_message = (
+                f"Argument {fg.YELLOW}{name}={value}{effects.CLEAR} could not "
+                f"be converted to type {fg.YELLOW}{converter.annotation}{effects.CLEAR}"
+            )
+        else:
+            error_message = (
+                f"Value: {e.value} could not be"
+                f" converted to '{converter.annotation}'"
+            )
+
+        print(error_message)
         if e.helper_text is not None:
             print(e.helper_text)
         sys.exit(1)
@@ -45,4 +67,6 @@ def __get_converter_name(annotation) -> str:
         if issubclass(annotation.__origin__, ArcGeneric):  # type: ignore
             return annotation.__origin__.__name__.lower()  # type: ignore
         return "alias"
+    elif is_enum(annotation):
+        return "enum"
     return annotation.__name__

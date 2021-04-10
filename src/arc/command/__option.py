@@ -4,7 +4,7 @@ import inspect
 from arc import arc_config
 from arc.utils import symbol, Helpful
 from arc.types import needs_cleanup
-from arc.convert import convert
+from arc.convert import convert, is_alias
 
 
 NO_DEFAULT = symbol("No Default")
@@ -14,21 +14,21 @@ EMPTY = inspect._empty  # type: ignore
 
 class Option(Helpful):
     def __init__(self, name, annotation, default):
-        self.name = name
+        self.name: str = name
         self.annotation = Any if annotation is EMPTY else annotation
         self.default = NO_DEFAULT if default is EMPTY else default
         self.value = self.default
 
     def __repr__(self):
-        return f"<Option : {self.name}>"
+        return f"<Option : {self.name}={self.value}>"
 
     def convert(self):
         """Converts self.value using the
         converter associated with self.annotation"""
-        if self.annotation is Any:
+        if self.annotation is Any or self.value == self.default:
             return
 
-        self.value = convert(self.value, self.annotation)
+        self.value = convert(self.value, self.annotation, self.name)
 
     def cleanup(self):
         # Any special types need to implement

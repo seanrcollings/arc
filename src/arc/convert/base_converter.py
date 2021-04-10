@@ -8,9 +8,9 @@ class BaseConverter(ABC):
     def __init__(self, annotation):
         self.annotation = annotation
 
+    @abstractmethod
     def convert(self, value: str) -> Any:
         """ Method that converts the string sent, to it's desired type."""
-        return self.convert_to(value)
 
     @property
     @abstractmethod
@@ -21,3 +21,10 @@ class BaseConverter(ABC):
         converter is supposed to convert the
         value into
         """
+
+
+class TypeConverter:
+    convert_to: type
+
+    def convert(self, value: str):
+        return self.convert_to(value)
