@@ -92,7 +92,7 @@ bad_config = MyConfig(favorite_number = 'flower') # this is not
 ```
 
 ## Loading Files
-When you define a Config class, it comes with the `from_file` method for file loading. This will behave like it does on the `arc_config` object, but you can modulate it's behaviro a bit by defining the `parse` methdo
+When you define a Config class, it comes with the `from_file` method for file loading. This will behave like it does on the `arc_config` object, but you can modulate it's behavior a bit by defining the `parse` method
 
 ```py
 class MyConfig(ConfigBase):
