@@ -1,6 +1,6 @@
 from __future__ import annotations
 import inspect
-from typing import Dict, Any, Optional, TYPE_CHECKING, Callable
+from typing import Dict, Any, TYPE_CHECKING, Callable
 import functools
 import textwrap
 
@@ -18,7 +18,6 @@ if TYPE_CHECKING:
 class CommandMixin:
     args: Dict[str, Option]
     context: Dict[str, Any]
-    context_arg_name: Optional[str]
 
     def assert_args_filled(self):
         for option in self.args.values():
