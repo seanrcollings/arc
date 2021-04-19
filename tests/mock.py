@@ -18,4 +18,6 @@ def mock_command(
     name: str = "mock", cls: Type[Command] = KeywordCommand, func=lambda: ..., **kwargs
 ) -> MockedCommand:
     mocked = type(f"Mocked{cls.__name__}", (MockedCommand, cls), {})
-    return mocked(name, create_autospec(func), **kwargs)
+    mocked_func = create_autospec(func)
+    mocked_func.__annotations__ = func.__annotations__
+    return mocked(name, mocked_func, **kwargs)

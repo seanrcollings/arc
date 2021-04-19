@@ -1,5 +1,5 @@
 from unittest import TestCase
-from arc import CLI, namespace, run
+from arc import run
 from arc.command import Context
 
 from .mock import mock_command
