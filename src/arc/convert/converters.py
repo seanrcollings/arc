@@ -2,6 +2,7 @@ from typing import Dict, Type, Optional, Union, Any
 from typing import _GenericAlias as GenericAlias  # type: ignore
 from enum import Enum
 
+from arc.types import ArcType
 from arc.convert.base_converter import BaseConverter, TypeConverter
 from arc.convert import ConversionError
 from arc.errors import ArcError
@@ -269,3 +270,10 @@ def is_alias(alias):
 
 def is_enum(annotation: type):
     return Enum in annotation.mro()
+
+
+def is_arc_type(annotation):
+    if is_alias(annotation):
+        return issubclass(annotation.__origin__, ArcType)
+
+    return False

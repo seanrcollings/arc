@@ -1,11 +1,9 @@
 import sys
-
-from arc.types import ArcType
 from arc.color import fg, effects
 from arc.errors import ConversionError, ArcError
 
 from .converters import *
-from .converters import get_converter, is_alias, is_enum
+from .converters import get_converter, is_alias, is_enum, is_arc_type
 
 __all__ = [
     "StringConverter",
@@ -64,11 +62,13 @@ def __get_converter_name(annotation) -> str:
     the provided type annotation
     """
 
+    if is_arc_type(annotation):
+        return annotation.__origin__.__name__.lower()
+
     if is_alias(annotation):
-        if issubclass(annotation.__origin__, ArcType):  # type: ignore
-            return annotation.__origin__.__name__.lower()  # type: ignore
         return "alias"
-    elif is_enum(annotation):
+
+    if is_enum(annotation):
         return "enum"
 
     return annotation.__name__
