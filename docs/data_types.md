@@ -62,7 +62,7 @@ class Color(Enum):
 @cli.command()
 def paint(color: Color):
     if color == Color.RED:
-        print("You painted the walls the bloodiest reds")
+        print("You painted the walls the bloodiest of reds")
     elif color == Color.YELLOW:
         print("You painted the walls the most fabulous yellow")
     else:
