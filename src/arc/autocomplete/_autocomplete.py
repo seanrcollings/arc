@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from arc.command import Command
 from arc.parser import parse, CommandNode
+from arc import arc_config
 
 from . import utils
 
@@ -42,12 +43,18 @@ class AutoComplete:
 
     def complete_arguments(self):
         for name, option in self.command.args.items():
-            if option.annotation == bool:
-                self.completions.append(Completion(f"--{name}", "FLAG"))
-            else:
-                self.completions.append(
-                    Completion(f"{name}=", option.annotation.__name__)
-                )
+            if name not in [arg.name for arg in self.node.args]:
+                if option.annotation == bool:
+                    self.completions.append(
+                        Completion(f"{arc_config.flag_denoter}{name}", "FLAG")
+                    )
+                else:
+                    self.completions.append(
+                        Completion(
+                            f"{name}{arc_config.arg_assignment}",
+                            option.annotation.__name__,
+                        )
+                    )
 
     def complete_subcommands(self):
         if (
@@ -56,9 +63,9 @@ class AutoComplete:
 
             for name, subcommand in self.command.subcommands.items():
                 if name not in ("_autocomplete", "help"):
-
+                    sep = arc_config.namespace_sep
                     name = (
-                        f"{':'.join(self.namespace)}:{name}"
+                        f"{sep.join(self.namespace)}{sep}{name}"
                         if len(self.namespace) > 0
                         else name
                     )
