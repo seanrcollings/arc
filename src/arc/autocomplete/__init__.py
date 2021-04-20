@@ -2,7 +2,7 @@ import sys
 import os
 from arc import namespace as ns, CommandType as ct, Context, ExecutionError
 
-from ._autocomplete import AutoComplete
+from ._autocomplete import AutoComplete, FishFormatter
 
 autocomplete = ns("_autocomplete")
 
@@ -26,13 +26,13 @@ def init(shell_name: str, ctx: Context):
 
 @autocomplete.subcommand()
 def fish(command_str: str, ctx: Context):
-    completer = AutoComplete(ctx.cli, command_str)
+    completer = AutoComplete(ctx.cli, command_str, FishFormatter)
     completer.complete()
-    print(*completer.completions, sep="\n")
+    print(completer.display())
 
 
-@autocomplete.subcommand(command_type=ct.POSITIONAL)
-def bash(*args, ctx: Context):
-    completer = AutoComplete(ctx.cli, os.getenv("COMP_LINE", ""))
-    completer.complete()
-    print(*(completion.value for completion in completer.completions), sep="\n")
+# @autocomplete.subcommand(command_type=ct.POSITIONAL)
+# def bash(*args, ctx: Context):
+#     completer = AutoComplete(ctx.cli, os.getenv("COMP_LINE", ""))
+#     completer.complete()
+#     print(*(completion.value for completion in completer.completions), sep="\n")

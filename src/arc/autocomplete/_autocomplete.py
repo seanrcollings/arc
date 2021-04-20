@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from abc import ABC, abstractmethod
+from typing import Type
 
 from arc.command import Command
 from arc.parser import parse, CommandNode
@@ -12,15 +14,26 @@ class Completion:
     value: str
     description: str
 
-    def __str__(self):
-        return f"{self.value}\t{self.description}"
+
+class Formatter(ABC):
+    def __init__(self, completions: list[Completion]):
+        self.completions = completions
+
+    @abstractmethod
+    def format(self):
+        ...
+
+
+class FishFormatter(Formatter):
+    def format(self):
+        return "\n".join(f"{c.value}\t{c.description}" for c in self.completions)
 
 
 class AutoComplete:
-    def __init__(self, cli: Command, command_str: str):
+    def __init__(self, cli: Command, command_str: str, formatter: Type[Formatter]):
         self.cli = cli
-        # if the first token is the name of the tool, we
-        # can just discard it
+        self.formatter = formatter
+        # if the first token is the name of the tool, we can discard it
         self.command_str = command_str.lstrip(self.cli.name).lstrip(" ")
         self.completions: list[Completion] = []
 
@@ -36,6 +49,11 @@ class AutoComplete:
             self.namespace, self.command = utils.current_namespace(
                 self.cli, self.node.namespace
             )
+
+    def display(self):
+        """Execute the provided formatter and returns it's result"""
+        formatter = self.formatter(self.completions)
+        return formatter.format()
 
     def complete(self):
         self.complete_arguments()
