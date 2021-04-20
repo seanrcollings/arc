@@ -62,4 +62,9 @@ class AutoComplete:
                         if len(self.namespace) > 0
                         else name
                     )
-                    self.completions.append(Completion(name, subcommand.doc or ""))
+                    doc = (
+                        subcommand.doc.split("\n")[0]
+                        if subcommand.doc is not None
+                        else ""
+                    )
+                    self.completions.append(Completion(name, doc))

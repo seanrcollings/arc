@@ -56,6 +56,7 @@ class CLI(KeywordCommand):
         :param str completions_from: command for the shell to run to generate the
         autocompletions
         """
+        # pylint: disable=import-outside-toplevel
         from .autocomplete import autocomplete
 
         autocomplete.context["cli"] = self
