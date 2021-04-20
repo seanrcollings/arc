@@ -1,5 +1,4 @@
 import sys
-import os
 from arc import namespace as ns, CommandType as ct, Context, ExecutionError
 
 from ._autocomplete import AutoComplete, FishFormatter
