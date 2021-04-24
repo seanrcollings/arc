@@ -8,16 +8,8 @@ A tool for building declartive, and highly extendable CLI systems for Python 3.9
 - User-extension via Dynamic namespace loading
 
 # Docs
-- [Changelog](docs/changelog.md)
-- [Getting Started](docs/getting_started.md)
-- [CLI Arguments](docs/args_and_flags.md)
-- [Type Conversion](docs/data_types.md)
-- [Commands](docs/commands/commands.md)
-- [Configuration](docs/configuration.md)
-- [Contest](docs/context.md)
-- [Autoloading](docs/autloading.md)
-- [Autcompletion](docs/autocompletion.md)
-
+- [Wiki](https://github.com/seanrcollings/arc/wiki)
+- [Changelog](https://github.com/seanrcollings/arc/wiki/Changelog)
 
 # Installation
 
@@ -50,7 +42,7 @@ cli()
 $ python example.py hello
 Hello, World!
 ```
-Reference [getting started](docs/getting_started.md) for more info
+Reference [getting started](https://github.com/seanrcollings/arc/wiki) for more info
 
 # Tests
 Run the full test suite with
