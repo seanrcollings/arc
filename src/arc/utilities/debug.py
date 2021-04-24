@@ -2,7 +2,7 @@ import os
 import random
 
 from arc import namespace, arc_config
-from arc.formatters import Table, Box
+from arc.present import Table, Box
 
 debug = namespace("debug")
 

@@ -2,6 +2,7 @@ from typing import Literal, Union, Optional
 import re
 import shutil
 
+from arc import color
 
 border_styles = {
     "regular": {
@@ -73,11 +74,13 @@ class Box:
         border: Border = "regular",
         padding: Union[int, dict[str, int]] = 0,
         justify: Justification = "left",
+        color: color.Color = color.fg.WHITE,
     ):
         self.string = string
         self.__border = border_styles[border]
         self.__justify = justifications[justify]
         self.__padding = self.__get_padding(padding)
+        self.__color = color
 
     def __str__(self):
         cleaned = list(
@@ -117,9 +120,11 @@ class Box:
     def horizontal_border(self, width, side: str):
         return "".join(
             (
+                self.__color,
                 self.border["corners"][f"{side}-left"],
                 self.border["horizontal"] * (width - 2),
                 self.border["corners"][f"{side}-right"],
+                color.effects.CLEAR,
             )
         )
 
@@ -128,9 +133,9 @@ class Box:
     ):
         cleaned = cleaned or line
         formatted = (
-            f"{self.border['vertical']}"
+            f"{self.__color}{self.border['vertical']}{color.effects.CLEAR}"
             f"{cleaned:{self.__justify}{width - 2}}"
-            f"{self.border['vertical']}\n"
+            f"{self.__color}{self.border['vertical']}{color.effects.CLEAR}\n"
         )
 
         if line == "":

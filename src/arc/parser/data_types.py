@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 from arc.color import fg, effects, bg
 from arc.utils import symbol
-from arc.formatters import Box
+from arc.present import Box
 
 
 class TokenizerMode(Enum):
