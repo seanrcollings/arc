@@ -33,7 +33,7 @@ I've been autoladed!
 ## Restrictions
 Autoloaded Commands cannot overide commands installed by normal means. This is to prevent a user from accidentally overwriting a part of a tool they where unaware of with their own code.
 
-The `autoload` method is available on the `CLI` object on not on the more general `Command` object. As such, commands can only be autoloaded onto the root CLI object and not into sub-commands. This is a style choice to prevent confusion / over-engineered complexity. However, while I don't reccomend this, if you still want to use autoloading with a sub-command, you can by using the internal `Autoload` object:
+The `autoload` method is available on the `CLI` object and not on the more general `Command` object. As such, commands can only be autoloaded onto the root CLI object and not into sub-commands. This is a style choice to prevent confusion / over-engineered complexity. However, while I don't reccomend this, if you still want to use autoloading with a sub-command, you can by using the internal `Autoload` object:
 ```py
 from arc import namespace
 from arc.cli import Autoload

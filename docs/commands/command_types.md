@@ -10,7 +10,7 @@ from arc import CLI
 from arc import CommandType as ct
 cli = CLI()
 
-@cli.subcommand(greeting", ct.KEYWORD) # Since it is the default, specifying here is optional
+@cli.subcommand("greeting", ct.KEYWORD) # Since it is the default, specifying here is optional
 def test(name="Jotaro Kujo"):
     print(f"Greeting, {name}!")
 
@@ -27,7 +27,7 @@ from arc import CommandType as ct
 
 cli = CLI()
 
-@cli.subcommand(greeting", ct.KEYWORD)
+@cli.subcommand("greeting", ct.KEYWORD)
 def test(name="Jotaro Kujo", **kwargs):
     print(f"Greeting, {name}!")
     if len(kwargs) > 0:
@@ -53,7 +53,7 @@ from arc import CommandType as ct
 
 cli = CLI()
 
-@cli.subcommand(greeting", ct.POSITIONAL)
+@cli.subcommand("greeting", ct.POSITIONAL)
 def test(name="Jotaro Kujo"):
     print(f"Greeting, {name}!")
 
@@ -70,7 +70,7 @@ from arc import CommandType as ct
 
 cli = CLI()
 
-@cli.subcommand(greeting", ct.POSITIONAL)
+@cli.subcommand("greeting", ct.POSITIONAL)
 def test(name="Jotaro Kujo", *args):
     print(f"Greeting, {name}!")
     if len(args) > 0:
@@ -94,7 +94,7 @@ from arc import CommandType as ct
 
 cli = CLI()
 
-@cli.subcommand(raw", ct.RAW)
+@cli.subcommand("raw", ct.RAW)
 def test(*args):
     print("Here the input!")
     print(*args)
@@ -117,11 +117,11 @@ cli = CLI(command_type=ct.KEYWORD) # At CLI level
 
 ns = namespace("namespace", command_type=ct.POSITIONAL) # at a namespace level
 
-@ns.subcommand(greeting", ct.RAW)  # At Command level
+@ns.subcommand("greeting", ct.RAW)  # At Command level
 def greeting(*args):
     print(args)
 ```
-If the command type is not defined on the command, it inherits the type of it's parent namespace. 
+If the command type is not defined on the command, it inherits the type of it's parent namespace.
 
 
 ## [Custom Scripts](./custom_command_type.md)

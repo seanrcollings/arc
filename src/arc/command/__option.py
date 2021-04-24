@@ -13,13 +13,13 @@ EMPTY = inspect._empty  # type: ignore
 
 class Option(Helpful):
     def __init__(self, name, annotation, default):
-        self.name = name
+        self.name: str = name
         self.annotation = str if annotation is EMPTY else annotation
         self.default = NO_DEFAULT if default is EMPTY else default
         self.value = self.default
 
     def __repr__(self):
-        return f"<Option : {self.name}>"
+        return f"<Option : {self.name}={self.value}>"
 
     def convert(self):
         """Converts self.value using the
@@ -27,7 +27,7 @@ class Option(Helpful):
         if self.annotation is str:
             return
 
-        self.value = convert(self.value, self.annotation)
+        self.value = convert(self.value, self.annotation, self.name)
 
     def cleanup(self):
         # Any special types need to implement

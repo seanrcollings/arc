@@ -1,6 +1,6 @@
 from __future__ import annotations
 import inspect
-from typing import Dict, Any, Optional, TYPE_CHECKING, Callable
+from typing import Dict, Any, TYPE_CHECKING, Callable, get_type_hints
 import functools
 import textwrap
 
@@ -18,7 +18,6 @@ if TYPE_CHECKING:
 class CommandMixin:
     args: Dict[str, Option]
     context: Dict[str, Any]
-    context_arg_name: Optional[str]
 
     def assert_args_filled(self):
         for option in self.args.values():
@@ -26,8 +25,18 @@ class CommandMixin:
                 raise CommandError(f"No value for required option '{option.name}'")
 
 
+class ParamProxy:
+    def __init__(self, param: inspect.Parameter, annotation: type):
+        self.param = param
+        self.annotation = annotation
+
+    def __getattr__(self, name):
+        return getattr(self.param, name)
+
+
 class ArgBuilder:
     def __init__(self, function):
+        self.__annotations = get_type_hints(function)
         self.__sig = inspect.signature(function)
         self.__length = len(self.__sig.parameters.values())
         self.__args: Dict[str, Option] = {}
@@ -44,8 +53,9 @@ class ArgBuilder:
 
     def __iter__(self):
         for param in self.__sig.parameters.values():
-            yield param
-            self.add_arg(param)
+            proxy = ParamProxy(param, self.__annotations.get(param.name, str))
+            yield proxy
+            self.add_arg(proxy)
 
     @property
     def args(self):
@@ -55,7 +65,7 @@ class ArgBuilder:
     def hidden_args(self):
         return self.__hidden_args
 
-    def add_arg(self, param: inspect.Parameter):
+    def add_arg(self, param: ParamProxy):
         if Context in param.annotation.mro():
             self.__hidden_args["context"] = Option(
                 param.name, param.annotation, NO_DEFAULT

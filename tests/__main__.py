@@ -22,7 +22,7 @@ from tests.utilities import *
 from tests.parser import *
 from tests.test_context import *
 
-# from tests.docs import *
+from tests.docs import *
 
 if __name__ == "__main__":
     unittest.main()

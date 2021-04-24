@@ -21,7 +21,7 @@ cli = CLI()
 Commands are created using Python decorators. A function becomes a command using the `cli.comand()` decorator. You can pass a name into the command decorator. If there isn't an explicit name, the function's name will be used This will be the name used to execute the command.
 
 ```py 2
-@cli.comand("hello")
+@cli.command("hello")
 def hello():
     print("Hello, World!")
 ```
@@ -39,7 +39,7 @@ from arc import CLI
 
 cli = CLI()
 
-@cli.comand("hello")
+@cli.command("hello")
 def hello():
     '''Command that prints Hello World'''
     print("Hello, World!")

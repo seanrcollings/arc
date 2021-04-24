@@ -63,20 +63,26 @@ Context can also be subclassed for additional functionality.
 ```py
 from arc import CLI, Context
 
+
 class MyContext(Context):
     def punch(self):
         print(f"ORA ORA, {self.name}")
 
-cli = CLI(contex={"name": "DIO"})
+
+cli = CLI(context={"name": "DIO"})
+
 
 @cli.command()
 def punch(ctx: MyContext):
     ctx.punch()
+
+
+cli()
 ```
 
 
 ```out
-$ python3 example.py greet
+$ python3 example.py punch
 ORA ORA, DIO
 ```
 

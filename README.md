@@ -1,14 +1,22 @@
 # ARC: A Regular CLI
-A tool for building easy, and highly extendable CLI systems for Python 3.8
+A tool for building declartive, and highly extendable CLI systems for Python 3.9
+
+# ARC Features
+- Automatic type convertsion
+- Command Namespacing
+- Help Documentation Generation
+- User-extension via Dynamic namespace loading
 
 # Docs
 - [Changelog](docs/changelog.md)
 - [Getting Started](docs/getting_started.md)
-- [Utilities](docs/utilities.md)
-- [Type Converters](docs/converters.md)
-- [Context Managers](docs/context_mangers.md)
-- [Special Command Names](docs/special_script_names.md)
+- [CLI Arguments](docs/args_and_flags.md)
+- [Type Conversion](docs/data_types.md)
+- [Commands](docs/commands/commands.md)
 - [Configuration](docs/configuration.md)
+- [Contest](docs/context.md)
+- [Autoloading](docs/autloading.md)
+
 
 # Installation
 
@@ -30,7 +38,7 @@ from arc import CLI
 
 cli = CLI()
 
-@cli.command("hello")
+@cli.command()
 def hello():
     print("Hello, World!")
 

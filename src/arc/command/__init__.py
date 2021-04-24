@@ -6,6 +6,7 @@ from .positional_command import PositionalCommand
 from .raw_command import RawCommand
 from .command_type import CommandType, command_factory
 from .context import Context
+from .__option import Option
 
 
 def namespace(

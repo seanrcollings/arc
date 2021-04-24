@@ -1,10 +1,10 @@
-from typing import TypeVar
-from .arc_generic import ArcGeneric
+from typing import TypeVar, Generic
+from . import ArcType
 
 T = TypeVar("T")
 
 # Files do not work yet
-class File(ArcGeneric[T]):
+class File(Generic[T], ArcType):
     READ = TypeVar("READ")
     WRITE = TypeVar("WRITE")
     APPEND = TypeVar("APPEND")

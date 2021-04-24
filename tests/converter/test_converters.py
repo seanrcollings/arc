@@ -1,6 +1,10 @@
 from unittest import TestCase
+from typing import Literal
+from enum import Enum, IntEnum
+
 from arc.convert import *
-from arc.errors import ConversionError
+from arc.errors import ConversionError, ArcError
+from arc.types import Range
 
 
 class TestConverters(TestCase):
@@ -47,3 +51,59 @@ class TestConverters(TestCase):
 
         with self.assertRaises(ConversionError):
             BoolConverter(bool).convert("ainfeainfeain")
+
+    def test_enum(self):
+        class Color(Enum):
+            RED = "red"
+            GREEN = "green"
+            BLUE = "blue"
+
+        self.assertEqual(EnumConverter(Color).convert("red"), Color.RED)
+        self.assertEqual(EnumConverter(Color).convert("green"), Color.GREEN)
+        self.assertEqual(EnumConverter(Color).convert("blue"), Color.BLUE)
+
+        with self.assertRaises(ConversionError):
+            EnumConverter(Color).convert("yellow")
+
+        with self.assertRaises(ConversionError):
+            EnumConverter(Color).convert("2")
+
+    def test_numbered_enum(self):
+        class Numbers(Enum):
+            ONE = 1
+            TWO = 2
+            THREE = 3
+
+        self.assertEqual(EnumConverter(Numbers).convert("1"), Numbers.ONE)
+        self.assertEqual(EnumConverter(Numbers).convert("2"), Numbers.TWO)
+        self.assertEqual(EnumConverter(Numbers).convert("3"), Numbers.THREE)
+
+        with self.assertRaises(ConversionError):
+            EnumConverter(Numbers).convert("4")
+
+    def test_int_enum(self):
+        class Numbers(IntEnum):
+            ONE = 1
+            TWO = 2
+            THREE = 3
+
+        self.assertEqual(EnumConverter(Numbers).convert("1"), Numbers.ONE)
+        self.assertEqual(EnumConverter(Numbers).convert("2"), Numbers.TWO)
+        self.assertEqual(EnumConverter(Numbers).convert("3"), Numbers.THREE)
+
+        with self.assertRaises(ConversionError):
+            EnumConverter(Numbers).convert("4")
+
+    def test_range(self):
+        self.assertEqual(RangeConverter(Range[Literal[1], Literal[10]]).convert("2"), 2)
+        self.assertEqual(RangeConverter(Range[Literal[1], Literal[10]]).convert("1"), 1)
+        self.assertEqual(RangeConverter(Range[Literal[1], Literal[10]]).convert("8"), 8)
+
+        with self.assertRaises(ConversionError):
+            RangeConverter(Range[Literal[1], Literal[10]]).convert("10")
+
+        with self.assertRaises(ConversionError):
+            RangeConverter(Range[Literal[5], Literal[10]]).convert("3")
+
+        with self.assertRaises(ArcError):
+            RangeConverter(Range[Literal[5], Literal["string"]]).convert("3")
