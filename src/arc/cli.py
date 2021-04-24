@@ -37,7 +37,7 @@ class CLI(KeywordCommand):
 
     # Need to stub these in
     # because Command is abstract,
-    # but they shouldn't every be called
+    # but they shouldn't ever be called
     # (at least right now: https://github.com/seanrcollings/arc/issues/63)
     def execute(self, _):
         ...
@@ -45,13 +45,33 @@ class CLI(KeywordCommand):
     def match_input(self, _):
         ...
 
+    def autocomplete(self, completions_for: str = None, completions_from: str = None):
+        """Enables autocompletion support for this CLI
+
+        :param str completions_for: command for the shell to run autocompletions against.
+        This will defautl the name of the CLI, which should generally be the name of
+        the executable being built. It's useful to set this during testing, if you're
+        not actually installing a binary locally in development
+
+        :param str completions_from: command for the shell to run to generate the
+        autocompletions
+        """
+        # pylint: disable=import-outside-toplevel
+        from .autocomplete import autocomplete
+
+        autocomplete.context["cli"] = self
+        autocomplete.context["init"] = {
+            "completions_for": completions_for or self.name,
+            "completions_from": completions_from or self.name,
+        }
+        self.install_command(autocomplete)
+
     @utils.timer("Autoloading")
     def autoload(self, *paths: str):
         Autoload(paths, self).load()
 
     def helper(self, level: int = 0):
-        """Displays this help.
-        """
+        """Displays this help."""
         print(f"Usage: {self.name} <COMMAND> [ARGUMENTS ...]\n\n")
         print(f"{effects.UNDERLINE}{effects.BOLD}Commands:{effects.CLEAR}\n")
         for command in self.subcommands.values():

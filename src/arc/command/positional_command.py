@@ -51,11 +51,11 @@ class PositionalCommand(Command, CommandMixin):
             )
 
         if param.kind is param.VAR_POSITIONAL:
-            if idx != meta["length"] - 1:
-                raise CommandError(
-                    "The variable postional arguement (*args)",
-                    "must be the last argument of the command",
-                )
+            # if idx != meta["length"] - 1:
+            #     raise CommandError(
+            #         "The variable postional arguement (*args)",
+            #         "must be the last argument of the command",
+            #     )
 
             self.__pass_args = True
 

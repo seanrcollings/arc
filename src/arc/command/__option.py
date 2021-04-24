@@ -1,10 +1,9 @@
-from typing import Any
 import inspect
 
 from arc import arc_config
 from arc.utils import symbol, Helpful
 from arc.types import needs_cleanup
-from arc.convert import convert, is_alias
+from arc.convert import convert
 
 
 NO_DEFAULT = symbol("No Default")
@@ -15,7 +14,7 @@ EMPTY = inspect._empty  # type: ignore
 class Option(Helpful):
     def __init__(self, name, annotation, default):
         self.name: str = name
-        self.annotation = Any if annotation is EMPTY else annotation
+        self.annotation = str if annotation is EMPTY else annotation
         self.default = NO_DEFAULT if default is EMPTY else default
         self.value = self.default
 
@@ -25,7 +24,7 @@ class Option(Helpful):
     def convert(self):
         """Converts self.value using the
         converter associated with self.annotation"""
-        if self.annotation is Any or self.value == self.default:
+        if self.annotation is str:
             return
 
         self.value = convert(self.value, self.annotation, self.name)

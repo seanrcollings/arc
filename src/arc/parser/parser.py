@@ -29,7 +29,9 @@ class Tokenizer:
     """
 
     TOKEN_TYPES = {
-        TokenizerMode.COMMAND: {COMMAND: fr"\A\b((?:(?:{IDENT}:)+{IDENT})|{IDENT})$",},
+        TokenizerMode.COMMAND: {
+            COMMAND: fr"\A\b((?:(?:{IDENT}:)+{IDENT})|{IDENT}:?)$",
+        },
         TokenizerMode.BODY: {
             FLAG: fr"\A{arc_config.flag_denoter}(?P<name>\b{IDENT})$",
             KEY_ARGUMENT: fr"\A\b(?P<name>{IDENT}\b){arc_config.arg_assignment}(?P<value>.+)$",
@@ -52,7 +54,11 @@ class Tokenizer:
     def __tokenize_one_token(self):
         for kind, pattern in self.TOKEN_TYPES[self.mode].items():
             regex = re.compile(pattern)
-            match_against = self.data[0].strip()
+            match_against = self.data[0]
+            # empty tokens are ignored
+            if match_against == "":
+                self.data.pop(0)
+                return None
 
             if match := regex.match(match_against):
                 value = self.__get_value(match)
@@ -139,7 +145,8 @@ class Parser:
             return None
 
 
-def parse(command: Union[List[str], str]) -> types.CommandNode:
+@utils.timer("Parsing")
+def parse(command: Union[List[str], str], handle=True) -> types.CommandNode:
     """Convenience wrapper around the
     tokenizer and parser.
 
@@ -149,7 +156,7 @@ def parse(command: Union[List[str], str]) -> types.CommandNode:
     if isinstance(command, str):
         command = shlex.split(command)
 
-    with utils.handle(TokenizerError, ParserError):
+    with utils.handle(TokenizerError, ParserError, handle=handle):
         tokens = Tokenizer(command).tokenize()
         parsed = Parser(tokens).parse()
     return parsed

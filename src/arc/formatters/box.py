@@ -1,4 +1,4 @@
-from typing import Union, Optional
+from typing import Literal, Union, Optional
 import re
 import shutil
 
@@ -39,6 +39,10 @@ def clean(string):
     return ansi_escape.sub("", string)
 
 
+Border = Union[Literal["regular"], Literal["heavy"]]
+Justification = Union[Literal["left"], Literal["center"], Literal["right"]]
+
+
 class Box:
     """"Formatter for creating a Box around provided text
 
@@ -66,9 +70,9 @@ class Box:
     def __init__(
         self,
         string: str,
-        border: str = "regular",
+        border: Border = "regular",
         padding: Union[int, dict[str, int]] = 0,
-        justify: str = "left",
+        justify: Justification = "left",
     ):
         self.string = string
         self.__border = border_styles[border]

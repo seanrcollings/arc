@@ -98,18 +98,21 @@ class Helpful(ABC):
 
 
 @contextmanager
-def handle(*exceptions: Type[Exception], exit_code=1):
-    try:
-        yield
-    except exceptions as e:
-        if arc_config.loglevel == logging.DEBUG:
-            logger.debug(
-                "".join(
-                    traceback.format_exception(
-                        etype=type(e), value=e, tb=e.__traceback__
+def handle(*exceptions: Type[Exception], exit_code=1, handle=True):
+    if handle:
+        try:
+            yield
+        except exceptions as e:
+            if arc_config.loglevel == logging.DEBUG:
+                logger.debug(
+                    "".join(
+                        traceback.format_exception(
+                            etype=type(e), value=e, tb=e.__traceback__
+                        )
                     )
                 )
-            )
-        else:
-            print(e)
-        sys.exit(exit_code)
+            else:
+                print(e)
+            sys.exit(exit_code)
+    else:
+        yield

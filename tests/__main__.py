@@ -12,13 +12,12 @@ os.chdir(dirname)
 
 # Tests
 # pylint: disable=unused-import, wrong-import-position, unused-wildcard-import, wildcard-import
-from tests.test_cli import TestCLI
-from tests.test_group import TestGroup
+from tests.test_cli import *
+from tests.test_group import *
 from tests.command import *
 from tests.converter import *
-
+from tests.autocomplete import *
 from tests.examples import *
-
 from tests.utilities import *
 from tests.parser import *
 from tests.test_context import *
