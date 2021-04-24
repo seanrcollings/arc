@@ -16,6 +16,7 @@ A tool for building declartive, and highly extendable CLI systems for Python 3.9
 - [Configuration](docs/configuration.md)
 - [Contest](docs/context.md)
 - [Autoloading](docs/autloading.md)
+- [Autcompletion](docs/autocompletion.md)
 
 
 # Installation

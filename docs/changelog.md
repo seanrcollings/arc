@@ -2,7 +2,6 @@
 Check out the most recent, and all, versions of Arc.
 
 - [ARC - A Regular CLI: Change Log](#arc---a-regular-cli-change-log)
-- [Future](#future)
 - [v2.2.0](#v220)
 - [v2.1.0](#v210)
 - [v2.0.2](#v202)
@@ -21,12 +20,8 @@ Check out the most recent, and all, versions of Arc.
 - [v0.4 (Converters)](#v04-converters)
 - [v0.1 - 0.3](#v01---03)
 
-# Future
-- Type guessing
-- Better default helper text
-- Allow arbitrary nesting of utilites
-
 # v2.2.0
+- Adds autocompletion support for the fish shell
 - Adds Command autoloading support
 - Beefed up the Config
   - Config is internally more rigidly defined
