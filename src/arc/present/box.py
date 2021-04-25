@@ -3,6 +3,7 @@ import re
 import shutil
 
 from arc import color
+from .data import justifications, Justification
 
 border_styles = {
     "regular": {
@@ -27,12 +28,6 @@ border_styles = {
     },
 }
 
-justifications = {
-    "left": "<",
-    "center": "^",
-    "right": ">",
-}
-
 
 def clean(string):
     """Gets rid of escape sequences"""
@@ -41,24 +36,14 @@ def clean(string):
 
 
 Border = Union[Literal["regular"], Literal["heavy"]]
-Justification = Union[Literal["left"], Literal["center"], Literal["right"]]
 
 
 class Box:
-    """"Formatter for creating a Box around provided text
-
-    Will accept colorized strings
-
-    :param string: String to surround with a box
-    :param border: Border style, either 'regular' or 'heavy' defaults to 'regular
-    :param padding: Dictionary containing the padding of each side of the string
-            defaults to: {"top": 0, "left": 0, "bottom": 0, "right": 0}
-            If all sides are going to have the same padding, can
-            shorthand it by just passing in that integer
-    :param justify: how to justify the text (left, center, right) defaults to left
+    """"Presenter for creating a Box around provided text
 
     ### Examples:
         print(Box('some cool text', padding=2, justify='center')) ->
+
         ╭────────────────────╮
         │                    │
         │                    │
@@ -66,6 +51,8 @@ class Box:
         │                    │
         │                    │
         ╰────────────────────╯
+
+    Will accept colorized strings
     """
 
     def __init__(
@@ -76,6 +63,17 @@ class Box:
         justify: Justification = "left",
         color: color.Color = color.fg.WHITE,
     ):
+        """
+        :param string: String to surround with a box - May be colored
+        :param border: Border style, either 'regular' or 'heavy' defaults to 'regular
+        :param padding: Dictionary containing the padding of each side of the string
+                defaults to: `{"top": 0, "left": 0, "bottom": 0, "right": 0}`
+                If all sides are going to have the same padding, can
+                shorthand it by just passing in that integer
+        :param justify: how to justify the text (left, center, right) defaults to left
+        :param color: What color the border should be. Defaults to white.
+                Use `arc.color.fg` constants
+        """
         self.string = string
         self.__border = border_styles[border]
         self.__justify = justifications[justify]
