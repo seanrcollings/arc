@@ -1,4 +1,4 @@
-from typing import TypedDict, Union, cast, Any
+from typing import TypedDict, Union, cast, Any, Sequence
 from arc.errors import ArcError
 from arc.color import fg, effects
 from .data import justifications, Justification
@@ -42,7 +42,7 @@ def _format_cell(content, column: Column, row_idx, column_idx):
 
 
 ColumnInput = list[Union[str, Column]]
-RowInput = list[Union[list, dict[str, Any]]]
+RowInput = Sequence[Union[Sequence[Any], dict[str, Any]]]
 
 
 class Table:

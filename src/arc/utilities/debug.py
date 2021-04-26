@@ -18,27 +18,27 @@ def display_config():
         ["Converters", "See debug:converters", "-"],
     ]
 
-    table = Table(
-        headers=["name", "value", "default"], rows=config_items, column_width=25
-    )
-    print(Box(str(table)))
+    table = Table(columns=["NAME", "VALUE", "DEFAULT"], rows=config_items)
+    print(Box(str(table), justify="center", padding=1))
 
 
 @debug.subcommand("converters")
 def converters():
     """Displays information aboubt the currently accessible converters"""
     filler_words = ["foo", "bar", "baz", "buzz"]  # Randomly pick for filler information
-    converter_rows = [
-        [v.__name__, v.convert_to, f"{random.choice(filler_words)} : {k}"]
-        for (k, v) in arc_config.converters.items()
-    ]
 
     table = Table(
-        headers=["Converter Name", "Convert to", "Example"],
-        rows=converter_rows,
-        column_width=30,
+        columns=[
+            "Converter Name",
+            {"name": "Convert To", "width": 35},
+            {"name": "Example", "justify": "right"},
+        ],
+        rows=[
+            [v.__name__, v.convert_to, f"{random.choice(filler_words)} : {k}"]
+            for (k, v) in arc_config.converters.items()
+        ],
     )
-    print(Box(str(table)))
+    print(Box(str(table), justify="center", padding=1))
 
 
 @debug.subcommand("arcfile")
