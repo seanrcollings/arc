@@ -37,7 +37,7 @@ class Loader:
     def __init__(
         self,
         start: float = 0.0,
-        segments: int = 10,
+        segments: int = 100,
         format_str="{bar}",
         styler: Styler = default,
     ):
@@ -60,8 +60,8 @@ class Loader:
         return self.progress >= 1
 
     @property
-    def percent(self):
-        return self.progress * 100
+    def percent(self) -> int:
+        return int(self.progress * 100)
 
     def render(self):
         return ""

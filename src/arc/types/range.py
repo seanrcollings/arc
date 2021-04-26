@@ -24,6 +24,6 @@ class Range(int, Generic[Start, End], ArcType):
 
     def range_with_picked(self) -> Generator[tuple[int, bool], None, None]:
         """Iterator that returns each integer in the specified range, along
-        with whether or not it was the value picked """
+        with whether or not it was the value picked"""
         for i in self.range():
             yield i, i == self.value

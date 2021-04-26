@@ -39,7 +39,7 @@ Border = Union[Literal["regular"], Literal["heavy"]]
 
 
 class Box:
-    """"Presenter for creating a Box around provided text
+    """ "Presenter for creating a Box around provided text
 
     ### Examples:
         print(Box('some cool text', padding=2, justify='center')) ->
