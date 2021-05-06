@@ -1,8 +1,8 @@
 """Example CLI to demonstrate all of the type converters"""
-from typing import List
-from arc import CLI
+from typing import List, Literal
 from enum import Enum
-from arc.types import File
+from arc import CLI
+from arc.types import File, Range
 
 
 cli = CLI()
@@ -66,6 +66,14 @@ class Color(Enum):
 def enum_type(value: Color):
     print(type(value))
     print(value)
+
+
+@cli.command("range")
+def range_type(value: Range[Literal[1], Literal[10]]):
+    print(type(value))
+    print(value)
+    for i in value.range_with_picked():
+        print(i)
 
 
 if __name__ == "__main__":

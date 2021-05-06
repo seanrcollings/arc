@@ -19,7 +19,7 @@ class IntConverter(BaseConverter):
     def convert(self, value):
         if value.isnumeric():
             return int(value)
-        raise ConversionError(value, "Value must be a whole number integer")
+        raise ConversionError(value, expected="a whole number integer")
 
 
 class FloatConverter(BaseConverter):
@@ -29,7 +29,7 @@ class FloatConverter(BaseConverter):
         try:
             return float(value)
         except ValueError as e:
-            raise ConversionError(value, "Value must be a float (1.3, 4, 1.7)") from e
+            raise ConversionError(value, expected="a float (1.3, 4, 1.7)") from e
 
 
 class BytesConverter(BaseConverter):
@@ -57,9 +57,7 @@ class BoolConverter(BaseConverter):
         elif value in ("false", "f"):
             return False
 
-        raise ConversionError(
-            value, "Value must be the string '(t)rue' or '(f)alse' or a valid integer"
-        )
+        raise ConversionError(value, "'(t)rue' or '(f)alse' or a valid integer")
 
 
 class IntBoolConverter(BaseConverter):
@@ -88,9 +86,7 @@ class ListConverter(BaseConverter):
     def convert(self, value: str):
         if "," in value:
             return value.replace(" ", "").split(",")
-        raise ConversionError(
-            value, "ListConverter only accepts comma seperated strings"
-        )
+        raise ConversionError(value, "a comma seperated list of strings")
 
 
 class FileConverter(BaseConverter):
@@ -142,7 +138,11 @@ class AliasConverter(BaseConverter):
         elif origin is tuple:
             return self.convert_tuple(alias, value)
         else:
-            raise ConversionError(None, f"Type Alias for '{origin}' not supported")
+            raise ConversionError(
+                value=None,
+                expected="a valid type alias",
+                helper_text=f"Type Alias for '{origin}' not supported",
+            )
 
     def convert_union(self, alias, value):
         for union_type in alias.__args__:
@@ -163,7 +163,8 @@ class AliasConverter(BaseConverter):
         if is_alias(contains_type):
             raise ConversionError(
                 contains_type,
-                message="Arc only supports shallow Collection Type Aliases",
+                "a valid alias type",
+                helper_text="Arc only supports shallow Collection Type Aliases",
             )
 
         value = value.replace(" ", "")
@@ -182,7 +183,8 @@ class AliasConverter(BaseConverter):
         items, _ = self.collection_setup(alias, value)
         if (i_len := len(items)) != (a_len := len(alias.__args__)):
             raise ConversionError(
-                value=items, message=f"{alias} expects {a_len} item(s), was {i_len}",
+                value=items,
+                expected=f"a tuple of {a_len} item(s), was {i_len} item(s)",
             )
 
         return tuple(
@@ -203,8 +205,7 @@ class EnumConverter(BaseConverter):
         except ValueError as e:
             raise ConversionError(
                 value,
-                f"The value '{value}' is not acceptable.\n"
-                f"Acceptable values: {', '.join(str(data.value) for data in self.annotation)}",
+                expected=f"to be one of: {', '.join(str(data.value) for data in self.annotation)}",
             ) from e
 
 
@@ -213,7 +214,11 @@ class RangeConverter(BaseConverter):
     _range: Optional[tuple[int, int]] = None
 
     def convert(self, value: str):
-        error = ConversionError(value, f"Must be an integer in range: {self.range}")
+        error = ConversionError(
+            value,
+            f"an integer in range: {self.range}",
+            "Note that the range is inclusive on the minimum and exclusive on the maximum",
+        )
 
         if not value.isnumeric():
             raise error

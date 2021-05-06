@@ -5,6 +5,7 @@ from arc.errors import ConversionError, ArcError
 from .converters import *
 from .converters import get_converter, is_alias, is_enum, is_arc_type
 
+
 __all__ = [
     "StringConverter",
     "BytesConverter",
@@ -26,6 +27,9 @@ def convert(value, kind, name: Optional[str] = None):
     :param kind: type to attempt the convertion to
     :param name: optional descrive name of the argument
     """
+    # pylint: disable=import-outside-toplevel
+    from arc.utils import logger, format_exception
+
     converter_name = __get_converter_name(kind)
     converter_cls = get_converter(converter_name)
 
@@ -40,8 +44,8 @@ def convert(value, kind, name: Optional[str] = None):
     except ConversionError as e:
         if name:
             error_message = (
-                f"Argument {fg.YELLOW}{name}={value}{effects.CLEAR} could not "
-                f"be converted to type {fg.YELLOW}{converter.annotation}{effects.CLEAR}"
+                f"{fg.RED}ERROR{effects.CLEAR}: Argument "
+                f"{fg.YELLOW}{name}{effects.CLEAR} expected {e.expected}"
             )
         else:
             error_message = (
@@ -49,9 +53,11 @@ def convert(value, kind, name: Optional[str] = None):
                 f" converted to '{converter.annotation}'"
             )
 
-        print(error_message)
-        if e.helper_text is not None:
-            print(e.helper_text)
+        if e.helper_text:
+            error_message += f"\n{fg.YELLOW}{e.helper_text}{effects.CLEAR}"
+
+        logger.debug(format_exception(e))
+        logger.error(error_message)
         sys.exit(1)
 
     return value

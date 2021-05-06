@@ -104,15 +104,15 @@ def handle(*exceptions: Type[Exception], exit_code=1, handle=True):
             yield
         except exceptions as e:
             if arc_config.loglevel == logging.DEBUG:
-                logger.debug(
-                    "".join(
-                        traceback.format_exception(
-                            etype=type(e), value=e, tb=e.__traceback__
-                        )
-                    )
-                )
+                logger.debug(format_exception(e))
             else:
                 print(e)
             sys.exit(exit_code)
     else:
         yield
+
+
+def format_exception(e: BaseException):
+    return "".join(
+        traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
+    )
