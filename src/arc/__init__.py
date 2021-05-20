@@ -8,4 +8,4 @@ from arc.errors import NoOpError, ExecutionError
 
 NO_OP = NoOpError()
 
-__version__ = "2.1.0"
+__version__ = "2.2.1"
