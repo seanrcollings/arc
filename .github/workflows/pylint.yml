@@ -25,6 +25,5 @@ jobs:
           pip install pylint
           pip install -r requirements.txt
       - name: Lint with pylint
-        continue-on-error: true
         run: |
-          pylint --rcfile=.pylintrc src/arc/**
+          pylint --rcfile=.pylintrc src/arc/** | grep -oP 'rated at 9.?[0-9]*/10'
