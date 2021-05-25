@@ -39,9 +39,10 @@ class CLI(KeywordCommand):
         super().__init__(name, self.__default, context)
         arc_config.from_file(arcfile)
         self.version = version
+        self.add_helper()
         self.default_action: Optional[Command] = self.base()(
             function
-        ) if function else None
+        ) if function else self.subcommands["help"]
 
     # pylint: disable=arguments-differ
     def __call__(self, execute: str = None):  # type: ignore
@@ -74,8 +75,6 @@ class CLI(KeywordCommand):
             print(self.name, self.version)
         elif self.default_action:
             self.default_action(**kwargs)
-        else:
-            self("help")
 
     def autocomplete(self, completions_for: str = None, completions_from: str = None):
         """Enables autocompletion support for this CLI
