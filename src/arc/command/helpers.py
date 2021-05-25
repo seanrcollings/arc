@@ -107,10 +107,10 @@ class FunctionWrapper:
     """
 
     def __get__(self, command: Command, objtype=None):
-        return command._function
+        return self.wrapper(command._function, command)
 
     def __set__(self, command: Command, value: Callable):
-        command._function = self.wrapper(value, command)
+        command._function = value
         self.__post_set(command)
 
     def __post_set(self, command: Command):

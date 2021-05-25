@@ -21,6 +21,7 @@ class TestCLI(TestCase):
             ...
 
         @self.cli.subcommand()
+        @self.cli.subcommand("func2copy")
         def func2(x: int):
             ...
 
@@ -37,13 +38,16 @@ class TestCLI(TestCase):
         self.cli.install_command(g2)
         self.assertIn(g2, self.cli.subcommands.values())
 
-    # Something about the mock_command is causing this to fail :(
-    # def test_execute(self):
-    #     run(self.cli, "func1 x=2")
-    #     self.cli.subcommands["func1"].function.assert_called_with(x="2")
+    def test_execute(self):
+        self.cli("func1 x=2")
+        self.cli.subcommands["func1"].function.assert_called_with(x="2")
 
-    #     run(self.cli, "func2 x=2")
-    #     self.cli.subcommands["func2"].function.assert_called_with(x=2)
+        self.cli("func2 x=2")
+        self.cli.subcommands["func2"].function.assert_called_with(x=2)
+
+    def test_multi_name(self):
+        self.cli("func2copy x=2")
+        self.cli.subcommands["func2copy"].function.assert_called_with(x=2)
 
     @mock.patch("arc.utils.handle")
     def test_nonexistant_command(self, _):

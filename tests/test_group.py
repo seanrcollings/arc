@@ -22,6 +22,7 @@ class TestGroup(TestCase):
             ...
 
         @self.group.subcommand()
+        @self.group.subcommand("func3copy")
         def func3(x: bool):
             ...
 
@@ -43,6 +44,12 @@ class TestGroup(TestCase):
         self.cli.subcommands["group"].subcommands["func2"].function.assert_called_with(
             x=4
         )
+
+    def test_multi_name(self):
+        self.cli("group:func3copy --x")
+        self.cli.subcommands["group"].subcommands[
+            "func3copy"
+        ].function.assert_called_with(x=True)
 
     @patch("arc.utils.handle")
     def test_nonexistant_script(self, _):

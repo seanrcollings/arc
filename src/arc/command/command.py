@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from typing import Dict, Callable, Optional, Tuple, Any
 import textwrap
+import functools
 
 
 from arc import utils, arc_config
@@ -62,6 +63,7 @@ class Command(utils.Helpful):
     def subcommand(self, name=None, command_type=None, **kwargs):
         """Create and install a subcommand"""
 
+        @self.ensure_function
         def decorator(function):
             command_name = name or function.__name__
             command = self.create_command(
@@ -75,6 +77,7 @@ class Command(utils.Helpful):
         """Decorator to replace the function
         of the current command"""
 
+        @self.ensure_function
         def decorator(function):
             self.function = function
             self.propagate_context(context)
@@ -248,3 +251,24 @@ class Command(utils.Helpful):
             for command in self.subcommands.values():
                 if command.name != "help":
                     command.helper(level + 1)
+
+    @staticmethod
+    def ensure_function(wrapped):
+        """Decorator to insure that multiple commands
+        can be created for the same function.
+        """
+
+        @functools.wraps(wrapped)
+        def decorator(maybe_function):
+            if isinstance(maybe_function, Command):
+                # pylint: disable=protected-access
+                return wrapped(maybe_function._function)
+            if callable(maybe_function):
+                return wrapped(maybe_function)
+
+            raise CommandError(
+                f"{wrapped.__name__} expected a function or "
+                f"Command but recieved a {type(maybe_function)}"
+            )
+
+        return decorator

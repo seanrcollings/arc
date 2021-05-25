@@ -57,6 +57,7 @@ class CLI(KeywordCommand):
         as `Command.subcommand`
         """
 
+        @self.ensure_function
         def decorator(function):
             command_name = name or function.__name__
             self.default_action = self.create_command(
