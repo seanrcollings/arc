@@ -10,6 +10,7 @@ class TestGroup(TestCase):
     def setUp(self):
         self.group = mock_command("group")
         self.cli = mock_command("cli", CLI)
+
         self.cli.install_command(self.group)
 
         @self.group.subcommand()
