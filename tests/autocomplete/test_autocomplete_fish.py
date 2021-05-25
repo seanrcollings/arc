@@ -28,7 +28,9 @@ class TestAutoCompleteFish(TestCase):
     @patch("sys.stdout", new_callable=StringIO)
     def test_command_completion(self, mock_out: StringIO):
         self.cli("_autocomplete:fish command_str='tool'")
-        self.assertEqual(mock_out.getvalue().strip(), "func1\t\nfunc2")
+        self.assertEqual(
+            mock_out.getvalue().strip(), "--help\tFLAG\n--version\tFLAG\nfunc1\t\nfunc2"
+        )
 
     @patch("sys.stdout", new_callable=StringIO)
     def test_subcommand_completion(self, mock_out: StringIO):

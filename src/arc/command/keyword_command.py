@@ -29,7 +29,6 @@ class KeywordCommand(Command, CommandMixin):
         :raises ScriptError: if a option is present in option_nodes and
         not in self.args
         """
-
         for node in option_nodes:
             name = cast(str, node.name)
             option: Union[Option, None] = self.args.get(name)

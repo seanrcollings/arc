@@ -1,5 +1,5 @@
 import sys
-from typing import List, Union, Optional, Iterable, Generator
+from typing import List, Union, Optional, Iterable, Generator, Callable
 from importlib import import_module
 from pathlib import Path
 
@@ -18,32 +18,64 @@ class CLI(KeywordCommand):
     the run function.
     """
 
-    def __init__(self, name="cli", function=utils.no_op, arcfile=".arc", context=None):
+    def __init__(
+        self,
+        name: str = "cli",
+        function: Callable = None,
+        arcfile: str = ".arc",
+        context: dict = None,
+        version: str = "¯\\_(ツ)_/¯",
+    ):
         """Creates a CLI object.
 
         :param name: name of the CLI, will be used in the help command
+        :param function: function that defines the CLI's default behavior. Identical
+            to calling `@cli.base()`
         :param arcfile: arc config file to load. defaults to ./.arc
-        :param context: dict of key value pairs to pass to children as context"""
+        :param context: dictionary of key value pairs to pass to children as context
+        :param version: Version string to display with `--version`
+        """
 
-        super().__init__(name, function, context)
+        super().__init__(name, self.__default, context)
         arc_config.from_file(arcfile)
+        self.version = version
+        self.default_action: Optional[Command] = self.base()(
+            function
+        ) if function else None
 
     # pylint: disable=arguments-differ
-    def __call__(self, execute: Optional[str] = None):  # type: ignore
+    def __call__(self, execute: str = None):  # type: ignore
         return run(self, execute)
 
     def command(self, *args, **kwargs):
         return self.subcommand(*args, **kwargs)
 
-    # Need to stub these in
-    # because Command is abstract,
-    # but they shouldn't ever be called
-    # (at least right now: https://github.com/seanrcollings/arc/issues/63)
-    def execute(self, _):
-        ...
+    def base(self, name=None, command_type=None, **kwargs):
+        """Define The CLI's default behavior
+        when not given a specific command. Has the same interface
+        as `Command.subcommand`
+        """
 
-    def match_input(self, _):
-        ...
+        def decorator(function):
+            command_name = name or function.__name__
+            self.default_action = self.create_command(
+                command_name, function, command_type, **kwargs
+            )
+
+            self.args |= self.default_action.args
+            return self.default_action
+
+        return decorator
+
+    def __default(self, help: bool, version: bool, **kwargs):
+        if help:
+            self("help")
+        elif version:
+            print(self.name, self.version)
+        elif self.default_action:
+            self.default_action(**kwargs)
+        else:
+            self("help")
 
     def autocomplete(self, completions_for: str = None, completions_from: str = None):
         """Enables autocompletion support for this CLI

@@ -1,7 +1,7 @@
 from unittest import TestCase, mock
 from pathlib import Path
 
-from arc import CLI, namespace
+from arc import CLI, namespace, CommandType
 from arc.errors import CommandError
 from arc.utilities.debug import debug
 
@@ -12,6 +12,10 @@ class TestCLI(TestCase):
     def setUp(self):
         self.cli = mock_command("cli", CLI)
 
+        @self.cli.base(command_type=CommandType.KEYWORD)
+        def base(val: int):
+            ...
+
         @self.cli.subcommand()
         def func1(x):
             ...
@@ -19,6 +23,10 @@ class TestCLI(TestCase):
         @self.cli.subcommand()
         def func2(x: int):
             ...
+
+    def test_base(self):
+        self.cli("val=2")
+        self.cli.default_action.function.assert_called_with(val=2)
 
     def test_install_group(self):
         g1 = namespace("g1")

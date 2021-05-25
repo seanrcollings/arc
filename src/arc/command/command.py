@@ -60,7 +60,7 @@ class Command(utils.Helpful):
     ### CLI Building ###
 
     def subcommand(self, name=None, command_type=None, **kwargs):
-        """decorator wrapper around `create_command` and `install_command`"""
+        """Create and install a subcommand"""
 
         def decorator(function):
             command_name = name or function.__name__
