@@ -143,18 +143,9 @@ class Command(utils.Helpful):
 
     def run(self, command_node: CommandNode):
         """External interface to execute a command"""
-        if command_node.empty_namespace():
-            self.pre_execute(command_node)
-            value = self.execute(command_node)
-            return self.post_execute(value)
-
-        else:
-            subcommand_name = command_node.namespace.pop(0)
-            if subcommand_name not in self.subcommands:
-                raise CommandError(f"The subcommand '{subcommand_name}' not found.")
-
-            subcommand = self.subcommands[subcommand_name]
-            return subcommand.run(command_node)
+        self.pre_execute(command_node)
+        value = self.execute(command_node)
+        return self.post_execute(value)
 
     def pre_execute(self, command_node: CommandNode):
         """Pre Command Execution hook.
