@@ -31,9 +31,7 @@ class TestConverters(TestCase):
     def test_list(self):
         self.assertEqual(ListConverter(list).convert("1,2,3"), ["1", "2", "3"])
         self.assertEqual(ListConverter(list).convert("a,b,c"), ["a", "b", "c"])
-
-        with self.assertRaises(ConversionError):
-            ListConverter(list).convert("no commas")
+        self.assertEqual(ListConverter(list).convert("a"), ["a"])
 
     def test_bool(self):
         self.assertEqual(BoolConverter(bool).convert("0"), False)
