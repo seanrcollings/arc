@@ -121,24 +121,28 @@ def display_help(command: Command, level: int = 0):
     indent = "    " * level
     name = f"{fg.GREEN}{command.name}{effects.CLEAR}"
 
-    if level == 0:
-        print(textwrap.indent(name, indent))
-    else:
-        print(textwrap.indent(sep + name, indent))
+    info = []
 
-    if command.doc:
-        print(textwrap.indent(command.doc, indent + "  "))
+    info.append(
+        textwrap.indent(name, indent)
+        if level == 0
+        else textwrap.indent(sep + name, indent)
+    )
+
+    info.append(textwrap.indent(command.doc, indent + "  ") if command.doc else "")
 
     if len(command.subcommands) > 0:
-        print(
+        info.append(
             textwrap.indent(
                 f"{effects.BOLD}{effects.UNDERLINE}Subcomands:{effects.CLEAR}",
                 indent + "  ",
             )
         )
 
-    for command in command.subcommands.values():
-        display_help(command, level + 1)
+    print("\n".join(info))
+
+    for sub in command.subcommands.values():
+        display_help(sub, level + 1)
 
 
 def run(
