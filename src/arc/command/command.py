@@ -1,21 +1,18 @@
-from abc import abstractmethod
-from typing import Dict, Callable, Optional, Tuple, Any
-import textwrap
+from abc import abstractmethod, ABC
+from typing import Dict, Callable, Optional, Any, Union, Collection
 import functools
 
-
-from arc import utils, arc_config
 from arc.color import effects, fg
 from arc.errors import CommandError, ValidationError
 from arc.parser.data_types import CommandNode
+from arc import utils
 
 from .__option import Option
 from .helpers import ArgBuilder, FunctionWrapper
 
 
-class Command(utils.Helpful):
-    """Abstract Commad Class, all Command types must inherit from it
-    Helpful is abstract, so this is as well"""
+class Command(ABC):
+    """Abstract Commad Class, all Command types must inherit from it"""
 
     __name__: str
 
@@ -43,6 +40,7 @@ class Command(utils.Helpful):
         self.args = {}  # KeywordCommand Freaks out if this isn't here
         self.function = function
         self.subcommands: Dict[str, Command] = {}
+        self.subcommand_aliases: dict[str, str] = {}
         self.context = context or {}
 
     def __repr__(self):
@@ -60,15 +58,27 @@ class Command(utils.Helpful):
 
     ### CLI Building ###
 
-    def subcommand(self, name=None, command_type=None, **kwargs):
+    def subcommand(
+        self, name: Union[str, Collection[str]] = None, command_type=None, **kwargs
+    ):
         """Create and install a subcommand"""
 
         @self.ensure_function
         def decorator(function):
-            command_name = name or function.__name__
+            if isinstance(name, (list, set, tuple)):
+                command_name = name[0]
+                command_aliases = name[1:]
+            else:
+                command_name = name or function.__name__
+                command_aliases = []
+
             command = self.create_command(
                 command_name, function, command_type, **kwargs
             )
+
+            for alias in command_aliases:
+                self.subcommand_aliases[alias] = command_name
+
             return self.install_command(command)
 
         return decorator
@@ -113,9 +123,6 @@ class Command(utils.Helpful):
         command.propagate_context(self.context)
         self.subcommands[command.name] = command
 
-        if "help" not in self.subcommands and self.name != "help":
-            self.add_helper()
-
         utils.logger.debug(
             "Registered %s%s%s command to %s%s%s",
             fg.YELLOW,
@@ -128,7 +135,7 @@ class Command(utils.Helpful):
 
         return command
 
-    def build_args(self) -> Tuple[Dict[str, Option], Dict[str, Option]]:
+    def build_args(self) -> tuple[dict[str, Option], dict[str, Option]]:
         """Builds the args and arc_args collections based
         on the function definition
         """
@@ -143,18 +150,9 @@ class Command(utils.Helpful):
 
     def run(self, command_node: CommandNode):
         """External interface to execute a command"""
-        if command_node.empty_namespace():
-            self.pre_execute(command_node)
-            value = self.execute(command_node)
-            return self.post_execute(value)
-
-        else:
-            subcommand_name = command_node.namespace.pop(0)
-            if subcommand_name not in self.subcommands:
-                raise CommandError(f"The subcommand '{subcommand_name}' not found.")
-
-            subcommand = self.subcommands[subcommand_name]
-            return subcommand.run(command_node)
+        self.pre_execute(command_node)
+        value = self.execute(command_node)
+        return self.post_execute(value)
 
     def pre_execute(self, command_node: CommandNode):
         """Pre Command Execution hook.
@@ -223,34 +221,6 @@ class Command(utils.Helpful):
     def cleanup(self):
         for arg in self.args.values():
             arg.cleanup()
-
-    def add_helper(self):
-        helper_command = self.create_command("help", self.helper)
-        self.install_command(helper_command)
-
-    def helper(self, level: int = 0):
-        """helper doc"""
-        sep = arc_config.namespace_sep
-        indent = "    " * level
-        name = f"{fg.GREEN}{self.name}{effects.CLEAR}"
-        if level == 0:
-            print(textwrap.indent(name, indent))
-        else:
-            print(textwrap.indent(sep + name, indent))
-
-        if self.doc:
-            print(textwrap.indent(self.doc, indent + "  "))
-
-        if len(self.subcommands) > 0:
-            print(
-                textwrap.indent(
-                    f"{effects.BOLD}{effects.UNDERLINE}Subcomands:{effects.CLEAR}",
-                    indent + "  ",
-                )
-            )
-            for command in self.subcommands.values():
-                if command.name != "help":
-                    command.helper(level + 1)
 
     @staticmethod
     def ensure_function(wrapped):

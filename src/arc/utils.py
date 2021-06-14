@@ -91,12 +91,6 @@ def indent(string: str, distance="\t", split="\n"):
     return f"{distance}" + f"{split}{distance}".join(string.split(split))
 
 
-class Helpful(ABC):
-    @abstractmethod
-    def helper(self, level: int):
-        ...
-
-
 @contextmanager
 def handle(*exceptions: Type[Exception], exit_code=1, handle=True):
     if handle:

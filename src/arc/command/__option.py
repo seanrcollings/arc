@@ -1,7 +1,7 @@
 import inspect
 
 from arc import arc_config
-from arc.utils import symbol, Helpful
+from arc.utils import symbol
 from arc.types import needs_cleanup
 from arc.convert import convert
 
@@ -11,7 +11,7 @@ NO_DEFAULT = symbol("No Default")
 EMPTY = inspect._empty  # type: ignore
 
 
-class Option(Helpful):
+class Option:
     def __init__(self, name, annotation, default):
         self.name: str = name
         self.annotation = str if annotation is EMPTY else annotation

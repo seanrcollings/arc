@@ -1,14 +1,13 @@
 import sys
-from typing import List, Union, Optional, Iterable, Generator, Callable
-from importlib import import_module
-from pathlib import Path
+from typing import List, Union, Optional, Callable
+import textwrap
 
 from arc.parser import parse
 from arc import arc_config, utils
-
 from .color import effects, fg
 from .command import KeywordCommand, Command
 from .errors import CommandError
+from .autoload import Autoload
 
 
 class CLI(KeywordCommand):
@@ -36,10 +35,10 @@ class CLI(KeywordCommand):
         :param version: Version string to display with `--version`
         """
 
-        super().__init__(name, self.__default, context)
+        super().__init__(name, self.missing_command, context)
         arc_config.from_file(arcfile)
         self.version = version
-        self.add_helper()
+        self.install_command(self.create_command("help", self.helper))
         self.default_action: Optional[Command] = self.base()(
             function
         ) if function else self.subcommands["help"]
@@ -69,7 +68,14 @@ class CLI(KeywordCommand):
 
         return decorator
 
-    def __default(self, help: bool, version: bool, **kwargs):
+    # pylint: disable=redefined-builtin
+    def missing_command(self, help: bool, version: bool, **kwargs):
+        """When no command is provided,
+        this function will be called to handle it.
+        It handles the --help and --version flags.
+        And if neither of those are specified, it will call
+        the `@cli.base()` definition
+        """
         if help:
             self("help")
         elif version:
@@ -102,68 +108,41 @@ class CLI(KeywordCommand):
     def autoload(self, *paths: str):
         Autoload(paths, self).load()
 
-    def helper(self, level: int = 0):
+    def helper(self):
         """Displays this help."""
         print(f"Usage: {self.name} <COMMAND> [ARGUMENTS ...]\n\n")
         print(f"{effects.UNDERLINE}{effects.BOLD}Commands:{effects.CLEAR}\n")
         for command in self.subcommands.values():
-            command.helper(level)
+            display_help(command)
 
 
-class Autoload:
-    def __init__(self, paths: Iterable[str], parent: Command):
-        self.paths = paths
-        self.parent = parent
+def display_help(command: Command, level: int = 0):
+    sep = arc_config.namespace_sep
+    indent = "    " * level
+    name = f"{fg.GREEN}{command.name}{effects.CLEAR}"
 
-    def load(self):
-        for path in self.__load_files(self.paths):
-            utils.logger.debug("Autoloading %s%s%s", fg.YELLOW, path, effects.CLEAR)
-            for command in self.__load_commands(path):
-                if command.name in self.parent.subcommands:
-                    raise CommandError(
-                        f"Namespace {command.name} already exists on {self.parent}\n"
-                        "Autoloaded namespaces cannot overwrite prexisting namespaces"
-                    )
+    info = []
 
-                self.parent.install_command(command)
+    info.append(
+        textwrap.indent(name, indent)
+        if level == 0
+        else textwrap.indent(sep + name, indent)
+    )
 
-    def __load_files(self, paths: Iterable[str]):
-        for filepath in paths:
-            path = self.path(filepath)
-            if not path:
-                continue
+    info.append(textwrap.indent(command.doc, indent + "  ") if command.doc else "")
 
-            if path.name.startswith("__"):
-                continue
-
-            if path.is_dir():
-                yield from self.__load_files(path.iterdir())  # type: ignore
-            else:
-                yield path
-
-    def __load_commands(self, path: Path) -> Generator[Command, None, None]:
-        sys.path.append(str(path.parent))
-        module = import_module(path.stem)
-        module_objects = (
-            getattr(module, name) for name in dir(module) if not name.startswith("__")
+    if len(command.subcommands) > 0:
+        info.append(
+            textwrap.indent(
+                f"{effects.BOLD}{effects.UNDERLINE}Subcomands:{effects.CLEAR}",
+                indent + "  ",
+            )
         )
-        for obj in module_objects:
-            if isinstance(obj, type):
-                continue
 
-            try:
-                if Command in obj.__class__.mro() and obj.__autoload__:
-                    yield obj
-            except AttributeError:
-                continue
+    print("\n".join(info))
 
-    @staticmethod
-    def path(filepath: str) -> Optional[Path]:
-        path = Path(filepath)
-        path = path.expanduser().resolve()
-        if path.exists():
-            return path
-        return None
+    for sub in command.subcommands.values():
+        display_help(sub, level + 1)
 
 
 def run(
@@ -171,7 +150,7 @@ def run(
 ):
     """Core function of the ARC API.
     Loads up the config file, parses the user input
-    And then passes control over to the `command` object.
+    Finds the command referenced, then passes over control to it
 
     :param command: command object to run
     :param execute: string to parse and execute. If it's not provided
@@ -181,8 +160,29 @@ def run(
     """
     if arcfile:
         arc_config.from_file(arcfile)
+
     user_input: Union[List[str], str] = execute if execute else sys.argv[1:]
     command_node = parse(user_input)
     utils.logger.debug(command_node)
+
+    current_namespace: list[str] = []
+    subcommand_name = command.name
     with utils.handle(CommandError):
+        while not command_node.empty_namespace():
+            subcommand_name = command_node.namespace.pop(0)
+            current_namespace.append(subcommand_name)
+
+            if subcommand_name in command.subcommands:
+                command = command.subcommands[subcommand_name]
+            elif subcommand_name in command.subcommand_aliases:
+                command = command.subcommands[
+                    command.subcommand_aliases[subcommand_name]
+                ]
+            else:
+                raise CommandError(
+                    f"The command {fg.YELLOW}"
+                    f"{':'.join(current_namespace)}{effects.CLEAR}{fg.RED} not found. "
+                    "Check --help for available commands"
+                )
+
         return command.run(command_node)

@@ -84,9 +84,7 @@ class ListConverter(BaseConverter):
     convert_to = list
 
     def convert(self, value: str):
-        if "," in value:
-            return value.replace(" ", "").split(",")
-        raise ConversionError(value, "a comma seperated list of strings")
+        return list(value.strip(" ") for value in value.split(","))
 
 
 class FileConverter(BaseConverter):
