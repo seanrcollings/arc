@@ -74,3 +74,11 @@ class TestCLI(TestCase):
             self.cli.autoload(  # type: ignore
                 str(Path(__file__).parent.parent / "src/arc/utilities/debug.py")
             )
+
+    def test_command_alias(self):
+        @self.cli.subcommand(("name1", "name2"))
+        def name1():
+            ...
+
+        self.cli("name2")
+        name1.function.assert_called_with()

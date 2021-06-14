@@ -172,13 +172,17 @@ def run(
             subcommand_name = command_node.namespace.pop(0)
             current_namespace.append(subcommand_name)
 
-            if subcommand_name not in command.subcommands:
+            if subcommand_name in command.subcommands:
+                command = command.subcommands[subcommand_name]
+            elif subcommand_name in command.subcommand_aliases:
+                command = command.subcommands[
+                    command.subcommand_aliases[subcommand_name]
+                ]
+            else:
                 raise CommandError(
                     f"The command {fg.YELLOW}"
                     f"{':'.join(current_namespace)}{effects.CLEAR}{fg.RED} not found. "
                     "Check --help for available commands"
                 )
-
-            command = command.subcommands[subcommand_name]
 
         return command.run(command_node)

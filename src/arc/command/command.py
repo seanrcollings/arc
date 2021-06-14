@@ -1,5 +1,5 @@
 from abc import abstractmethod, ABC
-from typing import Dict, Callable, Optional, Any
+from typing import Dict, Callable, Optional, Any, Union, Collection
 import functools
 
 from arc.color import effects, fg
@@ -40,6 +40,7 @@ class Command(ABC):
         self.args = {}  # KeywordCommand Freaks out if this isn't here
         self.function = function
         self.subcommands: Dict[str, Command] = {}
+        self.subcommand_aliases: dict[str, str] = {}
         self.context = context or {}
 
     def __repr__(self):
@@ -57,15 +58,27 @@ class Command(ABC):
 
     ### CLI Building ###
 
-    def subcommand(self, name=None, command_type=None, **kwargs):
+    def subcommand(
+        self, name: Union[str, Collection[str]] = None, command_type=None, **kwargs
+    ):
         """Create and install a subcommand"""
 
         @self.ensure_function
         def decorator(function):
-            command_name = name or function.__name__
+            if isinstance(name, (list, set, tuple)):
+                command_name = name[0]
+                command_aliases = name[1:]
+            else:
+                command_name = name or function.__name__
+                command_aliases = []
+
             command = self.create_command(
                 command_name, function, command_type, **kwargs
             )
+
+            for alias in command_aliases:
+                self.subcommand_aliases[alias] = command_name
+
             return self.install_command(command)
 
         return decorator
