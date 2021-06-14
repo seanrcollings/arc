@@ -1,12 +1,5 @@
-import sys
 from arc.color import fg, effects
-
-PREVIOUS_LINE = "\033[F"
-CLEAR_LINE = "\033[K"
-
-
-def write(string: str):
-    sys.stdout.write(string)
+from .helpers import write, CLEAR_LINE, PREVIOUS_LINE
 
 
 def confirm(message: str):
