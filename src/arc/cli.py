@@ -1,5 +1,6 @@
 import sys
 from typing import List, Union, Optional, Callable
+import textwrap
 
 from arc.parser import parse
 from arc import arc_config, utils
@@ -34,10 +35,10 @@ class CLI(KeywordCommand):
         :param version: Version string to display with `--version`
         """
 
-        super().__init__(name, self.__default, context)
+        super().__init__(name, self.missing_command, context)
         arc_config.from_file(arcfile)
         self.version = version
-        self.add_helper()
+        self.install_command(self.create_command("help", self.helper))
         self.default_action: Optional[Command] = self.base()(
             function
         ) if function else self.subcommands["help"]
@@ -67,7 +68,14 @@ class CLI(KeywordCommand):
 
         return decorator
 
-    def __default(self, help: bool, version: bool, **kwargs):
+    # pylint: disable=redefined-builtin
+    def missing_command(self, help: bool, version: bool, **kwargs):
+        """When no command is provided,
+        this function will be called to handle it.
+        It handles the --help and --version flags.
+        And if neither of those are specified, it will call
+        the `@cli.base()` definition
+        """
         if help:
             self("help")
         elif version:
@@ -100,12 +108,37 @@ class CLI(KeywordCommand):
     def autoload(self, *paths: str):
         Autoload(paths, self).load()
 
-    def helper(self, level: int = 0):
+    def helper(self):
         """Displays this help."""
         print(f"Usage: {self.name} <COMMAND> [ARGUMENTS ...]\n\n")
         print(f"{effects.UNDERLINE}{effects.BOLD}Commands:{effects.CLEAR}\n")
         for command in self.subcommands.values():
-            command.helper(level)
+            display_help(command)
+
+
+def display_help(command: Command, level: int = 0):
+    sep = arc_config.namespace_sep
+    indent = "    " * level
+    name = f"{fg.GREEN}{command.name}{effects.CLEAR}"
+
+    if level == 0:
+        print(textwrap.indent(name, indent))
+    else:
+        print(textwrap.indent(sep + name, indent))
+
+    if command.doc:
+        print(textwrap.indent(command.doc, indent + "  "))
+
+    if len(command.subcommands) > 0:
+        print(
+            textwrap.indent(
+                f"{effects.BOLD}{effects.UNDERLINE}Subcomands:{effects.CLEAR}",
+                indent + "  ",
+            )
+        )
+
+    for command in command.subcommands.values():
+        display_help(command, level + 1)
 
 
 def run(

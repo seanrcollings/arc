@@ -1,21 +1,18 @@
-from abc import abstractmethod
-from typing import Dict, Callable, Optional, Tuple, Any
-import textwrap
+from abc import abstractmethod, ABC
+from typing import Dict, Callable, Optional, Any
 import functools
 
-
-from arc import utils, arc_config
 from arc.color import effects, fg
 from arc.errors import CommandError, ValidationError
 from arc.parser.data_types import CommandNode
+from arc import utils
 
 from .__option import Option
 from .helpers import ArgBuilder, FunctionWrapper
 
 
-class Command(utils.Helpful):
-    """Abstract Commad Class, all Command types must inherit from it
-    Helpful is abstract, so this is as well"""
+class Command(ABC):
+    """Abstract Commad Class, all Command types must inherit from it"""
 
     __name__: str
 
@@ -113,9 +110,6 @@ class Command(utils.Helpful):
         command.propagate_context(self.context)
         self.subcommands[command.name] = command
 
-        if "help" not in self.subcommands and self.name != "help":
-            self.add_helper()
-
         utils.logger.debug(
             "Registered %s%s%s command to %s%s%s",
             fg.YELLOW,
@@ -128,7 +122,7 @@ class Command(utils.Helpful):
 
         return command
 
-    def build_args(self) -> Tuple[Dict[str, Option], Dict[str, Option]]:
+    def build_args(self) -> tuple[dict[str, Option], dict[str, Option]]:
         """Builds the args and arc_args collections based
         on the function definition
         """
@@ -214,34 +208,6 @@ class Command(utils.Helpful):
     def cleanup(self):
         for arg in self.args.values():
             arg.cleanup()
-
-    def add_helper(self):
-        helper_command = self.create_command("help", self.helper)
-        self.install_command(helper_command)
-
-    def helper(self, level: int = 0):
-        """helper doc"""
-        sep = arc_config.namespace_sep
-        indent = "    " * level
-        name = f"{fg.GREEN}{self.name}{effects.CLEAR}"
-        if level == 0:
-            print(textwrap.indent(name, indent))
-        else:
-            print(textwrap.indent(sep + name, indent))
-
-        if self.doc:
-            print(textwrap.indent(self.doc, indent + "  "))
-
-        if len(self.subcommands) > 0:
-            print(
-                textwrap.indent(
-                    f"{effects.BOLD}{effects.UNDERLINE}Subcomands:{effects.CLEAR}",
-                    indent + "  ",
-                )
-            )
-            for command in self.subcommands.values():
-                if command.name != "help":
-                    command.helper(level + 1)
 
     @staticmethod
     def ensure_function(wrapped):
