@@ -10,15 +10,6 @@ from .questions import Question, QuestionError
 V = TypeVar("V")
 
 
-def colorize(f):
-    @functools.wraps(f)
-    def wrapper(inst: "Prompt", message: str, *args, **kwargs):
-        color, emoji = f(inst, message)
-        print(color + inst.emoji(emoji) + message + effects.CLEAR, *args, **kwargs)
-
-    return wrapper
-
-
 class Prompt:
     def __init__(self, show_emojis: bool = True):
         self.show_emojis = show_emojis
@@ -39,7 +30,7 @@ class Prompt:
             try:
                 answer = question.handle_answer(user_input)
             except QuestionError as e:
-                write(f"{PREVIOUS_LINE}{PREVIOUS_LINE}{e}")
+                write(f"{PREVIOUS_LINE}{PREVIOUS_LINE}{CLEAR_LINE}{e}")
 
         self._previous_answers.append(answer)
         return answer
@@ -49,29 +40,29 @@ class Prompt:
         self._previous_answers.append(answer)
         return answer
 
-    @colorize
-    def error(self, _message: str):
-        return fg.RED, "🚨"
+    def beautify(self, message: str, color: str = "", emoji: str = "", **kwargs):
+        print(color + self.emoji(emoji) + message + effects.CLEAR, **kwargs)
 
-    @colorize
-    def ok(self, _message: str):
-        return fg.GREEN, "✓"
+    def error(self, message: str, **kwargs):
+        self.beautify(message, fg.RED, "🚨", **kwargs)
 
-    @colorize
-    def no(self, _message: str):
-        return fg.RED, "✗"
+    def ok(self, message: str, **kwargs):
+        self.beautify(message, fg.GREEN, "✓", **kwargs)
 
-    @colorize
-    def act(self, _message: str):
-        return fg.BLUE.bright, ""
+    def no(self, message: str, **kwargs):
+        self.beautify(message, fg.RED, "✗", **kwargs)
 
-    @colorize
-    def warn(self, _message: str):
-        return fg.YELLOW, "🚧"
+    def act(self, message: str, **kwargs):
+        self.beautify(message, fg.BLUE.bright, **kwargs)
 
-    @colorize
-    def subtle(self, _message: str):
-        return fg.GREY, ""
+    def warn(self, message: str, **kwargs):
+        self.beautify(message, fg.YELLOW, "🚧", **kwargs)
+
+    def subtle(self, message: str, **kwargs):
+        self.beautify(message, fg.GREY, **kwargs)
+
+    def snake(self, message: str, **kwargs):
+        self.beautify(message, emoji="🐍", **kwargs)
 
     def emoji(self, emoji: str):
         if self.show_emojis and len(emoji) > 0:
