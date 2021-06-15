@@ -9,8 +9,9 @@ V = TypeVar("V")
 
 
 class Prompt:
-    def __init__(self, show_emojis: bool = True):
+    def __init__(self, show_emojis: bool = True, color_output: bool = True):
         self.show_emojis = show_emojis
+        self.color_output = color_output
         self._previous_answers: list[Any] = []
 
     @property
@@ -39,7 +40,9 @@ class Prompt:
         return self.ask(question)
 
     def beautify(self, message: str, color: str = "", emoji: str = "", **kwargs):
-        print(color + self.emoji(emoji) + message + effects.CLEAR, **kwargs)
+        print(
+            self.colored(color) + self.emoji(emoji) + message + effects.CLEAR, **kwargs
+        )
 
     def error(self, message: str, **kwargs):
         self.beautify(message, fg.RED, "🚨", **kwargs)
@@ -65,4 +68,9 @@ class Prompt:
     def emoji(self, emoji: str):
         if self.show_emojis and len(emoji) > 0:
             return emoji + " "
+        return ""
+
+    def colored(self, color: str):
+        if self.color_output:
+            return color
         return ""
