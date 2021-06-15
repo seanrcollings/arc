@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, Union
+from arc.color import fg, effects
 
 T = TypeVar("T")
 
@@ -89,3 +90,27 @@ class RangeQuestion(Question[int]):
             raise QuestionError("Input not in range")
 
         return answer
+
+
+class ConfirmQuestion(Question[bool]):
+    result = {
+        "y": True,
+        "yes": True,
+        "n": False,
+        "no": False,
+    }
+
+    def __init__(self, message: str):
+        self.message = message
+
+    def render(self) -> str:
+        return f"{self.message} [{fg.GREEN}Y{effects.CLEAR}/{fg.RED}N{effects.CLEAR}]"
+
+    def handle_answer(self, answer: str) -> bool:
+        if answer.lower() in self.result:
+            return self.result[answer.lower()]
+
+        raise QuestionError(
+            "Not valid, please enter "
+            f"{fg.GREEN}y{effects.CLEAR} or {fg.RED}n{effects.CLEAR}",
+        )

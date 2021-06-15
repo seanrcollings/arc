@@ -2,8 +2,7 @@ from typing import Any, TypeVar
 
 from arc.color import fg, effects
 from .helpers import write, CLEAR_LINE, PREVIOUS_LINE
-from .confirm import confirm
-from .questions import Question, QuestionError
+from .questions import Question, QuestionError, ConfirmQuestion
 
 
 V = TypeVar("V")
@@ -24,7 +23,7 @@ class Prompt:
 
         print(question.render())
         answer = None
-        while not answer:
+        while answer is None:
             user_input = input(f"\n{CLEAR_LINE}> ").lower()
             try:
                 answer = question.handle_answer(user_input)
@@ -36,9 +35,8 @@ class Prompt:
         return answer
 
     def confirm(self, *args, **kwargs):
-        answer = confirm(*args, **kwargs)
-        self._previous_answers.append(answer)
-        return answer
+        question = ConfirmQuestion(*args, **kwargs)
+        self.ask(question)
 
     def beautify(self, message: str, color: str = "", emoji: str = "", **kwargs):
         print(color + self.emoji(emoji) + message + effects.CLEAR, **kwargs)
