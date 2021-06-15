@@ -29,7 +29,8 @@ class Prompt:
             try:
                 answer = question.handle_answer(user_input)
             except QuestionError as e:
-                write(f"{PREVIOUS_LINE}{PREVIOUS_LINE}{CLEAR_LINE}{e}")
+                write(f"{PREVIOUS_LINE}{PREVIOUS_LINE}{CLEAR_LINE}")
+                self.error(str(e), end="")
 
         self._previous_answers.append(answer)
         return answer
