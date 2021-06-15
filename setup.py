@@ -1,11 +1,18 @@
 import setuptools
-import arc
+
+try:
+    import arc
+
+    VERSION = arc.__version__
+except ImportError:
+    VERSION = "test_version"
+
+DOWNLOAD = f"https://github.com/seanrcollings/arc/archive/v{VERSION}tar.gz"
+
 
 with open("README.md", "r") as fh:
     LONG_DESC = fh.read()
 
-VERSION = arc.__version__
-DOWNLOAD = f"https://github.com/seanrcollings/arc/archive/v{VERSION}tar.gz"
 
 setuptools.setup(
     name="arc-cli",
