@@ -52,6 +52,7 @@ class fg:
     MAGENTA = Color(35)
     CYAN    = Color(36)
     WHITE   = Color(37)
+    GREY    = BLACK.bright
 
     @staticmethod
     def rgb(red: int = 0, green: int = 0, blue: int = 0):
