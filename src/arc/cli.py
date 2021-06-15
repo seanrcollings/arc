@@ -113,13 +113,19 @@ class CLI(KeywordCommand):
         print(f"Usage: {self.name} <COMMAND> [ARGUMENTS ...]\n\n")
         print(f"{effects.UNDERLINE}{effects.BOLD}Commands:{effects.CLEAR}\n")
         for command in self.subcommands.values():
-            display_help(command)
+            display_help(command, self)
 
 
-def display_help(command: Command, level: int = 0):
+def display_help(command: Command, parent: Command, level: int = 0):
     sep = arc_config.namespace_sep
     indent = "    " * level
+
+    aliases = [
+        key for key, value in parent.subcommand_aliases.items() if value == command.name
+    ]
     name = f"{fg.GREEN}{command.name}{effects.CLEAR}"
+    if aliases:
+        name += f"{fg.BLACK.bright} ({', '.join(aliases)}){effects.CLEAR}"
 
     info = []
 
@@ -142,7 +148,7 @@ def display_help(command: Command, level: int = 0):
     print("\n".join(info))
 
     for sub in command.subcommands.values():
-        display_help(sub, level + 1)
+        display_help(sub, command, level + 1)
 
 
 def run(
