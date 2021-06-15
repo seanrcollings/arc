@@ -8,6 +8,11 @@ T = TypeVar("T")
 
 
 def is_int(f):
+    """Asserts that the given answer is a number.
+    If it is a number, cast to an int and call
+    the decorated function.
+    """
+
     def wrapper(inst, answer: str, *args, **kwargs):
         if not answer.isnumeric():
             raise QuestionError("Input must be a number")
@@ -18,6 +23,8 @@ def is_int(f):
 
 
 def is_list(f):
+    """Splits the answer on commas"""
+
     def wrapper(inst, answer: str, *args, **kwargs):
         return f(inst, list(a.strip() for a in answer.split(",")), *args, **kwargs)
 
@@ -42,6 +49,18 @@ MultipleReturn = Union[tuple[int, str], list[tuple[int, str]]]
 
 
 class MultipleChoiceQuestion(Question[MultipleReturn]):
+    """Question with multiple possible options
+
+    ```
+    MultipleChoiceQuestion(["Option 1", "Option 2", "Option 3",])
+    [0] Option 1
+    [1] Option 2
+    [3] Option 3
+    ```
+
+    if `multiple_answer = True`, the user can choose multiple options (1,2,3)
+    """
+
     def __init__(self, choices: list[str], multiple_answer: bool = False):
         self.choices = choices
         self.multiple_answer = multiple_answer
@@ -77,7 +96,13 @@ class MultipleChoiceQuestion(Question[MultipleReturn]):
 
 
 class RangeQuestion(Question[int]):
+    """Question for a number in a given range"""
+
     def __init__(self, min: int, max: int):
+        """
+        :param min: the smallest number possible
+        :param max: the largest  number possible
+        """
         self.min = min
         self.max = max
 
@@ -93,6 +118,11 @@ class RangeQuestion(Question[int]):
 
 
 class ConfirmQuestion(Question[bool]):
+    """Question to get a yes / no from the user
+
+    `confirm()` is an alias for asking this question
+    """
+
     result = {
         "y": True,
         "yes": True,

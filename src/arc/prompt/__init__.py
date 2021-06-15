@@ -3,4 +3,4 @@ from .questions import *
 
 
 def confirm(message: str):
-    return Prompt().ask(ConfirmQuestion(message))
+    return Prompt().confirm(message)

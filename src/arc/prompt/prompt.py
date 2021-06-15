@@ -36,7 +36,7 @@ class Prompt:
 
     def confirm(self, *args, **kwargs):
         question = ConfirmQuestion(*args, **kwargs)
-        self.ask(question)
+        return self.ask(question)
 
     def beautify(self, message: str, color: str = "", emoji: str = "", **kwargs):
         print(color + self.emoji(emoji) + message + effects.CLEAR, **kwargs)
