@@ -16,6 +16,13 @@ def is_int(f):
     return wrapper
 
 
+def is_list(f):
+    def wrapper(inst, answer: str, *args, **kwargs):
+        return f(inst, list(a.strip() for a in answer.split(",")), *args, **kwargs)
+
+    return wrapper
+
+
 class QuestionError(Exception):
     ...
 
@@ -63,8 +70,9 @@ class MultipleChoiceQuestion(Question[MultipleReturn]):
 
         return (answer, self.choices[answer])
 
-    def _handle_multiple_answer(self, answer: str):
-        return list(self._handle_single_answer(a.strip()) for a in answer.split(","))
+    @is_list
+    def _handle_multiple_answer(self, answer: list[str]):
+        return list(self._handle_single_answer(a) for a in answer)
 
 
 class RangeQuestion(Question[int]):

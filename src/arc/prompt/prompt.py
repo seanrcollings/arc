@@ -1,4 +1,3 @@
-import functools
 from typing import Any, TypeVar
 
 from arc.color import fg, effects
