@@ -5,7 +5,7 @@ import textwrap
 from arc.parser import parse
 from arc import arc_config, utils
 from .color import effects, fg
-from .command import Command
+from .command import Command, ParsingMethod
 from .errors import CommandError
 from .autoload import Autoload
 
@@ -35,7 +35,7 @@ class CLI(Command):
         :param version: Version string to display with `--version`
         """
 
-        super().__init__(name, self.missing_command, context)
+        super().__init__(name, self.missing_command, ParsingMethod.KEYWORD, context)
         arc_config.from_file(arcfile)
         self.version = version
         # self.install_command(self.create_command("help", self.helper))

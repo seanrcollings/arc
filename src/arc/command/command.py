@@ -1,11 +1,11 @@
-from typing import Dict, Callable, Optional, Any, Type
+from typing import Dict, Callable, Optional, Any, Type, Union, Collection
 import functools
 
 from arc.color import effects, fg
 from arc.errors import CommandError, ExecutionError, NoOpError
 from arc import utils
 
-from .argument_parser import ArgumentParser
+from .argument_parser import ArgumentParser, ParsingMethod
 
 
 class CommandExecutor:
@@ -31,7 +31,6 @@ class CommandExecutor:
 
 # TODO
 # - Function cleanup
-# - Subcommands
 # - @base
 # - Context
 class Command:
@@ -76,80 +75,77 @@ class Command:
 
     ### Building Subcommands ###
 
-    # def subcommand(
-    #     self, name: Union[str, Collection[str]] = None, command_type=None, **kwargs
-    # ):
-    #     """Create and install a subcommand"""
+    def subcommand(
+        self,
+        name: Union[str, list[str], tuple[str, ...]] = None,
+        parsing_method: type[ArgumentParser] = None,
+        **kwargs,
+    ):
+        """Create and install a subcommand
 
-    #     @self.ensure_function
-    #     def decorator(function):
-    #         if isinstance(name, (list, set, tuple)):
-    #             command_name = name[0]
-    #             command_aliases = name[1:]
-    #         else:
-    #             command_name = name or function.__name__
-    #             command_aliases = []
+        Fallback for parsing_method:
+          - provided argument
+          - type of `self.parser`
+        """
 
-    #         command = self.create_command(
-    #             command_name, function, command_type, **kwargs
-    #         )
+        parsing_method = parsing_method or type(self.parser)
 
-    #         for alias in command_aliases:
-    #             self.subcommand_aliases[alias] = command_name
+        @self.ensure_function
+        def decorator(function):
+            command_name = self.handle_command_aliases(name or function.__name__)
+            command = Command(command_name, function, parsing_method, **kwargs)
+            return self.install_command(command)
 
-    #         return self.install_command(command)
+        return decorator
 
-    #     return decorator
+    def base(self, context: Optional[dict] = None):
+        """Decorator to replace the function
+        of the current command"""
 
-    # def base(self, context: Optional[dict] = None):
-    #     """Decorator to replace the function
-    #     of the current command"""
+        @self.ensure_function
+        def decorator(function):
+            self.function = function
+            self.propagate_context(context)
+            return self
 
-    #     @self.ensure_function
-    #     def decorator(function):
-    #         self.function = function
-    #         self.propagate_context(context)
-    #         return self
+        return decorator
 
-    #     return decorator
+    def install_commands(self, *commands):
+        return tuple(self.install_command(command) for command in commands)
 
-    # def create_command(self, name, function, command_type=None, **kwargs):
-    #     """Creates a command object of provided command_type
+    def install_command(self, command: "Command"):
+        """Installs a command object as a subcommand
+        of the current object"""
+        command.propagate_context(self.context)
+        self.subcommands[command.name] = command
 
-    #     Fallback for command type:
-    #       - provided arguement
-    #       - command_type of the parent namespace
-    #       - KeywordCommand
+        utils.logger.debug(
+            "Registered %s%s%s command to %s%s%s",
+            fg.YELLOW,
+            command.name,
+            effects.CLEAR,
+            fg.YELLOW,
+            self.name,
+            effects.CLEAR,
+        )
 
-    #     :returns: the Command object
-    #     """
-
-    #     # command_type = command_type or CommandType.get_command_type(self)
-    #     # command = command_factory(name, function, command_type, **kwargs)
-    #     # return command
-
-    # def install_commands(self, *commands):
-    #     return tuple(self.install_command(command) for command in commands)
-
-    # def install_command(self, command: "Command"):
-    #     """Installs a command object as a subcommand
-    #     of the current object"""
-    #     command.propagate_context(self.context)
-    #     self.subcommands[command.name] = command
-
-    #     utils.logger.debug(
-    #         "Registered %s%s%s command to %s%s%s",
-    #         fg.YELLOW,
-    #         command.name,
-    #         effects.CLEAR,
-    #         fg.YELLOW,
-    #         self.name,
-    #         effects.CLEAR,
-    #     )
-
-    #     return command
+        return command
 
     ### Helpers ###
+
+    def handle_command_aliases(
+        self, command_name: Union[str, list[str], tuple[str, ...]]
+    ) -> str:
+        if isinstance(command_name, str):
+            return command_name
+
+        name = command_name[0]
+        aliases = command_name[1:]
+
+        for alias in aliases:
+            self.subcommand_aliases[alias] = name
+
+        return name
 
     def propagate_context(self, new_context):
         self.context = (new_context or {}) | self.context
