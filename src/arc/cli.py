@@ -1,6 +1,7 @@
 import sys
 from typing import List, Union, Optional, Callable
 import textwrap
+import shlex
 
 from arc.parser import parse
 from arc import arc_config, utils
@@ -168,17 +169,15 @@ def run(
         arc_config.from_file(arcfile)
 
     user_input: Union[List[str], str] = execute if execute else sys.argv[1:]
-    command_node = parse(user_input)
-    utils.logger.debug(command_node)
+    if isinstance(user_input, str):
+        user_input = shlex.split(user_input)
 
-    current_namespace: list[str] = []
-    subcommand_name = command.name
-    command_context = command.context
+    # How do we know if the command namespace is empty?
+    command_namespace: list[str] = user_input[0].split(arc_config.namespace_sep)
+    command_args: list[str] = user_input[1:]
+
     with utils.handle(CommandError):
-        while not command_node.empty_namespace():
-            subcommand_name = command_node.namespace.pop(0)
-            current_namespace.append(subcommand_name)
-
+        for subcommand_name in command_namespace:
             if subcommand_name in command.subcommands:
                 command = command.subcommands[subcommand_name]
             elif subcommand_name in command.subcommand_aliases:
@@ -188,10 +187,14 @@ def run(
             else:
                 raise CommandError(
                     f"The command {fg.YELLOW}"
-                    f"{':'.join(current_namespace)}{effects.CLEAR}{fg.RED} not found. "
+                    f"{':'.join(command_namespace)}{effects.CLEAR}{fg.RED} not found. "
                     "Check --help for available commands"
                 )
 
-            command_context = command.context | command_context
-
-        return command.run(command_node, command_context)
+        utils.logger.debug(
+            "Executing command: %s%s%s",
+            fg.YELLOW,
+            ":".join(command_namespace),
+            effects.CLEAR,
+        )
+        return command.run(command_namespace, command_args)
