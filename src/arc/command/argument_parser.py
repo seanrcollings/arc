@@ -20,12 +20,8 @@ class ArgumentParser(ABC):
     """
 
     def __init__(self, function: Callable):
-        self._args: dict[str, Argument] = {}
+        self.args: dict[str, Argument] = {}
         self.build_args(function)
-
-    @property
-    def args(self):
-        return self._args
 
     def get_matchers(self):
         all_matchers = {}
@@ -86,7 +82,7 @@ class ArgumentParser(ABC):
             for idx, param in enumerate(builder):
                 self.arg_hook(param, builder.get_meta(index=idx))
 
-            self._args = builder.args
+            self.args = builder.args
 
     def arg_hook(self, param, meta):
         """Callback to assert that the param being processed
@@ -97,7 +93,7 @@ class ArgumentParser(ABC):
     ### Helpers ###
 
     def get_or_raise(self, key: str, message):
-        arg = self._args.get(key)
+        arg = self.args.get(key)
         if arg and not arg.hidden:
             return arg
 

@@ -19,7 +19,6 @@ from tests.converter import *
 from tests.autocomplete import *
 from tests.examples import *
 from tests.utilities import *
-from tests.parser import *
 from tests.test_context import *
 
 from tests.docs import *

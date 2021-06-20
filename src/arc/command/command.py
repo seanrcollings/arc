@@ -157,7 +157,7 @@ class Command:
         def decorator(maybe_function):
             if isinstance(maybe_function, Command):
                 # pylint: disable=protected-access
-                return wrapped(maybe_function._function)
+                return wrapped(maybe_function.function)
             if callable(maybe_function):
                 return wrapped(maybe_function)
 

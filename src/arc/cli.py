@@ -21,6 +21,7 @@ class CLI(Command):
         self,
         name: str = "cli",
         function: Callable = None,
+        parsing_method=ParsingMethod.KEYWORD,
         arcfile: str = ".arc",
         context: dict = None,
         version: str = "¯\\_(ツ)_/¯",
@@ -34,8 +35,7 @@ class CLI(Command):
         :param context: dictionary of key value pairs to pass to children as context
         :param version: Version string to display with `--version`
         """
-
-        super().__init__(name, self.missing_command, ParsingMethod.KEYWORD, context)
+        super().__init__(name, self.missing_command, parsing_method, context)
         arc_config.from_file(arcfile)
         self.version = version
         # self.install_command(self.create_command("help", self.helper))
