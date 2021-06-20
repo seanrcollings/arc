@@ -5,12 +5,12 @@ import textwrap
 from arc.parser import parse
 from arc import arc_config, utils
 from .color import effects, fg
-from .command import KeywordCommand, Command
+from .command import Command
 from .errors import CommandError
 from .autoload import Autoload
 
 
-class CLI(KeywordCommand):
+class CLI(Command):
     """The CLI class is now implemented as a subclass
     of the Command class and reality just acts as a
     conveneince wrapper around Command creation and
@@ -38,7 +38,7 @@ class CLI(KeywordCommand):
         super().__init__(name, self.missing_command, context)
         arc_config.from_file(arcfile)
         self.version = version
-        self.install_command(self.create_command("help", self.helper))
+        # self.install_command(self.create_command("help", self.helper))
         self.default_action: Optional[Command] = self.base()(
             function
         ) if function else self.subcommands["help"]

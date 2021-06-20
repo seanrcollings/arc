@@ -85,6 +85,10 @@ class symbol:
     def __eq__(self, other):
         return self.__name == other
 
+    @property
+    def name(self):
+        return self.__name
+
 
 def indent(string: str, distance="\t", split="\n"):
     """Indents the block of text provided by the distance"""
