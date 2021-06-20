@@ -1,4 +1,4 @@
-from typing import Dict, Callable, Optional, Any, Type, Union, TypedDict, Literal
+from typing import Dict, Callable, Optional, Any, Type, Union
 import functools
 
 from arc.color import effects, fg
