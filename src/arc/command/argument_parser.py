@@ -7,7 +7,7 @@ from arc import arc_config, errors
 from arc.color import fg, effects
 from .helpers import ArgBuilder
 from .argument import Argument, NO_DEFAULT
-
+from .context import Context
 
 IDENT = r"[a-zA-Z-_0-9]+"
 
@@ -37,7 +37,7 @@ class ArgumentParser(ABC):
 
     ### Argument Parsing ###
 
-    def parse(self, cli_args: list[str]) -> dict[str, Any]:
+    def parse(self, cli_args: list[str], context: dict[str, Any]) -> dict[str, Any]:
         """Parses the provided command-line arguments into
         a dictionary of arguments to be passed to a python
         function
@@ -51,19 +51,25 @@ class ArgumentParser(ABC):
                     key, value = self.handle_match(match, name)
                     matched_args[key] = value
 
-        return self.fill_unmatched(matched_args)
+        return self.fill_unmatched(matched_args, context)
 
     def handle_match(self, match: re.Match, name: str) -> tuple[str, Any]:
         groups: Union[dict[str, str], str] = self.get_match_values(match)
         handler: Callable = getattr(self, f"handle_{name}")
         return handler(groups)
 
-    def fill_unmatched(self, matched_args: dict[str, Any]) -> dict[str, Any]:
-        unfilled = {
-            key: arg.default
-            for key, arg in self.args.items()
-            if key not in matched_args
-        }
+    def fill_unmatched(
+        self, matched_args: dict[str, Any], context: dict[str, Any]
+    ) -> dict[str, Any]:
+
+        unfilled = {}
+        for key, arg in self.args.items():
+            if key not in matched_args:
+                if issubclass(arg.annotation, Context):
+                    unfilled[key] = arg.annotation(context)
+                else:
+                    unfilled[key] = arg.default
+
         for key, value in unfilled.items():
             if value is NO_DEFAULT:
                 raise errors.ParserError(
@@ -91,10 +97,11 @@ class ArgumentParser(ABC):
     ### Helpers ###
 
     def get_or_raise(self, key: str, message):
-        if arg := self._args.get(key):
+        arg = self._args.get(key)
+        if arg and not arg.hidden:
             return arg
-        else:
-            raise errors.ParserError(message)
+
+        raise errors.ParserError(message)
 
     @staticmethod
     def get_match_values(match: re.Match) -> Union[dict[str, str], str]:

@@ -12,10 +12,11 @@ EMPTY = inspect._empty  # type: ignore
 
 
 class Argument:
-    def __init__(self, name, annotation, default):
+    def __init__(self, name, annotation, default, hidden=False):
         self.name: str = name
         self.annotation = str if annotation is EMPTY else annotation
         self.default = NO_DEFAULT if default is EMPTY else default
+        self.hidden = hidden
 
     def __repr__(self):
         return f"<Argument : {self.name}={self.default}>"

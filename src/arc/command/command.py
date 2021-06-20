@@ -1,11 +1,11 @@
-from typing import Dict, Callable, Optional, Any, Type, Union, Collection
+from typing import Dict, Callable, Optional, Any, Type, Union
 import functools
 
 from arc.color import effects, fg
 from arc.errors import CommandError, ExecutionError, NoOpError
 from arc import utils
 
-from .argument_parser import ArgumentParser, ParsingMethod
+from .argument_parser import ArgumentParser
 
 
 class CommandExecutor:
@@ -44,7 +44,7 @@ class Command:
         self.name = name
         self.subcommands: Dict[str, Command] = {}
         self.subcommand_aliases: dict[str, str] = {}
-        self.context: dict[str, Any] = context or {}
+        self.context = context or {}
         self.doc = function.__doc__
 
         self.parser: ArgumentParser = parser(function)
@@ -70,7 +70,7 @@ class Command:
 
     def run(self, cli_args: list[str]):
         """External interface to execute a command"""
-        args = self.parser.parse(cli_args)
+        args = self.parser.parse(cli_args, self.context)
         return self.executor.execute(args)
 
     ### Building Subcommands ###
@@ -79,7 +79,7 @@ class Command:
         self,
         name: Union[str, list[str], tuple[str, ...]] = None,
         parsing_method: type[ArgumentParser] = None,
-        **kwargs,
+        context: dict[str, Any] = None,
     ):
         """Create and install a subcommand
 
@@ -89,11 +89,12 @@ class Command:
         """
 
         parsing_method = parsing_method or type(self.parser)
+        context = self.context | (context or {})
 
         @self.ensure_function
         def decorator(function):
             command_name = self.handle_command_aliases(name or function.__name__)
-            command = Command(command_name, function, parsing_method, **kwargs)
+            command = Command(command_name, function, parsing_method, context)
             return self.install_command(command)
 
         return decorator
@@ -104,8 +105,9 @@ class Command:
 
         @self.ensure_function
         def decorator(function):
-            self.function = function
+            self.executor.function = function
             self.propagate_context(context)
+            self.parser.build_args(function, self.context)
             return self
 
         return decorator
@@ -148,7 +150,7 @@ class Command:
         return name
 
     def propagate_context(self, new_context):
-        self.context = (new_context or {}) | self.context
+        self.context |= new_context or {}
         for command in self.subcommands.values():
             command.propagate_context(self.context)
 
