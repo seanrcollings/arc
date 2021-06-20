@@ -86,16 +86,14 @@ class ConfigBase(metaclass=ConfigMeta):
     def parse(self, lines: List[str]):
         # Have to do this for circular imports
         # pylint: disable=import-outside-toplevel
-        from arc.parser import parse
-        from arc.parser.data_types import KEY_ARGUMENT
+        parsed = {}
 
-        node = parse(" ".join(lines))
-        parsed: dict[str, Any] = {}
-
-        for arg in node.args:
-            if arg.name is None or arg.kind != KEY_ARGUMENT:
-                raise ArcError("Config values must follow the form `name=value`")
-            parsed[arg.name] = self.__convert_loaded_value(arg.value)
+        try:
+            for line in lines:
+                key, value = line.split("=")
+                parsed[key] = self.__convert_loaded_value(value)
+        except:
+            raise ArcError("Config values must follow the form `name=value`")
 
         return parsed
 
