@@ -3,7 +3,6 @@ from typing import List, Union, Optional, Callable, Any
 import textwrap
 import shlex
 
-from arc.parser import parse
 from arc import arc_config, utils
 from .color import effects, fg
 from .command import Command, ParsingMethod
@@ -51,7 +50,7 @@ class CLI(Command):
     def command(self, *args, **kwargs):
         return self.subcommand(*args, **kwargs)
 
-    def base(self, name=None, command_type=None, **kwargs):
+    def base(self, name=None, parse_method=None, **kwargs):
         """Define The CLI's default behavior
         when not given a specific command. Has the same interface
         as `Command.subcommand`
@@ -59,12 +58,14 @@ class CLI(Command):
 
         @self.ensure_function
         def decorator(function):
-            command_name = name or function.__name__
-            self.default_action = self.create_command(
-                command_name, function, command_type, **kwargs
+            self.default_action = Command(
+                name or function.__name__,
+                function,
+                parse_method or type(self.parser),
+                **kwargs,
             )
 
-            self.args |= self.default_action.args
+            self.parser.args |= self.default_action.parser.args
             return self.default_action
 
         return decorator
