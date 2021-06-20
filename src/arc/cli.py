@@ -38,10 +38,10 @@ class CLI(Command):
         super().__init__(name, self.missing_command, parsing_method, context)
         arc_config.from_file(arcfile)
         self.version = version
-        # self.install_command(self.create_command("help", self.helper))
-        # self.default_action: Optional[Command] = self.base()(
-        #     function
-        # ) if function else self.subcommands["help"]
+        self.install_command(Command("help", self.helper))
+        self.default_action: Optional[Command] = self.base()(
+            function
+        ) if function else self.subcommands["help"]
 
     # pylint: disable=arguments-differ
     def __call__(self, execute: str = None):  # type: ignore

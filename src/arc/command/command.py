@@ -5,7 +5,7 @@ from arc.color import effects, fg
 from arc.errors import CommandError, ExecutionError, NoOpError
 from arc import utils
 
-from .argument_parser import ArgumentParser
+from .argument_parser import ArgumentParser, ParsingMethod
 
 
 class CommandExecutor:
@@ -36,7 +36,7 @@ class Command:
         self,
         name: str,
         function: Callable,
-        parser: Type[ArgumentParser],
+        parser: Type[ArgumentParser] = ParsingMethod.KEYWORD,
         context: Optional[Dict] = None,
     ):
         self.name = name
