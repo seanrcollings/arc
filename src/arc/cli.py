@@ -1,5 +1,5 @@
 import sys
-from typing import List, Union, Optional, Callable
+from typing import List, Union, Optional, Callable, Any
 import textwrap
 import shlex
 
@@ -161,7 +161,7 @@ def run(
 
     :param command: command object to run
     :param execute: string to parse and execute. If it's not provided
-        sys.argv will be used
+        `sys.argv` will be used
     :param arcfile: file path to an arc config file to load,
         will ignore if path does not exsit
     """
@@ -175,6 +175,7 @@ def run(
     # How do we know if the command namespace is empty?
     command_namespace: list[str] = user_input[0].split(arc_config.namespace_sep)
     command_args: list[str] = user_input[1:]
+    command_ctx: dict[str, Any] = command.context
 
     with utils.handle(CommandError):
         for subcommand_name in command_namespace:
@@ -191,10 +192,12 @@ def run(
                     "Check --help for available commands"
                 )
 
+            command_ctx = command.context | command_ctx
+
         utils.logger.debug(
             "Executing command: %s%s%s",
             fg.YELLOW,
             ":".join(command_namespace),
             effects.CLEAR,
         )
-        return command.run(command_namespace, command_args)
+        return command.run(command_namespace, command_args, command_ctx)

@@ -1,22 +1,9 @@
 from __future__ import annotations
 import inspect
-from typing import Dict, Any, TYPE_CHECKING, get_type_hints
+from typing import get_type_hints
 
-
-from arc.errors import CommandError
-
-from .argument import Argument, NO_DEFAULT, EMPTY
+from .argument import Argument, EMPTY
 from .context import Context
-
-
-class CommandMixin:
-    args: Dict[str, Argument]
-    context: Dict[str, Any]
-
-    def assert_args_filled(self):
-        for option in self.args.values():
-            if option.value is NO_DEFAULT:
-                raise CommandError(f"No value for required option '{option.name}'")
 
 
 HIDDEN_ARG_TYPES = {Context}
@@ -36,7 +23,7 @@ class ArgBuilder:
         self.__annotations = get_type_hints(function)
         self.__sig = inspect.signature(function)
         self.__length = len(self.__sig.parameters.values())
-        self.__args: Dict[str, Argument] = {}
+        self.__args: dict[str, Argument] = {}
 
     def __enter__(self):
         return self

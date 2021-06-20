@@ -31,8 +31,6 @@ class CommandExecutor:
 
 # TODO
 # - Function cleanup
-# - @base
-# - Context
 class Command:
     def __init__(
         self,
@@ -68,7 +66,9 @@ class Command:
 
     ### Execution ###
 
-    def run(self, cli_args: list[str], context: dict[str, Any]):
+    def run(
+        self, cli_namespace: list[str], cli_args: list[str], context: dict[str, Any]
+    ):
         """External interface to execute a command"""
         self.context = context | self.context
         args = self.parser.parse(cli_args, self.context)
@@ -106,8 +106,7 @@ class Command:
 
         @self.ensure_function
         def decorator(function):
-            self.executor.function = function
-            self.parser.build_args(function)
+            self.function = function
             return self
 
         return decorator
@@ -147,11 +146,6 @@ class Command:
             self.subcommand_aliases[alias] = name
 
         return name
-
-    def propagate_context(self, new_context):
-        self.context |= new_context or {}
-        for command in self.subcommands.values():
-            command.propagate_context(self.context)
 
     @staticmethod
     def ensure_function(wrapped):
