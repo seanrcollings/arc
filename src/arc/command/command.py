@@ -68,8 +68,9 @@ class Command:
 
     ### Execution ###
 
-    def run(self, cli_args: list[str]):
+    def run(self, cli_args: list[str], context: dict[str, Any]):
         """External interface to execute a command"""
+        self.context = context | self.context
         args = self.parser.parse(cli_args, self.context)
         return self.executor.execute(args)
 
@@ -89,7 +90,7 @@ class Command:
         """
 
         parsing_method = parsing_method or type(self.parser)
-        context = self.context | (context or {})
+        context = context or {}
 
         @self.ensure_function
         def decorator(function):
@@ -99,15 +100,14 @@ class Command:
 
         return decorator
 
-    def base(self, context: Optional[dict] = None):
+    def base(self):
         """Decorator to replace the function
         of the current command"""
 
         @self.ensure_function
         def decorator(function):
             self.executor.function = function
-            self.propagate_context(context)
-            self.parser.build_args(function, self.context)
+            self.parser.build_args(function)
             return self
 
         return decorator
@@ -118,7 +118,6 @@ class Command:
     def install_command(self, command: "Command"):
         """Installs a command object as a subcommand
         of the current object"""
-        command.propagate_context(self.context)
         self.subcommands[command.name] = command
 
         utils.logger.debug(

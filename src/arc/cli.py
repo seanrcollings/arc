@@ -173,6 +173,7 @@ def run(
 
     current_namespace: list[str] = []
     subcommand_name = command.name
+    command_context = command.context
     with utils.handle(CommandError):
         while not command_node.empty_namespace():
             subcommand_name = command_node.namespace.pop(0)
@@ -191,4 +192,6 @@ def run(
                     "Check --help for available commands"
                 )
 
-        return command.run(command_node)
+            command_context = command.context | command_context
+
+        return command.run(command_node, command_context)
