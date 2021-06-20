@@ -148,11 +148,11 @@ class Command(ABC):
 
     ### Execution ###
 
-    def run(self, command_node: CommandNode):
+    def run(self, namespace: list[str], args: list[str]):
         """External interface to execute a command"""
-        self.pre_execute(command_node)
-        value = self.execute(command_node)
-        return self.post_execute(value)
+        print(namespace)
+        print(args)
+        breakpoint()
 
     def pre_execute(self, command_node: CommandNode):
         """Pre Command Execution hook.
