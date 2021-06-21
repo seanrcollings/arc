@@ -5,11 +5,10 @@ import re
 
 from arc import arc_config, errors
 from arc.color import fg, effects
+from arc.utils import IDENT
 from .helpers import ArgBuilder
 from .argument import Argument, NO_DEFAULT
 from .context import Context
-
-from arc.utils import IDENT
 
 
 class ArgumentParser(ABC):
@@ -182,6 +181,11 @@ POS_ARGUMENT = re.compile(r"\A(.+)$")
 
 class PositionalParser(ArgumentParser):
     __pass_args = False
+
+    matchers = {"positional_argument": POS_ARGUMENT}
+
+    def handle_positional_argument(self, argument):
+        breakpoint()
 
     def arg_hook(self, param, meta):
         idx = meta["index"]
