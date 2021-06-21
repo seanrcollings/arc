@@ -9,7 +9,7 @@ from arc import utils
 class Callbacks(TypedDict):
     before: set[Callable]
     after: set[Callable]
-    around: set[Generator]
+    around: set[Callable]
 
 
 class CommandExecutor:
@@ -20,6 +20,8 @@ class CommandExecutor:
             "around": set(),
             "after": set(),
         }
+
+        self.__gens: list[Generator] = []
 
     def values(self) -> ValuesView[set]:
         ...
@@ -86,17 +88,14 @@ class CommandExecutor:
             for callback in self.callbacks["around"]:
                 gen = callback(arguments)
                 next(gen)
-                self.callbacks["around"].remove(callback)
-                self.callbacks["around"].add(gen)
+                self.__gens.append(gen)
 
     def end_around_callbacks(self, value):
         if len(self.callbacks["around"]) > 0:
             utils.logger.debug(
-                "Sending return value to %saround%s callbacks",
-                fg.YELLOW,
-                effects.CLEAR,
+                "Completing %saround%s callbacks", fg.YELLOW, effects.CLEAR,
             )
-            for callback in self.callbacks["around"]:
+            for callback in self.__gens:
                 try:
                     callback.send(value)
                 except StopIteration:

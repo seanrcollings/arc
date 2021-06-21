@@ -27,9 +27,9 @@ def after(func):
     return callback("after")(func)
 
 
-def skip(*remove_callbacks):
+def skip(*skip_callbacks):
     def wrapper(command: Command):
-        unwrapped = {c.__wrapped__ for c in remove_callbacks}
+        unwrapped = {c.__wrapped__ for c in skip_callbacks}
         callbacks: set
         for callbacks in command.executor.callbacks.values():  # type: ignore
             intersect = callbacks.intersection(unwrapped)
