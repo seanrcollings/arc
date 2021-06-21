@@ -1,16 +1,15 @@
-import sys
-from typing import List, Union, Optional, Callable
+from typing import Optional, Callable
 import textwrap
 
-from arc.parser import parse
+
 from arc import arc_config, utils
 from .color import effects, fg
-from .command import KeywordCommand, Command
-from .errors import CommandError
+from .command import Command, ParsingMethod
 from .autoload import Autoload
+from .run import run
 
 
-class CLI(KeywordCommand):
+class CLI(Command):
     """The CLI class is now implemented as a subclass
     of the Command class and reality just acts as a
     conveneince wrapper around Command creation and
@@ -21,6 +20,7 @@ class CLI(KeywordCommand):
         self,
         name: str = "cli",
         function: Callable = None,
+        parsing_method=ParsingMethod.KEYWORD,
         arcfile: str = ".arc",
         context: dict = None,
         version: str = "¯\\_(ツ)_/¯",
@@ -34,11 +34,10 @@ class CLI(KeywordCommand):
         :param context: dictionary of key value pairs to pass to children as context
         :param version: Version string to display with `--version`
         """
-
-        super().__init__(name, self.missing_command, context)
+        super().__init__(name, self.missing_command, parsing_method, context)
         arc_config.from_file(arcfile)
         self.version = version
-        self.install_command(self.create_command("help", self.helper))
+        self.install_command(Command("help", self.helper))
         self.default_action: Optional[Command] = self.base()(
             function
         ) if function else self.subcommands["help"]
@@ -50,7 +49,7 @@ class CLI(KeywordCommand):
     def command(self, *args, **kwargs):
         return self.subcommand(*args, **kwargs)
 
-    def base(self, name=None, command_type=None, **kwargs):
+    def base(self, name=None, parse_method=None, **kwargs):
         """Define The CLI's default behavior
         when not given a specific command. Has the same interface
         as `Command.subcommand`
@@ -58,12 +57,14 @@ class CLI(KeywordCommand):
 
         @self.ensure_function
         def decorator(function):
-            command_name = name or function.__name__
-            self.default_action = self.create_command(
-                command_name, function, command_type, **kwargs
+            self.default_action = Command(
+                name or function.__name__,
+                function,
+                parse_method or type(self.parser),
+                **kwargs,
             )
 
-            self.args |= self.default_action.args
+            self.parser.args |= self.default_action.parser.args
             return self.default_action
 
         return decorator
@@ -149,46 +150,3 @@ def display_help(command: Command, parent: Command, level: int = 0):
 
     for sub in command.subcommands.values():
         display_help(sub, command, level + 1)
-
-
-def run(
-    command: Command, execute: Optional[str] = None, arcfile: Optional[str] = None,
-):
-    """Core function of the ARC API.
-    Loads up the config file, parses the user input
-    Finds the command referenced, then passes over control to it
-
-    :param command: command object to run
-    :param execute: string to parse and execute. If it's not provided
-        sys.argv will be used
-    :param arcfile: file path to an arc config file to load,
-        will ignore if path does not exsit
-    """
-    if arcfile:
-        arc_config.from_file(arcfile)
-
-    user_input: Union[List[str], str] = execute if execute else sys.argv[1:]
-    command_node = parse(user_input)
-    utils.logger.debug(command_node)
-
-    current_namespace: list[str] = []
-    subcommand_name = command.name
-    with utils.handle(CommandError):
-        while not command_node.empty_namespace():
-            subcommand_name = command_node.namespace.pop(0)
-            current_namespace.append(subcommand_name)
-
-            if subcommand_name in command.subcommands:
-                command = command.subcommands[subcommand_name]
-            elif subcommand_name in command.subcommand_aliases:
-                command = command.subcommands[
-                    command.subcommand_aliases[subcommand_name]
-                ]
-            else:
-                raise CommandError(
-                    f"The command {fg.YELLOW}"
-                    f"{':'.join(current_namespace)}{effects.CLEAR}{fg.RED} not found. "
-                    "Check --help for available commands"
-                )
-
-        return command.run(command_node)

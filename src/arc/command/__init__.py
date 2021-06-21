@@ -1,16 +1,12 @@
 from arc import utils
 
 from .command import Command
-from .keyword_command import KeywordCommand
-from .positional_command import PositionalCommand
-from .raw_command import RawCommand
-from .command_type import CommandType, command_factory
 from .context import Context
-from .__option import Option
+from .argument_parser import ParsingMethod, ArgumentParser
 
 
 def namespace(
-    name: str, function=None, command_type=CommandType.KEYWORD, **kwargs
+    name: str, function=None, parsing_method=ParsingMethod.KEYWORD, **kwargs
 ) -> Command:
     """Creates a Command namespace.
 
@@ -21,6 +17,6 @@ def namespace(
     :param context: dict of context values to be used in this namespace and below
     """
     function = function or utils.no_op
-    command = command_factory(name, function, command_type, **kwargs)
-    command.__autoload__ = True
+    command = Command(name, function, parsing_method, **kwargs)
+    command.__autoload__ = True  # type: ignore
     return command

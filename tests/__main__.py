@@ -16,12 +16,12 @@ from tests.test_cli import *
 from tests.test_group import *
 from tests.command import *
 from tests.converter import *
-from tests.autocomplete import *
+
 from tests.examples import *
 from tests.utilities import *
-from tests.parser import *
 from tests.test_context import *
 
+# from tests.autocompltete import *
 from tests.docs import *
 
 if __name__ == "__main__":

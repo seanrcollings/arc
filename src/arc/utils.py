@@ -4,7 +4,6 @@ import os
 import sys
 import time
 import traceback
-from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from typing import Dict, Type
 
@@ -17,6 +16,8 @@ handler = logging.StreamHandler()
 formatter = logging.Formatter()
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+
+IDENT = r"[a-zA-Z-_0-9]+"
 
 
 def no_op():
@@ -84,6 +85,10 @@ class symbol:
 
     def __eq__(self, other):
         return self.__name == other
+
+    @property
+    def name(self):
+        return self.__name
 
 
 def indent(string: str, distance="\t", split="\n"):
