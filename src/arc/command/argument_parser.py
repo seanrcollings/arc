@@ -1,4 +1,4 @@
-from typing import Callable, Any, Union, TypedDict
+from typing import Callable, Any, Union, TypedDict, Type
 from inspect import Parameter
 import re
 
@@ -249,7 +249,7 @@ class RawParser(ArgumentParser):
 
 
 class ParsingMethod:
-    KEYWORD = KeywordParser
-    POSITIONAL = PositionalParser
-    RAW = RawParser
-    FLAG = FlagParser
+    KEYWORD: Type[ArgumentParser] = KeywordParser
+    POSITIONAL: Type[ArgumentParser] = PositionalParser
+    RAW: Type[ArgumentParser] = RawParser
+    FLAG: Type[ArgumentParser] = FlagParser

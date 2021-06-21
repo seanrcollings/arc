@@ -1,9 +1,9 @@
-from typing import Optional, Callable
+from typing import Optional, Callable, Type
 import textwrap
 
 from arc import arc_config, utils
 from .color import effects, fg
-from .command import Command, ParsingMethod
+from .command import Command, ParsingMethod, ArgumentParser
 from .autoload import Autoload
 from .run import run
 
@@ -19,7 +19,7 @@ class CLI(Command):
         self,
         name: str = "cli",
         function: Callable = None,
-        parsing_method=ParsingMethod.KEYWORD,
+        parsing_method: Type[ArgumentParser] = ParsingMethod.KEYWORD,
         arcfile: str = ".arc",
         context: dict = None,
         version: str = "¯\\_(ツ)_/¯",
