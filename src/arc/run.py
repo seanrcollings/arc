@@ -1,6 +1,7 @@
 from typing import Optional, Union, Any
 import sys
 import shlex
+import re
 
 from .errors import CommandError
 from .command import Command
@@ -8,7 +9,12 @@ from .config import arc_config
 from . import utils
 from .color import fg, effects
 
-# TODO: Get missing_command working
+namespace_seperated = re.compile(
+    fr"\A\b((?:(?:{utils.IDENT}{arc_config.namespace_sep})+"
+    fr"{utils.IDENT})|{utils.IDENT}:?)$"
+)
+
+
 def run(
     command: Command, execute: Optional[str] = None, arcfile: Optional[str] = None,
 ):
@@ -26,9 +32,7 @@ def run(
         arc_config.from_file(arcfile)
 
     user_input = get_input(execute)
-    # How do we know if the command namespace is empty?
-    command_namespace: list[str] = user_input[0].split(arc_config.namespace_sep)
-    command_args: list[str] = user_input[1:]
+    command_namespace, command_args = get_command_namespace(user_input)
 
     with utils.handle(CommandError):
         command, command_ctx = find_command(command, command_namespace)
@@ -36,20 +40,48 @@ def run(
         utils.logger.debug(
             "Executing command: %s%s%s",
             fg.YELLOW,
-            ":".join(command_namespace),
+            ":".join(command_namespace) or "root",
             effects.CLEAR,
         )
         return command.run(command_namespace, command_args, command_ctx)
 
 
-def get_input(execute: Optional[str]):
+def get_input(execute: Optional[str]) -> list[str]:
+    """Retrieves the users' input.
+
+    If `execute` is provided, it is split using shell-like syntax.
+    If it is absent, sys.argv is returned
+    """
     user_input: Union[list[str], str] = execute if execute else sys.argv[1:]
     if isinstance(user_input, str):
         user_input = shlex.split(user_input)
     return user_input
 
 
-def find_command(command: Command, command_namespace: list[str]):
+def get_command_namespace(user_input: list[str],) -> tuple[list[str], list[str]]:
+    """Checks to see if the first argument from the user is a valid
+    namespace name. If it is not, it will return an emtpy namespace list and
+    cli.missing_command will be executed.
+    """
+    if len(user_input) > 0:
+        namespace = user_input[0]
+        if namespace_seperated.match(namespace):
+            return namespace.split(arc_config.namespace_sep), user_input[1:]
+
+    return [], user_input
+
+
+def find_command(
+    command: Command, command_namespace: list[str]
+) -> tuple[Command, dict[str, Any]]:
+    """Walks down the subcommand tree using the proveded list of `command_namespace`.
+    As it traverses the tree, it merges each levels context together, which will result
+    in the final context to pass to the command in the end.
+
+    When it hits the bottom of the `command_namespace` list
+    (so long as none of them were invalid namespaces) it has found the called command
+    and will return it.
+    """
     command_ctx = command.context
     for subcommand_name in command_namespace:
         if subcommand_name in command.subcommands:

@@ -9,7 +9,7 @@ from .helpers import ArgBuilder
 from .argument import Argument, NO_DEFAULT
 from .context import Context
 
-IDENT = r"[a-zA-Z-_0-9]+"
+from arc.utils import IDENT
 
 
 class ArgumentParser(ABC):

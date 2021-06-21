@@ -17,6 +17,8 @@ formatter = logging.Formatter()
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
+IDENT = r"[a-zA-Z-_0-9]+"
+
 
 def no_op():
     raise NoOpError()
