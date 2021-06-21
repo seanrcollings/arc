@@ -94,15 +94,16 @@ class CLI(Command):
         :param str completions_from: command for the shell to run to generate the
         autocompletions
         """
+        raise NotImplementedError("Autocompletion disabled until further notice")
         # pylint: disable=import-outside-toplevel
-        from .autocomplete import autocomplete
+        # from .autocomplete import autocomplete
 
-        autocomplete.context["cli"] = self
-        autocomplete.context["init"] = {
-            "completions_for": completions_for or self.name,
-            "completions_from": completions_from or self.name,
-        }
-        self.install_command(autocomplete)
+        # autocomplete.context["cli"] = self
+        # autocomplete.context["init"] = {
+        #     "completions_for": completions_for or self.name,
+        #     "completions_from": completions_from or self.name,
+        # }
+        # self.install_command(autocomplete)
 
     @utils.timer("Autoloading")
     def autoload(self, *paths: str):
