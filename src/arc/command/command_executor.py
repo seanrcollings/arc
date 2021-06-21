@@ -34,7 +34,17 @@ class CommandExecutor:
             self.before_callbacks(arguments)
             self.start_around_callbacks(arguments)
             utils.logger.debug(BAR)
-            value = self.function(**arguments)
+            # The parsers always spit out a dictionary of arguements
+            # and values. This doesn't allow *args to work, because you can't
+            # spread *args after **kwargs. So the parser stores the *args in
+            # _args and then we spread it manually. Note that this relies
+            # on dictionaires being ordered
+            if "_args" in arguments:
+                var_args = arguments.pop("_args")
+                value = self.function(*arguments.values(), *var_args)
+            else:
+                value = self.function(**arguments)
+
         except NoOpError as e:
             print(
                 f"{fg.RED}This namespace cannot be executed. "

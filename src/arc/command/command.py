@@ -50,8 +50,8 @@ class Command:
     ):
         """External interface to execute a command"""
         self.context = context | self.context
-        args = self.parser.parse(cli_args, self.context)
-        return self.executor.execute(args)
+        parsed_args = self.parser.parse(cli_args, self.context)
+        return self.executor.execute(parsed_args)
 
     ### Building Subcommands ###
 

@@ -10,7 +10,7 @@ from .helpers import ArgBuilder
 from .argument import Argument, NO_DEFAULT
 from .context import Context
 
-
+# TODO: reimplement kebab-case
 class ArgumentParser(ABC):
     """Base class for ArgumentParsers
 
@@ -39,12 +39,12 @@ class ArgumentParser(ABC):
         """
         matchers = self.get_matchers()
         matched_args: dict[str, Any] = {}
-        for idx, cli_arg in reversed(list(enumerate(cli_args))):
+        for cli_arg in cli_args:
             for name, regex in matchers.items():
                 if match := regex.match(cli_arg):
-                    cli_args.pop(idx)
                     key, value = self.handle_match(match, name)
-                    matched_args[key] = value
+                    if any((key, value)):
+                        matched_args[key] = value
 
         return self.fill_unmatched(matched_args, context)
 
@@ -176,16 +176,47 @@ class KeywordParser(FlagParser):
             self.__pass_kwargs = True
 
 
+# NOTE: This currently also matches to flags
+# because the flag matcher matches before the pos_argument one
+# it doesn't error, but could in the future.
 POS_ARGUMENT = re.compile(r"\A(.+)$")
 
 
-class PositionalParser(ArgumentParser):
+class PositionalParser(FlagParser):
     __pass_args = False
-
     matchers = {"positional_argument": POS_ARGUMENT}
+    current_pos = 0
 
-    def handle_positional_argument(self, argument):
-        breakpoint()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.non_flags = {
+            key: val for key, val in self.args.items() if val.annotation != bool
+        }
+        self.var_args: list[str] = []
+
+    def parse(self, *args):
+        self.current_pos = 0
+        parsed = super().parse(*args)
+        if self.__pass_args:
+            parsed["_args"] = self.var_args
+
+        return parsed
+
+    def handle_positional_argument(self, value: str):
+        if self.current_pos >= len(self.non_flags):
+            if self.__pass_args:
+                self.var_args.append(value)
+                return None, None
+            else:
+                raise errors.ParserError(
+                    f"Command takes {len(self.non_flags)} arguments, "
+                    f"but was given {self.current_pos + 1}"
+                )
+
+        name = list(self.non_flags.keys())[self.current_pos]
+        argument = list(self.non_flags.values())[self.current_pos]
+        self.current_pos += 1
+        return name, argument.convert(value)
 
     def arg_hook(self, param, meta):
         idx = meta["index"]
