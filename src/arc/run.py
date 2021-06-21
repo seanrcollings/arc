@@ -66,6 +66,7 @@ def get_command_namespace(user_input: list[str],) -> tuple[list[str], list[str]]
     if len(user_input) > 0:
         namespace = user_input[0]
         if namespace_seperated.match(namespace):
+            namespace = namespace.replace("-", "_")
             return namespace.split(arc_config.namespace_sep), user_input[1:]
 
     return [], user_input

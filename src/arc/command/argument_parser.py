@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import Callable, Any, Union, TypedDict
 from inspect import Parameter
 import re
@@ -11,11 +10,16 @@ from .argument import Argument, NO_DEFAULT
 from .context import Context
 
 # TODO: reimplement kebab-case
-class ArgumentParser(ABC):
+class ArgumentParser:
     """Base class for ArgumentParsers
 
     Handles analyzing the provided function signature to generate
     The Argument data structure
+
+    Attempts to match provided data to `cls.matchers` regexes. If it finds a match,
+    it'll pass control over to the match handler (`handle_<matcher-name>`). This class
+    should not be used to parse anything, as it does not provide any matchers or handlers
+    of it's own.
     """
 
     def __init__(self, function: Callable):
@@ -138,9 +142,10 @@ class KeywordParser(FlagParser):
     matchers = {"keyword_argument": KEY_ARGUMENT}
 
     def handle_keyword_argument(self, argument: KeyArg) -> tuple[str, Any]:
+        name = argument["name"].replace("-", "_")
         try:
             arg = self.get_or_raise(
-                argument["name"],
+                name,
                 f"Argument {argument['name']}{arc_config.arg_assignment}"
                 f"{argument['value']} not recognized",
             )
@@ -148,7 +153,7 @@ class KeywordParser(FlagParser):
             value = arg.convert(argument["value"])
         except errors.ParserError:
             if self.__pass_kwargs:
-                name = argument["name"]
+                name = name
                 value = argument["value"]
             else:
                 raise

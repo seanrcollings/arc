@@ -83,3 +83,13 @@ class TestCLI(TestCase):
 
         self.cli("name2")
         name1.function.assert_called_with()
+
+    def test_keybab(self):
+        @self.cli.subcommand()
+        def two_words(first_name):
+            ...
+
+        self.cli("two_words first_name=sean")
+        self.cli("two-words first-name=sean")
+
+        self.assertEqual(two_words.function.call_count, 2)
