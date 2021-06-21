@@ -2,32 +2,11 @@ from typing import Dict, Callable, Optional, Any, Type, Union
 import functools
 
 from arc.color import effects, fg
-from arc.errors import CommandError, ExecutionError, NoOpError
+from arc.errors import CommandError
 from arc import utils
 
 from .argument_parser import ArgumentParser, ParsingMethod
-
-
-class CommandExecutor:
-    def __init__(self, function: Callable):
-        self.function = function
-
-    @utils.timer("Command Execution")
-    def execute(self, arguments: dict[str, Any]):
-        BAR = "\u2500" * 40
-        try:
-            utils.logger.debug(BAR)
-            return self.function(**arguments)
-        except NoOpError as e:
-            print(
-                f"{fg.RED}This namespace cannot be executed. "
-                f"Check --help for possible subcommands{effects.CLEAR}"
-            )
-        except ExecutionError as e:
-            print(e)
-        finally:
-            utils.logger.debug(BAR)
-
+from .command_executor import CommandExecutor
 
 # TODO
 # - Function cleanup
@@ -67,7 +46,7 @@ class Command:
     ### Execution ###
 
     def run(
-        self, cli_namespace: list[str], cli_args: list[str], context: dict[str, Any]
+        self, _cli_namespace: list[str], cli_args: list[str], context: dict[str, Any]
     ):
         """External interface to execute a command"""
         self.context = context | self.context
@@ -118,6 +97,7 @@ class Command:
         """Installs a command object as a subcommand
         of the current object"""
         self.subcommands[command.name] = command
+        command.executor.register_callbacks(**self.executor.callbacks)
 
         utils.logger.debug(
             "Registered %s%s%s command to %s%s%s",
