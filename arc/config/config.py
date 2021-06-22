@@ -14,7 +14,7 @@ class Config(ConfigBase):
     flag_denoter: str = "--"
     mode: str = "debug"
     loglevel: ManagedLogging = ManagedLogging("arc_logger")
-    converters: Dict[str, Type[BaseConverter]] = converter_mapping
+    converters: Dict[type, Type[BaseConverter]] = converter_mapping
 
     # Converter Methods
     def add_converter(self, cls: Type[BaseConverter], to: type):
@@ -25,9 +25,9 @@ class Config(ConfigBase):
         """
 
         if issubclass(cls, BaseConverter):
-            self.converters[to.__name__] = cls
+            self.converters[to] = cls
         else:
             raise ArcError("Converter must inherit from 'Base Converter'")
 
-    def get_converter(self, key: Union[str, type]):
+    def get_converter(self, key: type):
         return get_converter(key)

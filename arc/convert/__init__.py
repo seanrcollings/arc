@@ -3,7 +3,7 @@ from arc.color import fg, effects
 from arc.errors import ConversionError, ArcError
 
 from .converters import *
-from .converters import get_converter, is_alias, is_enum, is_arc_type
+from .converters import get_converter
 
 
 __all__ = [
@@ -52,6 +52,6 @@ def convert(value, kind, name: Optional[str] = None):
 
         logger.debug(format_exception(e))
         logger.error(error_message)
-        sys.exit(1)
+        raise e
 
     return value

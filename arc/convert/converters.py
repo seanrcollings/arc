@@ -134,7 +134,7 @@ class AliasConverter(BaseConverter):
                 if is_alias(union_type):
                     return self.convert_alias(union_type, value)
 
-                converter = get_converter(union_type.__name__)
+                converter = get_converter(union_type)
                 if converter:
                     return converter(alias).convert(value)
             except ConversionError:
@@ -155,7 +155,7 @@ class AliasConverter(BaseConverter):
 
         value = value.replace(" ", "")
 
-        return value.split(","), get_converter(contains_type.__name__)
+        return value.split(","), get_converter(contains_type)
 
     def convert_list(self, alias, value):
         items, converter = self.collection_setup(alias, value)
@@ -174,7 +174,7 @@ class AliasConverter(BaseConverter):
             )
 
         return tuple(
-            get_converter(alias.__args__[idx].__name__)(tuple).convert(item)  # type: ignore
+            get_converter(alias.__args__[idx])(tuple).convert(item)
             for idx, item in enumerate(items)
         )
 
@@ -232,53 +232,34 @@ class RangeConverter(BaseConverter[Type[Range]]):
         return self._range
 
 
-converter_mapping: Dict[str, Type[BaseConverter]] = {
-    "str": StringConverter,
-    "int": IntConverter,
-    "float": FloatConverter,
-    "bytes": BytesConverter,
-    "bool": BoolConverter,
-    "list": ListConverter,
-    "alias": AliasConverter,
-    "file": FileConverter,
-    "range": RangeConverter,
-    "enum": EnumConverter,
+converter_mapping: Dict[type, Type[BaseConverter]] = {
+    str: StringConverter,
+    int: IntConverter,
+    float: FloatConverter,
+    bytes: BytesConverter,
+    bool: BoolConverter,
+    list: ListConverter,
+    GenericAlias: AliasConverter,
+    File: FileConverter,
+    Range: RangeConverter,
+    Enum: EnumConverter,
 }
 
 
-def get_converter(kind: Union[str, type]) -> Type[BaseConverter]:
-    key: str = ""
-    if isinstance(kind, str):
-        key = kind
-    elif is_arc_type(kind):
-        key = kind.__origin__.__name__.lower()  # type: ignore
+# There are several possibilites of how to map a type to a Converter
+# 1. The type is a subclass of the key
+# 2. The type is an Alias (AliasConverter)
+# 3. The type is a key
+def get_converter(kind: type) -> Type[BaseConverter]:
+    if is_alias(kind):
+        return converter_mapping[GenericAlias]
 
-    elif is_alias(kind):
-        key = "alias"
+    for cls in kind.mro():
+        if cls in converter_mapping:
+            return converter_mapping[cls]
 
-    elif is_enum(kind):
-        key = "enum"
-
-    else:
-        key = kind.__name__
-
-    converter = converter_mapping.get(key)
-    if not converter:
-        raise ArcError(f"No Converter found for {kind}")
-
-    return converter
+    raise ArcError(f"No Converter found for {kind}")
 
 
 def is_alias(alias):
-    return isinstance(alias, GenericAlias)
-
-
-def is_enum(annotation: type):
-    return issubclass(annotation, Enum)
-
-
-def is_arc_type(annotation):
-    if is_alias(annotation):
-        return issubclass(annotation.__origin__, ArcType)
-
-    return False
+    return isinstance(alias, GenericAlias) or getattr(alias, "__origin__", False)
