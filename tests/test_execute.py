@@ -1,4 +1,6 @@
 """End to end testing for Commands"""
+from typing_extensions import Literal
+from arc.types.range import Range
 from typing import Union
 import pytest
 from arc import CLI, ParsingMethod
@@ -109,3 +111,15 @@ def test_set_alias(cli: MockedCommand):
 
     with pytest.raises(ConversionError):
         cli("se val=word")
+
+
+def test_range(cli: MockedCommand):
+    @cli.subcommand()
+    def ra(val: Range[Literal[1], Literal[10]]):
+        ...
+
+    cli("ra val=2")
+    ra.function.assert_called_with(val=Range(2, 1, 10))
+
+    with pytest.raises(ConversionError):
+        cli("ra val=99")

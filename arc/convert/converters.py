@@ -2,11 +2,10 @@ from typing import Dict, Type, Optional, Union, Any
 from typing import _GenericAlias as GenericAlias  # type: ignore
 from enum import Enum
 
-from arc.types import ArcType
 from arc.convert.base_converter import BaseConverter
 from arc.convert import ConversionError
 from arc.errors import ArcError
-from arc.types import File, Range
+from arc.types import ArcType, File, Range
 
 
 class StringConverter(BaseConverter[str]):
@@ -251,12 +250,18 @@ converter_mapping: Dict[type, Type[BaseConverter]] = {
 # 2. The type is an Alias (AliasConverter)
 # 3. The type is a key
 def get_converter(kind: type) -> Type[BaseConverter]:
+
     if is_alias(kind):
-        return converter_mapping[GenericAlias]
+        if issubclass(kind.__origin__, ArcType):
+            kind = kind.__origin__
+        else:
+            return converter_mapping[GenericAlias]
 
     for cls in kind.mro():
         if cls in converter_mapping:
             return converter_mapping[cls]
+
+    breakpoint()
 
     raise ArcError(f"No Converter found for {kind}")
 
