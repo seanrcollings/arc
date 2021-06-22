@@ -1,30 +1,15 @@
-from typing import Any
+from typing import Generic, TypeVar
 from abc import ABC, abstractmethod
 
+T = TypeVar("T")
 
-class BaseConverter(ABC):
+
+class BaseConverter(Generic[T], ABC):
     """Base Converter, all converters must inherit from this converter"""
 
-    def __init__(self, annotation):
-        self.annotation = annotation
+    def __init__(self, annotation=None):
+        self.annotation: T = annotation
 
     @abstractmethod
-    def convert(self, value: str) -> Any:
+    def convert(self, value: str) -> T:
         """ Method that converts the string sent, to it's desired type."""
-
-    @property
-    @abstractmethod
-    def convert_to(self):
-        """Specifies conversion type
-
-        String that specifies what type the
-        converter is supposed to convert the
-        value into
-        """
-
-
-class TypeConverter:
-    convert_to: type
-
-    def convert(self, value: str):
-        return self.convert_to(value)

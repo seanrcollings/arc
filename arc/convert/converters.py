@@ -3,28 +3,25 @@ from typing import _GenericAlias as GenericAlias  # type: ignore
 from enum import Enum
 
 from arc.types import ArcType
-from arc.convert.base_converter import BaseConverter, TypeConverter
+from arc.convert.base_converter import BaseConverter
 from arc.convert import ConversionError
 from arc.errors import ArcError
 from arc.types import File, Range
 
 
-class StringConverter(TypeConverter, BaseConverter):
-    convert_to = str
+class StringConverter(BaseConverter[str]):
+    def convert(self, value: str) -> str:
+        return str(value)
 
 
-class IntConverter(BaseConverter):
-    convert_to = int
-
-    def convert(self, value):
+class IntConverter(BaseConverter[int]):
+    def convert(self, value: str) -> int:
         if value.isnumeric():
             return int(value)
         raise ConversionError(value, expected="a whole number integer")
 
 
-class FloatConverter(BaseConverter):
-    convert_to = float
-
+class FloatConverter(BaseConverter[float]):
     def convert(self, value):
         try:
             return float(value)
@@ -33,21 +30,17 @@ class FloatConverter(BaseConverter):
 
 
 class BytesConverter(BaseConverter):
-    convert_to = bytes
-
-    def convert(self, value):
+    def convert(self, value: str):
         return value.encode()
 
 
-class BoolConverter(BaseConverter):
+class BoolConverter(BaseConverter[bool]):
     """Converts a string to a boolean
     True / true - True
     False / false - False
     """
 
-    convert_to = bool
-
-    def convert(self, value):
+    def convert(self, value: str):
         if value.isnumeric():
             return bool(int(value))
 
@@ -60,39 +53,32 @@ class BoolConverter(BaseConverter):
         raise ConversionError(value, "'(t)rue' or '(f)alse' or a valid integer")
 
 
-class IntBoolConverter(BaseConverter):
+class IntBoolConverter(BaseConverter[bool]):
     """Converts an int to a boolean.
     0 - False
     All other ints / floats - True
     """
 
-    convert_to = bool
-
-    def convert(self, value):
+    def convert(self, value: str):
         if value.isnumeric():
-            value = int(value)
-            return value != 0
+            return int(value) != 0
         raise ConversionError(value, "ibool only accepts whole number integers")
 
 
-class ListConverter(BaseConverter):
+class ListConverter(BaseConverter[list[str]]):
     """Converts arguement into an array
     argument: my_list=1,2,3,4,5,6
     return : ["1", "2", "3", "4", "5", "6"]
     """
 
-    convert_to = list
-
     def convert(self, value: str):
         return list(value.strip(" ") for value in value.split(","))
 
 
-class FileConverter(BaseConverter):
+class FileConverter(BaseConverter[Type[File]]):
     """Converts a string to a file handler object
     /path/to/a/file
     """
-
-    convert_to = File
 
     def convert(self, value):
         return self.annotation(value, self.annotation.__args__).open()
@@ -117,16 +103,16 @@ class AliasConverter(BaseConverter):
         - o: [1, 2, 3, 4, 5, 6]
     """
 
-    convert_to = Any
-
     def convert(self, value):
         return self.convert_alias(self.annotation, value)
 
     def convert_alias(self, alias: Type[GenericAlias], value: str) -> Any:
         if not is_alias(alias):
-            raise ConversionError(None, "Provided alias must inherit from GenericAlias")
+            raise ConversionError(
+                value, "Provided alias must inherit from GenericAlias"
+            )
 
-        origin: str = alias.__origin__
+        origin = alias.__origin__
         if origin is Union:
             return self.convert_union(alias, value)
         elif origin is list:
@@ -154,7 +140,9 @@ class AliasConverter(BaseConverter):
             except ConversionError:
                 continue
 
-        raise ConversionError(value, f"Failed to convert {alias}")
+        raise ConversionError(
+            value, "a valid Union type", helper_text=f"Failed to convert {alias}"
+        )
 
     def collection_setup(self, collection_alias, value):
         contains_type = collection_alias.__args__[0]
@@ -191,9 +179,7 @@ class AliasConverter(BaseConverter):
         )
 
 
-class EnumConverter(BaseConverter):
-    convert_to = Enum
-
+class EnumConverter(BaseConverter[Type[Enum]]):
     def convert(self, value):
         if value.isnumeric():
             value = int(value)
@@ -207,8 +193,7 @@ class EnumConverter(BaseConverter):
             ) from e
 
 
-class RangeConverter(BaseConverter):
-    convert_to = Range
+class RangeConverter(BaseConverter[Type[Range]]):
     _range: Optional[tuple[int, int]] = None
 
     def convert(self, value: str):
@@ -272,7 +257,7 @@ def is_alias(alias):
 
 
 def is_enum(annotation: type):
-    return Enum in annotation.mro()
+    return issubclass(annotation, Enum)
 
 
 def is_arc_type(annotation):

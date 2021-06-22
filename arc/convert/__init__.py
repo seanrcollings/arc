@@ -7,7 +7,6 @@ from .converters import get_converter, is_alias, is_enum, is_arc_type
 
 
 __all__ = [
-    "StringConverter",
     "BytesConverter",
     "IntConverter",
     "FloatConverter",
