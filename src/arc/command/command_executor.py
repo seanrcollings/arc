@@ -1,30 +1,20 @@
-from typing import Callable, Any, TypedDict, Generator, Literal, ValuesView
+from typing import Callable, Any, Generator, Literal
 
 from arc.color import effects, fg
 from arc.errors import CommandError, ExecutionError, NoOpError
 from arc import utils
 
 
-# pylint: disable=inherit-non-class
-class Callbacks(TypedDict):
-    before: set[Callable]
-    after: set[Callable]
-    around: set[Callable]
-
-
 class CommandExecutor:
     def __init__(self, function: Callable):
         self.function = function
-        self.callbacks: Callbacks = {
+        self.callbacks: dict[str, set] = {
             "before": set(),
             "around": set(),
             "after": set(),
         }
 
         self.__gens: list[Generator] = []
-
-    def values(self) -> ValuesView[set]:
-        ...
 
     @utils.timer("Command Execution")
     def execute(self, arguments: dict[str, Any]):
@@ -67,7 +57,7 @@ class CommandExecutor:
     def register_callback(
         self, when: Literal["before", "around", "after"], call,
     ):
-        if when not in ("before", "after", "around"):
+        if when not in self.callbacks.keys():
             raise CommandError(
                 f"Callback `when` must be before, after, or around, cannot be {when}"
             )

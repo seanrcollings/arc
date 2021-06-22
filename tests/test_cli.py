@@ -5,16 +5,18 @@ from arc import CLI, namespace
 from arc.errors import CommandError
 from arc.utilities.debug import debug
 
-from .mock import mock_command
+from .mock import mock_command, mock_typed_func
 
 
 class TestCLI(TestCase):
     def setUp(self):
         self.cli = mock_command("cli", CLI)
 
-        @self.cli.base()
         def base(val: int):
             ...
+
+        mocked = mock_typed_func(base)
+        self.cli.base()(mocked)
 
         @self.cli.subcommand()
         def func1(x):
@@ -25,10 +27,9 @@ class TestCLI(TestCase):
         def func2(x: int):
             ...
 
-    # Missing command not currenlty working
-    # def test_base(self):
-    #     self.cli("val=2")
-    #     self.cli.default_action.function.assert_called_with(val=2)
+    def test_base(self):
+        self.cli("val=2")
+        self.cli.default_action.function.assert_called_with(val=2)
 
     def test_install_group(self):
         g1 = namespace("g1")

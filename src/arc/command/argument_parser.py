@@ -9,7 +9,7 @@ from .helpers import ArgBuilder
 from .argument import Argument, NO_DEFAULT
 from .context import Context
 
-# TODO: reimplement kebab-case
+
 class ArgumentParser:
     """Base class for ArgumentParsers
 
@@ -153,7 +153,6 @@ class KeywordParser(FlagParser):
             value = arg.convert(argument["value"])
         except errors.ParserError:
             if self.__pass_kwargs:
-                name = name
                 value = argument["value"]
             else:
                 raise

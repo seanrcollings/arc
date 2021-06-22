@@ -11,9 +11,7 @@ class MockedCommand(Command):
 
     def __init__(self, name, function, *args, **kwargs):
         if not getattr(function, "mock", None):
-            annotations = function.__annotations__
-            function = create_autospec(function)
-            function.__annotations__ = annotations
+            function = mock_typed_func(function)
 
         super().__init__(name, function, *args, **kwargs)
 
@@ -47,3 +45,9 @@ def mock_command(
     mocked_cls = type(f"Mocked{cls.__name__}", (MockedCommand, cls), {})
     command = mocked_cls(name, func, parser, **kwargs)
     return command
+
+
+def mock_typed_func(func):
+    mocked = create_autospec(func)
+    mocked.__annotations__ = func.__annotations__
+    return mocked
