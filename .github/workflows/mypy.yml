@@ -26,4 +26,4 @@ jobs:
           poetry install
       - name: Lint with mypy
         run: |
-          poetry run mypy src/arc
+          poetry run mypy arc

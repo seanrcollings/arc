@@ -26,4 +26,4 @@ jobs:
           poetry install
       - name: Lint with pylint
         run: |
-          peotry run pylint --rcfile=.pylintrc src/arc/** | grep -oP 'rated at 9.?[0-9]*/10'
+          poetry run pylint --rcfile=.pylintrc arc/** | grep -oP 'rated at 9.?[0-9]*/10'
