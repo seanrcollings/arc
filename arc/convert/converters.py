@@ -246,10 +246,27 @@ converter_mapping: Dict[str, Type[BaseConverter]] = {
 }
 
 
-def get_converter(key: Union[str, type]) -> Optional[Type[BaseConverter]]:
-    if isinstance(key, type):
-        key = key.__name__
-    return converter_mapping.get(key)
+def get_converter(kind: Union[str, type]) -> Type[BaseConverter]:
+    key: str = ""
+    if isinstance(kind, str):
+        key = kind
+    elif is_arc_type(kind):
+        key = kind.__origin__.__name__.lower()  # type: ignore
+
+    elif is_alias(kind):
+        key = "alias"
+
+    elif is_enum(kind):
+        key = "enum"
+
+    else:
+        key = kind.__name__
+
+    converter = converter_mapping.get(key)
+    if not converter:
+        raise ArcError(f"No Converter found for {kind}")
+
+    return converter
 
 
 def is_alias(alias):

@@ -29,13 +29,8 @@ def convert(value, kind, name: Optional[str] = None):
     # pylint: disable=import-outside-toplevel
     from arc.utils import logger, format_exception
 
-    converter_name = __get_converter_name(kind)
-    converter_cls = get_converter(converter_name)
-
-    if converter_cls is not None:
-        converter = converter_cls(kind)
-    else:
-        raise ArcError(f"No converter found for type: {kind}")
+    converter_cls = get_converter(kind)
+    converter = converter_cls(kind)
 
     try:
         value = converter.convert(value)
@@ -60,20 +55,3 @@ def convert(value, kind, name: Optional[str] = None):
         sys.exit(1)
 
     return value
-
-
-def __get_converter_name(annotation) -> str:
-    """Returns the converter name for
-    the provided type annotation
-    """
-
-    if is_arc_type(annotation):
-        return annotation.__origin__.__name__.lower()
-
-    if is_alias(annotation):
-        return "alias"
-
-    if is_enum(annotation):
-        return "enum"
-
-    return annotation.__name__

@@ -17,7 +17,7 @@ class Config(ConfigBase):
     converters: Dict[str, Type[BaseConverter]] = converter_mapping
 
     # Converter Methods
-    def add_converter(self, cls: Type[BaseConverter]):
+    def add_converter(self, cls: Type[BaseConverter], to: type):
         """Adds a converter to self.converters
         :param cls: The Custom converter to be added. Must inherit from BaseConverter
 
@@ -25,7 +25,7 @@ class Config(ConfigBase):
         """
 
         if issubclass(cls, BaseConverter):
-            self.converters[cls.convert_to.__name__] = cls
+            self.converters[to.__name__] = cls
         else:
             raise ArcError("Converter must inherit from 'Base Converter'")
 
