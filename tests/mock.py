@@ -7,6 +7,7 @@ from arc.command import Command, ParsingMethod, ArgumentParser
 
 class MockedCommand(Command):
     function: MagicMock
+    default_action: Command
     subcommands: Dict[str, MockedCommand]  # type: ignore
 
     def __init__(self, name, function, *args, **kwargs):

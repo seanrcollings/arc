@@ -1,96 +1,108 @@
 from unittest import TestCase, mock
 from pathlib import Path
+import pytest
 
 from arc import CLI, namespace
 from arc.errors import CommandError
 from arc.utilities.debug import debug
 
-from .mock import mock_command, mock_typed_func
+from .mock import mock_command, mock_typed_func, MockedCommand
 
 
-class TestCLI(TestCase):
-    def setUp(self):
-        self.cli = mock_command("cli", CLI)
+@pytest.fixture
+def cli():
+    cli = mock_command("cli", CLI)
 
-        def base(val: int):
-            ...
+    def base(val: int):
+        ...
 
-        mocked = mock_typed_func(base)
-        self.cli.base()(mocked)
+    mocked = mock_typed_func(base)
+    cli.base()(mocked)
 
-        @self.cli.subcommand()
-        def func1(x):
-            ...
+    @cli.subcommand()
+    def func1(x):
+        ...
 
-        @self.cli.subcommand()
-        @self.cli.subcommand("func2copy")
-        def func2(x: int):
-            ...
+    @cli.subcommand()
+    @cli.subcommand("func2copy")
+    def func2(x: int):
+        ...
 
-    def test_base(self):
-        self.cli("val=2")
-        self.cli.default_action.function.assert_called_with(val=2)
+    return cli
 
-    def test_install_group(self):
-        g1 = namespace("g1")
-        self.cli.install_command(g1)
-        self.assertIn(g1, self.cli.subcommands.values())
 
-        g2 = namespace("g2")
-        self.cli.install_command(g2)
-        self.assertIn(g2, self.cli.subcommands.values())
+def test_base(cli: MockedCommand):
+    cli("val=2")
+    cli.default_action.function.assert_called_with(val=2)
 
-    def test_execute(self):
-        self.cli("func1 x=2")
-        self.cli.subcommands["func1"].function.assert_called_with(x="2")
 
-        self.cli("func2 x=2")
-        self.cli.subcommands["func2"].function.assert_called_with(x=2)
+def test_install_group(cli: MockedCommand):
+    g1 = namespace("g1")
+    cli.install_command(g1)
+    assert g1 in cli.subcommands.values()
 
-    def test_multi_name(self):
-        self.cli("func2copy x=2")
-        self.cli.subcommands["func2copy"].function.assert_called_with(x=2)
+    g2 = namespace("g2")
+    cli.install_command(g2)
+    assert g2 in cli.subcommands.values()
 
-    @mock.patch("arc.utils.handle")
-    def test_nonexistant_command(self, _):
-        with self.assertRaises(CommandError):
-            self.cli("doesnotexist x=2")
 
-    def test_autoload_file(self):
-        self.cli.autoload(  # type: ignore
+def test_execute(cli: MockedCommand):
+    cli("func1 x=2")
+    cli.subcommands["func1"].function.assert_called_with(x="2")
+
+    cli("func2 x=2")
+    cli.subcommands["func2"].function.assert_called_with(x=2)
+
+
+def test_multi_name(cli: MockedCommand):
+    cli("func2copy x=2")
+    cli.subcommands["func2copy"].function.assert_called_with(x=2)
+
+
+def test_nonexistant_command(cli: MockedCommand):
+    with pytest.raises(CommandError), mock.patch("arc.utils.handle"):
+        cli("doesnotexist x=2")
+
+
+def test_autoload_file(cli: MockedCommand):
+    cli.autoload(  # type: ignore
+        str(Path(__file__).parent.parent / "src/arc/utilities/debug.py")
+    )
+    assert "debug" in cli.subcommands
+
+
+def test_autoload_dir(cli: MockedCommand):
+    cli.autoload(  # type: ignore
+        str(Path(__file__).parent.parent / "src/arc/utilities")
+    )
+    assert "debug" in cli.subcommands
+    assert "files" in cli.subcommands
+    assert "https" in cli.subcommands
+
+
+def test_autoload_error(cli: MockedCommand):
+    cli.install_command(debug)
+    with pytest.raises(CommandError):
+        cli.autoload(  # type: ignore
             str(Path(__file__).parent.parent / "src/arc/utilities/debug.py")
         )
-        self.assertIn("debug", self.cli.subcommands)
 
-    def test_autoload_dir(self):
-        self.cli.autoload(  # type: ignore
-            str(Path(__file__).parent.parent / "src/arc/utilities")
-        )
-        self.assertIn("debug", self.cli.subcommands)
-        self.assertIn("files", self.cli.subcommands)
-        self.assertIn("https", self.cli.subcommands)
 
-    def test_autoload_error(self):
-        self.cli.install_command(debug)
-        with self.assertRaises(CommandError):
-            self.cli.autoload(  # type: ignore
-                str(Path(__file__).parent.parent / "src/arc/utilities/debug.py")
-            )
+def test_command_alias(cli: MockedCommand):
+    @cli.subcommand(("name1", "name2"))
+    def name1():
+        ...
 
-    def test_command_alias(self):
-        @self.cli.subcommand(("name1", "name2"))
-        def name1():
-            ...
+    cli("name2")
+    name1.function.assert_called_with()
 
-        self.cli("name2")
-        name1.function.assert_called_with()
 
-    def test_keybab(self):
-        @self.cli.subcommand()
-        def two_words(first_name):
-            ...
+def test_keybab(cli: MockedCommand):
+    @cli.subcommand()
+    def two_words(first_name):
+        ...
 
-        self.cli("two_words first_name=sean")
-        self.cli("two-words first-name=sean")
+    cli("two_words first_name=sean")
+    cli("two-words first-name=sean")
 
-        self.assertEqual(two_words.function.call_count, 2)
+    assert two_words.function.call_count == 2
