@@ -66,15 +66,13 @@ def test_nonexistant_command(cli: MockedCommand):
 
 def test_autoload_file(cli: MockedCommand):
     cli.autoload(  # type: ignore
-        str(Path(__file__).parent.parent / "src/arc/utilities/debug.py")
+        str(Path(__file__).parent.parent / "arc/utilities/debug.py")
     )
     assert "debug" in cli.subcommands
 
 
 def test_autoload_dir(cli: MockedCommand):
-    cli.autoload(  # type: ignore
-        str(Path(__file__).parent.parent / "src/arc/utilities")
-    )
+    cli.autoload(str(Path(__file__).parent.parent / "arc/utilities"))  # type: ignore
     assert "debug" in cli.subcommands
     assert "files" in cli.subcommands
     assert "https" in cli.subcommands
@@ -84,7 +82,7 @@ def test_autoload_error(cli: MockedCommand):
     cli.install_command(debug)
     with pytest.raises(CommandError):
         cli.autoload(  # type: ignore
-            str(Path(__file__).parent.parent / "src/arc/utilities/debug.py")
+            str(Path(__file__).parent.parent / "arc/utilities/debug.py")
         )
 
 
