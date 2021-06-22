@@ -87,7 +87,11 @@ class BarLoader(Loader):
     EMPTY = "."
 
     def __init__(
-        self, full=None, empty=None, *args, **kwargs,
+        self,
+        full=None,
+        empty=None,
+        *args,
+        **kwargs,
     ):
         self.full = full or self.FULL
         self.empty = empty or self.EMPTY

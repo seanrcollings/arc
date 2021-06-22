@@ -16,7 +16,9 @@ namespace_seperated = re.compile(
 
 
 def run(
-    command: Command, execute: Optional[str] = None, arcfile: Optional[str] = None,
+    command: Command,
+    execute: Optional[str] = None,
+    arcfile: Optional[str] = None,
 ):
     """Core function of the ARC API.
     Loads up the config file, parses the user input
@@ -58,7 +60,9 @@ def get_input(execute: Optional[str]) -> list[str]:
     return user_input
 
 
-def get_command_namespace(user_input: list[str],) -> tuple[list[str], list[str]]:
+def get_command_namespace(
+    user_input: list[str],
+) -> tuple[list[str], list[str]]:
     """Checks to see if the first argument from the user is a valid
     namespace name. If it is not, it will return an emtpy namespace list and
     cli.missing_command will be executed.

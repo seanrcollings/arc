@@ -55,7 +55,9 @@ class CommandExecutor:
                 self.register_callback(when, callback)
 
     def register_callback(
-        self, when: Literal["before", "around", "after"], call,
+        self,
+        when: Literal["before", "around", "after"],
+        call,
     ):
         if when not in self.callbacks.keys():
             raise CommandError(
@@ -93,7 +95,9 @@ class CommandExecutor:
     def end_around_callbacks(self, value):
         if len(self.callbacks["around"]) > 0:
             utils.logger.debug(
-                "Completing %saround%s callbacks", fg.YELLOW, effects.CLEAR,
+                "Completing %saround%s callbacks",
+                fg.YELLOW,
+                effects.CLEAR,
             )
             for callback in self.__gens:
                 try:

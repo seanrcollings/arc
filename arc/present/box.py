@@ -127,7 +127,10 @@ class Box:
         )
 
     def format_line(
-        self, line: str, width: int, cleaned: Optional[str] = None,
+        self,
+        line: str,
+        width: int,
+        cleaned: Optional[str] = None,
     ):
         cleaned = cleaned or line
         formatted = (
