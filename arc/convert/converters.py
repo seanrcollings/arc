@@ -252,8 +252,8 @@ converter_mapping: Dict[type, Type[BaseConverter]] = {
 def get_converter(kind: type) -> Type[BaseConverter]:
 
     if is_alias(kind):
-        if issubclass(kind.__origin__, ArcType):
-            kind = kind.__origin__
+        if issubclass(kind.__origin__, ArcType):  # type: ignore
+            kind = kind.__origin__  # type: ignore
         else:
             return converter_mapping[GenericAlias]
 

@@ -7,14 +7,14 @@ class ArcError(Exception):
 
     def __init__(self, *args):
         super().__init__()
-        self.message = self.colorize(" ".join(args))
+        self.message = " ".join(args)
 
     def __str__(self):
         return self.message
 
-    @staticmethod
-    def colorize(string: str):
-        return f"{fg.RED}{string}{effects.CLEAR}"
+    # @staticmethod
+    # def colorize(string: str):
+    #     return f"{fg.RED}{string}{effects.CLEAR}"
 
 
 class ExecutionError(ArcError):
@@ -47,7 +47,7 @@ class ParserError(ArcError):
 class ConversionError(ArcError):
     """Raised if a type conversion fails """
 
-    def __init__(self, value, expected: str, helper_text: Optional[str] = None):
+    def __init__(self, value, expected: str, helper_text: str = ""):
         """Initializes the conversion errors
         :param value: the value attempting to be converted
         :param expected: string describing what the value should be

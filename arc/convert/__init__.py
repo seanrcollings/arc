@@ -1,6 +1,5 @@
-import sys
-from arc.color import fg, effects
-from arc.errors import ConversionError, ArcError
+from arc.errors import ConversionError, CommandError
+from arc.color import fg, effects as ef
 
 from .converters import *
 from .converters import get_converter
@@ -19,7 +18,7 @@ __all__ = [
 ]
 
 
-def convert(value, kind, name: Optional[str] = None):
+def convert(value, kind, name: str = ""):
     """Converts the provided string to the provided type
 
     :param value: value to convert
@@ -27,31 +26,18 @@ def convert(value, kind, name: Optional[str] = None):
     :param name: optional descrive name of the argument
     """
     # pylint: disable=import-outside-toplevel
-    from arc.utils import logger, format_exception
+    from arc.utils import handle
 
     converter_cls = get_converter(kind)
     converter = converter_cls(kind)
 
-    try:
-        value = converter.convert(value)
-
-    except ConversionError as e:
-        if name:
-            error_message = (
-                f"{fg.RED}ERROR{effects.CLEAR}: Argument "
-                f"{fg.YELLOW}{name}{effects.CLEAR} expected {e.expected}"
-            )
-        else:
-            error_message = (
-                f"Value: {e.value} could not be"
-                f" converted to '{converter.annotation}'"
-            )
-
-        if e.helper_text:
-            error_message += f"\n{fg.YELLOW}{e.helper_text}{effects.CLEAR}"
-
-        logger.debug(format_exception(e))
-        logger.error(error_message)
-        raise e
+    with handle(CommandError):
+        try:
+            value = converter.convert(value)
+        except ConversionError as e:
+            raise CommandError(
+                f"Argument {fg.BLUE}{name}{ef.CLEAR} expected {e.expected}, but recieved "
+                f"{fg.YELLOW}{value}{ef.CLEAR}. {e.helper_text}"
+            ) from e
 
     return value
