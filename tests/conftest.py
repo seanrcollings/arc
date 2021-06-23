@@ -6,7 +6,7 @@ from .mock import mock_command, mock_typed_func, MockedCommand
 
 @pytest.fixture
 def cli():
-    cli = mock_command("cli", CLI)
+    cli = mock_command("cli", CLI, arcfile="tests/.arc")
 
     def base(val: int):
         ...

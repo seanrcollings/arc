@@ -6,7 +6,7 @@ from pathlib import Path
 from arc.convert.base_converter import BaseConverter
 from arc.convert import ConversionError
 from arc.errors import ArcError
-from arc.types import ArcType, File, Range
+from arc.types import ArcType, File, Range, ValidPath
 
 
 class StringConverter(BaseConverter[str]):
@@ -237,6 +237,14 @@ class PathConverter(BaseConverter[Path]):
         return Path(value)
 
 
+class ValidPathConverter(BaseConverter[ValidPath]):
+    def convert(self, value: str) -> ValidPath:
+        path = ValidPath(value)
+        if not path.exists():
+            raise ConversionError(value, "a valid filepath")
+        return path
+
+
 converter_mapping: Dict[type, Type[BaseConverter]] = {
     str: StringConverter,
     int: IntConverter,
@@ -249,6 +257,7 @@ converter_mapping: Dict[type, Type[BaseConverter]] = {
     Range: RangeConverter,
     Enum: EnumConverter,
     Path: PathConverter,
+    ValidPath: ValidPathConverter,
 }
 
 

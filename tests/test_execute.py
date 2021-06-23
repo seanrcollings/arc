@@ -1,10 +1,13 @@
 """End to end testing for Commands"""
-from typing_extensions import Literal
-from arc.types.range import Range
-from typing import Union
+from unittest import mock
+from typing import Literal
+from pathlib import Path
+import enum
 import pytest
-from arc import CLI, ParsingMethod
-from arc.errors import ConversionError
+
+from arc.types import Range, ValidPath
+from arc import ParsingMethod
+from arc.errors import ConversionError, CommandError
 from .mock import MockedCommand
 
 
@@ -78,7 +81,7 @@ def test_list_alias(cli: MockedCommand):
     cli("li val=1,2,3")
     li.function.assert_called_with(val=[1, 2, 3])
 
-    with pytest.raises(ConversionError):
+    with pytest.raises(CommandError):
         cli("li val=ainfe")
 
     # @cli.subcommand()
@@ -97,7 +100,7 @@ def test_tuple_alias(cli: MockedCommand):
     cli("tu val=1")
     tu.function.assert_called_with(val=(1,))
 
-    with pytest.raises(ConversionError):
+    with pytest.raises(CommandError):
         cli("tu val=1,2")
 
 
@@ -109,7 +112,7 @@ def test_set_alias(cli: MockedCommand):
     cli("se val=1")
     se.function.assert_called_with(val={1})
 
-    with pytest.raises(ConversionError):
+    with pytest.raises(CommandError):
         cli("se val=word")
 
 
@@ -121,5 +124,43 @@ def test_range(cli: MockedCommand):
     cli("ra val=2")
     ra.function.assert_called_with(val=Range(2, 1, 10))
 
-    with pytest.raises(ConversionError):
+    with pytest.raises(CommandError):
         cli("ra val=99")
+
+
+def test_enum(cli: MockedCommand):
+    class Color(enum.Enum):
+        RED = "red"
+        YELLOW = "yellow"
+        GREEN = "green"
+
+    @cli.subcommand()
+    def en(color: Color):
+        ...
+
+    cli("en color=red")
+    en.function.assert_called_with(color=Color.RED)
+
+    with pytest.raises(CommandError):
+        cli("en color=blue")
+
+
+def test_path(cli: MockedCommand):
+    @cli.subcommand()
+    def pa(path: Path):
+        ...
+
+    cli("pa path=./arc")
+    pa.function.assert_called_with(path=Path("./arc"))
+
+
+def test_validated_path(cli: MockedCommand):
+    @cli.subcommand()
+    def pa(path: ValidPath):
+        ...
+
+    cli("pa path=./arc")
+    pa.function.assert_called_with(path=ValidPath("./arc"))
+
+    with pytest.raises(CommandError):
+        cli("pa path=doesnotexist")
