@@ -1,6 +1,7 @@
 from typing import Dict, Type, Optional, Union, Any
 from typing import _GenericAlias as GenericAlias  # type: ignore
 from enum import Enum
+from pathlib import Path
 
 from arc.convert.base_converter import BaseConverter
 from arc.convert import ConversionError
@@ -231,6 +232,11 @@ class RangeConverter(BaseConverter[Type[Range]]):
         return self._range
 
 
+class PathConverter(BaseConverter[Path]):
+    def convert(self, value: str) -> Path:
+        return Path(value)
+
+
 converter_mapping: Dict[type, Type[BaseConverter]] = {
     str: StringConverter,
     int: IntConverter,
@@ -242,6 +248,7 @@ converter_mapping: Dict[type, Type[BaseConverter]] = {
     File: FileConverter,
     Range: RangeConverter,
     Enum: EnumConverter,
+    Path: PathConverter,
 }
 
 

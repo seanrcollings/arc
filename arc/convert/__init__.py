@@ -36,7 +36,7 @@ def convert(value, kind, name: str = ""):
             value = converter.convert(value)
         except ConversionError as e:
             raise CommandError(
-                f"Argument {fg.BLUE}{name}{ef.CLEAR} expected {e.expected}, but recieved "
+                f"Argument {fg.BLUE}{name}{ef.CLEAR} expected {e.expected}, but was "
                 f"{fg.YELLOW}{value}{ef.CLEAR}. {e.helper_text}"
             ) from e
 
