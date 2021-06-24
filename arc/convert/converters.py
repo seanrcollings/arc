@@ -277,8 +277,6 @@ def get_converter(kind: type) -> Type[BaseConverter]:
         if cls in converter_mapping:
             return converter_mapping[cls]
 
-    breakpoint()
-
     raise ArcError(f"No Converter found for {kind}")
 
 
