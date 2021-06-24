@@ -103,10 +103,10 @@ def handle(*exceptions: Type[Exception], exit_code=1, handle=True):
             yield
         except exceptions as e:
             if arc_config.loglevel == logging.DEBUG:
-                logger.debug(format_exception(e))
+                raise e
             else:
-                print(e)
-            sys.exit(exit_code)
+                print(f"{effects.BOLD}{fg.RED}ERROR{effects.CLEAR}:", e)
+                sys.exit(exit_code)
     else:
         yield
 

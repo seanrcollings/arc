@@ -7,7 +7,7 @@ from arc import utils
 
 class CommandExecutor:
     def __init__(self, function: Callable):
-        self.function = function
+        self.function: Callable = function
         self.callbacks: dict[str, set] = {
             "before": set(),
             "around": set(),

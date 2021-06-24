@@ -2,7 +2,7 @@ from typing import Dict, Callable, Optional, Any, Type, Union
 import functools
 
 from arc.color import effects, fg
-from arc.errors import CommandError
+from arc.errors import CommandError, ParserError
 from arc import utils
 
 from .argument_parser import ArgumentParser, ParsingMethod
@@ -50,7 +50,8 @@ class Command:
     ):
         """External interface to execute a command"""
         self.context = context | self.context
-        parsed_args = self.parser.parse(cli_args, self.context)
+        with utils.handle(ParserError):
+            parsed_args = self.parser.parse(cli_args, self.context)
         return self.executor.execute(parsed_args)
 
     ### Building Subcommands ###

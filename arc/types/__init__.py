@@ -6,6 +6,7 @@ class ArcType:
 # pylint: disable=wrong-import-position
 from .file import File
 from .range import Range
+from .paths import *
 
 
 def needs_cleanup(kind):

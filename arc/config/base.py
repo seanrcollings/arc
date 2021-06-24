@@ -118,7 +118,7 @@ class ConfigBase(metaclass=ConfigMeta):
 
         for converter in config_converters:
             try:
-                return converter(converter.convert_to).convert(value)
+                return converter().convert(value)
             except ConversionError:
                 continue
 

@@ -38,7 +38,7 @@ class CircleConverter(BaseConverter):
 
 
 cli = CLI()
-arc_config.add_converter(CircleConverter)
+arc_config.add_converter(CircleConverter, Circle)
 
 
 @cli.command()

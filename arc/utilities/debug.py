@@ -25,18 +25,11 @@ def display_config():
 @debug.subcommand("converters")
 def converters():
     """Displays information aboubt the currently accessible converters"""
-    filler_words = ["foo", "bar", "baz", "buzz"]  # Randomly pick for filler information
-
     table = Table(
         columns=[
-            "Converter Name",
-            {"name": "Convert To", "width": 35},
-            {"name": "Example", "justify": "right"},
+            {"name": "Converter Name", "justify": "center"},
         ],
-        rows=[
-            [v.__name__, v.convert_to, f"{random.choice(filler_words)} : {k}"]
-            for (k, v) in arc_config.converters.items()
-        ],
+        rows=[[v.__name__] for v in arc_config.converters.values()],
     )
     print(Box(str(table), justify="center", padding=1))
 
