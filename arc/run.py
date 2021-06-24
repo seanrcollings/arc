@@ -15,6 +15,7 @@ namespace_seperated = re.compile(
 )
 
 
+@utils.timer("Running")
 def run(
     command: Command,
     execute: Optional[str] = None,

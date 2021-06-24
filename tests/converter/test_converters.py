@@ -1,5 +1,5 @@
 import pytest
-from typing import Literal
+from typing import Literal, Union
 from enum import Enum, IntEnum
 
 from arc.convert import *
@@ -34,6 +34,52 @@ def test_list():
     assert ListConverter().convert("1,2,3") == ["1", "2", "3"]
     assert ListConverter().convert("a,b,c") == ["a", "b", "c"]
     assert ListConverter().convert("a") == ["a"]
+
+    assert ListConverter(list[int]).convert("1,2,3") == [1, 2, 3]
+
+    with pytest.raises(ConversionError):
+        ListConverter(list[int]).convert("a,b,c")
+
+
+def test_tuple():
+    assert TupleConverter().convert("1,2,3") == ("1", "2", "3")
+    assert TupleConverter().convert("a,b,c") == ("a", "b", "c")
+    assert TupleConverter().convert("a") == ("a",)
+
+    assert TupleConverter(tuple[int]).convert("1") == (1,)
+
+    with pytest.raises(ConversionError):
+        TupleConverter(tuple[int]).convert("a")
+
+    with pytest.raises(ConversionError):
+        TupleConverter(tuple[int]).convert("1,2")
+
+    # Test Ellipsis
+    c = TupleConverter(tuple[int, ...])
+    assert c.convert("1") == (1,)
+    assert c.convert("1,2,3,4,5") == (1, 2, 3, 4, 5)
+
+
+def test_set():
+    assert SetConverter().convert("1,2,3") == {"1", "2", "3"}
+    assert SetConverter().convert("a,b,c") == {"a", "b", "c"}
+    assert SetConverter().convert("a") == {"a"}
+
+    assert SetConverter(set[int]).convert("1,2,3") == {1, 2, 3}
+
+    with pytest.raises(ConversionError):
+        SetConverter(set[int]).convert("a,b,c")
+
+
+def test_union():
+    c = UnionConverter(Union[int, bool, str])
+    assert c.convert("1") == 1
+    assert c.convert("t") == True
+    assert c.convert("hi") == "hi"
+
+    c = UnionConverter(Union[list[int], str])
+    assert c.convert("1,2") == [1, 2]
+    assert c.convert("string") == "string"
 
 
 def test_bool():

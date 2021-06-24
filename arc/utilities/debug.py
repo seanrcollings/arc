@@ -1,14 +1,14 @@
 import os
-import random
 
 from arc import namespace, arc_config
+from arc.convert import converter_mapping
 from arc.present import Table, Box
 
 debug = namespace("debug")
 
 
-@debug.subcommand("config")
-def display_config():
+@debug.subcommand()
+def config():
     """Displays information about the current config of the Arc app"""
     config_items = [
         ["Namespace Seperator", arc_config.namespace_sep, ":"],
@@ -22,19 +22,19 @@ def display_config():
     print(Box(str(table), justify="center", padding=1))
 
 
-@debug.subcommand("converters")
+@debug.subcommand()
 def converters():
     """Displays information aboubt the currently accessible converters"""
     table = Table(
         columns=[
             {"name": "Converter Name", "justify": "center"},
         ],
-        rows=[[v.__name__] for v in arc_config.converters.values()],
+        rows=[[v.__name__] for v in converter_mapping.values()],
     )
     print(Box(str(table), justify="center", padding=1))
 
 
-@debug.subcommand("arcfile")
+@debug.subcommand()
 def arcfile():
     """Prints the contents of the .arc file in the CWD"""
     if os.path.isfile(".arc"):

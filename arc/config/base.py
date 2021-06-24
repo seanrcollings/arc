@@ -1,7 +1,7 @@
 from typing import Type, List, Optional, Any, TypedDict
 from pathlib import Path
 
-from arc.convert.converters import *
+from arc.convert import converters
 from arc.convert import BaseConverter
 from arc.errors import ArcError, ConversionError
 
@@ -13,7 +13,7 @@ class Field(TypedDict):  # pylint: disable=inherit-non-class
     value: ConfigValue
 
 
-Fields = Dict[str, Field]
+Fields = dict[str, Field]
 
 
 class ConfigMeta(type):
@@ -60,7 +60,7 @@ class ConfigBase(metaclass=ConfigMeta):
         self.last_loaded: Optional[str] = None
         self.__set_values(data)
 
-    def __set_values(self, data: Dict[str, Any]):
+    def __set_values(self, data: dict[str, Any]):
         for key, value in data.items():
             setattr(self, key, value)
 
@@ -110,10 +110,10 @@ class ConfigBase(metaclass=ConfigMeta):
 
         # Check if it needs to be converted
         config_converters: List[Type[BaseConverter]] = [
-            IntConverter,
-            BoolConverter,
-            FloatConverter,
-            ListConverter,
+            converters.IntConverter,
+            converters.BoolConverter,
+            converters.FloatConverter,
+            converters.ListConverter,
         ]
 
         for converter in config_converters:
