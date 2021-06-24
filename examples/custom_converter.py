@@ -1,12 +1,10 @@
 from math import pi
-from arc.convert import BaseConverter, ConversionError
-from arc import CLI, arc_config
+from arc.convert import BaseConverter, ConversionError, register
+from arc import CLI
 
 
 # Custom Circle object
 class Circle:
-    __name__ = "circle"
-
     def __init__(self, radius=3):
         self.radius = radius
 
@@ -18,10 +16,9 @@ class Circle:
 
 
 # Custom converter for Circle class
+@register(Circle)
 class CircleConverter(BaseConverter):
-    convert_to = Circle
-
-    def convert(self, value):
+    def convert(self, value: str):
         """
         The conversion method will get called with
         whatever data the user passed in. Then you can
@@ -38,7 +35,6 @@ class CircleConverter(BaseConverter):
 
 
 cli = CLI()
-arc_config.add_converter(CircleConverter, Circle)
 
 
 @cli.command()
