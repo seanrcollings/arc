@@ -1,7 +1,8 @@
-from typing import _GenericAlias as GenericAlias  # type: ignore
+from typing import _GenericAlias as GenericAlias, Union  # type: ignore
 
+from arc import errors
 from .base_converter import BaseConverter
-from .converter_mapping import register
+from .converter_mapping import register, get_converter
 
 
 class GenericConverter(BaseConverter[GenericAlias]):
@@ -10,29 +11,25 @@ class GenericConverter(BaseConverter[GenericAlias]):
         self.args: tuple[type, ...] = annotation.__args__
         self.origin: type = annotation.__origin__
 
-    def handle_union(self, val: str):
-        ...
 
+@register(Union)
+class UnionConverter(GenericConverter):
+    def convert(self, value: str):
+        for union_type in self.args:
+            try:
+                # if is_alias(union_type):
+                #     return self.convert_alias(union_type, value)
 
-# @register(Union)
-# class UnionConverter(GenericConverter):
-#     def convert(self, value: str):
-#         breakpoint()
-#         for union_type in self.args:
-#             try:
-#                 # if is_alias(union_type):
-#                 #     return self.convert_alias(union_type, value)
+                converter = get_converter(union_type)
+                return converter(self.annotation).convert(value)
+            except errors.ConversionError:
+                continue
 
-#                 converter = get_converter(union_type)
-#                 return converter(self.annotation).convert(value)
-#             except errors.ConversionError:
-#                 continue
-
-#         raise errors.ConversionError(
-#             value,
-#             expected="a valid Union type",
-#             helper_text=f"Failed to convert {self.annotation}",
-#         )
+        raise errors.ConversionError(
+            value,
+            expected="a valid Union type",
+            helper_text=f"Failed to convert {self.annotation}",
+        )
 
 
 @register(list)
