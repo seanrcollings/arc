@@ -1,6 +1,6 @@
 """End to end testing for Commands"""
 from unittest import mock
-from typing import Literal
+from typing import Literal, Union
 from pathlib import Path
 import enum
 import pytest
@@ -164,3 +164,34 @@ def test_validated_path(cli: MockedCommand):
 
     with pytest.raises(CommandError):
         cli("pa path=doesnotexist")
+
+
+def test_union(cli: MockedCommand):
+    @cli.subcommand()
+    def un(val: Union[int, str]):
+        ...
+
+    cli("un val=2")
+    un.function.assert_called_with(val=2)
+    cli("un val=string")
+    un.function.assert_called_with(val="string")
+
+
+def test_nested_union(cli: MockedCommand):
+    @cli.subcommand()
+    def un(val: list[Union[int, str]]):
+        ...
+
+    cli("un val=1,2,3,4")
+    un.function.assert_called_with(val=[1, 2, 3, 4])
+    cli("un val=1,string,2,string")
+    un.function.assert_called_with(val=[1, "string", 2, "string"])
+
+    @cli.subcommand()
+    def un2(val: Union[list[int], list[str]]):
+        ...
+
+    cli("un2 val=1,2,3,4")
+    un2.function.assert_called_with(val=[1, 2, 3, 4])
+    cli("un2 val=1,string,3,4")
+    un2.function.assert_called_with(val=["1", "string", "3", "4"])
