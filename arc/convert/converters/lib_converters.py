@@ -5,11 +5,12 @@ from pathlib import Path
 from arc.errors import ConversionError
 
 from .base_converter import BaseConverter
-
+from .converter_mapping import register
 
 __all__ = ["EnumConverter", "PathConverter"]
 
 
+@register(Enum)
 class EnumConverter(BaseConverter[Type[Enum]]):
     def convert(self, value):
         if value.isnumeric():
@@ -24,6 +25,7 @@ class EnumConverter(BaseConverter[Type[Enum]]):
             ) from e
 
 
+@register(Path)
 class PathConverter(BaseConverter[Path]):
     def convert(self, value: str) -> Path:
         return Path(value)

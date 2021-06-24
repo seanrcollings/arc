@@ -4,10 +4,12 @@ from typing import Type, Optional
 from arc.types import File, Range, ValidPath
 from arc import errors, utils
 from .base_converter import BaseConverter
+from .converter_mapping import register
 
 __all__ = ["FileConverter", "RangeConverter", "ValidPathConverter"]
 
 
+@register(File)
 class FileConverter(BaseConverter[Type[File]]):
     """Converts a string to a file handler object
     /path/to/a/file
@@ -17,6 +19,7 @@ class FileConverter(BaseConverter[Type[File]]):
         return self.annotation(value, self.annotation.__args__).open()
 
 
+@register(Range)
 class RangeConverter(BaseConverter[Type[Range]]):
     _range: Optional[tuple[int, int]] = None
 
@@ -56,6 +59,7 @@ class RangeConverter(BaseConverter[Type[Range]]):
         return self._range
 
 
+@register(ValidPath)
 class ValidPathConverter(BaseConverter[ValidPath]):
     def convert(self, value: str) -> ValidPath:
         path = ValidPath(value)

@@ -1,3 +1,4 @@
+from typing import _SpecialForm as SpecialForms, Union, TypeVar
 from pathlib import Path
 from enum import Enum
 
@@ -5,27 +6,38 @@ from arc import utils, errors
 from arc.types import File, Range, ValidPath
 
 from .base_converter import BaseConverter
-from .builtin_converters import *
-from .lib_converters import *
-from .arc_converters import *
-from .generic_converters import *
 
-converter_mapping: dict[type, type[BaseConverter]] = {
-    # builtin types
-    str: StringConverter,
-    int: IntConverter,
-    float: FloatConverter,
-    bytes: BytesConverter,
-    bool: BoolConverter,
-    list: ListConverter,
-    # stdlib types
-    Enum: EnumConverter,
-    Path: PathConverter,
-    # Custom Types
-    File: FileConverter,
-    Range: RangeConverter,
-    ValidPath: ValidPathConverter,
+# from .builtin_converters import *
+# from .lib_converters import *
+# from .arc_converters import *
+# from .generic_converters import *
+
+converter_mapping: dict[Union[type, SpecialForms], type[BaseConverter]] = {
+    #     # builtin types
+    #     str: StringConverter,
+    #     int: IntConverter,
+    #     float: FloatConverter,
+    #     bytes: BytesConverter,
+    #     bool: BoolConverter,
+    #     list: ListConverter,
+    #     # stdlib types
+    #     Enum: EnumConverter,
+    #     Path: PathConverter,
+    #     # Custom Types
+    #     File: FileConverter,
+    #     Range: RangeConverter,
+    #     ValidPath: ValidPathConverter,
 }
+
+
+def register(kind: Union[type, SpecialForms]):
+    """Registers decorated `cls` as the converter for `kind`"""
+
+    def wrapper(cls: type[BaseConverter]) -> type[BaseConverter]:
+        converter_mapping[kind] = cls
+        return cls
+
+    return wrapper
 
 
 # There are several possibilites of how to map a type to a Converter

@@ -6,12 +6,16 @@ placed in `generic_convertrs.py`
 from arc.errors import ConversionError
 from .base_converter import BaseConverter
 
+from .converter_mapping import register
 
+
+@register(str)
 class StringConverter(BaseConverter[str]):
     def convert(self, value: str) -> str:
         return str(value)
 
 
+@register(int)
 class IntConverter(BaseConverter[int]):
     def convert(self, value: str) -> int:
         if value.isnumeric():
@@ -19,6 +23,7 @@ class IntConverter(BaseConverter[int]):
         raise ConversionError(value, expected="a whole number integer")
 
 
+@register(float)
 class FloatConverter(BaseConverter[float]):
     def convert(self, value):
         try:
@@ -27,11 +32,13 @@ class FloatConverter(BaseConverter[float]):
             raise ConversionError(value, expected="a float (1.3, 4, 1.7)") from e
 
 
+@register(bytes)
 class BytesConverter(BaseConverter):
     def convert(self, value: str):
         return value.encode()
 
 
+@register(bool)
 class BoolConverter(BaseConverter[bool]):
     """Converts a string to a boolean
     True / true - True
@@ -49,15 +56,3 @@ class BoolConverter(BaseConverter[bool]):
             return False
 
         raise ConversionError(value, "'(t)rue' or '(f)alse' or a valid integer")
-
-
-class IntBoolConverter(BaseConverter[bool]):
-    """Converts an int to a boolean.
-    0 - False
-    All other ints / floats - True
-    """
-
-    def convert(self, value: str):
-        if value.isnumeric():
-            return int(value) != 0
-        raise ConversionError(value, "ibool only accepts whole number integers")

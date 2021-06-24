@@ -1,7 +1,7 @@
 from typing import _GenericAlias as GenericAlias  # type: ignore
 
-from arc import errors
 from .base_converter import BaseConverter
+from .converter_mapping import register
 
 
 class GenericConverter(BaseConverter[GenericAlias]):
@@ -14,26 +14,28 @@ class GenericConverter(BaseConverter[GenericAlias]):
         ...
 
 
-class UnionConverter(GenericConverter):
-    def convert(self, value: str):
-        breakpoint()
-        for union_type in self.args:
-            try:
-                # if is_alias(union_type):
-                #     return self.convert_alias(union_type, value)
+# @register(Union)
+# class UnionConverter(GenericConverter):
+#     def convert(self, value: str):
+#         breakpoint()
+#         for union_type in self.args:
+#             try:
+#                 # if is_alias(union_type):
+#                 #     return self.convert_alias(union_type, value)
 
-                converter = get_converter(union_type)
-                return converter(self.annotation).convert(value)
-            except errors.ConversionError:
-                continue
+#                 converter = get_converter(union_type)
+#                 return converter(self.annotation).convert(value)
+#             except errors.ConversionError:
+#                 continue
 
-        raise errors.ConversionError(
-            value,
-            expected="a valid Union type",
-            helper_text=f"Failed to convert {self.annotation}",
-        )
+#         raise errors.ConversionError(
+#             value,
+#             expected="a valid Union type",
+#             helper_text=f"Failed to convert {self.annotation}",
+#         )
 
 
+@register(list)
 class ListConverter(BaseConverter[list[str]]):
     """Converts arguement into an array
     argument: my_list=1,2,3,4,5,6
