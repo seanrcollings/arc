@@ -17,18 +17,14 @@ class UnionConverter(GenericConverter):
     def convert(self, value: str):
         for union_type in self.args:
             try:
-                # if is_alias(union_type):
-                #     return self.convert_alias(union_type, value)
-
                 converter = get_converter(union_type)
                 return converter(self.annotation).convert(value)
             except errors.ConversionError:
                 continue
 
+        expected = ", ".join(arg.__name__ for arg in self.args[: len(self.args) - 1])
         raise errors.ConversionError(
-            value,
-            expected="a valid Union type",
-            helper_text=f"Failed to convert {self.annotation}",
+            value, expected=expected + f" or {self.args[-1].__name__}"
         )
 
 
