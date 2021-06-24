@@ -1,6 +1,6 @@
 from typing import _GenericAlias as GenericAlias, Union  # type: ignore
 
-from arc import errors
+from arc import errors, utils
 from .base_converter import BaseConverter
 from .converter_mapping import register, get_converter
 
@@ -8,8 +8,12 @@ from .converter_mapping import register, get_converter
 class GenericConverter(BaseConverter[GenericAlias]):
     def __init__(self, annotation: GenericAlias):
         super().__init__(annotation)
-        self.args: tuple[type, ...] = annotation.__args__
-        self.origin: type = annotation.__origin__
+        if utils.is_alias(annotation):
+            self.args: tuple[type, ...] = annotation.__args__
+            self.origin: type = annotation.__origin__
+        else:
+            self.args = tuple()
+            self.origin = annotation
 
 
 @register(Union)
@@ -18,7 +22,7 @@ class UnionConverter(GenericConverter):
         for union_type in self.args:
             try:
                 converter = get_converter(union_type)
-                return converter(self.annotation).convert(value)
+                return converter(union_type).convert(value)
             except errors.ConversionError:
                 continue
 
@@ -28,107 +32,58 @@ class UnionConverter(GenericConverter):
         )
 
 
-@register(list)
-class ListConverter(BaseConverter[list[str]]):
-    """Converts arguement into an array
-    argument: my_list=1,2,3,4,5,6
-    return : ["1", "2", "3", "4", "5", "6"]
-    """
+class CollectionConverter(GenericConverter):
+    convert_to: type
 
     def convert(self, value: str):
-        return list(value.strip(" ") for value in value.split(","))
+        items = [value.strip(" ") for value in value.split(",")]
+        if self.args:
+            return self.generic_convert(items)
+        return self.basic_convert(items)
+
+    def basic_convert(self, items: list):
+        return self.convert_to(items)
+
+    def generic_convert(self, items: list):
+        return items
 
 
-# class AliasConverter(BaseConverter):
-#     """
-#     convert string inputs into their appropriate types
-#     based on the type alias provided
+class MutableCollectionConverter(CollectionConverter):
+    def generic_convert(self, items: list):
+        item_type = self.args[0]
+        converter = get_converter(item_type)(item_type)
+        return self.convert_to(converter.convert(item) for item in items)
 
-#     Union[int, str]
 
-#         - i: '1234'
-#         - o: 1234
+@register(list)
+class ListConverter(MutableCollectionConverter):
+    convert_to = list
 
-#         - i: 'hello'
-#         - o: 'hello'
 
-#     List[int]
+@register(set)
+class SetConverter(MutableCollectionConverter):
+    convert_to = set
 
-#         - i: '1,2,3,4,5,6'
-#         - o: [1, 2, 3, 4, 5, 6]
-#     """
 
-#     def convert(self, value):
-#         return self.convert_alias(self.annotation, value)
+@register(tuple)
+class TupleConverter(CollectionConverter):
+    convert_to = tuple
 
-#     def convert_alias(self, alias: Type[GenericAlias], value: str) -> Any:
-#         if not is_alias(alias):
-#             raise ConversionError(
-#                 value, "Provided alias must inherit from GenericAlias"
-#             )
-
-#         origin = alias.__origin__
-#         if origin is Union:
-#             return self.convert_union(alias, value)
-#         elif origin is list:
-#             return self.convert_list(alias, value)
-#         elif origin is set:
-#             return self.convert_set(alias, value)
-#         elif origin is tuple:
-#             return self.convert_tuple(alias, value)
-#         else:
-#             raise ConversionError(
-#                 value=None,
-#                 expected="a valid type alias",
-#                 helper_text=f"Type Alias for '{origin}' not supported",
-#             )
-
-# def convert_union(self, alias, value):
-#     for union_type in alias.__args__:
-#         try:
-#             if is_alias(union_type):
-#                 return self.convert_alias(union_type, value)
-
-#             converter = get_converter(union_type)
-#             if converter:
-#                 return converter(alias).convert(value)
-#         except ConversionError:
-#             continue
-
-#     raise ConversionError(
-#         value, "a valid Union type", helper_text=f"Failed to convert {alias}"
-#     )
-
-#     def collection_setup(self, collection_alias, value):
-#         contains_type = collection_alias.__args__[0]
-#         if is_alias(contains_type):
-#             raise ConversionError(
-#                 contains_type,
-#                 "a valid alias type",
-#                 helper_text="Arc only supports shallow Collection Type Aliases",
-#             )
-
-#         value = value.replace(" ", "")
-
-#         return value.split(","), get_converter(contains_type)
-
-#     def convert_list(self, alias, value):
-#         items, converter = self.collection_setup(alias, value)
-#         return list([converter(list).convert(item) for item in items])
-
-#     def convert_set(self, alias, value):
-#         items, converter = self.collection_setup(alias, value)
-#         return set(converter(set).convert(item) for item in items)
-
-#     def convert_tuple(self, alias, value):
-#         items, _ = self.collection_setup(alias, value)
-#         if (i_len := len(items)) != (a_len := len(alias.__args__)):
-#             raise ConversionError(
-#                 value=items,
-#                 expected=f"a tuple of {a_len} item(s), was {i_len} item(s)",
-#             )
-
-#         return tuple(
-#             get_converter(alias.__args__[idx])(tuple).convert(item)
-#             for idx, item in enumerate(items)
-#         )
+    def generic_convert(self, items: list):
+        # Handle arbitrarily sized tuples
+        if len(self.args) == 2 and self.args[-1] is Ellipsis:
+            item_type = self.args[0]
+            converter = get_converter(item_type)(item_type)
+            return tuple(converter.convert(item) for item in items)
+        else:
+            # Handle statically sized tuples
+            if len(self.args) != len(items):
+                raise errors.ConversionError(
+                    items,
+                    expected=f"{len(self.args)} values "
+                    f"({', '.join(arg.__name__ for arg in self.args)})",
+                )
+            return tuple(
+                get_converter(item_type)(item_type).convert(item)
+                for item_type, item in zip(self.args, items)
+            )
