@@ -1,7 +1,8 @@
-from typing import Type, Union, Dict
+from typing import Type, Dict
 
 from arc.convert.converters import *
-from arc.convert import BaseConverter, get_converter, converter_mapping
+from arc.convert.converters import BaseConverter
+from arc.convert import get_converter, converter_mapping
 from arc.errors import ArcError
 
 from .helpers import *

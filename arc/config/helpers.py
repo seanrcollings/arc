@@ -1,7 +1,6 @@
 import logging
-from typing import Generic, TypeVar, Union, Any
+from typing import Generic, TypeVar, Union, Any, Optional
 
-from arc.convert.converters import *
 
 T = TypeVar("T")
 

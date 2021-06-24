@@ -2,6 +2,7 @@ from __future__ import annotations
 import inspect
 from typing import get_type_hints
 
+from arc import utils
 from .argument import Argument, EMPTY
 from .context import Context
 
@@ -55,16 +56,14 @@ class ArgBuilder:
             )
 
     def is_hidden_arg(self, param: ParamProxy) -> bool:
-        # Arc types will be wrapped in a GenercAlias, use this
-        # to unwrap it
-        if origin := getattr(param.annotation, "__origin__", None):
-            annotation = origin
-        else:
-            annotation = param.annotation
+        annotation = utils.unwrap_type(param.annotation)
 
-        for kind in HIDDEN_ARG_TYPES:
-            if annotation is kind or issubclass(annotation, kind):
-                return True
+        try:
+            for kind in HIDDEN_ARG_TYPES:
+                if annotation is kind or issubclass(annotation, kind):
+                    return True
+        except TypeError:
+            return False
 
         return False
 

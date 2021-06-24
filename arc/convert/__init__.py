@@ -2,7 +2,7 @@ from arc.errors import ConversionError, CommandError
 from arc.color import fg, effects as ef
 
 from .converters import *
-from .converters import get_converter
+from .converters import get_converter, BaseConverter
 
 
 def convert(value, kind, name: str = ""):

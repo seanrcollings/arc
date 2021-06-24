@@ -5,9 +5,8 @@ import sys
 import time
 import traceback
 from contextlib import contextmanager
-from typing import Dict, Type
+from typing import Dict, Type, _GenericAlias as GenericAlias  # type: ignore
 
-from arc import arc_config
 from arc.errors import NoOpError
 from arc.color import fg, effects
 
@@ -98,6 +97,9 @@ def indent(string: str, distance="\t", split="\n"):
 
 @contextmanager
 def handle(*exceptions: Type[Exception], exit_code=1, handle=True):
+    # pylint: disable=import-outside-toplevel
+    from arc import arc_config
+
     if handle:
         try:
             yield
@@ -115,3 +117,24 @@ def format_exception(e: BaseException):
     return "".join(
         traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
     )
+
+
+def unwrap_type(annotation) -> type:
+    """Handles unwrapping `GenericTypes`, `SpecialForms`, etc...
+    To retrive the inner origin type.
+
+    For Example:
+
+    - `list[int] -> list`
+    - `Union[int, str] -> Union`
+    - `File[File.Read] -> File`
+    - `list -> list`
+    """
+    if origin := getattr(annotation, "__origin__", None):
+        return origin
+    else:
+        return annotation
+
+
+def is_alias(alias):
+    return isinstance(alias, GenericAlias) or getattr(alias, "__origin__", False)
