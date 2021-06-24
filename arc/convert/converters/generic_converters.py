@@ -1,4 +1,4 @@
-from typing import _GenericAlias as GenericAlias, Union  # type: ignore
+from typing import _GenericAlias as GenericAlias, Union, cast, Optional  # type: ignore
 
 from arc import errors, utils
 from .base_converter import BaseConverter
@@ -6,11 +6,12 @@ from .converter_mapping import register, get_converter
 
 
 class GenericConverter(BaseConverter[GenericAlias]):
-    def __init__(self, annotation: GenericAlias):
+    def __init__(self, annotation: GenericAlias = None):
         super().__init__(annotation)
         if utils.is_alias(annotation):
+            annotation = cast(GenericAlias, annotation)
             self.args: tuple[type, ...] = annotation.__args__
-            self.origin: type = annotation.__origin__
+            self.origin: Optional[type] = annotation.__origin__
         else:
             self.args = tuple()
             self.origin = annotation
