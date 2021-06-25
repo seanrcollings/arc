@@ -23,9 +23,9 @@ class ArgumentParser:
     of it's own.
     """
 
-    def __init__(self, function: Callable):
+    def __init__(self, function: Callable, arg_aliases=None):
         self.args: dict[str, Argument] = {}
-        self.build_args(function)
+        self.build_args(function, arg_aliases)
 
     def get_matchers(self):
         all_matchers = {}
@@ -81,8 +81,8 @@ class ArgumentParser:
 
     ### Argument Schema Building ###
 
-    def build_args(self, function: Callable):
-        with ArgBuilder(function) as builder:
+    def build_args(self, function: Callable, arg_aliases=None):
+        with ArgBuilder(function, arg_aliases) as builder:
             for idx, param in enumerate(builder):
                 self.arg_hook(param, builder.get_meta(index=idx))
 

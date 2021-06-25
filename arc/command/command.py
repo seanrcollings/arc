@@ -1,4 +1,4 @@
-from typing import Dict, Callable, Optional, Any, Type, Union
+from typing import Dict, Callable, Optional, Any, Type, Union, Iterable
 import functools
 
 from arc.color import effects, fg
@@ -19,6 +19,7 @@ class Command:
         function: Callable,
         parser: Type[ArgumentParser] = ParsingMethod.KEYWORD,
         context: Optional[Dict] = None,
+        arg_aliases=None,
     ):
         self.name = name
         self.subcommands: Dict[str, Command] = {}
@@ -26,7 +27,7 @@ class Command:
         self.context = context or {}
         self.doc = function.__doc__
 
-        self.parser: ArgumentParser = parser(function)
+        self.parser: ArgumentParser = parser(function, arg_aliases)
         self.executor = CommandExecutor(function)
 
     def __repr__(self):
@@ -63,6 +64,7 @@ class Command:
         name: Union[str, list[str], tuple[str, ...]] = None,
         parsing_method: type[ArgumentParser] = None,
         context: dict[str, Any] = None,
+        arg_aliases: dict[str, Union[Iterable[str], str]] = None,
     ):
         """Create and install a subcommand
 
@@ -77,7 +79,13 @@ class Command:
         @self.ensure_function
         def decorator(function):
             command_name = self.handle_command_aliases(name or function.__name__)
-            command = Command(command_name, function, parsing_method, context)
+            command = Command(
+                command_name,
+                function,
+                parsing_method,
+                context,
+                arg_aliases,
+            )
             return self.install_command(command)
 
         return decorator

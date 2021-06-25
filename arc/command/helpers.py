@@ -1,8 +1,8 @@
 from __future__ import annotations
 import inspect
-from typing import get_type_hints
+from typing import get_type_hints, Union, Iterable
 
-from arc import utils
+from arc import utils, errors
 from .argument import Argument, EMPTY
 from .context import Context
 
@@ -20,12 +20,13 @@ class ParamProxy:
 
 
 class ArgBuilder:
-    def __init__(self, function):
+    def __init__(self, function, arg_aliases=None):
         self.__annotations = get_type_hints(function)
         self.__sig = inspect.signature(function)
         self.__length = len(self.__sig.parameters.values())
         self.__args: dict[str, Argument] = {}
-        self.__short_flags: set[str] = set()
+        self.__arg_aliases: dict[str, Union[Iterable[str], str]] = arg_aliases or {}
+        self.__ensure_unique_aliases()
 
     def __enter__(self):
         return self
@@ -47,18 +48,23 @@ class ArgBuilder:
         return self.__args
 
     def add_arg(self, param: ParamProxy):
+        arg = None
         if param.annotation is bool:
             default = False if param.default is EMPTY else param.default
-            flag = Argument(param.name, param.annotation, default)
-            short_flag = self.short_flag_name(param.name)
-            flag.aliases.add(short_flag)
-            self.__short_flags.add(short_flag)
-            self.__args[param.name] = flag
+            arg = Argument(param.name, param.annotation, default)
 
         elif param.kind not in (param.VAR_KEYWORD, param.VAR_POSITIONAL):
-            self.__args[param.name] = Argument(
+            arg = Argument(
                 param.name, param.annotation, param.default, self.is_hidden_arg(param)
             )
+
+        if arg:
+            if aliases := self.__arg_aliases.get(arg.name):
+                if isinstance(aliases, str):
+                    arg.aliases.add(aliases)
+                arg.aliases.update(self.__arg_aliases[arg.name])
+
+            self.__args[param.name] = arg
 
     def is_hidden_arg(self, param: ParamProxy) -> bool:
         annotation = utils.unwrap_type(param.annotation)
@@ -72,19 +78,16 @@ class ArgBuilder:
 
         return False
 
-    def short_flag_name(self, name: str):
-        short_name = name[0]
-
-        if short_name in self.__short_flags:
-            short_name = short_name.upper()
-
-        if short_name in self.__short_flags:
-            raise TypeError(
-                "Too many flags that start with the same letter. "
-                "Cannot resolve shorter names for them"
-            )
-
-        return short_name
-
     def get_meta(self, **kwargs):
         return dict(length=self.__length, **kwargs)
+
+    def __ensure_unique_aliases(self):
+        aliases = []
+        for alias in self.__arg_aliases.values():
+            if isinstance(alias, str):
+                aliases.append(alias)
+            else:
+                aliases += list(alias)
+
+        if len(set(aliases)) != len(aliases):
+            raise errors.CommandError("Argument Aliases must be unique")
