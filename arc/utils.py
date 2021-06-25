@@ -1,37 +1,19 @@
+from typing import Dict, Type, _GenericAlias as GenericAlias  # type: ignore
+from contextlib import contextmanager
+import traceback
 import functools
 import logging
-import os
-import sys
 import time
-import traceback
-from contextlib import contextmanager
-from typing import Dict, Type, _GenericAlias as GenericAlias  # type: ignore
+import sys
 
 from arc.errors import NoOpError
 from arc.color import fg, effects
-
-logger = logging.getLogger("arc_logger")
-handler = logging.StreamHandler()
-formatter = logging.Formatter()
-handler.setFormatter(formatter)
-logger.addHandler(handler)
 
 IDENT = r"[a-zA-Z-_0-9]+"
 
 
 def no_op():
     raise NoOpError()
-
-
-def clear():
-    """Executes a clear screen command
-    will work on any OS. Used in the CLI's
-    interactive mode
-    """
-    if os.name == "nt":
-        os.system("cls")
-    else:
-        os.system("clear")
 
 
 def timer(name):
@@ -42,6 +24,9 @@ def timer(name):
     def wrapper(func):
         @functools.wraps(func)
         def decorator(*args, **kwargs):
+            # pylint: disable=import-outside-toplevel
+            from arc import logger
+
             start_time = time.time()
             return_value = func(*args, **kwargs)
             end_time = time.time()
@@ -98,13 +83,13 @@ def indent(string: str, distance="\t", split="\n"):
 @contextmanager
 def handle(*exceptions: Type[Exception], exit_code=1, handle=True):
     # pylint: disable=import-outside-toplevel
-    from arc import arc_config
+    from arc import config
 
     if handle:
         try:
             yield
         except exceptions as e:
-            if arc_config.loglevel == logging.DEBUG:
+            if config.loglevel == logging.DEBUG:
                 raise e
             else:
                 print(f"{effects.BOLD}{fg.RED}ERROR{effects.CLEAR}:", e)

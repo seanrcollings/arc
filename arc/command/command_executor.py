@@ -3,6 +3,7 @@ from typing import Callable, Any, Generator, Literal
 from arc.color import effects, fg
 from arc.errors import CommandError, ExecutionError, NoOpError
 from arc import utils
+from arc.logging import logger
 
 
 class CommandExecutor:
@@ -23,7 +24,7 @@ class CommandExecutor:
         try:
             self.before_callbacks(arguments)
             self.start_around_callbacks(arguments)
-            utils.logger.debug(BAR)
+            logger.debug(BAR)
             # The parsers always spit out a dictionary of arguements
             # and values. This doesn't allow *args to work, because you can't
             # spread *args after **kwargs. So the parser stores the *args in
@@ -43,7 +44,7 @@ class CommandExecutor:
         except ExecutionError as e:
             print(e)
         finally:
-            utils.logger.debug(BAR)
+            logger.debug(BAR)
             self.end_around_callbacks(value)
             self.after_callbacks(value)
 
@@ -68,25 +69,19 @@ class CommandExecutor:
 
     def before_callbacks(self, arguments: dict[str, Any]):
         if len(self.callbacks["before"]) > 0:
-            utils.logger.debug(
-                "Executing %sbefore%s callbacks", fg.YELLOW, effects.CLEAR
-            )
+            logger.debug("Executing %sbefore%s callbacks", fg.YELLOW, effects.CLEAR)
             for callback in self.callbacks["before"]:
                 callback(arguments)
 
     def after_callbacks(self, value: Any):
         if len(self.callbacks["after"]) > 0:
-            utils.logger.debug(
-                "Executing %safter%s callbacks", fg.YELLOW, effects.CLEAR
-            )
+            logger.debug("Executing %safter%s callbacks", fg.YELLOW, effects.CLEAR)
             for callback in self.callbacks["after"]:
                 callback(value)
 
     def start_around_callbacks(self, arguments):
         if len(self.callbacks["around"]) > 0:
-            utils.logger.debug(
-                "Starting %saround%s callbacks", fg.YELLOW, effects.CLEAR
-            )
+            logger.debug("Starting %saround%s callbacks", fg.YELLOW, effects.CLEAR)
             for callback in self.callbacks["around"]:
                 gen = callback(arguments)
                 next(gen)
@@ -94,7 +89,7 @@ class CommandExecutor:
 
     def end_around_callbacks(self, value):
         if len(self.callbacks["around"]) > 0:
-            utils.logger.debug(
+            logger.debug(
                 "Completing %saround%s callbacks",
                 fg.YELLOW,
                 effects.CLEAR,

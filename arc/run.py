@@ -3,14 +3,15 @@ import sys
 import shlex
 import re
 
+from arc import utils
+from arc.logging import logger
 from .errors import CommandError
 from .command import Command
-from .config import arc_config
-from . import utils
+from .config import config
 from .color import fg, effects
 
 namespace_seperated = re.compile(
-    fr"\A\b((?:(?:{utils.IDENT}{arc_config.namespace_sep})+"
+    fr"\A\b((?:(?:{utils.IDENT}{config.namespace_sep})+"
     fr"{utils.IDENT})|{utils.IDENT}:?)$"
 )
 
@@ -32,7 +33,7 @@ def run(
         will ignore if path does not exsit
     """
     if arcfile:
-        arc_config.from_file(arcfile)
+        config.from_file(arcfile)
 
     user_input = get_input(execute)
     command_namespace, command_args = get_command_namespace(user_input)
@@ -40,7 +41,7 @@ def run(
     with utils.handle(CommandError):
         command, command_ctx = find_command(command, command_namespace)
 
-        utils.logger.debug(
+        logger.debug(
             "Executing command: %s%s%s",
             fg.YELLOW,
             ":".join(command_namespace) or "root",
@@ -72,7 +73,7 @@ def get_command_namespace(
         namespace = user_input[0]
         if namespace_seperated.match(namespace):
             namespace = namespace.replace("-", "_")
-            return namespace.split(arc_config.namespace_sep), user_input[1:]
+            return namespace.split(config.namespace_sep), user_input[1:]
 
     return [], user_input
 

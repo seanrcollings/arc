@@ -1,8 +1,8 @@
-from arc.config import arc_config
-
+from arc.config import config
 from arc.cli import CLI, run
 from arc.command import Context, namespace, callbacks, ParsingMethod
 from arc.errors import NoOpError, ExecutionError
+from arc.logging import logger
 
 NO_OP = NoOpError()
 

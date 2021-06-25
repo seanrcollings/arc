@@ -1,6 +1,6 @@
 import inspect
 
-from arc import arc_config
+from arc import config
 from arc.utils import symbol
 from arc.types import needs_cleanup
 from arc.convert import convert
@@ -29,4 +29,4 @@ class Argument:
         return convert(value, self.annotation, self.name)
 
     def helper(self, level: int = 0):
-        print(f"{self.name}{arc_config.arg_assignment}{self.default}")
+        print(f"{self.name}{config.arg_assignment}{self.default}")
