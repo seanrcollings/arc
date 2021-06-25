@@ -115,6 +115,7 @@ class Config(ConfigBase):
     namespace_sep: str = ":"
     arg_assignment: str = "="
     flag_denoter: str = "--"
+    short_flag_denoter: str = "-"
     mode: str = "production"
     loglevel: int = 30
 

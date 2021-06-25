@@ -25,6 +25,7 @@ class ArgBuilder:
         self.__sig = inspect.signature(function)
         self.__length = len(self.__sig.parameters.values())
         self.__args: dict[str, Argument] = {}
+        self.__short_flags: set[str] = set()
 
     def __enter__(self):
         return self
@@ -48,7 +49,11 @@ class ArgBuilder:
     def add_arg(self, param: ParamProxy):
         if param.annotation is bool:
             default = False if param.default is EMPTY else param.default
-            self.__args[param.name] = Argument(param.name, param.annotation, default)
+            flag = Argument(param.name, param.annotation, default)
+            short_flag = self.short_flag_name(param.name)
+            flag.aliases.add(short_flag)
+            self.__short_flags.add(short_flag)
+            self.__args[param.name] = flag
 
         elif param.kind not in (param.VAR_KEYWORD, param.VAR_POSITIONAL):
             self.__args[param.name] = Argument(
@@ -66,6 +71,20 @@ class ArgBuilder:
             return False
 
         return False
+
+    def short_flag_name(self, name: str):
+        short_name = name[0]
+
+        if short_name in self.__short_flags:
+            short_name = short_name.upper()
+
+        if short_name in self.__short_flags:
+            raise TypeError(
+                "Too many flags that start with the same letter. "
+                "Cannot resolve shorter names for them"
+            )
+
+        return short_name
 
     def get_meta(self, **kwargs):
         return dict(length=self.__length, **kwargs)
