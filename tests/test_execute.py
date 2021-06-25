@@ -195,3 +195,22 @@ def test_nested_union(cli: MockedCommand):
     un2.function.assert_called_with(val=[1, 2, 3, 4])
     cli("un2 val=1,string,3,4")
     un2.function.assert_called_with(val=["1", "string", "3", "4"])
+
+
+def test_arg_alias(cli: MockedCommand):
+    @cli.subcommand(arg_aliases={"name": "na", "flag": ("f", "fl")})
+    def ar(name: str, flag: bool):
+        ...
+
+    cli("ar name=sean --flag")
+    ar.function.assert_called_with(name="sean", flag=True)
+    cli("ar na=sean -f")
+    ar.function.assert_called_with(name="sean", flag=True)
+    cli("ar na=sean -fl")
+    ar.function.assert_called_with(name="sean", flag=True)
+
+    with pytest.raises(CommandError):
+
+        @cli.subcommand(arg_aliases={"arg1": "arg", "arg2": ("arg", "2")})
+        def un(arg1: str, arg2: str):
+            ...

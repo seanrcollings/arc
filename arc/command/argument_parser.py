@@ -23,9 +23,9 @@ class ArgumentParser:
     of it's own.
     """
 
-    def __init__(self, function: Callable):
+    def __init__(self, function: Callable, arg_aliases=None):
         self.args: dict[str, Argument] = {}
-        self.build_args(function)
+        self.build_args(function, arg_aliases)
 
     def get_matchers(self):
         all_matchers = {}
@@ -81,8 +81,8 @@ class ArgumentParser:
 
     ### Argument Schema Building ###
 
-    def build_args(self, function: Callable):
-        with ArgBuilder(function) as builder:
+    def build_args(self, function: Callable, arg_aliases=None):
+        with ArgBuilder(function, arg_aliases) as builder:
             for idx, param in enumerate(builder):
                 self.arg_hook(param, builder.get_meta(index=idx))
 
@@ -101,6 +101,10 @@ class ArgumentParser:
         if arg and not arg.hidden:
             return arg
 
+        for arg in self.args.values():
+            if key in arg.aliases and not arg.hidden:
+                return arg
+
         raise errors.ParserError(message)
 
     @staticmethod
@@ -111,18 +115,25 @@ class ArgumentParser:
         return match.group(1)
 
 
-FLAG = re.compile(fr"\A{config.flag_denoter}(?P<name>\b{IDENT})$")
+FLAG = re.compile(
+    fr"^(?:{config.flag_denoter}|{config.short_flag_denoter})(?P<name>\b{IDENT})$"
+)
 
 
 class FlagParser(ArgumentParser):
-    """Class to handle parsing out the `--flags`"""
+    """Class to handle parsing out the `--flags` or `-f`"""
 
     matchers = {"flag": FLAG}
 
     def handle_flag(self, flag: dict[str, str]) -> tuple[str, Any]:
-        arg = self.get_or_raise(
-            flag["name"], f"Flag {config.flag_denoter}{flag['name']} not recognized"
-        )
+        name = flag["name"]
+
+        if len(name) == 1:
+            flag_denoter = config.short_flag_denoter
+        else:
+            flag_denoter = config.flag_denoter
+
+        arg = self.get_or_raise(name, f"Flag {flag_denoter}{name} not recognized")
         return arg.name, not arg.default
 
 

@@ -16,13 +16,7 @@ class MockedCommand(Command):
 
         super().__init__(name, function, *args, **kwargs)
 
-    def subcommand(self, name=None, parsing_method=None, context=None):  # type: ignore
-        """Create and install a subcommand
-
-        Fallback for parsing_method:
-          - provided argument
-          - type of `self.parser`
-        """
+    def subcommand(self, name=None, parsing_method=None, context=None, **kwargs):  # type: ignore
 
         parsing_method = parsing_method or type(self.parser)  # type: ignore
         context = context or {}  # type: ignore
@@ -30,7 +24,9 @@ class MockedCommand(Command):
         @self.ensure_function
         def decorator(function):
             command_name = self.handle_command_aliases(name or function.__name__)
-            command = MockedCommand(command_name, function, parsing_method, context)
+            command = MockedCommand(
+                command_name, function, parsing_method, context, **kwargs
+            )
             return self.install_command(command)
 
         return decorator
