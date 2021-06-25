@@ -2,7 +2,8 @@ from typing import Callable, Any, Union, TypedDict, Type
 from inspect import Parameter
 import re
 
-from arc import config, errors
+from arc import errors
+from arc.config import config
 from arc.color import fg, effects
 from arc.utils import IDENT
 from .helpers import ArgBuilder
