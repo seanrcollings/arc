@@ -1,20 +1,20 @@
 import os
 
-from arc import namespace, arc_config
+from arc import namespace, config
 from arc.convert import converter_mapping
 from arc.present import Table, Box
 
 debug = namespace("debug")
 
 
-@debug.subcommand()
-def config():
+@debug.subcommand("config")
+def config_command():
     """Displays information about the current config of the Arc app"""
     config_items = [
-        ["Namespace Seperator", arc_config.namespace_sep, ":"],
-        ["Argument Assignment", arc_config.arg_assignment, "="],
-        ["Flag Denoter", arc_config.flag_denoter, "--"],
-        ["Log", arc_config.loglevel, "logging.WARNING"],
+        ["Namespace Seperator", config.namespace_sep, ":"],
+        ["Argument Assignment", config.arg_assignment, "="],
+        ["Flag Denoter", config.flag_denoter, "--"],
+        ["Log", config.loglevel, "logging.WARNING"],
         ["Converters", "See debug:converters", "-"],
     ]
 

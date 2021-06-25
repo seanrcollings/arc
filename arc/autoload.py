@@ -6,7 +6,7 @@ import sys
 from arc.command import Command
 from arc.color import fg, effects
 from arc.errors import CommandError
-from arc import utils
+from arc.logging import logger
 
 
 class Autoload:
@@ -16,7 +16,7 @@ class Autoload:
 
     def load(self):
         for path in self.__load_files(self.paths):
-            utils.logger.debug("Autoloading %s%s%s", fg.YELLOW, path, effects.CLEAR)
+            logger.debug("Autoloading %s%s%s", fg.YELLOW, path, effects.CLEAR)
             for command in self.__load_commands(path):
                 if command.name in self.parent.subcommands:
                     raise CommandError(

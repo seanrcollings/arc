@@ -1,7 +1,7 @@
 from typing import Optional, Callable, Type
 import textwrap
 
-from arc import arc_config, utils
+from arc import config, utils
 from .color import effects, fg
 from .command import Command, ParsingMethod, ArgumentParser
 from .autoload import Autoload
@@ -34,7 +34,7 @@ class CLI(Command):
         :param version: Version string to display with `--version`
         """
         super().__init__(name, self.missing_command, parsing_method, context)
-        arc_config.from_file(arcfile)
+        config.from_file(arcfile)
         self.version = version
         self.install_command(Command("help", self.helper))
         self.default_action: Optional[Command] = (
@@ -118,7 +118,7 @@ class CLI(Command):
 
 
 def display_help(command: Command, parent: Command, level: int = 0):
-    sep = arc_config.namespace_sep
+    sep = config.namespace_sep
     indent = "    " * level
 
     aliases = [

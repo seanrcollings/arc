@@ -1,1 +1,1 @@
-loglevel=10
+mode=development

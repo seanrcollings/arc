@@ -2,7 +2,7 @@ from typing import Callable, Any, Union, TypedDict, Type
 from inspect import Parameter
 import re
 
-from arc import arc_config, errors
+from arc import config, errors
 from arc.color import fg, effects
 from arc.utils import IDENT
 from .helpers import ArgBuilder
@@ -110,7 +110,7 @@ class ArgumentParser:
         return match.group(1)
 
 
-FLAG = re.compile(fr"\A{arc_config.flag_denoter}(?P<name>\b{IDENT})$")
+FLAG = re.compile(fr"\A{config.flag_denoter}(?P<name>\b{IDENT})$")
 
 
 class FlagParser(ArgumentParser):
@@ -120,7 +120,7 @@ class FlagParser(ArgumentParser):
 
     def handle_flag(self, flag: dict[str, str]) -> tuple[str, Any]:
         arg = self.get_or_raise(
-            flag["name"], f"Flag {arc_config.flag_denoter}{flag['name']} not recognized"
+            flag["name"], f"Flag {config.flag_denoter}{flag['name']} not recognized"
         )
         return arg.name, not arg.default
 
@@ -132,7 +132,7 @@ class KeyArg(TypedDict):
 
 
 KEY_ARGUMENT = re.compile(
-    fr"\A\b(?P<name>{IDENT}\b){arc_config.arg_assignment}(?P<value>.+)$"
+    fr"\A\b(?P<name>{IDENT}\b){config.arg_assignment}(?P<value>.+)$"
 )
 
 
@@ -146,7 +146,7 @@ class KeywordParser(FlagParser):
         try:
             arg = self.get_or_raise(
                 name,
-                f"Argument {argument['name']}{arc_config.arg_assignment}"
+                f"Argument {argument['name']}{config.arg_assignment}"
                 f"{argument['value']} not recognized",
             )
             name = arg.name

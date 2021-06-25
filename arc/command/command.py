@@ -4,9 +4,11 @@ import functools
 from arc.color import effects, fg
 from arc.errors import CommandError, ParserError
 from arc import utils
+from arc.logging import logger
 
 from .argument_parser import ArgumentParser, ParsingMethod
 from .command_executor import CommandExecutor
+
 
 # TODO
 # - Function cleanup
@@ -100,7 +102,7 @@ class Command:
         self.subcommands[command.name] = command
         command.executor.register_callbacks(**self.executor.callbacks)
 
-        utils.logger.debug(
+        logger.debug(
             "Registered %s%s%s command to %s%s%s",
             fg.YELLOW,
             command.name,
