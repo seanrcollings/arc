@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass
 import logging
 from pathlib import Path
@@ -10,6 +11,11 @@ class ConfigBase:
     last_loaded: str = ""
 
     def from_file(self, filename: str, required: bool = False):
+        """Load configuration attributes from a file
+
+        :param filename: the file to read
+        :param required: whether or not a missing file raises an exception
+        """
         config_file = Path(filename).expanduser().resolve()
 
         if not config_file.is_file():
@@ -31,7 +37,28 @@ class ConfigBase:
 
         parsed = self.parse(lines)
         self.set_values(parsed)
-        self.post_load()
+
+    def from_env(self, prefix: str = None, upper: bool = True):
+        """Loads configuration attributes from environment variables
+
+        :param prefix: an optional common prefix for all env configuration options.
+        For example, if the attribute is `mode` the prefix is `arc_` and the
+        enviroment variable would be expected to be `arc_mode`
+        :param upper: whether to assume that the environment variable is uppercase, defaults
+        to `True`
+        """
+        prefix = prefix or self.ENV_PREFIX
+        attrs = [a for a in vars(self) if not a.startswith("__")]
+        values: dict = {}
+        for attr in attrs:
+            name = f"{prefix}{attr}"
+            if upper:
+                name = name.upper()
+
+            if value := os.getenv(name):
+                values[attr] = value
+
+        self.set_values(values)
 
     def parse(self, lines: list[str]):
 
@@ -39,7 +66,7 @@ class ConfigBase:
         try:
             for line in lines:
                 key, value = line.split("=")
-                parsed[key] = self.__convert_loaded_value(value)
+                parsed[key] = value
         except Exception as e:
             raise errors.ArcError(
                 "Config values must follow the form `name=value`"
@@ -52,7 +79,9 @@ class ConfigBase:
             if not hasattr(self, key):
                 raise errors.ArcError(f"Cannot set `{key}`")
 
-            setattr(self, key, value)
+            setattr(self, key, self.__convert_loaded_value(value))
+
+        self.post_load()
 
     def __convert_loaded_value(self, value: str):
         """Attempts to convert a loaded config value, if it
@@ -82,6 +111,7 @@ class ConfigBase:
 
 @dataclass
 class Config(ConfigBase):
+    ENV_PREFIX = "ARC_"
     namespace_sep: str = ":"
     arg_assignment: str = "="
     flag_denoter: str = "--"
