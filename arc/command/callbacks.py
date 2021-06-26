@@ -1,16 +1,24 @@
-import functools
 from typing import Literal
 from .command import Command
 
 
 def callback(when: Literal["before", "around", "after"]):
     def wrapper(func):
-        @functools.wraps(func)
-        def register(command: Command):
-            command.executor.register_callback(when, func)
-            return command
+        def register_wrapper(register_func):
+            def register(command: Command):
+                command.executor.register_callback(when, register_func)
+                return command
 
-        return register
+            return register
+
+        def handle_args(*args):
+            if isinstance(args[0], Command):
+                return register_wrapper(func)(args[0])
+            else:
+                inner = func(*args)
+                return register_wrapper(inner)
+
+        return handle_args
 
     return wrapper
 
