@@ -9,11 +9,13 @@ from arc.logging import logger
 class CommandExecutor:
     def __init__(self, function: Callable):
         self.function: Callable = function
-        self.callbacks: dict[str, set] = {
+        self.callbacks: dict[str, set[Callable]] = {
             "before": set(),
             "around": set(),
             "after": set(),
         }
+
+        self.non_inheritable: set[Callable] = set()
 
         self.__gens: list[Generator] = []
 
@@ -50,15 +52,23 @@ class CommandExecutor:
 
         return value
 
+    def inheritable_callbacks(self):
+        return {
+            key: {
+                callback
+                for callback in callbacks
+                if callback not in self.non_inheritable
+            }
+            for key, callbacks in self.callbacks.items()
+        }
+
     def register_callbacks(self, **kwargs):
         for when, callbacks in kwargs.items():
             for callback in callbacks:
                 self.register_callback(when, callback)
 
     def register_callback(
-        self,
-        when: Literal["before", "around", "after"],
-        call,
+        self, when: Literal["before", "around", "after"], call, inherit: bool = True
     ):
         if when not in self.callbacks.keys():
             raise CommandError(
@@ -66,6 +76,8 @@ class CommandExecutor:
             )
 
         self.callbacks[when].add(call)
+        if not inherit:
+            self.non_inheritable.add(call)
 
     def before_callbacks(self, arguments: dict[str, Any]):
         if len(self.callbacks["before"]) > 0:

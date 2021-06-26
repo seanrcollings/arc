@@ -108,7 +108,7 @@ class Command:
         """Installs a command object as a subcommand
         of the current object"""
         self.subcommands[command.name] = command
-        command.executor.register_callbacks(**self.executor.callbacks)
+        command.executor.register_callbacks(**self.executor.inheritable_callbacks())
 
         logger.debug(
             "Registered %s%s%s command to %s%s%s",
