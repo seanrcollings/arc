@@ -122,3 +122,12 @@ def unwrap_type(annotation) -> type:
 
 def is_alias(alias):
     return isinstance(alias, GenericAlias) or getattr(alias, "__origin__", False)
+
+
+def header(contents: str):
+    # pylint: disable=import-outside-toplevel
+    from arc import logging
+
+    logging.logger.debug(
+        f"{effects.UNDERLINE}{effects.BOLD}{fg.BLUE}{contents:^35}{effects.CLEAR}"
+    )

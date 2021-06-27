@@ -1,8 +1,9 @@
 from typing import Optional, Callable, Type
 import textwrap
 
-from arc import utils
-from arc.config import config
+from arc import utils, config
+from arc.logging import logger
+from arc import present
 from .color import effects, fg
 from .command import Command, ParsingMethod, ArgumentParser
 from .autoload import Autoload
@@ -36,6 +37,7 @@ class CLI(Command):
         """
         super().__init__(name, self.missing_command, parsing_method, context)
         config.from_file(arcfile)
+        utils.header("INIT")
         self.version = version
         self.install_command(Command("help", self.helper))
         self.default_action: Optional[Command] = (

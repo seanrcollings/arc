@@ -32,6 +32,7 @@ def run(
     :param arcfile: file path to an arc config file to load,
         will ignore if path does not exsit
     """
+    utils.header("EXECUTE")
     if arcfile:
         config.from_file(arcfile)
 
