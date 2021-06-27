@@ -44,7 +44,7 @@ class CommandExecutor:
                 f"Check --help for possible subcommands{effects.CLEAR}"
             )
         except ExecutionError as e:
-            print(e)
+            logger.error(e)
         finally:
             logger.debug(BAR)
             self.end_around_callbacks(value)

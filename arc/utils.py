@@ -2,7 +2,6 @@ from typing import Dict, Type, _GenericAlias as GenericAlias  # type: ignore
 from contextlib import contextmanager
 import traceback
 import functools
-import logging
 import time
 import sys
 
@@ -83,16 +82,16 @@ def indent(string: str, distance="\t", split="\n"):
 @contextmanager
 def handle(*exceptions: Type[Exception], exit_code=1, handle=True):
     # pylint: disable=import-outside-toplevel
-    from arc import config
+    from arc import config, logging
 
     if handle:
         try:
             yield
         except exceptions as e:
-            if config.loglevel == logging.DEBUG:
+            if config.mode == "development":
                 raise e
             else:
-                print(f"{effects.BOLD}{fg.RED}ERROR{effects.CLEAR}:", e)
+                logging.logger.error(e)
                 sys.exit(exit_code)
     else:
         yield
