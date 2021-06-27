@@ -2,7 +2,6 @@ import inspect
 
 from arc.config import config
 from arc.utils import symbol
-from arc.types import needs_cleanup
 from arc.convert import convert
 
 

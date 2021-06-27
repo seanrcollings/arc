@@ -1,6 +1,7 @@
 import functools
 from typing import Literal
-from .command import Command
+
+from arc.command import Command
 
 CallbackTime = Literal["before", "around", "after"]
 

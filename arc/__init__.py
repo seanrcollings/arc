@@ -1,6 +1,7 @@
 from arc.config import config
 from arc.cli import CLI, run
-from arc.command import Context, namespace, callbacks, ParsingMethod
+from arc.command import Context, namespace, ParsingMethod
+from arc import callbacks
 from arc.errors import NoOpError, ExecutionError, ValidationError
 from arc.logging import logger
 

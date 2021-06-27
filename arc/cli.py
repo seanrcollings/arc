@@ -2,8 +2,6 @@ from typing import Optional, Callable, Type
 import textwrap
 
 from arc import utils, config
-from arc.logging import logger
-from arc import present
 from .color import effects, fg
 from .command import Command, ParsingMethod, ArgumentParser
 from .autoload import Autoload
