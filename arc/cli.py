@@ -1,7 +1,8 @@
 from typing import Optional, Callable, Type
 import textwrap
 
-from arc import utils, config
+from arc import utils
+from arc.config import config
 from .color import effects, fg
 from .command import Command, ParsingMethod, ArgumentParser
 from .autoload import Autoload
