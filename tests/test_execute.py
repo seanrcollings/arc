@@ -8,127 +8,126 @@ import pytest
 from arc.types import Range, ValidPath
 from arc import ParsingMethod
 from arc.errors import ConversionError, CommandError
-from .mock import MockedCommand
+from arc import CLI
 
 
-def test_keybab(cli: MockedCommand):
+def test_keybab(cli: CLI):
     @cli.subcommand()
     def two_words(first_name):
-        ...
+        assert first_name == "sean"
 
     cli("two_words first_name=sean")
     cli("two-words first-name=sean")
 
-    assert two_words.function.call_count == 2
 
-
-def test_positional(cli: MockedCommand):
+def test_positional(cli: CLI):
     @cli.subcommand(parsing_method=ParsingMethod.POSITIONAL)
     def pos(val: int):
-        ...
+        assert val == 2
 
     cli("pos 2")
-    pos.function.assert_called_with(val=2)
 
 
-def test_float(cli: MockedCommand):
+def test_float(cli: CLI):
     @cli.subcommand()
     def fl(val: float):
-        ...
+        assert val == 2.3
 
     cli("fl val=2.3")
-    fl.function.assert_called_with(val=2.3)
 
 
-def test_bytes(cli: MockedCommand):
+def test_bytes(cli: CLI):
     @cli.subcommand()
     def by(val: bytes):
-        ...
+        assert val == b"hi"
 
     cli("by val=hi")
-    by.function.assert_called_with(val=b"hi")
 
 
-def test_bool(cli: MockedCommand):
+def test_bool(cli: CLI):
     @cli.subcommand()
-    def bo(val: bool):
-        ...
+    def true_val(val: bool):
+        assert val
 
-    cli("bo val=t")
-    bo.function.assert_called_with(val=True)
-    cli("bo val=true")
-    bo.function.assert_called_with(val=True)
-    cli("bo val=false")
-    bo.function.assert_called_with(val=False)
-    cli("bo val=f")
-    bo.function.assert_called_with(val=False)
+    @cli.subcommand()
+    def false_val(val: bool):
+        assert not val
+
+    cli("true-val val=t")
+    cli("true-val val=true")
+
+    cli("false-val val=false")
+    cli("false-val val=f")
 
 
-def test_list(cli: MockedCommand):
+def test_list(cli: CLI):
     @cli.subcommand()
     def li(val: list):
-        ...
+        assert val == ["1"]
 
     cli("li val=1")
-    li.function.assert_called_with(val=["1"])
 
 
-def test_list_alias(cli: MockedCommand):
+def test_list_alias(cli: CLI):
     @cli.subcommand()
     def li(val: list[int]):
-        ...
+        assert val == [1, 2, 3]
 
     cli("li val=1,2,3")
-    li.function.assert_called_with(val=[1, 2, 3])
 
     with pytest.raises(CommandError):
         cli("li val=ainfe")
 
-    # @cli.subcommand()
-    # def liu(val: list[Union[int, str]]):
-    #     ...
+    @cli.subcommand()
+    def liu(val: list[Union[int, str]]):
+        assert val == ["word", 1]
 
-    # cli("li val=word,1")
-    # li.function.assert_called_with(val=["word", 1])
+    cli("liu val=word,1")
 
 
-def test_tuple_alias(cli: MockedCommand):
+def test_tuple_alias(cli: CLI):
     @cli.subcommand()
     def tu(val: tuple[int]):
-        ...
+        assert val == (1,)
 
     cli("tu val=1")
-    tu.function.assert_called_with(val=(1,))
 
     with pytest.raises(CommandError):
         cli("tu val=1,2")
 
+    @cli.subcommand()
+    def any_size(val: tuple[int, ...]):
+        for i in val:
+            assert isinstance(i, int)
 
-def test_set_alias(cli: MockedCommand):
+    cli("any-size val=1")
+    cli("any-size val=1,2,3,4")
+    cli("any-size val=1,2,3,4,5,6")
+
+
+def test_set_alias(cli: CLI):
     @cli.subcommand()
     def se(val: set[int]):
-        ...
+        assert val == {1}
 
     cli("se val=1")
-    se.function.assert_called_with(val={1})
 
     with pytest.raises(CommandError):
         cli("se val=word")
 
 
-def test_range(cli: MockedCommand):
+def test_range(cli: CLI):
     @cli.subcommand()
     def ra(val: Range[Literal[1], Literal[10]]):
-        ...
+        assert val == Range(2, 1, 10)
 
     cli("ra val=2")
-    ra.function.assert_called_with(val=Range(2, 1, 10))
 
     with pytest.raises(CommandError):
         cli("ra val=99")
 
 
-def test_enum(cli: MockedCommand):
+def test_enum(cli: CLI):
     class Color(enum.Enum):
         RED = "red"
         YELLOW = "yellow"
@@ -136,78 +135,67 @@ def test_enum(cli: MockedCommand):
 
     @cli.subcommand()
     def en(color: Color):
-        ...
+        assert color == Color.RED
 
     cli("en color=red")
-    en.function.assert_called_with(color=Color.RED)
 
     with pytest.raises(CommandError):
         cli("en color=blue")
 
 
-def test_path(cli: MockedCommand):
+def test_path(cli: CLI):
     @cli.subcommand()
     def pa(path: Path):
-        ...
+        assert path == Path("./arc")
 
     cli("pa path=./arc")
-    pa.function.assert_called_with(path=Path("./arc"))
 
 
-def test_validated_path(cli: MockedCommand):
+def test_validated_path(cli: CLI):
     @cli.subcommand()
     def pa(path: ValidPath):
-        ...
+        assert path == ValidPath("./arc")
 
     cli("pa path=./arc")
-    pa.function.assert_called_with(path=ValidPath("./arc"))
 
     with pytest.raises(CommandError):
         cli("pa path=doesnotexist")
 
 
-def test_union(cli: MockedCommand):
+def test_union(cli: CLI):
     @cli.subcommand()
     def un(val: Union[int, str]):
         ...
 
     cli("un val=2")
-    un.function.assert_called_with(val=2)
     cli("un val=string")
-    un.function.assert_called_with(val="string")
 
 
-def test_nested_union(cli: MockedCommand):
+def test_nested_union(cli: CLI):
     @cli.subcommand()
     def un(val: list[Union[int, str]]):
-        ...
+        return val
 
-    cli("un val=1,2,3,4")
-    un.function.assert_called_with(val=[1, 2, 3, 4])
-    cli("un val=1,string,2,string")
-    un.function.assert_called_with(val=[1, "string", 2, "string"])
+    assert cli("un val=1,2,3,4") == [1, 2, 3, 4]
+    assert cli("un val=1,string,2,string") == [1, "string", 2, "string"]
 
     @cli.subcommand()
     def un2(val: Union[list[int], list[str]]):
-        ...
+        return val
 
-    cli("un2 val=1,2,3,4")
-    un2.function.assert_called_with(val=[1, 2, 3, 4])
-    cli("un2 val=1,string,3,4")
-    un2.function.assert_called_with(val=["1", "string", "3", "4"])
+    assert cli("un2 val=1,2,3,4") == [1, 2, 3, 4]
+    assert cli("un2 val=1,string,3,4") == ["1", "string", "3", "4"]
 
 
-def test_arg_alias(cli: MockedCommand):
+def test_arg_alias(cli: CLI):
     @cli.subcommand(arg_aliases={"name": "na", "flag": ("f", "fl")})
     def ar(name: str, flag: bool):
-        ...
+        assert name == "sean"
+        assert flag
 
     cli("ar name=sean --flag")
-    ar.function.assert_called_with(name="sean", flag=True)
     cli("ar na=sean -f")
-    ar.function.assert_called_with(name="sean", flag=True)
     cli("ar na=sean -fl")
-    ar.function.assert_called_with(name="sean", flag=True)
 
     with pytest.raises(CommandError):
 

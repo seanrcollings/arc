@@ -83,7 +83,7 @@ class CLI(Command):
         elif version:
             print(self.name, self.version)
         elif self.default_action:
-            self.default_action(**kwargs)
+            return self.default_action(**kwargs)
 
     def autocomplete(self, completions_for: str = None, completions_from: str = None):
         """Enables autocompletion support for this CLI

@@ -1,26 +1,20 @@
 import pytest
 
 from arc import CLI
-from .mock import mock_command, mock_typed_func, MockedCommand
 
 
 @pytest.fixture
 def cli():
-    cli = mock_command("cli", CLI, arcfile="tests/.arc")
-
-    def base(val: int):
-        ...
-
-    mocked = mock_typed_func(base)
-    cli.base()(mocked)
+    # cli = mock_command("cli", CLI, arcfile="tests/.arc")
+    cli = CLI(arcfile="tests/.arc")
 
     @cli.subcommand()
     def func1(x):
-        ...
+        assert isinstance(x, str)
 
     @cli.subcommand()
     @cli.subcommand("func2copy")
     def func2(x: int):
-        ...
+        assert isinstance(x, int)
 
     return cli
