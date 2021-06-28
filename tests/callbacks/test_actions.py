@@ -10,7 +10,7 @@ def test_open_file(cli: CLI):
         assert not file.closed
         return file
 
-    assert cli("test file=.arc").closed
+    assert cli("test file=tests/.arc").closed
 
     with pytest.raises(errors.ActionError):
         cli("test file=doesnotexist")
