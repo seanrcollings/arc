@@ -1,5 +1,5 @@
+from typing import Literal, Callable
 import functools
-from typing import Literal
 
 from arc.command import Command
 
@@ -15,6 +15,13 @@ def register_wrapper(when: CallbackTime, func, **kwargs):
 
 
 def callback(when: CallbackTime, **options):
+    """Wraps a function so it can be used as
+    a command callback
+
+    Args:
+        when (CallbackTime): When the callback should fire (before, after, or around)
+    """
+
     def wrapper(func):
         @functools.wraps(func)
         def handle_args(*args, **kwargs):
@@ -47,19 +54,21 @@ def callback_helper(when: CallbackTime, func=None, *, inherit=True):
     return wrapped
 
 
-def before(*args, **kwargs):
+def before(*args, **kwargs) -> Callable[..., Command]:
     return callback_helper("before", *args, **kwargs)
 
 
-def after(*args, **kwargs):
+def after(*args, **kwargs) -> Callable[..., Command]:
     return callback_helper("after", *args, **kwargs)
 
 
-def around(*args, **kwargs):
+def around(*args, **kwargs) -> Callable[..., Command]:
     return callback_helper("around", *args, **kwargs)
 
 
 def skip(*skip_callbacks):
+    """Removes callbacks from command"""
+
     def wrapper(command: Command):
         unwrapped = {c.__wrapped__ for c in skip_callbacks}
         callbacks: set

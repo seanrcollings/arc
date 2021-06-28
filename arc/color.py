@@ -41,9 +41,9 @@ def _hex_to_rgb(hex_rep: Union[str, int]):
         raise TypeError(f"type of hex_rep must be int or str, got: {type(hex_rep)}")
 
 
-# pylint: disable=bad-whitespace
 # fmt: off
 class fg:
+    """Foreground colors"""
     BLACK   = Color(30)
     RED     = Color(31)
     GREEN   = Color(32)
@@ -68,6 +68,7 @@ class fg:
 
 
 class bg:
+    """Background colors"""
     BLACK   = Color(40)
     RED     = Color(41)
     GREEN   = Color(42)
@@ -91,6 +92,7 @@ class bg:
 
 
 class effects:
+    """Other effects"""
     CLEAR         = Color(0)
     BOLD          = Color(1)
     ITALIC        = Color(3)

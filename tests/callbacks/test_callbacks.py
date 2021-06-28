@@ -65,8 +65,8 @@ def test_inheritance(cli: CLI):
     def thing():
         ...
 
-    assert no_inherit.__wrapped__ not in thing.executor.callbacks["before"]
-    assert before.__wrapped__ in thing.executor.callbacks["before"]
+    assert no_inherit.__wrapped__ not in thing.executor.callbacks["before"]  # type: ignore
+    assert before.__wrapped__ in thing.executor.callbacks["before"]  # type: ignore
 
 
 def test_skip(cli: CLI):
@@ -80,8 +80,8 @@ def test_skip(cli: CLI):
     def sub():
         ...
 
-    assert before.__wrapped__ in top.executor.callbacks["before"]
-    assert before.__wrapped__ not in sub.executor.callbacks["before"]
+    assert before.__wrapped__ in top.executor.callbacks["before"]  # type: ignore
+    assert before.__wrapped__ not in sub.executor.callbacks["before"]  # type: ignore
 
 
 def test_callback_args(cli: CLI):
