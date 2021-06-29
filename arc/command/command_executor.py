@@ -8,6 +8,8 @@ from arc.logging import logger
 
 
 class CommandExecutor:
+    """Handles the execution of a commands's function"""
+
     def __init__(self, function: Callable):
         self.function: Callable = function
         self.callbacks: dict[str, set[Callable]] = {
@@ -22,6 +24,14 @@ class CommandExecutor:
 
     @utils.timer("Command Execution")
     def execute(self, arguments: dict[str, Any]):
+        """Executes the command's functions
+
+        Args:
+            arguments (dict[str, Any]): Arguments parsed by an `ArgumentParser`
+
+        Returns:
+            Any: What the command's function returns
+        """
         BAR = "\u2500" * 40
         value = None
         try:

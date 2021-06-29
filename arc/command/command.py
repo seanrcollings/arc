@@ -11,8 +11,6 @@ from .argument_parser import ArgumentParser, ParsingMethod
 from .command_executor import CommandExecutor
 
 
-# TODO
-# - Function cleanup
 class Command:
     def __init__(
         self,
@@ -69,11 +67,23 @@ class Command:
         context: dict[str, Any] = None,
         arg_aliases: dict[str, Union[Iterable[str], str]] = None,
     ):
-        """Create and install a subcommand
+        """Create and install a subcommands
 
-        Fallback for parsing_method:
-          - provided argument
-          - type of `self.parser`
+        Args:
+            name (Union[str, list[str], tuple[str, ...]], optional): The name to reference
+                this subcommand by. Can optionally be a `list` of names. In this case,
+                the first in the list will be treated as the "true" name, and the others
+                will be treated as aliases. If no value is provided, `function.__name__` is used
+            parsing_method (type[ArgumentParser], optional): The way to parse this command's
+                arguments. `ParsingMethod` contains constants to reference for each method.
+                Defaults to the parsing method of `self`.
+            context (dict[str, Any], optional): Special data that will be
+                passed to this command (and any subcommands) at runtime. Defaults to None.
+            arg_aliases (dict[str, Union[Iterable[str], str]], optional): Secondary names
+                that arguments can be referred to by. Defaults to None.
+
+        Returns:
+            Command: the subcommand created
         """
 
         parsing_method = parsing_method or type(self.parser)
