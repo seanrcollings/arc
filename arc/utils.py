@@ -1,8 +1,6 @@
 from typing import Dict, Type, _GenericAlias as GenericAlias  # type: ignore
-from contextlib import contextmanager
 import traceback
 import functools
-import logging
 import time
 import sys
 
@@ -80,22 +78,37 @@ def indent(string: str, distance="\t", split="\n"):
     return f"{distance}" + f"{split}{distance}".join(string.split(split))
 
 
-@contextmanager
-def handle(*exceptions: Type[Exception], exit_code=1, handle=True):
-    # pylint: disable=import-outside-toplevel
-    from arc import config
+class handle:
+    def __init__(self, *exceptions: Type[Exception], exit_code: int = 1):
+        self.exceptions = exceptions
+        self.exit_code = exit_code
 
-    if handle:
-        try:
-            yield
-        except exceptions as e:
-            if config.loglevel == logging.DEBUG:
-                raise e
-            else:
-                print(f"{effects.BOLD}{fg.RED}ERROR{effects.CLEAR}:", e)
-                sys.exit(exit_code)
-    else:
-        yield
+    def __call__(self, func):
+        @functools.wraps(func)
+        def inner(*args, **kwargs):
+            with self:
+                return func(*args, **kwargs)
+
+        return inner
+
+    def __enter__(self):
+        yield self
+
+    def __exit__(self, exc_type, exc_value, trace):
+        # pylint: disable=import-outside-toplevel
+        from arc import config, logging
+
+        # Rebubble an exit call
+        if exc_type is SystemExit:
+            return False
+
+        if config.mode == "development":
+            return False
+
+        if exc_type:
+            logging.logger.debug(format_exception(exc_value))
+            logging.logger.error(exc_value)
+            sys.exit(self.exit_code)
 
 
 def format_exception(e: BaseException):
@@ -123,3 +136,12 @@ def unwrap_type(annotation) -> type:
 
 def is_alias(alias):
     return isinstance(alias, GenericAlias) or getattr(alias, "__origin__", False)
+
+
+def header(contents: str):
+    # pylint: disable=import-outside-toplevel
+    from arc import logging
+
+    logging.logger.debug(
+        f"{effects.UNDERLINE}{effects.BOLD}{fg.BLUE}{contents:^35}{effects.CLEAR}"
+    )

@@ -36,6 +36,7 @@ class CLI(Command):
         """
         super().__init__(name, self.missing_command, parsing_method, context)
         config.from_file(arcfile)
+        utils.header("INIT")
         self.version = version
         self.install_command(Command("help", self.helper))
         self.default_action: Optional[Command] = (
@@ -82,7 +83,7 @@ class CLI(Command):
         elif version:
             print(self.name, self.version)
         elif self.default_action:
-            self.default_action(**kwargs)
+            return self.default_action(**kwargs)
 
     def autocomplete(self, completions_for: str = None, completions_from: str = None):
         """Enables autocompletion support for this CLI

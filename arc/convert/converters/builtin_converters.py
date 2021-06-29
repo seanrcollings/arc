@@ -3,10 +3,17 @@ This module does not include the converters for things like `list` or `tuple`
 because those converters also handle their generic form (`list[int]`) and are
 placed in `generic_convertrs.py`
 """
+from typing import TextIO, IO, BinaryIO
 from arc.errors import ConversionError
 from .base_converter import BaseConverter
 
 from .converter_mapping import register
+
+
+@register(TextIO, IO, BinaryIO)
+class EmptyConverter(BaseConverter):
+    def convert(self, value):
+        return value
 
 
 @register(str)

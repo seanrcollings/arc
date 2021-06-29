@@ -1,5 +1,5 @@
 """ Converters For Special Arc Types """
-from typing import Type, Optional
+from typing import Optional
 
 from arc.types import File, Range, ValidPath
 from arc import errors, utils
@@ -10,7 +10,7 @@ __all__ = ["FileConverter", "RangeConverter", "ValidPathConverter"]
 
 
 @register(File)
-class FileConverter(BaseConverter[Type[File]]):
+class FileConverter(BaseConverter[File]):
     """Converts a string to a file handler object
     /path/to/a/file
     """
@@ -20,7 +20,7 @@ class FileConverter(BaseConverter[Type[File]]):
 
 
 @register(Range)
-class RangeConverter(BaseConverter[Type[Range]]):
+class RangeConverter(BaseConverter[Range]):
     _range: Optional[tuple[int, int]] = None
 
     def convert(self, value: str):

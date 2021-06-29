@@ -6,11 +6,12 @@ from .base_converter import BaseConverter
 converter_mapping: dict[Union[type, SpecialForm], type[BaseConverter]] = {}
 
 
-def register(kind: Union[type, SpecialForm]):
+def register(*kinds: Union[type, SpecialForm]):
     """Registers decorated `cls` as the converter for `kind`"""
 
     def wrapper(cls: type[BaseConverter]) -> type[BaseConverter]:
-        converter_mapping[kind] = cls
+        for kind in kinds:
+            converter_mapping[kind] = cls
         return cls
 
     return wrapper

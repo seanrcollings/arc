@@ -1,5 +1,6 @@
 from typing import Dict, Callable, Optional, Any, Type, Union, Iterable
 import functools
+import pprint
 
 from arc.color import effects, fg
 from arc.errors import CommandError, ParserError
@@ -55,6 +56,8 @@ class Command:
         self.context = context | self.context
         with utils.handle(ParserError):
             parsed_args = self.parser.parse(cli_args, self.context)
+
+        logger.debug("Parsed arguments: %s", pprint.pformat(parsed_args))
         return self.executor.execute(parsed_args)
 
     ### Building Subcommands ###
@@ -108,7 +111,7 @@ class Command:
         """Installs a command object as a subcommand
         of the current object"""
         self.subcommands[command.name] = command
-        command.executor.register_callbacks(**self.executor.callbacks)
+        command.executor.register_callbacks(**self.executor.inheritable_callbacks())
 
         logger.debug(
             "Registered %s%s%s command to %s%s%s",

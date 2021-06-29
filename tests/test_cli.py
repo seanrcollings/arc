@@ -6,15 +6,16 @@ from arc import CLI, namespace, ParsingMethod
 from arc.errors import CommandError
 from arc.utilities.debug import debug
 
-from .mock import MockedCommand
+
+def test_base(cli: CLI):
+    @cli.base()
+    def base(val: int):
+        return val
+
+    assert cli("val=2") == 2
 
 
-def test_base(cli: MockedCommand):
-    cli("val=2")
-    cli.default_action.function.assert_called_with(val=2)
-
-
-def test_install_group(cli: MockedCommand):
+def test_install_group(cli: CLI):
     g1 = namespace("g1")
     cli.install_command(g1)
     assert g1 in cli.subcommands.values()
@@ -24,39 +25,31 @@ def test_install_group(cli: MockedCommand):
     assert g2 in cli.subcommands.values()
 
 
-def test_execute(cli: MockedCommand):
+def test_execute(cli: CLI):
     cli("func1 x=2")
-    cli.subcommands["func1"].function.assert_called_with(x="2")
-
     cli("func2 x=2")
-    cli.subcommands["func2"].function.assert_called_with(x=2)
 
 
-def test_multi_name(cli: MockedCommand):
-    cli("func2copy x=2")
-    cli.subcommands["func2copy"].function.assert_called_with(x=2)
-
-
-def test_nonexistant_command(cli: MockedCommand):
+def test_nonexistant_command(cli: CLI):
     with pytest.raises(CommandError), mock.patch("arc.utils.handle"):
         cli("doesnotexist x=2")
 
 
-def test_autoload_file(cli: MockedCommand):
+def test_autoload_file(cli: CLI):
     cli.autoload(  # type: ignore
         str(Path(__file__).parent.parent / "arc/utilities/debug.py")
     )
     assert "debug" in cli.subcommands
 
 
-def test_autoload_dir(cli: MockedCommand):
+def test_autoload_dir(cli: CLI):
     cli.autoload(str(Path(__file__).parent.parent / "arc/utilities"))  # type: ignore
     assert "debug" in cli.subcommands
     assert "files" in cli.subcommands
     assert "https" in cli.subcommands
 
 
-def test_autoload_error(cli: MockedCommand):
+def test_autoload_error(cli: CLI):
     cli.install_command(debug)
     with pytest.raises(CommandError):
         cli.autoload(  # type: ignore
@@ -64,30 +57,26 @@ def test_autoload_error(cli: MockedCommand):
         )
 
 
-def test_command_alias(cli: MockedCommand):
+def test_command_alias(cli: CLI):
     @cli.subcommand(("name1", "name2"))
     def name1():
-        ...
+        return True
 
-    cli("name2")
-    name1.function.assert_called_with()
+    assert cli("name2")
 
 
-def test_keybab(cli: MockedCommand):
+def test_keybab(cli: CLI):
     @cli.subcommand()
     def two_words(first_name):
-        ...
+        return True
 
-    cli("two_words first_name=sean")
-    cli("two-words first-name=sean")
-
-    assert two_words.function.call_count == 2
+    assert cli("two_words first_name=sean")
+    assert cli("two-words first-name=sean")
 
 
-def test_positional(cli: MockedCommand):
+def test_positional(cli: CLI):
     @cli.subcommand(parsing_method=ParsingMethod.POSITIONAL)
     def pos(val: int):
-        ...
+        return True
 
-    cli("pos 2")
-    pos.function.assert_called_with(val=2)
+    assert cli("pos 2")

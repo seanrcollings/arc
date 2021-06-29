@@ -28,6 +28,7 @@ class File(Generic[T], ArcType):
         return self
 
     def __exit__(self, exception_type, value, traceback):
+        print("exit")
         self.close()
 
     def __getattr__(self, attr):

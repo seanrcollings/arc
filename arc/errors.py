@@ -31,7 +31,11 @@ class CommandError(ArcError):
 
 
 class ValidationError(ArcError):
-    """Raised when there is an error in validating command input"""
+    """Raised when there is an error in validating command input or in a validator callback"""
+
+
+class ActionError(ArcError):
+    """Raised when a action callback fails to execute"""
 
 
 class TokenizerError(ArcError):
