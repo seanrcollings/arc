@@ -29,7 +29,7 @@ border_styles = {
 }
 
 
-def clean(string):
+def _clean(string):
     """Gets rid of escape sequences"""
     ansi_escape = re.compile(r"(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]")
     return ansi_escape.sub("", string)
@@ -39,9 +39,10 @@ Border = Union[Literal["regular"], Literal["heavy"]]
 
 
 class Box:
-    """ "Presenter for creating a Box around provided text
+    """Presenter for creating a Box around provided text
 
-    ### Examples:
+    Examples:
+    ```
         print(Box('some cool text', padding=2, justify='center')) ->
 
         ╭────────────────────╮
@@ -51,7 +52,7 @@ class Box:
         │                    │
         │                    │
         ╰────────────────────╯
-
+    ```
     Will accept colorized strings
     """
 
@@ -64,15 +65,16 @@ class Box:
         color: color.Color = color.fg.WHITE,
     ):
         """
-        :param string: String to surround with a box - May be colored
-        :param border: Border style, either 'regular' or 'heavy' defaults to 'regular
-        :param padding: Dictionary containing the padding of each side of the string
-                defaults to: `{"top": 0, "left": 0, "bottom": 0, "right": 0}`
-                If all sides are going to have the same padding, can
-                shorthand it by just passing in that integer
-        :param justify: how to justify the text (left, center, right) defaults to left
-        :param color: What color the border should be. Defaults to white.
-                Use `arc.color.fg` constants
+        Args:
+            string: String to surround with a box - May be colored
+            border: Border style, either 'regular' or 'heavy' defaults to 'regular
+            padding: Dictionary containing the padding of each side of the string
+                    defaults to: `{"top": 0, "left": 0, "bottom": 0, "right": 0}`
+                    If all sides are going to have the same padding, can just pass
+                    in that integer, rather than the entire dictionary
+            justify: how to justify the text (left, center, right). Defaults to left
+            color: What color the border should be. Defaults to white.
+                    Use `arc.color.fg` constants
         """
         self.string = string
         self.__border = border_styles[border]
@@ -82,7 +84,7 @@ class Box:
 
     def __str__(self):
         cleaned = list(
-            self.pad_line(clean(string)) for string in self.string.split("\n")
+            self.pad_line(_clean(string)) for string in self.string.split("\n")
         )
         width = len(max(cleaned, key=len)) + 4
         term_width, _ = shutil.get_terminal_size()
@@ -107,10 +109,11 @@ class Box:
 
     @property
     def border(self):
+        """Dictionary containting the border stylings"""
         return self.__border
 
-    @border.setter  # type: ignore
-    def border_setter(self, value):
+    @border.setter
+    def border(self, value):
         self.__border = border_styles[value]
 
     # Utils

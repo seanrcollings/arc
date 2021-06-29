@@ -2,6 +2,8 @@ from typing import Union
 
 
 class Color(str):
+    """Color class, extends str"""
+
     ESCAPE = "\033["
 
     def __new__(cls, content, extra="m"):

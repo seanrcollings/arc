@@ -26,11 +26,12 @@ def run(
     Loads up the config file, parses the user input
     Finds the command referenced, then passes over control to it
 
-    :param command: command object to run
-    :param execute: string to parse and execute. If it's not provided
-        `sys.argv` will be used
-    :param arcfile: file path to an arc config file to load,
-        will ignore if path does not exsit
+    Args:
+        command (Command): command object to run
+        execute (str): string to parse and execute. If it's not provided
+            `sys.argv` will be used
+        arcfile (str): file path to an arc config file to load,
+            will ignore if path does not exsit
     """
     utils.header("EXECUTE")
     if arcfile:
@@ -55,7 +56,7 @@ def get_input(execute: Optional[str]) -> list[str]:
     """Retrieves the users' input.
 
     If `execute` is provided, it is split using shell-like syntax.
-    If it is absent, sys.argv is returned
+    If it is absent, `sys.argv` is returned
     """
     user_input: Union[list[str], str] = execute if execute else sys.argv[1:]
     if isinstance(user_input, str):

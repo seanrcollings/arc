@@ -1,3 +1,6 @@
+"""Provides helper functions to trigger each arc Converter.
+**Will be removed in favor of a wrapper around `convert.convert()`**
+"""
 from typing import _SpecialForm as SpecialForm
 from . import converter_mapping
 
