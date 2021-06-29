@@ -1,14 +1,7 @@
 import setuptools
 
-try:
-    import arc
-
-    VERSION = arc.__version__
-except ImportError:
-    VERSION = "test_version"
-
+VERSION = "2.4.1"
 DOWNLOAD = f"https://github.com/seanrcollings/arc/archive/v{VERSION}tar.gz"
-
 
 with open("README.md", "r") as fh:
     LONG_DESC = fh.read()

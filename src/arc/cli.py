@@ -39,9 +39,9 @@ class CLI(KeywordCommand):
         arc_config.from_file(arcfile)
         self.version = version
         self.install_command(self.create_command("help", self.helper))
-        self.default_action: Optional[Command] = self.base()(
-            function
-        ) if function else self.subcommands["help"]
+        self.default_action: Optional[Command] = (
+            self.base()(function) if function else self.subcommands["help"]
+        )
 
     # pylint: disable=arguments-differ
     def __call__(self, execute: str = None):  # type: ignore
@@ -152,7 +152,9 @@ def display_help(command: Command, parent: Command, level: int = 0):
 
 
 def run(
-    command: Command, execute: Optional[str] = None, arcfile: Optional[str] = None,
+    command: Command,
+    execute: Optional[str] = None,
+    arcfile: Optional[str] = None,
 ):
     """Core function of the ARC API.
     Loads up the config file, parses the user input

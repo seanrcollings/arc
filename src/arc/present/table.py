@@ -73,7 +73,10 @@ class Table:
         for row_idx, row in enumerate(self.__rows):
             for col_idx, column in enumerate(self.__columns.values()):
                 table += self.format_cell(
-                    str(row[column["name"]]), column, row_idx, col_idx,
+                    str(row[column["name"]]),
+                    column,
+                    row_idx,
+                    col_idx,
                 )
 
             table += "\n"
@@ -82,7 +85,12 @@ class Table:
 
     @staticmethod
     def formatter(
-        string, width=20, align="<", tcolor=fg.GREEN, bcolor="", style=effects.BOLD,
+        string,
+        width=20,
+        align="<",
+        tcolor=fg.GREEN,
+        bcolor="",
+        style=effects.BOLD,
     ):
         return f"{tcolor}{bcolor}{style}{string:{align}{width}}{effects.CLEAR}"
 
