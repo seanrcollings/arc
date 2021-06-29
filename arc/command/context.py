@@ -1,4 +1,11 @@
+"""
+.. include:: ../../docs/Context.md
+"""
+
+
 class Context(dict):
+    """Context object, extends `dict`"""
+
     def __repr__(self):
         return (
             f"<{self.__class__.__name__}"

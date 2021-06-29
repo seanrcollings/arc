@@ -9,16 +9,57 @@ V = TypeVar("V")
 
 
 class Prompt:
+    """Core class to the `prompt` package.
+
+    Usage:
+        ```py
+        prompt = Prompt()
+        question = MultipleChoiceQuestion(["Chocolate", "Vanilla", "Strawberry"])
+        prompt.ask(question, "What's you favorite ice cream flavor?")
+        ```
+        Would result in a prompt like:
+        ```
+        What's you favorite ice cream flavor?
+        [0] Chocolate
+        [1] Vanilla
+        [2] Strawberry
+
+        >
+        ```
+    """
+
     def __init__(self, show_emojis: bool = True, color_output: bool = True):
+        """
+        Args:
+            show_emojis (bool, optional): Whether or not to display the
+                icons / emojis when printing messages with the display
+                methods below. Defaults to True.
+            color_output (bool, optional): [description]. Whether or not
+                do color the output of each of the display methods below.
+                Defaults to True.
+        """
         self.show_emojis = show_emojis
         self.color_output = color_output
         self._previous_answers: list[Any] = []
 
     @property
     def previous_answers(self):
+        """All questions asked by this Prompt
+        have their answers stored in here"""
         return self._previous_answers
 
     def ask(self, question: Question[V], description: str = None) -> V:
+        """Ask a question
+
+        Args:
+            question (Question[V]): Question object to ask. Each question
+                object handles it's rendering and answering differently
+            description (str, optional): Description to preface the
+                question with. Defaults to None.
+
+        Returns:
+            V: The type that the particular Question returns
+        """
         if description:
             print(description)
 
@@ -35,7 +76,15 @@ class Prompt:
         self._previous_answers.append(answer)
         return answer
 
-    def confirm(self, *args, **kwargs):
+    def confirm(self, *args, **kwargs) -> bool:
+        """Request a Y/N answer from the user
+
+        Args:
+            message (str): Message to display to the user
+
+        Returns:
+            bool: The user's answer to the question
+        """
         question = ConfirmQuestion(*args, **kwargs)
         return self.ask(question)
 
@@ -45,24 +94,31 @@ class Prompt:
         )
 
     def error(self, message: str, **kwargs):
+        """Display an error message to the user"""
         self.beautify(message, fg.RED, "🚨", **kwargs)
 
     def ok(self, message: str, **kwargs):
+        """Display a successful message to the user"""
         self.beautify(message, fg.GREEN, "✓", **kwargs)
 
     def no(self, message: str, **kwargs):
+        """Display an unsuccessful message to the user"""
         self.beautify(message, fg.RED, "✗", **kwargs)
 
     def act(self, message: str, **kwargs):
+        """Display an action message to the user"""
         self.beautify(message, fg.BLUE.bright, **kwargs)
 
     def warn(self, message: str, **kwargs):
+        """Display a warning message to the user"""
         self.beautify(message, fg.YELLOW, "🚧", **kwargs)
 
     def subtle(self, message: str, **kwargs):
+        """"Display a subtle (light grey) message to the user"""
         self.beautify(message, fg.GREY, **kwargs)
 
     def snake(self, message: str, **kwargs):
+        """Display a Pythonic message to the user"""
         self.beautify(message, emoji="🐍", **kwargs)
 
     def emoji(self, emoji: str):

@@ -5,10 +5,14 @@ from .data import justifications, Justification
 
 
 class ColumnBase(TypedDict):  # pylint: disable=inherit-non-class
+    """ColumnBase Type"""
+
     name: str
 
 
 class Column(ColumnBase, total=False):  # pylint: disable=inherit-non-class
+    """Column Type"""
+
     justify: Justification
     width: int
 
@@ -46,6 +50,8 @@ RowInput = Sequence[Union[Sequence[Any], dict[str, Any]]]
 
 
 class Table:
+    """Present data in a table-like format"""
+
     def __init__(
         self,
         columns: ColumnInput,

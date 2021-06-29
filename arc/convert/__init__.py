@@ -1,3 +1,6 @@
+"""
+.. include:: ../../docs/Data-Types.md
+"""
 from arc.errors import ConversionError, CommandError
 from arc.color import fg, effects as ef
 
@@ -6,10 +9,10 @@ from .converters import *
 
 def convert(value, kind, name: str = ""):
     """Converts the provided string to the provided type
-
-    :param value: value to convert
-    :param kind: type to attempt the convertion to
-    :param name: optional descrive name of the argument
+    Args:
+        value: value to convert
+        kind: type to attempt the convertion to
+        name: optional descriptive name of the argument
     """
     # pylint: disable=import-outside-toplevel
     from arc.utils import handle

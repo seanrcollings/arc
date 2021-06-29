@@ -10,11 +10,7 @@ from .run import run
 
 
 class CLI(Command):
-    """The CLI class is now implemented as a subclass
-    of the Command class and reality just acts as a
-    conveneince wrapper around Command creation and
-    the run function.
-    """
+    """Core class for arc"""
 
     def __init__(
         self,
@@ -26,14 +22,15 @@ class CLI(Command):
         version: str = "¯\\_(ツ)_/¯",
     ):
         """Creates a CLI object.
-
-        :param name: name of the CLI, will be used in the help command
-        :param function: function that defines the CLI's default behavior. Identical
-            to calling `@cli.base()`
-        :param arcfile: arc config file to load. defaults to ./.arc
-        :param context: dictionary of key value pairs to pass to children as context
-        :param version: Version string to display with `--version`
+        Args:
+            name: name of the CLI, will be used in the help command.
+            function: function that defines the CLI's default behavior.
+                Identical to calling `@cli.base()`.
+            arcfile: arc config file to load. defaults to ./.arc
+            context: dictionary of key value pairs to pass to children as context
+            version: Version string to display with `--version`
         """
+
         super().__init__(name, self.missing_command, parsing_method, context)
         config.from_file(arcfile)
         utils.header("INIT")
@@ -48,6 +45,11 @@ class CLI(Command):
         return run(self, execute)
 
     def command(self, *args, **kwargs):
+        """Alias for `Command.subcommand`
+
+        Returns:
+            Command: The subcommand's command object
+        """
         return self.subcommand(*args, **kwargs)
 
     def base(self, name=None, parse_method=None, **kwargs):
@@ -76,7 +78,7 @@ class CLI(Command):
         this function will be called to handle it.
         It handles the --help and --version flags.
         And if neither of those are specified, it will call
-        the `@cli.base()` definition
+        the default action
         """
         if help:
             self("help")
@@ -88,13 +90,16 @@ class CLI(Command):
     def autocomplete(self, completions_for: str = None, completions_from: str = None):
         """Enables autocompletion support for this CLI
 
-        :param str completions_for: command for the shell to run autocompletions against.
-        This will defautl the name of the CLI, which should generally be the name of
-        the executable being built. It's useful to set this during testing, if you're
-        not actually installing a binary locally in development
-
-        :param str completions_from: command for the shell to run to generate the
-        autocompletions
+        **Currently disabled**
+        Args:
+            completions_for: command for the shell to run autocompletions against.
+                This will default the name of the CLI, which should generally be the name of
+                the executable being built. It's useful to set this during testing, if you're
+                not actually installing a binary locally in development
+            completions_from: command for the shell to run to generate the
+                autocompletions
+        Raises:
+            NotImplementedError
         """
         raise NotImplementedError("Autocompletion disabled until further notice")
         # pylint: disable=import-outside-toplevel
@@ -109,10 +114,12 @@ class CLI(Command):
 
     @utils.timer("Autoloading")
     def autoload(self, *paths: str):
+        """Attempts to autoload command objects
+        into the CLI from the provided paths"""
         Autoload(paths, self).load()
 
     def helper(self):
-        """Displays this help."""
+        """Displays the help"""
         print(f"Usage: {self.name} <COMMAND> [ARGUMENTS ...]\n\n")
         print(f"{effects.UNDERLINE}{effects.BOLD}Commands:{effects.CLEAR}\n")
         for command in self.subcommands.values():
@@ -120,6 +127,14 @@ class CLI(Command):
 
 
 def display_help(command: Command, parent: Command, level: int = 0):
+    """Generates the help documentation for a command.
+
+    Args:
+        command (Command): Command that acts as the root of the help documentation
+        parent (Command): The command's parent Command
+        level (int, optional): Depth of the Command in the Command tree.
+            Used to calculate spacing. Defaults to 0.
+    """
     sep = config.namespace_sep
     indent = "    " * level
 

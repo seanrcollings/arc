@@ -4,8 +4,6 @@ from arc.color import fg, effects
 
 T = TypeVar("T")
 
-# Validators
-
 
 def is_int(f):
     """Asserts that the given answer is a number.
@@ -100,8 +98,9 @@ class RangeQuestion(Question[int]):
 
     def __init__(self, min: int, max: int):
         """
-        :param min: the smallest number possible
-        :param max: the largest  number possible
+        Args:
+            min: the smallest number possible
+            max: the largest  number possible
         """
         self.min = min
         self.max = max

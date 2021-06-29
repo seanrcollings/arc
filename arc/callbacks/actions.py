@@ -8,6 +8,20 @@ from .callbacks import around
 
 @around(inherit=False)
 def open_file(argument: str, mode="r", *args, **kwargs):
+    """Attempts to open the file given as the provided argument.
+    Is not inherited by subcommands
+
+    Args:
+        argument (str): Name of the argument to attempt to open as a file
+        mode (str, optional): Mode to open the file in. Defaults to "r" (read).
+
+    All other arguments are passed to the `open()` call
+
+    Raises:
+        ActionError: If the provided path is not a file
+
+    """
+
     def inner(arguments: dict):
         filepath = arguments[argument]
         if not os.path.isfile(filepath):

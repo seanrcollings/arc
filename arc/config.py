@@ -10,21 +10,25 @@ class ConfigBase:
     ENV_PREFIX: str = ""
     last_loaded: str = ""
 
-    def from_file(self, filename: str, required: bool = False):
+    def from_file(self, filename: str, required: bool = False) -> bool:
         """Load configuration attributes from a file
 
-        :param filename: the file to read
-        :param required: whether or not a missing file raises an exception
+        Args:
+            filename: the file to read
+            required: whether or not a missing file raises an exception
+
+        Raises:
+            ArcError: if required is `True` and the file does not exist
         """
         config_file = Path(filename).expanduser().resolve()
 
         if not config_file.is_file():
             if not required:
-                return
+                return False
             raise errors.ArcError(f"File '{filename}' does not exist / is not a file")
 
         if str(config_file) == self.last_loaded:
-            return
+            return True
 
         self.last_loaded = str(config_file)
         file = config_file.open()
@@ -37,15 +41,17 @@ class ConfigBase:
 
         parsed = self.parse(lines)
         self.set_values(parsed)
+        return True
 
     def from_env(self, prefix: str = None, upper: bool = True):
         """Loads configuration attributes from environment variables
 
-        :param prefix: an optional common prefix for all env configuration options.
-        For example, if the attribute is `mode` the prefix is `arc_` and the
-        enviroment variable would be expected to be `arc_mode`
-        :param upper: whether to assume that the environment variable is uppercase, defaults
-        to `True`
+        Args:
+            prefix: an optional common prefix for all env configuration options.
+                For example, if the attribute is `mode` the prefix is `arc_` and the
+                enviroment variable would be expected to be `arc_mode`
+            upper: whether to assume that the environment variable is uppercase, defaults
+                to `True`
         """
         prefix = prefix or self.ENV_PREFIX
         attrs = [a for a in vars(self) if not a.startswith("__")]
@@ -61,7 +67,17 @@ class ConfigBase:
         self.set_values(values)
 
     def parse(self, lines: list[str]):
+        """Parses the configuration file
 
+        Args:
+            lines (list[str]): Lines of the file
+
+        Raises:
+            errors.ArcError: If the config does not follow a `key=value` format
+
+        Returns:
+            `dict[str, any]`: Dictionary of key-value pairs loaded
+        """
         parsed = {}
         try:
             for line in lines:
@@ -75,6 +91,14 @@ class ConfigBase:
         return parsed
 
     def set_values(self, parsed: dict):
+        """Handles setting the parsed config data
+
+        Args:
+            parsed (dict): Data returned by `parse()`
+
+        Raises:
+            errors.ArcError: If an item in the dictionary doesn't exist on the config object
+        """
         for key, value in parsed.items():
             if not hasattr(self, key):
                 raise errors.ArcError(f"Cannot set `{key}`")
@@ -106,18 +130,34 @@ class ConfigBase:
         return value
 
     def post_load(self):
-        ...
+        """Executed after a loading a config from file or from env
+        for post-load setup
+        """
 
 
 @dataclass
 class Config(ConfigBase):
+    """Arc Config object. All arguments have default values,
+    so the configuration file is not required by default"""
+
     ENV_PREFIX = "ARC_"
     namespace_sep: str = ":"
+    """Character to seperate command names: `parent:child:granchild`"""
     arg_assignment: str = "="
+    """Character to seperate argument names from argument values
+    when parsing via keyword `name=value`"""
     flag_denoter: str = "--"
+    """Characters the proceed a flag argument: `--flag`"""
     short_flag_denoter: str = "-"
+    """Characters that proceed a shortened flag `-f`"""
     mode: str = "production"
+    """The current mode of the application, possible values:
+    - production
+    - development
+    - test
+    """
     loglevel: int = 30
+    """The level to set the `arc_logger`"""
 
     def __post_init__(self):
         self.post_load()

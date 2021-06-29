@@ -1,3 +1,6 @@
+"""
+.. include:: ../README.md
+"""
 from arc.config import config
 from arc.cli import CLI, run
 from arc.command import Context, namespace, ParsingMethod
