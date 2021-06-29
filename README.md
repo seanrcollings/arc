@@ -8,7 +8,7 @@ A tool for building declartive, and highly extendable CLI systems for Python 3.9
 - User-extension via Dynamic namespace loading
 
 # Docs
-- [Wiki](https://github.com/seanrcollings/arc/wiki)
+- [Docs](http://arc.seanrcollings.com)
 - [Changelog](https://github.com/seanrcollings/arc/wiki/Changelog)
 
 # Installation
