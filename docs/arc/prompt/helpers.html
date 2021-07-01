@@ -31,6 +31,9 @@
                     <h2>API Documentation</h2>
                         <ul class="memberlist">
             <li>
+                    <a class="function" href="#clear_line">clear_line</a>
+            </li>
+            <li>
                     <a class="function" href="#write">write</a>
             </li>
     </ul>
@@ -51,10 +54,21 @@
                 
                         <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
+            <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">import</span> <span class="nn">sys</span>
 
 <span class="n">PREVIOUS_LINE</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[F&quot;</span>
-<span class="n">CLEAR_LINE</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[K&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">clear_line</span><span class="p">(</span><span class="n">amount</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;before&quot;</span><span class="p">,</span> <span class="s2">&quot;after&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">amount</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+        <span class="n">num</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="k">elif</span> <span class="n">amount</span> <span class="o">==</span> <span class="s2">&quot;before&quot;</span><span class="p">:</span>
+        <span class="n">num</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">num</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[</span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2">K&quot;</span>
 
 
 <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
@@ -64,6 +78,32 @@
         </details>
 
             </section>
+                <section id="clear_line">
+                            <div class="attr function"><a class="headerlink" href="#clear_line">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">clear_line</span><span class="signature">(amount: Literal[&#39;all&#39;, &#39;before&#39;, &#39;after&#39;] = &#39;all&#39;)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">clear_line</span><span class="p">(</span><span class="n">amount</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;before&quot;</span><span class="p">,</span> <span class="s2">&quot;after&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">amount</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+        <span class="n">num</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="k">elif</span> <span class="n">amount</span> <span class="o">==</span> <span class="s2">&quot;before&quot;</span><span class="p">:</span>
+        <span class="n">num</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">num</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[</span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2">K&quot;</span>
+</pre></div>
+
+        </details>
+
+    
+
+                </section>
                 <section id="write">
                             <div class="attr function"><a class="headerlink" href="#write">#&nbsp;&nbsp</a>
 

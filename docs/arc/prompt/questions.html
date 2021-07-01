@@ -46,10 +46,31 @@
                     <a class="class" href="#Question">Question</a>
                             <ul class="memberlist">
                         <li>
+                                <a class="variable" href="#Question.multi_line">multi_line</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Question.sensitive">sensitive</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#Question.render">render</a>
                         </li>
                         <li>
                                 <a class="function" href="#Question.handle_answer">handle_answer</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
+                    <a class="class" href="#InputQuestion">InputQuestion</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#InputQuestion.__init__">InputQuestion</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#InputQuestion.render">render</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#InputQuestion.handle_answer">handle_answer</a>
                         </li>
                 </ul>
 
@@ -88,7 +109,7 @@
                     <a class="class" href="#ConfirmQuestion">ConfirmQuestion</a>
                             <ul class="memberlist">
                         <li>
-                                <a class="function" href="#ConfirmQuestion.__init__">ConfirmQuestion</a>
+                                <a class="variable" href="#ConfirmQuestion.multi_line">multi_line</a>
                         </li>
                         <li>
                                 <a class="variable" href="#ConfirmQuestion.result">result</a>
@@ -123,6 +144,7 @@
             <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">fg</span><span class="p">,</span> <span class="n">effects</span>
+<span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">errors</span>
 
 <span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
 
@@ -151,11 +173,19 @@
     <span class="k">return</span> <span class="n">wrapper</span>
 
 
-<span class="k">class</span> <span class="nc">QuestionError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">QuestionError</span><span class="p">(</span><span class="n">errors</span><span class="o">.</span><span class="n">ArcError</span><span class="p">):</span>
     <span class="o">...</span>
 
 
 <span class="k">class</span> <span class="nc">Question</span><span class="p">(</span><span class="n">ABC</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
+    <span class="n">multi_line</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">sensitive</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="sd">&quot;&quot;&quot;Sensitive questions are those  who&#39;s answer</span>
+<span class="sd">    shouldn&#39;t be echoed to the terminal like passwords&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">desc</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">desc</span> <span class="o">=</span> <span class="n">desc</span>
+
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Returns a string repersentation of the question&quot;&quot;&quot;</span>
@@ -163,6 +193,28 @@
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">handle_answer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">answer</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Handles the user&#39;s input for the question&quot;&quot;&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">InputQuestion</span><span class="p">(</span><span class="n">Question</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">desc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">empty</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">sensitive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">multi_line</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">desc</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">empty</span> <span class="o">=</span> <span class="n">empty</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensitive</span> <span class="o">=</span> <span class="n">sensitive</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">multi_line</span> <span class="o">=</span> <span class="n">multi_line</span>
+
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">desc</span>
+
+    <span class="k">def</span> <span class="nf">handle_answer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">answer</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QuestionError</span><span class="p">(</span><span class="s2">&quot;Cannot be blank&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">answer</span>
 
 
 <span class="n">MultipleReturn</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span>
@@ -181,7 +233,8 @@
 <span class="sd">    if `multiple_answer = True`, the user can choose multiple options (1,2,3)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">choices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">multiple_answer</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">desc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">choices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">multiple_answer</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">desc</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">choices</span> <span class="o">=</span> <span class="n">choices</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">multiple_answer</span> <span class="o">=</span> <span class="n">multiple_answer</span>
 
@@ -190,7 +243,7 @@
             <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">choice</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">choice</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">choices</span><span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">choices</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_multiple_answer</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">desc</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">choices</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_multiple_answer</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_render_multiple_answer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiple_answer</span><span class="p">:</span>
@@ -218,12 +271,13 @@
 <span class="k">class</span> <span class="nc">RangeQuestion</span><span class="p">(</span><span class="n">Question</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
     <span class="sd">&quot;&quot;&quot;Question for a number in a given range&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">min</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">max</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">desc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">min</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">max</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            min: the smallest number possible</span>
 <span class="sd">            max: the largest  number possible</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">desc</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min</span> <span class="o">=</span> <span class="nb">min</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max</span> <span class="o">=</span> <span class="nb">max</span>
 
@@ -244,6 +298,8 @@
 <span class="sd">    `confirm()` is an alias for asking this question</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="n">multi_line</span> <span class="o">=</span> <span class="kc">False</span>
+
     <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
         <span class="s2">&quot;yes&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
@@ -251,11 +307,8 @@
         <span class="s2">&quot;no&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
-
     <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">GREEN</span><span class="si">}</span><span class="s2">Y</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">RED</span><span class="si">}</span><span class="s2">N</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">]&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">desc</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">GREEN</span><span class="si">}</span><span class="s2">Y</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">RED</span><span class="si">}</span><span class="s2">N</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">] &quot;</span>
 
     <span class="k">def</span> <span class="nf">handle_answer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">answer</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">answer</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">:</span>
@@ -336,26 +389,26 @@ the decorated function.</p>
 
         
         <span class="def">class</span>
-        <span class="name">QuestionError</span><wbr>(<span class="base">builtins.Exception</span>):
+        <span class="name">QuestionError</span><wbr>(<span class="base"><a href="../errors.html#ArcError">arc.errors.ArcError</a></span>):
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">QuestionError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">QuestionError</span><span class="p">(</span><span class="n">errors</span><span class="o">.</span><span class="n">ArcError</span><span class="p">):</span>
     <span class="o">...</span>
 </pre></div>
 
         </details>
 
-            <div class="docstring"><p>Common base class for all non-exit exceptions.</p>
+            <div class="docstring"><p>Base Arc Exception</p>
 </div>
 
 
                             <div class="inherited">
                                 <h5>Inherited Members</h5>
                                 <dl>
-                                    <div><dt>builtins.Exception</dt>
-                                <dd id="QuestionError.__init__" class="function">Exception</dd>
+                                    <div><dt><a href="../errors.html#ArcError">arc.errors.ArcError</a></dt>
+                                <dd id="QuestionError.__init__" class="function"><a href="../errors.html#ArcError.__init__">ArcError</a></dd>
 
             </div>
             <div><dt>builtins.BaseException</dt>
@@ -378,6 +431,14 @@ the decorated function.</p>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">Question</span><span class="p">(</span><span class="n">ABC</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
+    <span class="n">multi_line</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">sensitive</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="sd">&quot;&quot;&quot;Sensitive questions are those  who&#39;s answer</span>
+<span class="sd">    shouldn&#39;t be echoed to the terminal like passwords&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">desc</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">desc</span> <span class="o">=</span> <span class="n">desc</span>
+
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Returns a string repersentation of the question&quot;&quot;&quot;</span>
@@ -394,6 +455,27 @@ inheritance.</p>
 </div>
 
 
+                            <div id="Question.multi_line" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#Question.multi_line">#&nbsp;&nbsp</a>
+
+        <span class="name">multi_line</span><span class="default_value"> = True</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="Question.sensitive" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#Question.sensitive">#&nbsp;&nbsp</a>
+
+        <span class="name">sensitive</span><span class="default_value"> = False</span>
+    </div>
+
+            <div class="docstring"><p>Sensitive questions are those  who's answer
+shouldn't be echoed to the terminal like passwords</p>
+</div>
+
+
+                            </div>
                             <div id="Question.render" class="classattr">
                                         <div class="attr function"><a class="headerlink" href="#Question.render">#&nbsp;&nbsp</a>
 
@@ -441,6 +523,133 @@ inheritance.</p>
 
                             </div>
                 </section>
+                <section id="InputQuestion">
+                                <div class="attr class">
+        <a class="headerlink" href="#InputQuestion">#&nbsp;&nbsp</a>
+
+        
+        <span class="def">class</span>
+        <span class="name">InputQuestion</span><wbr>(<span class="base">abc.ABC</span>, <span class="base">typing.Generic[~T]</span>):
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">InputQuestion</span><span class="p">(</span><span class="n">Question</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">desc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">empty</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">sensitive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">multi_line</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">desc</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">empty</span> <span class="o">=</span> <span class="n">empty</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensitive</span> <span class="o">=</span> <span class="n">sensitive</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">multi_line</span> <span class="o">=</span> <span class="n">multi_line</span>
+
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">desc</span>
+
+    <span class="k">def</span> <span class="nf">handle_answer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">answer</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QuestionError</span><span class="p">(</span><span class="s2">&quot;Cannot be blank&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">answer</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+</div>
+
+
+                            <div id="InputQuestion.__init__" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#InputQuestion.__init__">#&nbsp;&nbsp</a>
+
+        
+            <span class="name">InputQuestion</span><span class="signature">(
+    desc: str,
+    empty: bool = True,
+    sensitive: bool = False,
+    multi_line: bool = False
+)</span>
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">desc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">empty</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">sensitive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">multi_line</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">desc</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">empty</span> <span class="o">=</span> <span class="n">empty</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensitive</span> <span class="o">=</span> <span class="n">sensitive</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">multi_line</span> <span class="o">=</span> <span class="n">multi_line</span>
+</pre></div>
+
+        </details>
+
+    
+
+                            </div>
+                            <div id="InputQuestion.render" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#InputQuestion.render">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">render</span><span class="signature">(self) -&gt; str</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">desc</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Returns a string repersentation of the question</p>
+</div>
+
+
+                            </div>
+                            <div id="InputQuestion.handle_answer" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#InputQuestion.handle_answer">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">handle_answer</span><span class="signature">(self, answer: str)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">handle_answer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">answer</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QuestionError</span><span class="p">(</span><span class="s2">&quot;Cannot be blank&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">answer</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Handles the user's input for the question</p>
+</div>
+
+
+                            </div>
+                            <div class="inherited">
+                                <h5>Inherited Members</h5>
+                                <dl>
+                                    <div><dt><a href="#Question">Question</a></dt>
+                                <dd id="InputQuestion.sensitive" class="variable"><a href="#Question.sensitive">sensitive</a></dd>
+                <dd id="InputQuestion.multi_line" class="variable"><a href="#Question.multi_line">multi_line</a></dd>
+
+            </div>
+                                </dl>
+                            </div>
+                </section>
                 <section id="MultipleChoiceQuestion">
                                 <div class="attr class">
         <a class="headerlink" href="#MultipleChoiceQuestion">#&nbsp;&nbsp</a>
@@ -465,7 +674,8 @@ inheritance.</p>
 <span class="sd">    if `multiple_answer = True`, the user can choose multiple options (1,2,3)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">choices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">multiple_answer</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">desc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">choices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">multiple_answer</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">desc</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">choices</span> <span class="o">=</span> <span class="n">choices</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">multiple_answer</span> <span class="o">=</span> <span class="n">multiple_answer</span>
 
@@ -474,7 +684,7 @@ inheritance.</p>
             <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">choice</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">choice</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">choices</span><span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">choices</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_multiple_answer</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">desc</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">choices</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_multiple_answer</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_render_multiple_answer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiple_answer</span><span class="p">:</span>
@@ -517,12 +727,13 @@ inheritance.</p>
                                         <div class="attr function"><a class="headerlink" href="#MultipleChoiceQuestion.__init__">#&nbsp;&nbsp</a>
 
         
-            <span class="name">MultipleChoiceQuestion</span><span class="signature">(choices: list, multiple_answer: bool = False)</span>
+            <span class="name">MultipleChoiceQuestion</span><span class="signature">(desc: str, choices: list, multiple_answer: bool = False)</span>
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">choices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">multiple_answer</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">desc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">choices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">multiple_answer</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">desc</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">choices</span> <span class="o">=</span> <span class="n">choices</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">multiple_answer</span> <span class="o">=</span> <span class="n">multiple_answer</span>
 </pre></div>
@@ -547,7 +758,7 @@ inheritance.</p>
             <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">choice</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">choice</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">choices</span><span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">choices</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_multiple_answer</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">desc</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">choices</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_multiple_answer</span><span class="p">()</span>
 </pre></div>
 
         </details>
@@ -580,6 +791,16 @@ inheritance.</p>
 
 
                             </div>
+                            <div class="inherited">
+                                <h5>Inherited Members</h5>
+                                <dl>
+                                    <div><dt><a href="#Question">Question</a></dt>
+                                <dd id="MultipleChoiceQuestion.multi_line" class="variable"><a href="#Question.multi_line">multi_line</a></dd>
+                <dd id="MultipleChoiceQuestion.sensitive" class="variable"><a href="#Question.sensitive">sensitive</a></dd>
+
+            </div>
+                                </dl>
+                            </div>
                 </section>
                 <section id="RangeQuestion">
                                 <div class="attr class">
@@ -595,12 +816,13 @@ inheritance.</p>
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RangeQuestion</span><span class="p">(</span><span class="n">Question</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
     <span class="sd">&quot;&quot;&quot;Question for a number in a given range&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">min</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">max</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">desc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">min</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">max</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            min: the smallest number possible</span>
 <span class="sd">            max: the largest  number possible</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">desc</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min</span> <span class="o">=</span> <span class="nb">min</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max</span> <span class="o">=</span> <span class="nb">max</span>
 
@@ -625,17 +847,18 @@ inheritance.</p>
                                         <div class="attr function"><a class="headerlink" href="#RangeQuestion.__init__">#&nbsp;&nbsp</a>
 
         
-            <span class="name">RangeQuestion</span><span class="signature">(min: int, max: int)</span>
+            <span class="name">RangeQuestion</span><span class="signature">(desc: str, min: int, max: int)</span>
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">min</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">max</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">desc</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">min</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">max</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            min: the smallest number possible</span>
 <span class="sd">            max: the largest  number possible</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">desc</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min</span> <span class="o">=</span> <span class="nb">min</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max</span> <span class="o">=</span> <span class="nb">max</span>
 </pre></div>
@@ -695,6 +918,16 @@ inheritance.</p>
     
 
                             </div>
+                            <div class="inherited">
+                                <h5>Inherited Members</h5>
+                                <dl>
+                                    <div><dt><a href="#Question">Question</a></dt>
+                                <dd id="RangeQuestion.multi_line" class="variable"><a href="#Question.multi_line">multi_line</a></dd>
+                <dd id="RangeQuestion.sensitive" class="variable"><a href="#Question.sensitive">sensitive</a></dd>
+
+            </div>
+                                </dl>
+                            </div>
                 </section>
                 <section id="ConfirmQuestion">
                                 <div class="attr class">
@@ -713,6 +946,8 @@ inheritance.</p>
 <span class="sd">    `confirm()` is an alias for asking this question</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="n">multi_line</span> <span class="o">=</span> <span class="kc">False</span>
+
     <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
         <span class="s2">&quot;yes&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
@@ -720,11 +955,8 @@ inheritance.</p>
         <span class="s2">&quot;no&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
-
     <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">GREEN</span><span class="si">}</span><span class="s2">Y</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">RED</span><span class="si">}</span><span class="s2">N</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">]&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">desc</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">GREEN</span><span class="si">}</span><span class="s2">Y</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">RED</span><span class="si">}</span><span class="s2">N</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">] &quot;</span>
 
     <span class="k">def</span> <span class="nf">handle_answer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">answer</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">answer</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">:</span>
@@ -744,20 +976,11 @@ inheritance.</p>
 </div>
 
 
-                            <div id="ConfirmQuestion.__init__" class="classattr">
-                                        <div class="attr function"><a class="headerlink" href="#ConfirmQuestion.__init__">#&nbsp;&nbsp</a>
+                            <div id="ConfirmQuestion.multi_line" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#ConfirmQuestion.multi_line">#&nbsp;&nbsp</a>
 
-        
-            <span class="name">ConfirmQuestion</span><span class="signature">(message: str)</span>
+        <span class="name">multi_line</span><span class="default_value"> = False</span>
     </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
-</pre></div>
-
-        </details>
 
     
 
@@ -782,7 +1005,7 @@ inheritance.</p>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">GREEN</span><span class="si">}</span><span class="s2">Y</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">RED</span><span class="si">}</span><span class="s2">N</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">]&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">desc</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">GREEN</span><span class="si">}</span><span class="s2">Y</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">RED</span><span class="si">}</span><span class="s2">N</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">] &quot;</span>
 </pre></div>
 
         </details>
@@ -818,6 +1041,16 @@ inheritance.</p>
 </div>
 
 
+                            </div>
+                            <div class="inherited">
+                                <h5>Inherited Members</h5>
+                                <dl>
+                                    <div><dt><a href="#Question">Question</a></dt>
+                                <dd id="ConfirmQuestion.__init__" class="function"><a href="#Question.__init__">Question</a></dd>
+                <dd id="ConfirmQuestion.sensitive" class="variable"><a href="#Question.sensitive">sensitive</a></dd>
+
+            </div>
+                                </dl>
                             </div>
                 </section>
     </main>

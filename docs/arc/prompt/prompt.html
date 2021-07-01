@@ -46,6 +46,9 @@
                                 <a class="function" href="#Prompt.confirm">confirm</a>
                         </li>
                         <li>
+                                <a class="function" href="#Prompt.input">input</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#Prompt.beautify">beautify</a>
                         </li>
                         <li>
@@ -97,10 +100,11 @@
                         <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">TypeVar</span>
+<span class="kn">from</span> <span class="nn">getpass</span> <span class="kn">import</span> <span class="n">getpass</span>
 
 <span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">fg</span><span class="p">,</span> <span class="n">effects</span>
-<span class="kn">from</span> <span class="nn">.helpers</span> <span class="kn">import</span> <span class="n">write</span><span class="p">,</span> <span class="n">CLEAR_LINE</span><span class="p">,</span> <span class="n">PREVIOUS_LINE</span>
-<span class="kn">from</span> <span class="nn">.questions</span> <span class="kn">import</span> <span class="n">Question</span><span class="p">,</span> <span class="n">QuestionError</span><span class="p">,</span> <span class="n">ConfirmQuestion</span>
+<span class="kn">from</span> <span class="nn">.helpers</span> <span class="kn">import</span> <span class="n">write</span><span class="p">,</span> <span class="n">PREVIOUS_LINE</span><span class="p">,</span> <span class="n">clear_line</span>
+<span class="kn">from</span> <span class="nn">.questions</span> <span class="kn">import</span> <span class="n">Question</span><span class="p">,</span> <span class="n">QuestionError</span><span class="p">,</span> <span class="n">ConfirmQuestion</span><span class="p">,</span> <span class="n">InputQuestion</span>
 
 
 <span class="n">V</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;V&quot;</span><span class="p">)</span>
@@ -126,9 +130,13 @@
 <span class="sd">        ```</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_emojis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">color_output</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&gt; &quot;</span><span class="p">,</span> <span class="n">show_emojis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">color_output</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
+<span class="sd">            prompt (str, optional): What to display before the cursor when</span>
+<span class="sd">                asking a question. Defaults to `&#39;&gt; &#39;`</span>
 <span class="sd">            show_emojis (bool, optional): Whether or not to display the</span>
 <span class="sd">                icons / emojis when printing messages with the display</span>
 <span class="sd">                methods below. Defaults to True.</span>
@@ -136,6 +144,7 @@
 <span class="sd">                do color the output of each of the display methods below.</span>
 <span class="sd">                Defaults to True.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prompt</span> <span class="o">=</span> <span class="n">prompt</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">show_emojis</span> <span class="o">=</span> <span class="n">show_emojis</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">color_output</span> <span class="o">=</span> <span class="n">color_output</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_previous_answers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -146,31 +155,45 @@
 <span class="sd">        have their answers stored in here&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_previous_answers</span>
 
-    <span class="k">def</span> <span class="nf">ask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">question</span><span class="p">:</span> <span class="n">Question</span><span class="p">[</span><span class="n">V</span><span class="p">],</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">V</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">ask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">question</span><span class="p">:</span> <span class="n">Question</span><span class="p">[</span><span class="n">V</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">V</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Ask a question</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            question (Question[V]): Question object to ask. Each question</span>
 <span class="sd">                object handles it&#39;s rendering and answering differently</span>
-<span class="sd">            description (str, optional): Description to preface the</span>
-<span class="sd">                question with. Defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            V: The type that the particular Question returns</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">description</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="n">question</span><span class="o">.</span><span class="n">render</span><span class="p">())</span>
+        <span class="c1"># TODO: currently, sensitive questions</span>
+        <span class="c1"># can&#39;t display errors</span>
+        <span class="k">def</span> <span class="nf">get_input</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">question</span><span class="o">.</span><span class="n">sensitive</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">getpass</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">input</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">question</span><span class="o">.</span><span class="n">multi_line</span><span class="p">:</span>
+            <span class="n">write</span><span class="p">(</span><span class="n">question</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
         <span class="n">answer</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">has_failed</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">while</span> <span class="n">answer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">user_input</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">CLEAR_LINE</span><span class="si">}</span><span class="s2">&gt; &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="n">user_input</span> <span class="o">=</span> <span class="n">get_input</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">PREVIOUS_LINE</span> <span class="k">if</span> <span class="n">has_failed</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="o">+</span> <span class="n">clear_line</span><span class="p">()</span>
+                <span class="o">+</span> <span class="p">(</span><span class="n">question</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">question</span><span class="o">.</span><span class="n">multi_line</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">prompt</span>
+            <span class="p">)</span>
+
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">answer</span> <span class="o">=</span> <span class="n">question</span><span class="o">.</span><span class="n">handle_answer</span><span class="p">(</span><span class="n">user_input</span><span class="p">)</span>
             <span class="k">except</span> <span class="n">QuestionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PREVIOUS_LINE</span><span class="si">}{</span><span class="n">PREVIOUS_LINE</span><span class="si">}{</span><span class="n">CLEAR_LINE</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">write</span><span class="p">(</span><span class="n">clear_line</span><span class="p">())</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="n">has_failed</span> <span class="o">=</span> <span class="kc">True</span>
 
+        <span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># get past the error message</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_previous_answers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">answer</span>
 
@@ -178,12 +201,26 @@
         <span class="sd">&quot;&quot;&quot;Request a Y/N answer from the user</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            message (str): Message to display to the user</span>
+<span class="sd">            desc (str): Message to display to the user</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            bool: The user&#39;s answer to the question</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">question</span> <span class="o">=</span> <span class="n">ConfirmQuestion</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="n">question</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Gather input from the user_input</span>
+
+<span class="sd">        Is an alias for the `InputQuestion` type</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            desc (str): Message to display to the user</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: The user&#39;s input</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">question</span> <span class="o">=</span> <span class="n">InputQuestion</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="n">question</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">beautify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">emoji</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -264,9 +301,13 @@
 <span class="sd">        ```</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_emojis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">color_output</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&gt; &quot;</span><span class="p">,</span> <span class="n">show_emojis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">color_output</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
+<span class="sd">            prompt (str, optional): What to display before the cursor when</span>
+<span class="sd">                asking a question. Defaults to `&#39;&gt; &#39;`</span>
 <span class="sd">            show_emojis (bool, optional): Whether or not to display the</span>
 <span class="sd">                icons / emojis when printing messages with the display</span>
 <span class="sd">                methods below. Defaults to True.</span>
@@ -274,6 +315,7 @@
 <span class="sd">                do color the output of each of the display methods below.</span>
 <span class="sd">                Defaults to True.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prompt</span> <span class="o">=</span> <span class="n">prompt</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">show_emojis</span> <span class="o">=</span> <span class="n">show_emojis</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">color_output</span> <span class="o">=</span> <span class="n">color_output</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_previous_answers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -284,31 +326,45 @@
 <span class="sd">        have their answers stored in here&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_previous_answers</span>
 
-    <span class="k">def</span> <span class="nf">ask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">question</span><span class="p">:</span> <span class="n">Question</span><span class="p">[</span><span class="n">V</span><span class="p">],</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">V</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">ask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">question</span><span class="p">:</span> <span class="n">Question</span><span class="p">[</span><span class="n">V</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">V</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Ask a question</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            question (Question[V]): Question object to ask. Each question</span>
 <span class="sd">                object handles it&#39;s rendering and answering differently</span>
-<span class="sd">            description (str, optional): Description to preface the</span>
-<span class="sd">                question with. Defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            V: The type that the particular Question returns</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">description</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="n">question</span><span class="o">.</span><span class="n">render</span><span class="p">())</span>
+        <span class="c1"># TODO: currently, sensitive questions</span>
+        <span class="c1"># can&#39;t display errors</span>
+        <span class="k">def</span> <span class="nf">get_input</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">question</span><span class="o">.</span><span class="n">sensitive</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">getpass</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">input</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">question</span><span class="o">.</span><span class="n">multi_line</span><span class="p">:</span>
+            <span class="n">write</span><span class="p">(</span><span class="n">question</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
         <span class="n">answer</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">has_failed</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">while</span> <span class="n">answer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">user_input</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">CLEAR_LINE</span><span class="si">}</span><span class="s2">&gt; &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="n">user_input</span> <span class="o">=</span> <span class="n">get_input</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">PREVIOUS_LINE</span> <span class="k">if</span> <span class="n">has_failed</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="o">+</span> <span class="n">clear_line</span><span class="p">()</span>
+                <span class="o">+</span> <span class="p">(</span><span class="n">question</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">question</span><span class="o">.</span><span class="n">multi_line</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">prompt</span>
+            <span class="p">)</span>
+
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">answer</span> <span class="o">=</span> <span class="n">question</span><span class="o">.</span><span class="n">handle_answer</span><span class="p">(</span><span class="n">user_input</span><span class="p">)</span>
             <span class="k">except</span> <span class="n">QuestionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PREVIOUS_LINE</span><span class="si">}{</span><span class="n">PREVIOUS_LINE</span><span class="si">}{</span><span class="n">CLEAR_LINE</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">write</span><span class="p">(</span><span class="n">clear_line</span><span class="p">())</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="n">has_failed</span> <span class="o">=</span> <span class="kc">True</span>
 
+        <span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># get past the error message</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_previous_answers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">answer</span>
 
@@ -316,12 +372,26 @@
         <span class="sd">&quot;&quot;&quot;Request a Y/N answer from the user</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            message (str): Message to display to the user</span>
+<span class="sd">            desc (str): Message to display to the user</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            bool: The user&#39;s answer to the question</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">question</span> <span class="o">=</span> <span class="n">ConfirmQuestion</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="n">question</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Gather input from the user_input</span>
+
+<span class="sd">        Is an alias for the `InputQuestion` type</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            desc (str): Message to display to the user</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: The user&#39;s input</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">question</span> <span class="o">=</span> <span class="n">InputQuestion</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="n">question</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">beautify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">emoji</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -397,14 +467,22 @@
                                         <div class="attr function"><a class="headerlink" href="#Prompt.__init__">#&nbsp;&nbsp</a>
 
         
-            <span class="name">Prompt</span><span class="signature">(show_emojis: bool = True, color_output: bool = True)</span>
+            <span class="name">Prompt</span><span class="signature">(
+    prompt: str = &#39;&gt; &#39;,
+    show_emojis: bool = True,
+    color_output: bool = True
+)</span>
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_emojis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">color_output</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&gt; &quot;</span><span class="p">,</span> <span class="n">show_emojis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">color_output</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
+<span class="sd">            prompt (str, optional): What to display before the cursor when</span>
+<span class="sd">                asking a question. Defaults to `&#39;&gt; &#39;`</span>
 <span class="sd">            show_emojis (bool, optional): Whether or not to display the</span>
 <span class="sd">                icons / emojis when printing messages with the display</span>
 <span class="sd">                methods below. Defaults to True.</span>
@@ -412,6 +490,7 @@
 <span class="sd">                do color the output of each of the display methods below.</span>
 <span class="sd">                Defaults to True.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prompt</span> <span class="o">=</span> <span class="n">prompt</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">show_emojis</span> <span class="o">=</span> <span class="n">show_emojis</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">color_output</span> <span class="o">=</span> <span class="n">color_output</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_previous_answers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -422,6 +501,8 @@
             <div class="docstring"><h6 id="args">Args</h6>
 
 <ul>
+<li><strong>prompt (str, optional):</strong>  What to display before the cursor when
+asking a question. Defaults to <code>'&gt; '</code></li>
 <li><strong>show_emojis (bool, optional):</strong>  Whether or not to display the
 icons / emojis when printing messages with the display
 methods below. Defaults to True.</li>
@@ -450,40 +531,50 @@ have their answers stored in here</p>
 
         
             <span class="def">def</span>
-            <span class="name">ask</span><span class="signature">(
-    self,
-    question: <a href="questions.html#Question">arc.prompt.questions.Question</a>[~V],
-    description: str = None
-) -&gt; ~V</span>:
+            <span class="name">ask</span><span class="signature">(self, question: <a href="questions.html#Question">arc.prompt.questions.Question</a>[~V]) -&gt; ~V</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">ask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">question</span><span class="p">:</span> <span class="n">Question</span><span class="p">[</span><span class="n">V</span><span class="p">],</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">V</span><span class="p">:</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">ask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">question</span><span class="p">:</span> <span class="n">Question</span><span class="p">[</span><span class="n">V</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">V</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Ask a question</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            question (Question[V]): Question object to ask. Each question</span>
 <span class="sd">                object handles it&#39;s rendering and answering differently</span>
-<span class="sd">            description (str, optional): Description to preface the</span>
-<span class="sd">                question with. Defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            V: The type that the particular Question returns</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">description</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="n">question</span><span class="o">.</span><span class="n">render</span><span class="p">())</span>
+        <span class="c1"># TODO: currently, sensitive questions</span>
+        <span class="c1"># can&#39;t display errors</span>
+        <span class="k">def</span> <span class="nf">get_input</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">question</span><span class="o">.</span><span class="n">sensitive</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">getpass</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">input</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">question</span><span class="o">.</span><span class="n">multi_line</span><span class="p">:</span>
+            <span class="n">write</span><span class="p">(</span><span class="n">question</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
         <span class="n">answer</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">has_failed</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">while</span> <span class="n">answer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">user_input</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">CLEAR_LINE</span><span class="si">}</span><span class="s2">&gt; &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="n">user_input</span> <span class="o">=</span> <span class="n">get_input</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">PREVIOUS_LINE</span> <span class="k">if</span> <span class="n">has_failed</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="o">+</span> <span class="n">clear_line</span><span class="p">()</span>
+                <span class="o">+</span> <span class="p">(</span><span class="n">question</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">question</span><span class="o">.</span><span class="n">multi_line</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">prompt</span>
+            <span class="p">)</span>
+
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">answer</span> <span class="o">=</span> <span class="n">question</span><span class="o">.</span><span class="n">handle_answer</span><span class="p">(</span><span class="n">user_input</span><span class="p">)</span>
             <span class="k">except</span> <span class="n">QuestionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">PREVIOUS_LINE</span><span class="si">}{</span><span class="n">PREVIOUS_LINE</span><span class="si">}{</span><span class="n">CLEAR_LINE</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">write</span><span class="p">(</span><span class="n">clear_line</span><span class="p">())</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="n">has_failed</span> <span class="o">=</span> <span class="kc">True</span>
 
+        <span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># get past the error message</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_previous_answers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">answer</span>
 </pre></div>
@@ -497,8 +588,6 @@ have their answers stored in here</p>
 <ul>
 <li><strong>question (Question[V]):</strong>  Question object to ask. Each question
 object handles it's rendering and answering differently</li>
-<li><strong>description (str, optional):</strong>  Description to preface the
-question with. Defaults to None.</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -524,7 +613,7 @@ question with. Defaults to None.</li>
         <span class="sd">&quot;&quot;&quot;Request a Y/N answer from the user</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            message (str): Message to display to the user</span>
+<span class="sd">            desc (str): Message to display to the user</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            bool: The user&#39;s answer to the question</span>
@@ -540,13 +629,59 @@ question with. Defaults to None.</li>
 <h6 id="args">Args</h6>
 
 <ul>
-<li><strong>message (str):</strong>  Message to display to the user</li>
+<li><strong>desc (str):</strong>  Message to display to the user</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
 
 <blockquote>
   <p>bool: The user's answer to the question</p>
+</blockquote>
+</div>
+
+
+                            </div>
+                            <div id="Prompt.input" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Prompt.input">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">input</span><span class="signature">(self, *args, **kwargs) -&gt; str</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Gather input from the user_input</span>
+
+<span class="sd">        Is an alias for the `InputQuestion` type</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            desc (str): Message to display to the user</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: The user&#39;s input</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">question</span> <span class="o">=</span> <span class="n">InputQuestion</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="n">question</span><span class="p">)</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Gather input from the user_input</p>
+
+<p>Is an alias for the <code>InputQuestion</code> type</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>desc (str):</strong>  Message to display to the user</li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<blockquote>
+  <p>str: The user's input</p>
 </blockquote>
 </div>
 

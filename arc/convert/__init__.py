@@ -1,5 +1,5 @@
 """
-.. include:: ../../docs/Data-Types.md
+.. include:: ../../wiki/Data-Types.md
 """
 from arc.errors import ConversionError, CommandError
 from arc.color import fg, effects as ef
