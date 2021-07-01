@@ -10,4 +10,4 @@ from arc.logging import logger
 
 NO_OP = NoOpError()
 
-__version__ = "3.0b1"
+__version__ = "3.0.0b2"

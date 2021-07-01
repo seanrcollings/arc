@@ -79,6 +79,9 @@
                                 <a class="variable" href="#fg.GREY">GREY</a>
                         </li>
                         <li>
+                                <a class="variable" href="#fg.ARC_BLUE">ARC_BLUE</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#fg.rgb">rgb</a>
                         </li>
                         <li>
@@ -116,6 +119,12 @@
                         </li>
                         <li>
                                 <a class="variable" href="#bg.WHITE">WHITE</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#bg.GREY">GREY</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#bg.ARC_BLUE">ARC_BLUE</a>
                         </li>
                         <li>
                                 <a class="function" href="#bg.rgb">rgb</a>
@@ -216,15 +225,16 @@
 <span class="c1"># fmt: off</span>
 <span class="k">class</span> <span class="nc">fg</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Foreground colors&quot;&quot;&quot;</span>
-    <span class="n">BLACK</span>   <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
-    <span class="n">RED</span>     <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">31</span><span class="p">)</span>
-    <span class="n">GREEN</span>   <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
-    <span class="n">YELLOW</span>  <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">33</span><span class="p">)</span>
-    <span class="n">BLUE</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span>
-    <span class="n">MAGENTA</span> <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">35</span><span class="p">)</span>
-    <span class="n">CYAN</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span>
-    <span class="n">WHITE</span>   <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">37</span><span class="p">)</span>
-    <span class="n">GREY</span>    <span class="o">=</span> <span class="n">BLACK</span><span class="o">.</span><span class="n">bright</span>
+    <span class="n">BLACK</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+    <span class="n">RED</span>      <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">31</span><span class="p">)</span>
+    <span class="n">GREEN</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
+    <span class="n">YELLOW</span>   <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">33</span><span class="p">)</span>
+    <span class="n">BLUE</span>     <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span>
+    <span class="n">MAGENTA</span>  <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">35</span><span class="p">)</span>
+    <span class="n">CYAN</span>     <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span>
+    <span class="n">WHITE</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">37</span><span class="p">)</span>
+    <span class="n">GREY</span>     <span class="o">=</span> <span class="n">BLACK</span><span class="o">.</span><span class="n">bright</span>
+    <span class="n">ARC_BLUE</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\x1b</span><span class="s1">[38;2;59;192;240m&#39;</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">rgb</span><span class="p">(</span><span class="n">red</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">green</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">blue</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
@@ -241,14 +251,16 @@
 
 <span class="k">class</span> <span class="nc">bg</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Background colors&quot;&quot;&quot;</span>
-    <span class="n">BLACK</span>   <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>
-    <span class="n">RED</span>     <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">41</span><span class="p">)</span>
-    <span class="n">GREEN</span>   <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
-    <span class="n">YELLOW</span>  <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">43</span><span class="p">)</span>
-    <span class="n">BLUE</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">44</span><span class="p">)</span>
-    <span class="n">MAGENTA</span> <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>
-    <span class="n">CYAN</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">46</span><span class="p">)</span>
-    <span class="n">WHITE</span>   <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">47</span><span class="p">)</span>
+    <span class="n">BLACK</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>
+    <span class="n">RED</span>      <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">41</span><span class="p">)</span>
+    <span class="n">GREEN</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+    <span class="n">YELLOW</span>   <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">43</span><span class="p">)</span>
+    <span class="n">BLUE</span>     <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">44</span><span class="p">)</span>
+    <span class="n">MAGENTA</span>  <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>
+    <span class="n">CYAN</span>     <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">46</span><span class="p">)</span>
+    <span class="n">WHITE</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">47</span><span class="p">)</span>
+    <span class="n">GREY</span>     <span class="o">=</span> <span class="n">BLACK</span><span class="o">.</span><span class="n">bright</span>
+    <span class="n">ARC_BLUE</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\x1b</span><span class="s1">[38;2;59;192;240m&#39;</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">rgb</span><span class="p">(</span><span class="n">red</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">green</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">blue</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
@@ -419,15 +431,16 @@
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">fg</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Foreground colors&quot;&quot;&quot;</span>
-    <span class="n">BLACK</span>   <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
-    <span class="n">RED</span>     <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">31</span><span class="p">)</span>
-    <span class="n">GREEN</span>   <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
-    <span class="n">YELLOW</span>  <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">33</span><span class="p">)</span>
-    <span class="n">BLUE</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span>
-    <span class="n">MAGENTA</span> <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">35</span><span class="p">)</span>
-    <span class="n">CYAN</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span>
-    <span class="n">WHITE</span>   <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">37</span><span class="p">)</span>
-    <span class="n">GREY</span>    <span class="o">=</span> <span class="n">BLACK</span><span class="o">.</span><span class="n">bright</span>
+    <span class="n">BLACK</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+    <span class="n">RED</span>      <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">31</span><span class="p">)</span>
+    <span class="n">GREEN</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
+    <span class="n">YELLOW</span>   <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">33</span><span class="p">)</span>
+    <span class="n">BLUE</span>     <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span>
+    <span class="n">MAGENTA</span>  <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">35</span><span class="p">)</span>
+    <span class="n">CYAN</span>     <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span>
+    <span class="n">WHITE</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">37</span><span class="p">)</span>
+    <span class="n">GREY</span>     <span class="o">=</span> <span class="n">BLACK</span><span class="o">.</span><span class="n">bright</span>
+    <span class="n">ARC_BLUE</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\x1b</span><span class="s1">[38;2;59;192;240m&#39;</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">rgb</span><span class="p">(</span><span class="n">red</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">green</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">blue</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
@@ -540,6 +553,15 @@
     
 
                             </div>
+                            <div id="fg.ARC_BLUE" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#fg.ARC_BLUE">#&nbsp;&nbsp</a>
+
+        <span class="name">ARC_BLUE</span><span class="default_value"> = &#39;\x1b[38;2;59;192;240m&#39;</span>
+    </div>
+
+    
+
+                            </div>
                             <div id="fg.rgb" class="classattr">
                                         <div class="attr function"><a class="headerlink" href="#fg.rgb">#&nbsp;&nbsp</a>
 
@@ -606,14 +628,16 @@ sequence for the provided hex values</p>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">bg</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Background colors&quot;&quot;&quot;</span>
-    <span class="n">BLACK</span>   <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>
-    <span class="n">RED</span>     <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">41</span><span class="p">)</span>
-    <span class="n">GREEN</span>   <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
-    <span class="n">YELLOW</span>  <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">43</span><span class="p">)</span>
-    <span class="n">BLUE</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">44</span><span class="p">)</span>
-    <span class="n">MAGENTA</span> <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>
-    <span class="n">CYAN</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">46</span><span class="p">)</span>
-    <span class="n">WHITE</span>   <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">47</span><span class="p">)</span>
+    <span class="n">BLACK</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>
+    <span class="n">RED</span>      <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">41</span><span class="p">)</span>
+    <span class="n">GREEN</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+    <span class="n">YELLOW</span>   <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">43</span><span class="p">)</span>
+    <span class="n">BLUE</span>     <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">44</span><span class="p">)</span>
+    <span class="n">MAGENTA</span>  <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>
+    <span class="n">CYAN</span>     <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">46</span><span class="p">)</span>
+    <span class="n">WHITE</span>    <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="mi">47</span><span class="p">)</span>
+    <span class="n">GREY</span>     <span class="o">=</span> <span class="n">BLACK</span><span class="o">.</span><span class="n">bright</span>
+    <span class="n">ARC_BLUE</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\x1b</span><span class="s1">[38;2;59;192;240m&#39;</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">rgb</span><span class="p">(</span><span class="n">red</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">green</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">blue</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
@@ -712,6 +736,24 @@ sequence for the provided hex values</p>
                                             <div class="attr variable"><a class="headerlink" href="#bg.WHITE">#&nbsp;&nbsp</a>
 
         <span class="name">WHITE</span><span class="default_value"> = &#39;\x1b[47m&#39;</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="bg.GREY" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#bg.GREY">#&nbsp;&nbsp</a>
+
+        <span class="name">GREY</span><span class="default_value"> = &#39;\x1b[100m&#39;</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="bg.ARC_BLUE" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#bg.ARC_BLUE">#&nbsp;&nbsp</a>
+
+        <span class="name">ARC_BLUE</span><span class="default_value"> = &#39;\x1b[38;2;59;192;240m&#39;</span>
     </div>
 
     
