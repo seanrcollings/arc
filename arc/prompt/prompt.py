@@ -1,8 +1,9 @@
 from typing import Any, TypeVar
+from getpass import getpass
 
 from arc.color import fg, effects
 from .helpers import write, PREVIOUS_LINE, clear_line
-from .questions import Question, QuestionError, ConfirmQuestion
+from .questions import Question, QuestionError, ConfirmQuestion, InputQuestion
 
 
 V = TypeVar("V")
@@ -59,13 +60,20 @@ class Prompt:
             V: The type that the particular Question returns
         """
 
+        # TODO: currently, sensitive questions
+        # can't display errors
+        def get_input(prompt: str):
+            if question.sensitive:
+                return getpass(prompt)
+            return input(prompt)
+
         if question.multi_line:
             write(question.render() + "\n")
 
         answer = None
         has_failed = False
         while answer is None:
-            user_input = input(
+            user_input = get_input(
                 (PREVIOUS_LINE if has_failed else "")
                 + clear_line()
                 + (question.render() if not question.multi_line else "")
@@ -87,12 +95,26 @@ class Prompt:
         """Request a Y/N answer from the user
 
         Args:
-            message (str): Message to display to the user
+            desc (str): Message to display to the user
 
         Returns:
             bool: The user's answer to the question
         """
         question = ConfirmQuestion(*args, **kwargs)
+        return self.ask(question)
+
+    def input(self, *args, **kwargs) -> str:
+        """Gather input from the user_input
+
+        Is an alias for the `InputQuestion` type
+
+        Args:
+            desc (str): Message to display to the user
+
+        Returns:
+            str: The user's input
+        """
+        question = InputQuestion(*args, **kwargs)
         return self.ask(question)
 
     def beautify(self, message: str, color: str = "", emoji: str = "", **kwargs):

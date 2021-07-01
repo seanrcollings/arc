@@ -36,6 +36,9 @@ class QuestionError(errors.ArcError):
 
 class Question(ABC, Generic[T]):
     multi_line = True
+    sensitive = False
+    """Sensitive questions are those  who's answer
+    shouldn't be echoed to the terminal like passwords"""
 
     def __init__(self, desc: str):
         self.desc = desc
@@ -47,6 +50,28 @@ class Question(ABC, Generic[T]):
     @abstractmethod
     def handle_answer(self, answer: str) -> T:
         """Handles the user's input for the question"""
+
+
+class InputQuestion(Question):
+    def __init__(
+        self,
+        desc: str,
+        empty: bool = True,
+        sensitive: bool = False,
+        multi_line: bool = False,
+    ):
+        super().__init__(desc)
+        self.empty = empty
+        self.sensitive = sensitive
+        self.multi_line = multi_line
+
+    def render(self) -> str:
+        return self.desc
+
+    def handle_answer(self, answer: str):
+        if not self.empty and len(answer) == 0:
+            raise QuestionError("Cannot be blank")
+        return answer
 
 
 MultipleReturn = Union[tuple[int, str], list[tuple[int, str]]]
