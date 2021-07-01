@@ -35,6 +35,8 @@ class QuestionError(errors.ArcError):
 
 
 class Question(ABC, Generic[T]):
+    multi_line = True
+
     def __init__(self, desc: str):
         self.desc = desc
 
@@ -128,6 +130,8 @@ class ConfirmQuestion(Question[bool]):
     `confirm()` is an alias for asking this question
     """
 
+    multi_line = False
+
     result = {
         "y": True,
         "yes": True,
@@ -136,7 +140,7 @@ class ConfirmQuestion(Question[bool]):
     }
 
     def render(self) -> str:
-        return f"{self.desc} [{fg.GREEN}Y{effects.CLEAR}/{fg.RED}N{effects.CLEAR}]"
+        return f"{self.desc} [{fg.GREEN}Y{effects.CLEAR}/{fg.RED}N{effects.CLEAR}] "
 
     def handle_answer(self, answer: str) -> bool:
         if answer.lower() in self.result:

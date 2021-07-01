@@ -1,7 +1,7 @@
 from typing import Any, TypeVar
 
 from arc.color import fg, effects
-from .helpers import write, CLEAR_LINE, PREVIOUS_LINE
+from .helpers import write, PREVIOUS_LINE, clear_line
 from .questions import Question, QuestionError, ConfirmQuestion
 
 
@@ -59,16 +59,27 @@ class Prompt:
             V: The type that the particular Question returns
         """
 
-        print(question.render())
+        if question.multi_line:
+            write(question.render() + "\n")
+
         answer = None
+        has_failed = False
         while answer is None:
-            user_input = input(f"\n{CLEAR_LINE}> ").lower()
+            user_input = input(
+                (PREVIOUS_LINE if has_failed else "")
+                + clear_line()
+                + (question.render() if not question.multi_line else "")
+                + "> "
+            )
+
             try:
                 answer = question.handle_answer(user_input)
             except QuestionError as e:
-                write(f"{PREVIOUS_LINE}{PREVIOUS_LINE}{CLEAR_LINE}")
+                write(clear_line())
                 self.error(str(e), end="")
+                has_failed = True
 
+        write("\n")  # get past the error message
         self._previous_answers.append(answer)
         return answer
 
