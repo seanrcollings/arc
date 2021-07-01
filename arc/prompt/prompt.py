@@ -29,9 +29,13 @@ class Prompt:
         ```
     """
 
-    def __init__(self, show_emojis: bool = True, color_output: bool = True):
+    def __init__(
+        self, prompt: str = "> ", show_emojis: bool = True, color_output: bool = True
+    ):
         """
         Args:
+            prompt (str, optional): What to display before the cursor when
+                asking a question. Defaults to `'> '`
             show_emojis (bool, optional): Whether or not to display the
                 icons / emojis when printing messages with the display
                 methods below. Defaults to True.
@@ -39,6 +43,7 @@ class Prompt:
                 do color the output of each of the display methods below.
                 Defaults to True.
         """
+        self.prompt = prompt
         self.show_emojis = show_emojis
         self.color_output = color_output
         self._previous_answers: list[Any] = []
@@ -77,7 +82,7 @@ class Prompt:
                 (PREVIOUS_LINE if has_failed else "")
                 + clear_line()
                 + (question.render() if not question.multi_line else "")
-                + "> "
+                + self.prompt
             )
 
             try:
