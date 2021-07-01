@@ -66,3 +66,5 @@ if os.getenv("ARC_DEVELOPMENT") == "true":
 
         color_print("Publishing...")
         subprocess.run(("poetry", "publish", "--build"), check=True)
+
+        color_print("Deployed!")
