@@ -46,15 +46,16 @@ def _hex_to_rgb(hex_rep: Union[str, int]):
 # fmt: off
 class fg:
     """Foreground colors"""
-    BLACK   = Color(30)
-    RED     = Color(31)
-    GREEN   = Color(32)
-    YELLOW  = Color(33)
-    BLUE    = Color(34)
-    MAGENTA = Color(35)
-    CYAN    = Color(36)
-    WHITE   = Color(37)
-    GREY    = BLACK.bright
+    BLACK    = Color(30)
+    RED      = Color(31)
+    GREEN    = Color(32)
+    YELLOW   = Color(33)
+    BLUE     = Color(34)
+    MAGENTA  = Color(35)
+    CYAN     = Color(36)
+    WHITE    = Color(37)
+    GREY     = BLACK.bright
+    ARC_BLUE = '\x1b[38;2;59;192;240m'
 
     @staticmethod
     def rgb(red: int = 0, green: int = 0, blue: int = 0):
@@ -71,14 +72,16 @@ class fg:
 
 class bg:
     """Background colors"""
-    BLACK   = Color(40)
-    RED     = Color(41)
-    GREEN   = Color(42)
-    YELLOW  = Color(43)
-    BLUE    = Color(44)
-    MAGENTA = Color(45)
-    CYAN    = Color(46)
-    WHITE   = Color(47)
+    BLACK    = Color(40)
+    RED      = Color(41)
+    GREEN    = Color(42)
+    YELLOW   = Color(43)
+    BLUE     = Color(44)
+    MAGENTA  = Color(45)
+    CYAN     = Color(46)
+    WHITE    = Color(47)
+    GREY     = BLACK.bright
+    ARC_BLUE = '\x1b[38;2;59;192;240m'
 
     @staticmethod
     def rgb(red: int = 0, green: int = 0, blue: int = 0):

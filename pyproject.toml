@@ -26,6 +26,10 @@ pylint = "^2.7.0"
 pytest = "^6.2.4"
 pdoc = "^7.1.1"
 
+
+[tool.poetry.scripts]
+arc = "arc.application:cli"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
