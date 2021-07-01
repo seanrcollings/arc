@@ -48,20 +48,16 @@ class Prompt:
         have their answers stored in here"""
         return self._previous_answers
 
-    def ask(self, question: Question[V], description: str = None) -> V:
+    def ask(self, question: Question[V]) -> V:
         """Ask a question
 
         Args:
             question (Question[V]): Question object to ask. Each question
                 object handles it's rendering and answering differently
-            description (str, optional): Description to preface the
-                question with. Defaults to None.
 
         Returns:
             V: The type that the particular Question returns
         """
-        if description:
-            print(description)
 
         print(question.render())
         answer = None

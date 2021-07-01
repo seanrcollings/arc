@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, Union
 from arc.color import fg, effects
+from arc import errors
 
 T = TypeVar("T")
 
@@ -29,11 +30,14 @@ def is_list(f):
     return wrapper
 
 
-class QuestionError(Exception):
+class QuestionError(errors.ArcError):
     ...
 
 
 class Question(ABC, Generic[T]):
+    def __init__(self, desc: str):
+        self.desc = desc
+
     @abstractmethod
     def render(self) -> str:
         """Returns a string repersentation of the question"""
@@ -59,7 +63,8 @@ class MultipleChoiceQuestion(Question[MultipleReturn]):
     if `multiple_answer = True`, the user can choose multiple options (1,2,3)
     """
 
-    def __init__(self, choices: list[str], multiple_answer: bool = False):
+    def __init__(self, desc: str, choices: list[str], multiple_answer: bool = False):
+        super().__init__(desc)
         self.choices = choices
         self.multiple_answer = multiple_answer
 
@@ -68,7 +73,7 @@ class MultipleChoiceQuestion(Question[MultipleReturn]):
             f"[{idx}] {choice}" for idx, choice in enumerate(self.choices)
         )
 
-        return choices + self._render_multiple_answer()
+        return self.desc + "\n" + choices + self._render_multiple_answer()
 
     def _render_multiple_answer(self) -> str:
         if not self.multiple_answer:
@@ -96,12 +101,13 @@ class MultipleChoiceQuestion(Question[MultipleReturn]):
 class RangeQuestion(Question[int]):
     """Question for a number in a given range"""
 
-    def __init__(self, min: int, max: int):
+    def __init__(self, desc: str, min: int, max: int):
         """
         Args:
             min: the smallest number possible
             max: the largest  number possible
         """
+        super().__init__(desc)
         self.min = min
         self.max = max
 
@@ -129,11 +135,8 @@ class ConfirmQuestion(Question[bool]):
         "no": False,
     }
 
-    def __init__(self, message: str):
-        self.message = message
-
     def render(self) -> str:
-        return f"{self.message} [{fg.GREEN}Y{effects.CLEAR}/{fg.RED}N{effects.CLEAR}]"
+        return f"{self.desc} [{fg.GREEN}Y{effects.CLEAR}/{fg.RED}N{effects.CLEAR}]"
 
     def handle_answer(self, answer: str) -> bool:
         if answer.lower() in self.result:
