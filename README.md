@@ -9,6 +9,7 @@ A tool for building declartive, and highly extendable CLI systems for Python 3.9
 
 # Docs
 - [Docs](http://arc.seanrcollings.com)
+- [Wiki](https://github.com/seanrcollings/arc/wiki)
 - [Changelog](https://github.com/seanrcollings/arc/wiki/Changelog)
 
 # Installation
