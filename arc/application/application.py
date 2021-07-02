@@ -5,11 +5,11 @@ import subprocess
 import re
 from pathlib import Path
 
-from arc import CLI, ParsingMethod, color
+from arc import CLI, ParsingMethod, color, __version__
 
 from .templates import templates
 
-cli = CLI("arc")
+cli = CLI("arc", version=__version__)
 
 #####  OPEN  #####
 class OpenEnum(enum.Enum):
