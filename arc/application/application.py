@@ -5,7 +5,6 @@ import subprocess
 import re
 from pathlib import Path
 
-import pdoc  # type: ignore
 from arc import CLI, ParsingMethod, color
 
 from .templates import templates
@@ -47,11 +46,13 @@ def init_command(name: str, method: InitEnum):
     project = Path(os.getcwd() + f"/{name}")
     if method == InitEnum.POETRY:
         subprocess.run(("poetry", "new", name), check=True)
-        # subprocess.run(("poetry", "shell"), cwd=project, check=True)
-        # subprocess.run(
-        #     ("poetry", "add", "arc-cli"), cwd=project, check=True
-        # )
+        subprocess.run(("poetry", "add", "arc-cli"), cwd=project, check=True)
         name = name.replace("-", "_")
+        with open(project / "pyproject.toml", "a") as f:
+            f.write(f'\n[tool.poetry.scripts]\n{name} = "{name}.cli:cli"')
+
+        subprocess.run(("poetry", "install"), cwd=project, check=True)
+
         target_dir = project / name
 
     for file_name, template in templates.items():
@@ -60,43 +61,42 @@ def init_command(name: str, method: InitEnum):
 
 
 ####  DEPLOY  ####
-def color_print(message: str):
-    print(f"{color.fg.ARC_BLUE}{message}{color.effects.CLEAR}")
-
-
-def deploy(version: str):
-    """Handle the details of deploying a new version of arc"""
-    root = (Path(__file__) / "../../../").resolve()
-    color_print("Running Tests...")
-    subprocess.run(["pytest", root / "tests"], check=True)
-    color_print("Updating pyproject.toml version...")
-    subprocess.run(["poetry", "version", version], check=True)
-
-    color_print("Updating __version__...")
-    init = root / "arc" / "__init__.py"
-    with init.open("r+") as f:
-        subbed = re.sub(
-            r"__version__ = .+\n",
-            f'__version__ = "{version}"',
-            f.read(),
-        )
-        f.seek(0)
-        f.write(subbed)
-
-    color_print("Updating API Docs...")
-    pdoc.render.configure(docformat="google")
-    pdoc.pdoc(root / "arc", output_directory=root / "docs")
-
-    color_print("Commiting Changes...")
-    subprocess.run(("git", "add", "."), check=True)
-    subprocess.run(("git", "commit", "-m", f"Version {version}"), check=True)
-    subprocess.run(("git", "tag", f"v{version}"), check=True)
-
-    color_print("Publishing...")
-    subprocess.run(("poetry", "publish", "--build"), check=True)
-
-    color_print("Deployed!")
-
-
 if os.getenv("ARC_DEVELOPMENT") == "true":
-    cli.command(("deploy", "d"), parsing_method=ParsingMethod.POSITIONAL)(deploy)
+    import pdoc  # type: ignore
+
+    def color_print(message: str):
+        print(f"{color.fg.ARC_BLUE}{message}{color.effects.CLEAR}")
+
+    @cli.command(("deploy", "d"), parsing_method=ParsingMethod.POSITIONAL)
+    def deploy(version: str):
+        """Handle the details of deploying a new version of arc"""
+        root = (Path(__file__) / "../../../").resolve()
+        color_print("Running Tests...")
+        subprocess.run(["pytest", root / "tests"], check=True)
+        color_print("Updating pyproject.toml version...")
+        subprocess.run(["poetry", "version", version], check=True)
+
+        color_print("Updating __version__...")
+        init = root / "arc" / "__init__.py"
+        with init.open("r+") as f:
+            subbed = re.sub(
+                r"__version__ = .+\n",
+                f'__version__ = "{version}"',
+                f.read(),
+            )
+            f.seek(0)
+            f.write(subbed)
+
+        color_print("Updating API Docs...")
+        pdoc.render.configure(docformat="google")
+        pdoc.pdoc(root / "arc", output_directory=root / "docs")
+
+        color_print("Commiting Changes...")
+        subprocess.run(("git", "add", "."), check=True)
+        subprocess.run(("git", "commit", "-m", f"Version {version}"), check=True)
+        subprocess.run(("git", "tag", f"v{version}"), check=True)
+
+        color_print("Publishing...")
+        subprocess.run(("poetry", "publish", "--build"), check=True)
+
+        color_print("Deployed!")
