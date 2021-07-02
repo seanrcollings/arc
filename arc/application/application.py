@@ -63,6 +63,9 @@ def init_command(name: str, method: InitEnum):
 ####  DEPLOY  ####
 if os.getenv("ARC_DEVELOPMENT") == "true":
     import pdoc  # type: ignore
+    import pdoc.web  # type: ignore
+
+    root = (Path(__file__) / "../../../").resolve()
 
     def color_print(message: str):
         print(f"{color.fg.ARC_BLUE}{message}{color.effects.CLEAR}")
@@ -70,7 +73,6 @@ if os.getenv("ARC_DEVELOPMENT") == "true":
     @cli.command(("deploy", "d"), parsing_method=ParsingMethod.POSITIONAL)
     def deploy(version: str):
         """Handle the details of deploying a new version of arc"""
-        root = (Path(__file__) / "../../../").resolve()
         color_print("Running Tests...")
         subprocess.run(["pytest", root / "tests"], check=True)
         color_print("Updating pyproject.toml version...")
@@ -88,8 +90,7 @@ if os.getenv("ARC_DEVELOPMENT") == "true":
             f.write(subbed)
 
         color_print("Updating API Docs...")
-        pdoc.render.configure(docformat="google")
-        pdoc.pdoc(root / "arc", output_directory=root / "docs")
+        cli("docs:compile")
 
         color_print("Commiting Changes...")
         subprocess.run(("git", "add", "."), check=True)
@@ -100,3 +101,25 @@ if os.getenv("ARC_DEVELOPMENT") == "true":
         subprocess.run(("poetry", "publish", "--build"), check=True)
 
         color_print("Deployed!")
+
+    @cli.command()
+    def docs():
+        """Starts a http server to serve development pdocs"""
+        host = "localhost"
+        port = 8080
+        all_modules = pdoc.extract.walk_specs((root / "arc",))
+        pdoc.render.configure(docformat="google")
+        with pdoc.web.DocServer((host, port), all_modules) as httpd:
+            url = f"http://{host}:{port}"
+            print(f"pdoc server ready at {url}")
+            webbrowser.open(url)
+            try:
+                httpd.serve_forever()
+            except KeyboardInterrupt:
+                httpd.server_close()
+
+    @docs.subcommand("compile")
+    def compile_docs():
+        """Compiles the documentation"""
+        pdoc.render.configure(docformat="google")
+        pdoc.pdoc(root / "arc", output_directory=root / "docs")
