@@ -1,84 +1,82 @@
 from unittest import TestCase, mock
 from pathlib import Path
+import pytest
 
-from arc import CLI, namespace, CommandType
+from arc import CLI, namespace, ParsingMethod
 from arc.errors import CommandError
 from arc.utilities.debug import debug
 
-from .mock import mock_command
+
+def test_base(cli: CLI):
+    @cli.base()
+    def base(val: int):
+        return val
+
+    assert cli("val=2") == 2
 
 
-class TestCLI(TestCase):
-    def setUp(self):
-        self.cli = mock_command("cli", CLI)
+def test_install_group(cli: CLI):
+    g1 = namespace("g1")
+    cli.install_command(g1)
+    assert g1 in cli.subcommands.values()
 
-        @self.cli.base(command_type=CommandType.KEYWORD)
-        def base(val: int):
-            ...
+    g2 = namespace("g2")
+    cli.install_command(g2)
+    assert g2 in cli.subcommands.values()
 
-        @self.cli.subcommand()
-        def func1(x):
-            ...
 
-        @self.cli.subcommand()
-        @self.cli.subcommand("func2copy")
-        def func2(x: int):
-            ...
+def test_execute(cli: CLI):
+    cli("func1 x=2")
+    cli("func2 x=2")
 
-    def test_base(self):
-        self.cli("val=2")
-        self.cli.default_action.function.assert_called_with(val=2)
 
-    def test_install_group(self):
-        g1 = namespace("g1")
-        self.cli.install_command(g1)
-        self.assertIn(g1, self.cli.subcommands.values())
+def test_nonexistant_command(cli: CLI):
+    with pytest.raises(CommandError), mock.patch("arc.utils.handle"):
+        cli("doesnotexist x=2")
 
-        g2 = namespace("g2")
-        self.cli.install_command(g2)
-        self.assertIn(g2, self.cli.subcommands.values())
 
-    def test_execute(self):
-        self.cli("func1 x=2")
-        self.cli.subcommands["func1"].function.assert_called_with(x="2")
+def test_autoload_file(cli: CLI):
+    cli.autoload(  # type: ignore
+        str(Path(__file__).parent.parent / "arc/utilities/debug.py")
+    )
+    assert "debug" in cli.subcommands
 
-        self.cli("func2 x=2")
-        self.cli.subcommands["func2"].function.assert_called_with(x=2)
 
-    def test_multi_name(self):
-        self.cli("func2copy x=2")
-        self.cli.subcommands["func2copy"].function.assert_called_with(x=2)
+def test_autoload_dir(cli: CLI):
+    cli.autoload(str(Path(__file__).parent.parent / "arc/utilities"))  # type: ignore
+    assert "debug" in cli.subcommands
+    assert "files" in cli.subcommands
+    assert "https" in cli.subcommands
 
-    @mock.patch("arc.utils.handle")
-    def test_nonexistant_command(self, _):
-        with self.assertRaises(CommandError):
-            self.cli("doesnotexist x=2")
 
-    def test_autoload_file(self):
-        self.cli.autoload(  # type: ignore
-            str(Path(__file__).parent.parent / "src/arc/utilities/debug.py")
+def test_autoload_error(cli: CLI):
+    cli.install_command(debug)
+    with pytest.raises(CommandError):
+        cli.autoload(  # type: ignore
+            str(Path(__file__).parent.parent / "arc/utilities/debug.py")
         )
-        self.assertIn("debug", self.cli.subcommands)
 
-    def test_autoload_dir(self):
-        self.cli.autoload(  # type: ignore
-            str(Path(__file__).parent.parent / "src/arc/utilities")
-        )
-        self.assertIn("debug", self.cli.subcommands)
-        self.assertIn("files", self.cli.subcommands)
-        self.assertIn("https", self.cli.subcommands)
 
-    def test_autoload_error(self):
-        self.cli.install_command(debug)
-        with self.assertRaises(CommandError):
-            self.cli.autoload(  # type: ignore
-                str(Path(__file__).parent.parent / "src/arc/utilities/debug.py")
-            )
+def test_command_alias(cli: CLI):
+    @cli.subcommand(("name1", "name2"))
+    def name1():
+        return True
 
-    def test_command_alias(self):
-        @self.cli.subcommand(("name1", "name2"))
-        def name1():
-            ...
+    assert cli("name2")
 
-        self.cli("name2")
-        name1.function.assert_called_with()
+
+def test_keybab(cli: CLI):
+    @cli.subcommand()
+    def two_words(first_name):
+        return True
+
+    assert cli("two_words first_name=sean")
+    assert cli("two-words first-name=sean")
+
+
+def test_positional(cli: CLI):
+    @cli.subcommand(parsing_method=ParsingMethod.POSITIONAL)
+    def pos(val: int):
+        return True
+
+    assert cli("pos 2")
