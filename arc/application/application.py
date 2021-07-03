@@ -90,7 +90,12 @@ if os.getenv("ARC_DEVELOPMENT") == "true":
             f.write(subbed)
 
         color_print("Updating API Docs...")
-        cli("docs:compile")
+        compile_docs()
+
+        color_print("Update changelog")
+        subprocess.run(
+            (os.getenv("EDITOR", "nano"), root / "docs/Changelog.md"), check=True
+        )
 
         color_print("Commiting Changes...")
         subprocess.run(("git", "add", "."), check=True)
