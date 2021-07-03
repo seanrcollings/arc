@@ -63,11 +63,15 @@ class ArgumentParser:
     ) -> dict[str, Any]:
 
         unfilled = {}
+        # breakpoint()
         for key, arg in self.args.items():
             if key not in matched_args:
-                if issubclass(arg.annotation, Context):
-                    unfilled[key] = arg.annotation(context)
-                else:
+                try:
+                    if issubclass(arg.annotation, Context):
+                        unfilled[key] = arg.annotation(context)
+                    else:
+                        unfilled[key] = arg.default
+                except TypeError:
                     unfilled[key] = arg.default
 
         for key, value in unfilled.items():

@@ -164,11 +164,12 @@ def test_validated_path(cli: CLI):
 
 def test_union(cli: CLI):
     @cli.subcommand()
-    def un(val: Union[int, str]):
-        ...
+    def un(val: Union[int, str] = 2):
+        return val
 
-    cli("un val=2")
-    cli("un val=string")
+    assert cli("un val=2") == 2
+    assert cli("un val=string") == "string"
+    assert cli("un") == 2
 
 
 def test_nested_union(cli: CLI):
@@ -202,3 +203,17 @@ def test_arg_alias(cli: CLI):
         @cli.subcommand(arg_aliases={"arg1": "arg", "arg2": ("arg", "2")})
         def un(arg1: str, arg2: str):
             ...
+
+
+def test_literL(cli: CLI):
+    @cli.subcommand()
+    def li(mode: Literal["small", "big", "medium"] = "medium"):
+        return mode
+
+    assert cli("li mode=small") == "small"
+    assert cli("li mode=big") == "big"
+    assert cli("li mode=medium") == "medium"
+    assert cli("li") == "medium"
+
+    with pytest.raises(CommandError):
+        cli("li mode=other")

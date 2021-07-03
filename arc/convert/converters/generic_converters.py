@@ -1,4 +1,4 @@
-from typing import _GenericAlias as GenericAlias, Union, cast, Optional  # type: ignore
+from typing import _GenericAlias as GenericAlias, Union, cast, Optional, Literal  # type: ignore
 
 from arc import errors, utils
 from .base_converter import BaseConverter
@@ -31,6 +31,18 @@ class UnionConverter(GenericConverter):
         raise errors.ConversionError(
             value, expected=expected + f" or {self.args[-1].__name__}"
         )
+
+
+@register(Literal)
+class LiteralConverter(GenericConverter):
+    args: tuple[str, ...]  # type: ignore
+
+    def convert(self, value: str) -> str:
+        if value in self.args:
+            return value
+
+        expected = ", ".join(arg for arg in self.args[: len(self.args) - 1])
+        raise errors.ConversionError(value, expected=expected + f" or {self.args[-1]}")
 
 
 class CollectionConverter(GenericConverter):
