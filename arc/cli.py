@@ -75,8 +75,7 @@ class CLI(Command):
 
     # pylint: disable=redefined-builtin
     def missing_command(self, help: bool, version: bool, **kwargs):
-        """\
-        Handles default arguments
+        """Handles default arguments
 
         # Arguments
             --help     shows this help
@@ -93,6 +92,7 @@ class CLI(Command):
         """Enables autocompletion support for this CLI
 
         **Currently disabled**
+
         Args:
             completions_for: command for the shell to run autocompletions against.
                 This will default the name of the CLI, which should generally be the name of
@@ -121,7 +121,10 @@ class CLI(Command):
         Autoload(paths, self).load()
 
     def helper(self, command_name: str = ""):
-        """Displays help information for a given command"""
+        """Displays help information for a given command
+        By default, shows the top-level command help.
+        To see a specific command's help provide a command name (some:command:name)
+        """
         namespace = command_name.split(config.namespace_sep) if command_name else []
         help_text.display_help(
             self,

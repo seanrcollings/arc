@@ -35,7 +35,7 @@ class Argument:
 
     def helper(self):
         if self.annotation is bool:
-            return f"{config.flag_denoter}{self.name}"
+            return f"[{config.flag_denoter}{self.name}]"
         else:
             value = self.default if self.default is not NO_DEFAULT else "..."
             try:
@@ -44,4 +44,8 @@ class Argument:
             except:  # pylint: disable=bare-except
                 ...
 
-            return f"{self.name}{config.arg_assignment}{value}"
+            arg = f"{self.name}{config.arg_assignment}{value}"
+            if self.default is not NO_DEFAULT:
+                arg = f"[{arg}]"
+
+            return arg
