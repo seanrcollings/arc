@@ -1,4 +1,5 @@
 import inspect
+import enum
 
 from arc.config import config
 from arc.utils import symbol
@@ -32,5 +33,15 @@ class Argument:
 
         return convert(value, self.annotation, self.name)
 
-    def helper(self, level: int = 0):
-        print(f"{self.name}{config.arg_assignment}{self.default}")
+    def helper(self):
+        if self.annotation is bool:
+            return f"{config.flag_denoter}{self.name}"
+        else:
+            value = self.default if self.default is not NO_DEFAULT else "..."
+            try:
+                if issubclass(self.annotation, enum.Enum):
+                    value = ", ".join(self.annotation.__members__.keys())
+            except:  # pylint: disable=bare-except
+                ...
+
+            return f"{self.name}{config.arg_assignment}{value}"

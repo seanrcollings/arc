@@ -1,13 +1,12 @@
 from typing import Optional, Callable, Type
-import textwrap
 import logging
 
-from arc import utils
+from arc import utils, help_text
 from arc.config import config
 from .color import effects, fg
-from .command import Command, ParsingMethod, ArgumentParser
+from .command import Command, ParsingMethod, ArgumentParser, PositionalParser
 from .autoload import Autoload
-from .run import run
+from .run import run, find_command
 
 
 class CLI(Command):
@@ -37,7 +36,7 @@ class CLI(Command):
         self.__logging_setup()
         utils.header("INIT")
         self.version = version
-        self.install_command(Command("help", self.helper))
+        self.install_command(Command("help", self.helper, parser=PositionalParser))
         self.default_action: Optional[Command] = (
             self.base()(function) if function else self.subcommands["help"]
         )
@@ -76,11 +75,12 @@ class CLI(Command):
 
     # pylint: disable=redefined-builtin
     def missing_command(self, help: bool, version: bool, **kwargs):
-        """When no command is provided,
-        this function will be called to handle it.
-        It handles the --help and --version flags.
-        And if neither of those are specified, it will call
-        the default action
+        """\
+        Handles default arguments
+
+        # Arguments
+            --help     shows this help
+            --version  displays the version
         """
         if help:
             self("help")
@@ -120,12 +120,14 @@ class CLI(Command):
         into the CLI from the provided paths"""
         Autoload(paths, self).load()
 
-    def helper(self):
-        """Displays the help"""
-        print(f"Usage: {self.name} <COMMAND> [ARGUMENTS ...]\n\n")
-        print(f"{effects.UNDERLINE}{effects.BOLD}Commands:{effects.CLEAR}\n")
-        for command in self.subcommands.values():
-            display_help(command, self)
+    def helper(self, command_name: str = ""):
+        """Displays help information for a given command"""
+        namespace = command_name.split(config.namespace_sep) if command_name else []
+        help_text.display_help(
+            self,
+            find_command(self, namespace)[0],
+            namespace,
+        )
 
     def __logging_setup(self):
         root = logging.getLogger("arc_logger")
@@ -135,49 +137,6 @@ class CLI(Command):
         formatter = ArcFormatter()
         handler.setFormatter(formatter)
         root.addHandler(handler)
-
-
-def display_help(command: Command, parent: Command, level: int = 0):
-    """Generates the help documentation for a command.
-
-    Args:
-        command (Command): Command that acts as the root of the help documentation
-        parent (Command): The command's parent Command
-        level (int, optional): Depth of the Command in the Command tree.
-            Used to calculate spacing. Defaults to 0.
-    """
-    sep = config.namespace_sep
-    indent = "    " * level
-
-    aliases = [
-        key for key, value in parent.subcommand_aliases.items() if value == command.name
-    ]
-    name = f"{fg.GREEN}{command.name}{effects.CLEAR}"
-    if aliases:
-        name += f"{fg.BLACK.bright} ({', '.join(aliases)}){effects.CLEAR}"
-
-    info = []
-
-    info.append(
-        textwrap.indent(name, indent)
-        if level == 0
-        else textwrap.indent(sep + name, indent)
-    )
-
-    info.append(textwrap.indent(command.doc, indent + "  ") if command.doc else "")
-
-    if len(command.subcommands) > 0:
-        info.append(
-            textwrap.indent(
-                f"{effects.BOLD}{effects.UNDERLINE}Subcomands:{effects.CLEAR}",
-                indent + "  ",
-            )
-        )
-
-    print("\n".join(info))
-
-    for sub in command.subcommands.values():
-        display_help(sub, command, level + 1)
 
 
 class ArcFormatter(logging.Formatter):
