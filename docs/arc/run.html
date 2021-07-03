@@ -64,13 +64,15 @@
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">shlex</span>
 <span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">utils</span>
-<span class="kn">from</span> <span class="nn">arc.logging</span> <span class="kn">import</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">CommandError</span>
 <span class="kn">from</span> <span class="nn">.command</span> <span class="kn">import</span> <span class="n">Command</span>
 <span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">config</span>
 <span class="kn">from</span> <span class="nn">.color</span> <span class="kn">import</span> <span class="n">fg</span><span class="p">,</span> <span class="n">effects</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;arc_logger&quot;</span><span class="p">)</span>
 
 <span class="n">namespace_seperated</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
     <span class="sa">fr</span><span class="s2">&quot;\A\b((?:(?:</span><span class="si">{</span><span class="n">utils</span><span class="o">.</span><span class="n">IDENT</span><span class="si">}{</span><span class="n">config</span><span class="o">.</span><span class="n">namespace_sep</span><span class="si">}</span><span class="s2">)+&quot;</span>
@@ -162,8 +164,8 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;The command </span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command_namespace</span><span class="p">)</span><span class="si">}{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}{</span><span class="n">fg</span><span class="o">.</span><span class="n">RED</span><span class="si">}</span><span class="s2"> not found. &quot;</span>
-                <span class="s2">&quot;Check --help for available commands&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command_namespace</span><span class="p">)</span><span class="si">}{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2"> not found. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Check </span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">BLUE</span><span class="si">}</span><span class="s2">--help</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2"> for available commands&quot;</span>
             <span class="p">)</span>
 
         <span class="n">command_ctx</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">context</span> <span class="o">|</span> <span class="n">command_ctx</span>
@@ -343,8 +345,8 @@ cli.missing_command will be executed.</p>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;The command </span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command_namespace</span><span class="p">)</span><span class="si">}{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}{</span><span class="n">fg</span><span class="o">.</span><span class="n">RED</span><span class="si">}</span><span class="s2"> not found. &quot;</span>
-                <span class="s2">&quot;Check --help for available commands&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command_namespace</span><span class="p">)</span><span class="si">}{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2"> not found. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Check </span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">BLUE</span><span class="si">}</span><span class="s2">--help</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2"> for available commands&quot;</span>
             <span class="p">)</span>
 
         <span class="n">command_ctx</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">context</span> <span class="o">|</span> <span class="n">command_ctx</span>

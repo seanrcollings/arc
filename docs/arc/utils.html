@@ -95,9 +95,13 @@
 <span class="kn">import</span> <span class="nn">functools</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">from</span> <span class="nn">arc.errors</span> <span class="kn">import</span> <span class="n">NoOpError</span>
 <span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">fg</span><span class="p">,</span> <span class="n">effects</span>
+<span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">config</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;arc_logger&quot;</span><span class="p">)</span>
 
 <span class="n">IDENT</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;[a-zA-Z-_0-9]+&quot;</span>
 
@@ -114,8 +118,6 @@
     <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
         <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
         <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="c1"># pylint: disable=import-outside-toplevel</span>
-            <span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">logger</span>
 
             <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
             <span class="n">return_value</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -187,9 +189,6 @@
         <span class="k">yield</span> <span class="bp">self</span>
 
     <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">trace</span><span class="p">):</span>
-        <span class="c1"># pylint: disable=import-outside-toplevel</span>
-        <span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">config</span><span class="p">,</span> <span class="n">logging</span>
-
         <span class="c1"># Rebubble an exit call</span>
         <span class="k">if</span> <span class="n">exc_type</span> <span class="ow">is</span> <span class="ne">SystemExit</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
@@ -198,8 +197,8 @@
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="k">if</span> <span class="n">exc_type</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">format_exception</span><span class="p">(</span><span class="n">exc_value</span><span class="p">))</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">exc_value</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">format_exception</span><span class="p">(</span><span class="n">exc_value</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">exc_value</span><span class="p">)</span>
             <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exit_code</span><span class="p">)</span>
 
 
@@ -231,10 +230,7 @@
 
 
 <span class="k">def</span> <span class="nf">header</span><span class="p">(</span><span class="n">contents</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-    <span class="c1"># pylint: disable=import-outside-toplevel</span>
-    <span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">logging</span>
-
-    <span class="n">logging</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
         <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">UNDERLINE</span><span class="si">}{</span><span class="n">effects</span><span class="o">.</span><span class="n">BOLD</span><span class="si">}{</span><span class="n">fg</span><span class="o">.</span><span class="n">BLUE</span><span class="si">}{</span><span class="n">contents</span><span class="si">:</span><span class="s2">^35</span><span class="si">}{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="p">)</span>
 </pre></div>
@@ -279,8 +275,6 @@
     <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
         <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
         <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="c1"># pylint: disable=import-outside-toplevel</span>
-            <span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">logger</span>
 
             <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
             <span class="n">return_value</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -431,9 +425,6 @@ will only time if config.debug is set to True</p>
         <span class="k">yield</span> <span class="bp">self</span>
 
     <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">trace</span><span class="p">):</span>
-        <span class="c1"># pylint: disable=import-outside-toplevel</span>
-        <span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">config</span><span class="p">,</span> <span class="n">logging</span>
-
         <span class="c1"># Rebubble an exit call</span>
         <span class="k">if</span> <span class="n">exc_type</span> <span class="ow">is</span> <span class="ne">SystemExit</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
@@ -442,8 +433,8 @@ will only time if config.debug is set to True</p>
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="k">if</span> <span class="n">exc_type</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">format_exception</span><span class="p">(</span><span class="n">exc_value</span><span class="p">))</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">exc_value</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">format_exception</span><span class="p">(</span><span class="n">exc_value</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">exc_value</span><span class="p">)</span>
             <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exit_code</span><span class="p">)</span>
 </pre></div>
 
@@ -566,10 +557,7 @@ To retrive the inner origin type.</p>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">header</span><span class="p">(</span><span class="n">contents</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-    <span class="c1"># pylint: disable=import-outside-toplevel</span>
-    <span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">logging</span>
-
-    <span class="n">logging</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
         <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">UNDERLINE</span><span class="si">}{</span><span class="n">effects</span><span class="o">.</span><span class="n">BOLD</span><span class="si">}{</span><span class="n">fg</span><span class="o">.</span><span class="n">BLUE</span><span class="si">}{</span><span class="n">contents</span><span class="si">:</span><span class="s2">^35</span><span class="si">}{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="p">)</span>
 </pre></div>
