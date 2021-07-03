@@ -14,7 +14,7 @@ def config_command():
         ["Namespace Seperator", config.namespace_sep, ":"],
         ["Argument Assignment", config.arg_assignment, "="],
         ["Flag Denoter", config.flag_denoter, "--"],
-        ["Log", config.loglevel, "logging.WARNING"],
+        ["Mode", config.mode, "production"],
         ["Converters", "See debug:converters", "-"],
     ]
 

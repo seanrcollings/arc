@@ -1,5 +1,6 @@
 from typing import Optional, Callable, Type
 import textwrap
+import logging
 
 from arc import utils
 from arc.config import config
@@ -33,6 +34,7 @@ class CLI(Command):
 
         super().__init__(name, self.missing_command, parsing_method, context)
         config.from_file(arcfile)
+        self.__logging_setup()
         utils.header("INIT")
         self.version = version
         self.install_command(Command("help", self.helper))
@@ -125,6 +127,15 @@ class CLI(Command):
         for command in self.subcommands.values():
             display_help(command, self)
 
+    def __logging_setup(self):
+        root = logging.getLogger("arc_logger")
+        level = config.mode_map.get(config.mode, logging.WARNING)
+        root.setLevel(level)
+        handler = logging.StreamHandler()
+        formatter = ArcFormatter()
+        handler.setFormatter(formatter)
+        root.addHandler(handler)
+
 
 def display_help(command: Command, parent: Command, level: int = 0):
     """Generates the help documentation for a command.
@@ -167,3 +178,16 @@ def display_help(command: Command, parent: Command, level: int = 0):
 
     for sub in command.subcommands.values():
         display_help(sub, command, level + 1)
+
+
+class ArcFormatter(logging.Formatter):
+    prefixes = {
+        logging.INFO: f"{fg.BLUE}🛈{effects.CLEAR} ",
+        logging.WARNING: f"{fg.YELLOW}{effects.BOLD}WARNING{effects.CLEAR}: ",
+        logging.ERROR: f"{fg.RED}{effects.BOLD}ERROR{effects.CLEAR}: ",
+    }
+
+    def format(self, record: logging.LogRecord):
+        prefix = self.prefixes.get(record.levelno, "")
+        record.msg = prefix + str(record.msg)
+        return super().format(record)

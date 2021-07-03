@@ -3,9 +3,13 @@ import traceback
 import functools
 import time
 import sys
+import logging
 
 from arc.errors import NoOpError
 from arc.color import fg, effects
+from arc import config
+
+logger = logging.getLogger("arc_logger")
 
 IDENT = r"[a-zA-Z-_0-9]+"
 
@@ -22,8 +26,6 @@ def timer(name):
     def wrapper(func):
         @functools.wraps(func)
         def decorator(*args, **kwargs):
-            # pylint: disable=import-outside-toplevel
-            from arc import logger
 
             start_time = time.time()
             return_value = func(*args, **kwargs)
@@ -95,9 +97,6 @@ class handle:
         yield self
 
     def __exit__(self, exc_type, exc_value, trace):
-        # pylint: disable=import-outside-toplevel
-        from arc import config, logging
-
         # Rebubble an exit call
         if exc_type is SystemExit:
             return False
@@ -106,8 +105,8 @@ class handle:
             return False
 
         if exc_type:
-            logging.logger.debug(format_exception(exc_value))
-            logging.logger.error(exc_value)
+            logger.debug(format_exception(exc_value))
+            logger.error(exc_value)
             sys.exit(self.exit_code)
 
 
@@ -139,9 +138,6 @@ def is_alias(alias):
 
 
 def header(contents: str):
-    # pylint: disable=import-outside-toplevel
-    from arc import logging
-
-    logging.logger.debug(
+    logger.debug(
         f"{effects.UNDERLINE}{effects.BOLD}{fg.BLUE}{contents:^35}{effects.CLEAR}"
     )

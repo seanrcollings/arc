@@ -1,14 +1,16 @@
 from typing import Dict, Callable, Optional, Any, Type, Union, Iterable
 import functools
 import pprint
+import logging
 
 from arc.color import effects, fg
 from arc.errors import CommandError, ParserError
 from arc import utils
-from arc.logging import logger
 
 from .argument_parser import ArgumentParser, ParsingMethod
 from .command_executor import CommandExecutor
+
+logger = logging.getLogger("arc_logger")
 
 
 class Command:

@@ -2,13 +2,15 @@ from typing import Optional, Union, Any
 import sys
 import shlex
 import re
+import logging
 
 from arc import utils
-from arc.logging import logger
 from .errors import CommandError
 from .command import Command
 from .config import config
 from .color import fg, effects
+
+logger = logging.getLogger("arc_logger")
 
 namespace_seperated = re.compile(
     fr"\A\b((?:(?:{utils.IDENT}{config.namespace_sep})+"
@@ -100,8 +102,8 @@ def find_command(
         else:
             raise CommandError(
                 f"The command {fg.YELLOW}"
-                f"{':'.join(command_namespace)}{effects.CLEAR}{fg.RED} not found. "
-                "Check --help for available commands"
+                f"{':'.join(command_namespace)}{effects.CLEAR} not found. "
+                f"Check {fg.BLUE}--help{effects.CLEAR} for available commands"
             )
 
         command_ctx = command.context | command_ctx

@@ -3,7 +3,6 @@ from dataclasses import dataclass
 import logging
 from pathlib import Path
 from arc import errors
-from arc.logging import logger
 
 
 class ConfigBase:
@@ -156,21 +155,12 @@ class Config(ConfigBase):
     - development
     - test
     """
-    loglevel: int = 30
-    """The level to set the `arc_logger`"""
 
-    def __post_init__(self):
-        self.post_load()
-
-    def post_load(self):
-        mode_map = {
-            "development": logging.DEBUG,
-            "production": logging.INFO,
-            "test": logging.ERROR,
-        }
-        level = mode_map.get(self.mode, self.loglevel)
-        self.loglevel = level
-        logger.setLevel(level)
+    mode_map = {
+        "development": logging.DEBUG,
+        "production": logging.WARNING,
+        "test": logging.ERROR,
+    }
 
 
 config = Config()

@@ -1,12 +1,14 @@
 from typing import Iterable, Optional, Generator
 from importlib import import_module
 from pathlib import Path
+import logging
 import sys
 
 from arc.command import Command
 from arc.color import fg, effects
 from arc.errors import CommandError
-from arc.logging import logger
+
+logger = logging.getLogger("arc_logger")
 
 
 class Autoload:

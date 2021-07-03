@@ -1,10 +1,13 @@
 from typing import Callable, Any, Generator, Literal
 import pprint
+import logging
 
 from arc.color import effects, fg
 from arc import errors
 from arc import utils
-from arc.logging import logger
+
+
+logger = logging.getLogger("arc_logger")
 
 
 class CommandExecutor:
