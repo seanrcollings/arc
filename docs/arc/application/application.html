@@ -162,15 +162,20 @@
         <span class="n">init</span> <span class="o">=</span> <span class="n">root</span> <span class="o">/</span> <span class="s2">&quot;arc&quot;</span> <span class="o">/</span> <span class="s2">&quot;__init__.py&quot;</span>
         <span class="k">with</span> <span class="n">init</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;r+&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">subbed</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span>
-                <span class="sa">r</span><span class="s2">&quot;__version__ = .+\n&quot;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s1">&#39;__version__ = &quot;</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">,</span>
+                <span class="sa">r</span><span class="s2">&quot;__version__ = </span><span class="se">\&quot;</span><span class="s2">.+</span><span class="se">\&quot;</span><span class="s2">\n&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s1">&#39;__version__ = &quot;</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s1">    &quot;&#39;</span><span class="p">,</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span>
             <span class="p">)</span>
             <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">subbed</span><span class="p">)</span>
 
         <span class="n">color_print</span><span class="p">(</span><span class="s2">&quot;Updating API Docs...&quot;</span><span class="p">)</span>
-        <span class="n">cli</span><span class="p">(</span><span class="s2">&quot;docs:compile&quot;</span><span class="p">)</span>
+        <span class="n">compile_docs</span><span class="p">()</span>
+
+        <span class="n">color_print</span><span class="p">(</span><span class="s2">&quot;Update changelog&quot;</span><span class="p">)</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;EDITOR&quot;</span><span class="p">,</span> <span class="s2">&quot;nano&quot;</span><span class="p">),</span> <span class="n">root</span> <span class="o">/</span> <span class="s2">&quot;wiki/Changelog.md&quot;</span><span class="p">),</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
 
         <span class="n">color_print</span><span class="p">(</span><span class="s2">&quot;Commiting Changes...&quot;</span><span class="p">)</span>
         <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">((</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">),</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -184,6 +189,7 @@
 
     <span class="nd">@cli</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">docs</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Starts a http server to serve development pdocs&quot;&quot;&quot;</span>
         <span class="n">host</span> <span class="o">=</span> <span class="s2">&quot;localhost&quot;</span>
         <span class="n">port</span> <span class="o">=</span> <span class="mi">8080</span>
         <span class="n">all_modules</span> <span class="o">=</span> <span class="n">pdoc</span><span class="o">.</span><span class="n">extract</span><span class="o">.</span><span class="n">walk_specs</span><span class="p">((</span><span class="n">root</span> <span class="o">/</span> <span class="s2">&quot;arc&quot;</span><span class="p">,))</span>
@@ -197,8 +203,9 @@
             <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
                 <span class="n">httpd</span><span class="o">.</span><span class="n">server_close</span><span class="p">()</span>
 
-    <span class="nd">@docs</span><span class="o">.</span><span class="n">subcommand</span><span class="p">((</span><span class="s2">&quot;compile&quot;</span><span class="p">))</span>
+    <span class="nd">@docs</span><span class="o">.</span><span class="n">subcommand</span><span class="p">(</span><span class="s2">&quot;compile&quot;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">compile_docs</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Compiles the documentation&quot;&quot;&quot;</span>
         <span class="n">pdoc</span><span class="o">.</span><span class="n">render</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">docformat</span><span class="o">=</span><span class="s2">&quot;google&quot;</span><span class="p">)</span>
         <span class="n">pdoc</span><span class="o">.</span><span class="n">pdoc</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s2">&quot;arc&quot;</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="n">root</span> <span class="o">/</span> <span class="s2">&quot;docs&quot;</span><span class="p">)</span>
 </pre></div>

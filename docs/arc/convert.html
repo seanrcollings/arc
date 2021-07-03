@@ -46,6 +46,7 @@
     <li><a href="#union-type">Union Type</a></li>
     <li><a href="#path-type">Path Type</a></li>
     <li><a href="#enum-type">Enum Type</a></li>
+    <li><a href="#literal-type">Literal Type</a></li>
   </ul></li>
   <li><a href="#custom-types">Custom Types</a>
   <ul>
@@ -237,6 +238,22 @@ You painted the walls the bloodiest of reds
 </code></pre>
 
 <p>Since red is a defined value on the <code>Color</code> enumeration.</p>
+
+<h2 id="literal-type">Literal Type</h2>
+
+<p>The literal type can also be used to define a limited subset of values that are acceptable.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">CLI</span>
+
+<span class="n">cli</span> <span class="o">=</span> <span class="n">CLI</span><span class="p">()</span>
+
+<span class="nd">@cli</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">pick_pain</span><span class="p">(</span><span class="n">color</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="s2">&quot;yellow&quot;</span><span class="p">]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;You picked </span><span class="si">{</span><span class="n">color</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">cli</span><span class="p">()</span>
+</code></pre></div>
 
 <h1 id="custom-types">Custom Types</h1>
 

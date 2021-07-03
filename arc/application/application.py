@@ -82,8 +82,8 @@ if os.getenv("ARC_DEVELOPMENT") == "true":
         init = root / "arc" / "__init__.py"
         with init.open("r+") as f:
             subbed = re.sub(
-                r"__version__ = .+\n",
-                f'__version__ = "{version}"',
+                r"__version__ = \".+\"\n",
+                f'__version__ = "{version}    "',
                 f.read(),
             )
             f.seek(0)
@@ -94,7 +94,7 @@ if os.getenv("ARC_DEVELOPMENT") == "true":
 
         color_print("Update changelog")
         subprocess.run(
-            (os.getenv("EDITOR", "nano"), root / "docs/Changelog.md"), check=True
+            (os.getenv("EDITOR", "nano"), root / "wiki/Changelog.md"), check=True
         )
 
         color_print("Commiting Changes...")
