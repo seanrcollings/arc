@@ -33,19 +33,8 @@ class Argument:
 
         return convert(value, self.annotation, self.name)
 
-    def helper(self):
-        if self.annotation is bool:
-            return f"[{config.flag_denoter}{self.name}]"
-        else:
-            value = self.default if self.default is not NO_DEFAULT else "..."
-            try:
-                if issubclass(self.annotation, enum.Enum):
-                    value = ", ".join(self.annotation.__members__.keys())
-            except:  # pylint: disable=bare-except
-                ...
+    def is_flag(self):
+        return self.annotation is bool
 
-            arg = f"{self.name}{config.arg_assignment}{value}"
-            if self.default is not NO_DEFAULT:
-                arg = f"[{arg}]"
-
-            return arg
+    def is_optional(self):
+        return self.default is not NO_DEFAULT

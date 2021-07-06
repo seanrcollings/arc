@@ -103,15 +103,25 @@ def generate_usage(
 ):
     if root == command:
         command_str = "<command>"
-        arg_str = "[arguments ...]"
+        args_str = "[arguments ...]"
     else:
         command_str = config.namespace_sep.join(namespace)
-        arg_str = " ".join(arg.helper() for arg in command.parser.args.values())
+        args = []
+        for arg in command.parser.args.values():
+            if arg.is_flag():
+                args.append(f"[{config.flag_denoter}{arg.name}]")
+            else:
+                arg_str = f"{arg.name}{config.arg_assignment}<...>"
+                if arg.is_optional():
+                    arg_str = f"[{arg_str}]"
+                args.append(arg_str)
+
+        args_str = " ".join(args)
 
     doc.add_section(
         "usage",
         f"{fg.ARC_BLUE}{root.name}{effects.CLEAR}"
-        f" {effects.UNDERLINE}{command_str}{effects.CLEAR} {arg_str}",
+        f" {effects.UNDERLINE}{command_str}{effects.CLEAR} {args_str}",
     )
 
 
