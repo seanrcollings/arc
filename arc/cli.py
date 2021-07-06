@@ -121,9 +121,10 @@ class CLI(Command):
         Autoload(paths, self).load()
 
     def helper(self, command_name: str = ""):
-        """Displays help information for a given command
-        By default, shows the top-level command help.
-        To see a specific command's help provide a command name (some:command:name)
+        """Displays information for a given command
+        By default, shows help for the top-level command.
+        To see a specific command's information, provide
+        a command name (some:command:name)
         """
         namespace = command_name.split(config.namespace_sep) if command_name else []
         help_text.display_help(

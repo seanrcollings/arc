@@ -1,22 +1,25 @@
 import textwrap
-import re
 from typing import Union, Optional
 from arc.command import Command
 from arc.color import fg, effects
 from arc import config
 from arc.run import find_command
 
+__all__ = ["display_help", "generate_help"]
+
 
 def display_help(root: Command, command: Command, namespace: list[str]):
-    help_text = (
+    print(generate_help(root, command, namespace))
+
+
+def generate_help(root: Command, command: Command, namespace: list[str]):
+    return (
         ""
         + generate_usage(root, command, namespace)
         + generate_sections(command.doc)
         + generate_aliases(root, command, namespace)
         + generate_subcommands(command)
     ).strip("\n")
-
-    print(help_text)
 
 
 def generate_usage(root: Command, command: Command, namespace: list[str]) -> str:
@@ -34,17 +37,17 @@ def generate_usage(root: Command, command: Command, namespace: list[str]) -> str
     )
 
 
-def generate_sections(doc: Optional[str]):
+def generate_sections(doc: Optional[str]) -> str:
     formatted = ""
     if doc:
         command_doc = CommandDoc(doc)
         for heading, content in command_doc.sections.items():
-            formatted += section(heading, content)
+            formatted += section(heading, content.strip("\n"))
 
     return formatted
 
 
-def generate_aliases(root: Command, command: Command, namespace: list[str]):
+def generate_aliases(root: Command, command: Command, namespace: list[str]) -> str:
     parent, _ = find_command(root, namespace[:-1])
     aliases = [
         key for key, value in parent.subcommand_aliases.items() if value == command.name
@@ -54,7 +57,7 @@ def generate_aliases(root: Command, command: Command, namespace: list[str]):
     return ""
 
 
-def generate_subcommands(command: Command):
+def generate_subcommands(command: Command) -> str:
     if not command.subcommands:
         return ""
 
@@ -62,7 +65,7 @@ def generate_subcommands(command: Command):
     subcommands = ""
 
     for sub in command.subcommands.values():
-        lines = CommandDoc(sub.doc).description.split("\n")
+        lines = CommandDoc(sub.doc).sections.get("description", "").split("\n")
         if len(lines) > 0:
             first_line = lines[0].strip("\n")
         else:
@@ -75,33 +78,48 @@ def generate_subcommands(command: Command):
 
 
 class CommandDoc:
+
+    DEFAULT_SECTION = "description"
+
     def __init__(self, doc: str = None):
-        self.doc: Optional[str] = doc
         self.sections: dict[str, str] = {}
-
         if doc:
-            lines = doc.split("\n")
-            self.doc = "\n".join(line.strip() for line in lines)
+            self.parse_docstring(doc)
 
-            match = re.match(
-                r"(\A(?!#).+?(?:#|\Z))", self.doc, re.DOTALL | re.MULTILINE
-            )
-            if match:
-                self.sections["description"] = match.group().rstrip("#\n")
+    def parse_docstring(self, doc: str):
+        """Parses a doc string into sections
 
-            sections = self.doc.split("\n#")
-            if self.sections.get("description"):
-                sections = sections[1:]
+        Sections are denoted by a new line, and
+        then a line beginning with `#`. Whatever
+        comes after the `#` will be the key in
+        the sections dict. And all content between
+        that `#` and the next `#` will be the value.
 
-            for section in sections:
-                lines = section.split("\n")
-                self.sections[lines[0].strip()] = textwrap.dedent(
-                    "\n".join(lines[1:]).strip("\n")
-                )
+        The first section of the docstring is not
+        required to possess a section header, and
+        will be entered in as the `description` section.
+        """
+        lines = [line.strip() for line in doc.split("\n")]
+        current_section = self.DEFAULT_SECTION
 
-    @property
-    def description(self):
-        return self.sections.get("description", "")
+        for line in lines:
+            if line.startswith("#"):
+                current_section = line[1:].strip()
+                continue
+
+            self.update_section(current_section, line + "\n")
+
+    def add_section(self, title: str, content: str):
+        """Adds a section with `title` and `content`"""
+        self.sections[title] = content
+
+    def update_section(self, key: str, to_add: str):
+        """Updates a section. If that section
+        does not exist, creates it"""
+        if key in self.sections:
+            self.sections[key] += to_add
+        else:
+            self.add_section(key, to_add)
 
 
 def header(text: str):
