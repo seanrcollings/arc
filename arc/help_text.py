@@ -2,7 +2,7 @@ import textwrap
 from typing import Union
 from arc.command import Command
 from arc.color import fg, effects
-from arc import config
+from arc.config import config
 from arc.run import find_command
 
 __all__ = ["display_help", "generate_help"]
@@ -60,12 +60,8 @@ class CommandDoc:
         for line in lines:
             if line.startswith("#"):
                 current_section = line[1:].strip()
-                continue
-
-            if line == "" and current_section == self.DEFAULT_SECTION:
-                continue
-
-            self.update_section(current_section, line + "\n")
+            elif line != "" or current_section != self.DEFAULT_SECTION:
+                self.update_section(current_section, line + "\n")
 
     def add_section(self, title: str, content: str):
         """Adds a section with `title` and `content`"""
@@ -91,7 +87,6 @@ def generate_help(root: Command, command: Command, namespace: list[str]) -> str:
     command_doc.parse_docstring(command.doc or "")
     generate_aliases(command_doc, root, command, namespace)
     generate_subcommands(command_doc, command)
-    generate_arguments(command_doc, command)
     return str(command_doc)
 
 
@@ -136,7 +131,8 @@ def generate_aliases(
         key for key, value in parent.subcommand_aliases.items() if value == command.name
     ]
     if aliases:
-        doc.add_section("aliases", "\n".join(aliases))
+        aliases.append(command.name)
+        doc.add_section("names", "\n".join(aliases))
 
 
 def generate_subcommands(doc: CommandDoc, command: Command):
@@ -157,8 +153,3 @@ def generate_subcommands(doc: CommandDoc, command: Command):
         )
 
     doc.add_section("subcommands", subcommands)
-
-
-def generate_arguments(doc: CommandDoc, command: Command):
-    if doc.sections.get("arguments"):
-        return
