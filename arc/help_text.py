@@ -1,5 +1,5 @@
 import textwrap
-from typing import Union, Optional
+from typing import Union
 from arc.command import Command
 from arc.color import fg, effects
 from arc import config
@@ -8,73 +8,15 @@ from arc.run import find_command
 __all__ = ["display_help", "generate_help"]
 
 
-def display_help(root: Command, command: Command, namespace: list[str]):
-    print(generate_help(root, command, namespace))
+def header(text: str):
+    return f"{effects.BOLD}{fg.WHITE.bright}{text.upper()}{effects.CLEAR}"
 
 
-def generate_help(root: Command, command: Command, namespace: list[str]):
-    return (
-        ""
-        + generate_usage(root, command, namespace)
-        + generate_sections(command.doc)
-        + generate_aliases(root, command, namespace)
-        + generate_subcommands(command)
-    ).strip("\n")
+def section(heading: str, content: Union[str, list[str]]):
+    if isinstance(content, list):
+        content = textwrap.dedent("\n".join(content)).strip("\n")
 
-
-def generate_usage(root: Command, command: Command, namespace: list[str]) -> str:
-    if root == command:
-        command_str = "<command>"
-        arg_str = "[arguments ...]"
-    else:
-        command_str = config.namespace_sep.join(namespace)
-        arg_str = " ".join(arg.helper() for arg in command.parser.args.values())
-
-    return section(
-        "usage",
-        f"{fg.ARC_BLUE}{root.name}{effects.CLEAR}"
-        f" {effects.UNDERLINE}{command_str}{effects.CLEAR} {arg_str}",
-    )
-
-
-def generate_sections(doc: Optional[str]) -> str:
-    formatted = ""
-    if doc:
-        command_doc = CommandDoc(doc)
-        for heading, content in command_doc.sections.items():
-            formatted += section(heading, content.strip("\n"))
-
-    return formatted
-
-
-def generate_aliases(root: Command, command: Command, namespace: list[str]) -> str:
-    parent, _ = find_command(root, namespace[:-1])
-    aliases = [
-        key for key, value in parent.subcommand_aliases.items() if value == command.name
-    ]
-    if aliases:
-        return section("aliases", aliases)
-    return ""
-
-
-def generate_subcommands(command: Command) -> str:
-    if not command.subcommands:
-        return ""
-
-    name_size = len(max(command.subcommands.keys(), key=len))
-    subcommands = ""
-
-    for sub in command.subcommands.values():
-        lines = CommandDoc(sub.doc).sections.get("description", "").split("\n")
-        if len(lines) > 0:
-            first_line = lines[0].strip("\n")
-        else:
-            first_line = ""
-        subcommands += (
-            f"{fg.ARC_BLUE}{sub.name:<{name_size}}{effects.CLEAR}   {first_line}\n"
-        )
-
-    return section("subcommands", subcommands)
+    return header(heading) + "\n" + textwrap.indent(content, prefix="  ") + "\n\n"
 
 
 class CommandDoc:
@@ -85,6 +27,13 @@ class CommandDoc:
         self.sections: dict[str, str] = {}
         if doc:
             self.parse_docstring(doc)
+
+    def __str__(self):
+        string = ""
+        for title, content in self.sections.items():
+            string += section(title, content.strip("\n"))
+
+        return string.strip("\n")
 
     def parse_docstring(self, doc: str):
         """Parses a doc string into sections
@@ -107,6 +56,9 @@ class CommandDoc:
                 current_section = line[1:].strip()
                 continue
 
+            if line == "" and current_section == self.DEFAULT_SECTION:
+                continue
+
             self.update_section(current_section, line + "\n")
 
     def add_section(self, title: str, content: str):
@@ -122,12 +74,68 @@ class CommandDoc:
             self.add_section(key, to_add)
 
 
-def header(text: str):
-    return f"{effects.BOLD}{fg.WHITE.bright}{text.upper()}{effects.CLEAR}"
+def display_help(root: Command, command: Command, namespace: list[str]):
+    print(generate_help(root, command, namespace))
 
 
-def section(heading: str, content: Union[str, list[str]]):
-    if isinstance(content, list):
-        content = textwrap.dedent("\n".join(content)).strip("\n")
+def generate_help(root: Command, command: Command, namespace: list[str]) -> str:
+    command_doc = CommandDoc()
+    generate_usage(command_doc, root, command, namespace)
+    command_doc.parse_docstring(command.doc or "")
+    generate_aliases(command_doc, root, command, namespace)
+    generate_subcommands(command_doc, command)
+    return str(command_doc)
 
-    return header(heading) + "\n" + textwrap.indent(content, prefix="  ") + "\n\n"
+
+def generate_usage(
+    doc: CommandDoc,
+    root: Command,
+    command: Command,
+    namespace: list[str],
+):
+    if root == command:
+        command_str = "<command>"
+        arg_str = "[arguments ...]"
+    else:
+        command_str = config.namespace_sep.join(namespace)
+        arg_str = " ".join(arg.helper() for arg in command.parser.args.values())
+
+    doc.add_section(
+        "usage",
+        f"{fg.ARC_BLUE}{root.name}{effects.CLEAR}"
+        f" {effects.UNDERLINE}{command_str}{effects.CLEAR} {arg_str}",
+    )
+
+
+def generate_aliases(
+    doc: CommandDoc,
+    root: Command,
+    command: Command,
+    namespace: list[str],
+):
+    parent, _ = find_command(root, namespace[:-1])
+    aliases = [
+        key for key, value in parent.subcommand_aliases.items() if value == command.name
+    ]
+    if aliases:
+        doc.add_section("aliases", "\n".join(aliases))
+
+
+def generate_subcommands(doc: CommandDoc, command: Command):
+    if not command.subcommands:
+        return
+
+    name_size = len(max(command.subcommands.keys(), key=len))
+    subcommands = ""
+
+    for sub in command.subcommands.values():
+        lines = CommandDoc(sub.doc).sections.get("description", "").split("\n")
+        if len(lines) > 0:
+            first_line = lines[0].strip("\n")
+        else:
+            first_line = ""
+        subcommands += (
+            f"{fg.ARC_BLUE}{sub.name:<{name_size}}{effects.CLEAR}   {first_line}\n"
+        )
+
+    doc.add_section("subcommands", subcommands)
