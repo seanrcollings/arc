@@ -23,14 +23,20 @@ class CommandDoc:
 
     DEFAULT_SECTION = "description"
 
-    def __init__(self, doc: str = None):
+    def __init__(self, doc: str = None, section_order: tuple = None):
         self.sections: dict[str, str] = {}
+        self.order: tuple = section_order or tuple()
         if doc:
             self.parse_docstring(doc)
 
     def __str__(self):
         string = ""
-        for title, content in self.sections.items():
+        for key in self.order:
+            string += section(key, self.sections[key].strip("\n"))
+
+        for title, content in [
+            (key, val) for key, val in self.sections.items() if key not in self.order
+        ]:
             string += section(title, content.strip("\n"))
 
         return string.strip("\n")
@@ -68,6 +74,7 @@ class CommandDoc:
     def update_section(self, key: str, to_add: str):
         """Updates a section. If that section
         does not exist, creates it"""
+        key = key.lower().strip()
         if key in self.sections:
             self.sections[key] += to_add
         else:
@@ -84,6 +91,7 @@ def generate_help(root: Command, command: Command, namespace: list[str]) -> str:
     command_doc.parse_docstring(command.doc or "")
     generate_aliases(command_doc, root, command, namespace)
     generate_subcommands(command_doc, command)
+    generate_arguments(command_doc, command)
     return str(command_doc)
 
 
@@ -139,3 +147,8 @@ def generate_subcommands(doc: CommandDoc, command: Command):
         )
 
     doc.add_section("subcommands", subcommands)
+
+
+def generate_arguments(doc: CommandDoc, command: Command):
+    if doc.sections.get("arguments"):
+        return
