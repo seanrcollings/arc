@@ -43,7 +43,10 @@
                                 <a class="function" href="#Argument.convert">convert</a>
                         </li>
                         <li>
-                                <a class="function" href="#Argument.helper">helper</a>
+                                <a class="function" href="#Argument.is_flag">is_flag</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Argument.is_optional">is_optional</a>
                         </li>
                 </ul>
 
@@ -67,6 +70,7 @@
                         <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">enum</span>
 
 <span class="kn">from</span> <span class="nn">arc.config</span> <span class="kn">import</span> <span class="n">config</span>
 <span class="kn">from</span> <span class="nn">arc.utils</span> <span class="kn">import</span> <span class="n">symbol</span>
@@ -100,8 +104,11 @@
 
         <span class="k">return</span> <span class="n">convert</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotation</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">helper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}{</span><span class="n">config</span><span class="o">.</span><span class="n">arg_assignment</span><span class="si">}{</span><span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">is_flag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotation</span> <span class="ow">is</span> <span class="nb">bool</span>
+
+    <span class="k">def</span> <span class="nf">is_optional</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">NO_DEFAULT</span>
 </pre></div>
 
         </details>
@@ -140,8 +147,11 @@
 
         <span class="k">return</span> <span class="n">convert</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotation</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">helper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}{</span><span class="n">config</span><span class="o">.</span><span class="n">arg_assignment</span><span class="si">}{</span><span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">is_flag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotation</span> <span class="ow">is</span> <span class="nb">bool</span>
+
+    <span class="k">def</span> <span class="nf">is_optional</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">NO_DEFAULT</span>
 </pre></div>
 
         </details>
@@ -208,18 +218,37 @@
 
 
                             </div>
-                            <div id="Argument.helper" class="classattr">
-                                        <div class="attr function"><a class="headerlink" href="#Argument.helper">#&nbsp;&nbsp</a>
+                            <div id="Argument.is_flag" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Argument.is_flag">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">helper</span><span class="signature">(self, level: int = 0)</span>:
+            <span class="name">is_flag</span><span class="signature">(self)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">helper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}{</span><span class="n">config</span><span class="o">.</span><span class="n">arg_assignment</span><span class="si">}{</span><span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">is_flag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotation</span> <span class="ow">is</span> <span class="nb">bool</span>
+</pre></div>
+
+        </details>
+
+    
+
+                            </div>
+                            <div id="Argument.is_optional" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Argument.is_optional">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">is_optional</span><span class="signature">(self)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">is_optional</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">NO_DEFAULT</span>
 </pre></div>
 
         </details>

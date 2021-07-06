@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="generator" content="pdoc 7.1.1" />
-    <title>arc.command API documentation</title>
+    <title>arc.help_text API documentation</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%2244.5%202.5%2015%2015%22%3E%3Cpath%20d%3D%22M49.351%2021.041c-.233-.721-.546-2.408-.772-4.076-.042-.09-.067-.187-.046-.288-.166-1.347-.277-2.625-.241-3.351-1.378-1.008-2.271-2.586-2.271-4.362%200-.976.272-1.935.788-2.774.057-.094.122-.18.184-.268-.033-.167-.052-.339-.052-.516%200-1.477%201.202-2.679%202.679-2.679.791%200%201.496.352%201.987.9a6.3%206.3%200%200%201%201.001.029c.492-.564%201.207-.929%202.012-.929%201.477%200%202.679%201.202%202.679%202.679a2.65%202.65%200%200%201-.269%201.148c.383.747.595%201.572.595%202.41%200%202.311-1.507%204.29-3.635%205.107.037.699.147%202.27.423%203.294l.137.461c.156%202.136-4.612%205.166-5.199%203.215zm.127-4.919a4.78%204.78%200%200%200%20.775-.584c-.172-.115-.505-.254-.88-.378zm.331%202.302l.828-.502c-.202-.143-.576-.328-.984-.49zm.45%202.157l.701-.403c-.214-.115-.536-.249-.891-.376l.19.779zM49.13%204.141c0%20.152.123.276.276.276s.275-.124.275-.276-.123-.276-.276-.276-.275.124-.275.276zm.735-.389a1.15%201.15%200%200%201%20.314.783%201.16%201.16%200%200%201-1.162%201.162c-.457%200-.842-.27-1.032-.653-.026.117-.042.238-.042.362a1.68%201.68%200%200%200%201.679%201.679%201.68%201.68%200%200%200%201.679-1.679c0-.843-.626-1.535-1.436-1.654zm3.076%201.654a1.68%201.68%200%200%200%201.679%201.679%201.68%201.68%200%200%200%201.679-1.679c0-.037-.009-.072-.011-.109-.21.3-.541.508-.935.508a1.16%201.16%200%200%201-1.162-1.162%201.14%201.14%200%200%201%20.474-.912c-.015%200-.03-.005-.045-.005-.926.001-1.679.754-1.679%201.68zm1.861-1.265c0%20.152.123.276.276.276s.275-.124.275-.276-.123-.276-.276-.276-.275.124-.275.276zm1.823%204.823c0-.52-.103-1.035-.288-1.52-.466.394-1.06.64-1.717.64-1.144%200-2.116-.725-2.499-1.738-.383%201.012-1.355%201.738-2.499%201.738-.867%200-1.631-.421-2.121-1.062-.307.605-.478%201.267-.478%201.942%200%202.486%202.153%204.51%204.801%204.51s4.801-2.023%204.801-4.51zm-3.032%209.156l-.146-.492c-.276-1.02-.395-2.457-.444-3.268a6.11%206.11%200%200%201-1.18.115%206.01%206.01%200%200%201-2.536-.562l.006.175c.802.215%201.848.612%202.021%201.25.079.295-.021.601-.274.837l-.598.501c.667.304%201.243.698%201.311%201.179.02.144.022.507-.393.787l-.564.365c1.285.521%201.361.96%201.381%201.126.018.142.011.496-.427.746l-.854.489c.064-1.19%201.985-2.585%202.697-3.248zM49.34%209.925c0-.667%201-.667%201%200%200%20.653.818%201.205%201.787%201.205s1.787-.552%201.787-1.205c0-.667%201-.667%201%200%200%201.216-1.25%202.205-2.787%202.205s-2.787-.989-2.787-2.205zm-.887-7.633c-.093.077-.205.114-.317.114a.5.5%200%200%201-.318-.886L49.183.397a.5.5%200%200%201%20.703.068.5.5%200%200%201-.069.703zm7.661-.065c-.086%200-.173-.022-.253-.068l-1.523-.893c-.575-.337-.069-1.2.506-.863l1.523.892a.5.5%200%200%201%20.179.685c-.094.158-.261.247-.432.247z%22%20fill%3D%22%233bb300%22/%3E%3C/svg%3E"/>
 
 
@@ -27,20 +27,14 @@
 
 
 
-                    <h2>Submodules</h2>
-                    <ul>
-                            <li><a href="command/argument.html">arc.command.argument</a></li>
-                            <li><a href="command/argument_parser.html">arc.command.argument_parser</a></li>
-                            <li><a href="command/command.html">arc.command.command</a></li>
-                            <li><a href="command/command_executor.html">arc.command.command_executor</a></li>
-                            <li><a href="command/context.html">arc.command.context</a></li>
-                            <li><a href="command/helpers.html">arc.command.helpers</a></li>
-                    </ul>
 
                     <h2>API Documentation</h2>
                         <ul class="memberlist">
             <li>
-                    <a class="function" href="#namespace">namespace</a>
+                    <a class="function" href="#display_help">display_help</a>
+            </li>
+            <li>
+                    <a class="function" href="#generate_help">generate_help</a>
             </li>
     </ul>
 
@@ -55,91 +49,220 @@
     <main class="pdoc">
             <section>
                     <h1 class="modulename">
-<a href="./../arc.html">arc</a><wbr>.command    </h1>
+<a href="./../arc.html">arc</a><wbr>.help_text    </h1>
 
                 
                         <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">utils</span>
+            <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">textwrap</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">arc.command</span> <span class="kn">import</span> <span class="n">Command</span>
+<span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">fg</span><span class="p">,</span> <span class="n">effects</span>
+<span class="kn">from</span> <span class="nn">arc.config</span> <span class="kn">import</span> <span class="n">config</span>
+<span class="kn">from</span> <span class="nn">arc.run</span> <span class="kn">import</span> <span class="n">find_command</span>
 
-<span class="kn">from</span> <span class="nn">.command</span> <span class="kn">import</span> <span class="n">Command</span>
-<span class="kn">from</span> <span class="nn">.context</span> <span class="kn">import</span> <span class="n">Context</span>
-<span class="kn">from</span> <span class="nn">.argument_parser</span> <span class="kn">import</span> <span class="n">ParsingMethod</span><span class="p">,</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">PositionalParser</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;display_help&quot;</span><span class="p">,</span> <span class="s2">&quot;generate_help&quot;</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">namespace</span><span class="p">(</span>
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parsing_method</span><span class="o">=</span><span class="n">ParsingMethod</span><span class="o">.</span><span class="n">KEYWORD</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Command</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Creates a Command namespace.</span>
+<span class="k">def</span> <span class="nf">header</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">BOLD</span><span class="si">}{</span><span class="n">fg</span><span class="o">.</span><span class="n">WHITE</span><span class="o">.</span><span class="n">bright</span><span class="si">}{</span><span class="n">text</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">&quot;</span>
 
-<span class="sd">    Namespaces are autoloadable with `cli.autoload()`</span>
-<span class="sd">    Args:</span>
-<span class="sd">        name: name of the namespace / command</span>
-<span class="sd">        function: optional function to be used</span>
-<span class="sd">            when calling the namespace directly, defaults to no_op</span>
-<span class="sd">        command_type: Type of the command, defaults to KEYWORD</span>
-<span class="sd">        context: dict of context values to be used in this namespace and below</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">function</span> <span class="o">=</span> <span class="n">function</span> <span class="ow">or</span> <span class="n">utils</span><span class="o">.</span><span class="n">no_op</span>
-    <span class="n">command</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">parsing_method</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="n">command</span><span class="o">.</span><span class="n">__autoload__</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># type: ignore</span>
-    <span class="k">return</span> <span class="n">command</span>
+
+<span class="k">def</span> <span class="nf">section</span><span class="p">(</span><span class="n">heading</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">content</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">header</span><span class="p">(</span><span class="n">heading</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;  &quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">CommandDoc</span><span class="p">:</span>
+
+    <span class="n">DEFAULT_SECTION</span> <span class="o">=</span> <span class="s2">&quot;description&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">section_order</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sections</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="n">section_order</span> <span class="ow">or</span> <span class="nb">tuple</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">doc</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parse_docstring</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">string</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">:</span>
+            <span class="n">string</span> <span class="o">+=</span> <span class="n">section</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sections</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">title</span><span class="p">,</span> <span class="n">content</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sections</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span>
+        <span class="p">]:</span>
+            <span class="n">string</span> <span class="o">+=</span> <span class="n">section</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">content</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">string</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">parse_docstring</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parses a doc string into sections</span>
+
+<span class="sd">        Sections are denoted by a new line, and</span>
+<span class="sd">        then a line beginning with `#`. Whatever</span>
+<span class="sd">        comes after the `#` will be the key in</span>
+<span class="sd">        the sections dict. And all content between</span>
+<span class="sd">        that `#` and the next `#` will be the value.</span>
+
+<span class="sd">        The first section of the docstring is not</span>
+<span class="sd">        required to possess a section header, and</span>
+<span class="sd">        will be entered in as the `description` section.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)]</span>
+        <span class="n">current_section</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_SECTION</span>
+
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">):</span>
+                <span class="n">current_section</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">line</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span> <span class="ow">or</span> <span class="n">current_section</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_SECTION</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">update_section</span><span class="p">(</span><span class="n">current_section</span><span class="p">,</span> <span class="n">line</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">add_section</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds a section with `title` and `content`&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sections</span><span class="p">[</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="n">content</span>
+
+    <span class="k">def</span> <span class="nf">update_section</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">to_add</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates a section. If that section</span>
+<span class="sd">        does not exist, creates it&quot;&quot;&quot;</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sections</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sections</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">+=</span> <span class="n">to_add</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_section</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">to_add</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">display_help</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">generate_help</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="n">namespace</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">generate_help</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">command_doc</span> <span class="o">=</span> <span class="n">CommandDoc</span><span class="p">()</span>
+    <span class="n">generate_usage</span><span class="p">(</span><span class="n">command_doc</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="n">namespace</span><span class="p">)</span>
+    <span class="n">command_doc</span><span class="o">.</span><span class="n">parse_docstring</span><span class="p">(</span><span class="n">command</span><span class="o">.</span><span class="n">doc</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">generate_aliases</span><span class="p">(</span><span class="n">command_doc</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="n">namespace</span><span class="p">)</span>
+    <span class="n">generate_subcommands</span><span class="p">(</span><span class="n">command_doc</span><span class="p">,</span> <span class="n">command</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">command_doc</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">generate_usage</span><span class="p">(</span>
+    <span class="n">doc</span><span class="p">:</span> <span class="n">CommandDoc</span><span class="p">,</span>
+    <span class="n">root</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span>
+    <span class="n">command</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span>
+    <span class="n">namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+<span class="p">):</span>
+    <span class="k">if</span> <span class="n">root</span> <span class="o">==</span> <span class="n">command</span><span class="p">:</span>
+        <span class="n">command_str</span> <span class="o">=</span> <span class="s2">&quot;&lt;command&gt;&quot;</span>
+        <span class="n">args_str</span> <span class="o">=</span> <span class="s2">&quot;[arguments ...]&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">command_str</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">namespace_sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">namespace</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">command</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_flag</span><span class="p">():</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">flag_denoter</span><span class="si">}{</span><span class="n">arg</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">arg_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">arg</span><span class="o">.</span><span class="n">name</span><span class="si">}{</span><span class="n">config</span><span class="o">.</span><span class="n">arg_assignment</span><span class="si">}</span><span class="s2">&lt;...&gt;&quot;</span>
+                <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_optional</span><span class="p">():</span>
+                    <span class="n">arg_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">arg_str</span><span class="si">}</span><span class="s2">]&quot;</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg_str</span><span class="p">)</span>
+
+        <span class="n">args_str</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="n">doc</span><span class="o">.</span><span class="n">add_section</span><span class="p">(</span>
+        <span class="s2">&quot;usage&quot;</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">ARC_BLUE</span><span class="si">}{</span><span class="n">root</span><span class="o">.</span><span class="n">name</span><span class="si">}{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">UNDERLINE</span><span class="si">}{</span><span class="n">command_str</span><span class="si">}{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">args_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">generate_aliases</span><span class="p">(</span>
+    <span class="n">doc</span><span class="p">:</span> <span class="n">CommandDoc</span><span class="p">,</span>
+    <span class="n">root</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span>
+    <span class="n">command</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span>
+    <span class="n">namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+<span class="p">):</span>
+    <span class="n">parent</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">find_command</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">namespace</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">aliases</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">key</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parent</span><span class="o">.</span><span class="n">subcommand_aliases</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="n">command</span><span class="o">.</span><span class="n">name</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">aliases</span><span class="p">:</span>
+        <span class="n">aliases</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">command</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">doc</span><span class="o">.</span><span class="n">add_section</span><span class="p">(</span><span class="s2">&quot;names&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">aliases</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">generate_subcommands</span><span class="p">(</span><span class="n">doc</span><span class="p">:</span> <span class="n">CommandDoc</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="n">Command</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">command</span><span class="o">.</span><span class="n">subcommands</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="n">name_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">command</span><span class="o">.</span><span class="n">subcommands</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">))</span>
+    <span class="n">subcommands</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">command</span><span class="o">.</span><span class="n">subcommands</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">CommandDoc</span><span class="p">(</span><span class="n">sub</span><span class="o">.</span><span class="n">doc</span><span class="p">)</span><span class="o">.</span><span class="n">sections</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">first_line</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">first_line</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">subcommands</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">ARC_BLUE</span><span class="si">}{</span><span class="n">sub</span><span class="o">.</span><span class="n">name</span><span class="si">:</span><span class="s2">&lt;</span><span class="si">{</span><span class="n">name_size</span><span class="si">}}{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">   </span><span class="si">{</span><span class="n">first_line</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">doc</span><span class="o">.</span><span class="n">add_section</span><span class="p">(</span><span class="s2">&quot;subcommands&quot;</span><span class="p">,</span> <span class="n">subcommands</span><span class="p">)</span>
 </pre></div>
 
         </details>
 
             </section>
-                <section id="namespace">
-                            <div class="attr function"><a class="headerlink" href="#namespace">#&nbsp;&nbsp</a>
+                <section id="display_help">
+                            <div class="attr function"><a class="headerlink" href="#display_help">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">namespace</span><span class="signature">(
-    name: str,
-    function=None,
-    parsing_method=&lt;class &#39;<a href="command/argument_parser.html#KeywordParser">arc.command.argument_parser.KeywordParser</a>&#39;&gt;,
-    **kwargs
-) -&gt; <a href="command/command.html#Command">arc.command.command.Command</a></span>:
+            <span class="name">display_help</span><span class="signature">(
+    root: <a href="command/command.html#Command">arc.command.command.Command</a>,
+    command: <a href="command/command.html#Command">arc.command.command.Command</a>,
+    namespace: list
+)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">namespace</span><span class="p">(</span>
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parsing_method</span><span class="o">=</span><span class="n">ParsingMethod</span><span class="o">.</span><span class="n">KEYWORD</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Command</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Creates a Command namespace.</span>
-
-<span class="sd">    Namespaces are autoloadable with `cli.autoload()`</span>
-<span class="sd">    Args:</span>
-<span class="sd">        name: name of the namespace / command</span>
-<span class="sd">        function: optional function to be used</span>
-<span class="sd">            when calling the namespace directly, defaults to no_op</span>
-<span class="sd">        command_type: Type of the command, defaults to KEYWORD</span>
-<span class="sd">        context: dict of context values to be used in this namespace and below</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">function</span> <span class="o">=</span> <span class="n">function</span> <span class="ow">or</span> <span class="n">utils</span><span class="o">.</span><span class="n">no_op</span>
-    <span class="n">command</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">parsing_method</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="n">command</span><span class="o">.</span><span class="n">__autoload__</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># type: ignore</span>
-    <span class="k">return</span> <span class="n">command</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">display_help</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">generate_help</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="n">namespace</span><span class="p">))</span>
 </pre></div>
 
         </details>
 
-            <div class="docstring"><p>Creates a Command namespace.</p>
+    
 
-<p>Namespaces are autoloadable with <code>cli.autoload()</code></p>
+                </section>
+                <section id="generate_help">
+                            <div class="attr function"><a class="headerlink" href="#generate_help">#&nbsp;&nbsp</a>
 
-<h6 id="args">Args</h6>
+        
+            <span class="def">def</span>
+            <span class="name">generate_help</span><span class="signature">(
+    root: <a href="command/command.html#Command">arc.command.command.Command</a>,
+    command: <a href="command/command.html#Command">arc.command.command.Command</a>,
+    namespace: list
+) -&gt; str</span>:
+    </div>
 
-<ul>
-<li><strong>name:</strong>  name of the namespace / command</li>
-<li><strong>function:</strong>  optional function to be used
-when calling the namespace directly, defaults to no_op</li>
-<li><strong>command_type:</strong>  Type of the command, defaults to KEYWORD</li>
-<li><strong>context:</strong>  dict of context values to be used in this namespace and below</li>
-</ul>
-</div>
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">generate_help</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">command_doc</span> <span class="o">=</span> <span class="n">CommandDoc</span><span class="p">()</span>
+    <span class="n">generate_usage</span><span class="p">(</span><span class="n">command_doc</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="n">namespace</span><span class="p">)</span>
+    <span class="n">command_doc</span><span class="o">.</span><span class="n">parse_docstring</span><span class="p">(</span><span class="n">command</span><span class="o">.</span><span class="n">doc</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">generate_aliases</span><span class="p">(</span><span class="n">command_doc</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="n">namespace</span><span class="p">)</span>
+    <span class="n">generate_subcommands</span><span class="p">(</span><span class="n">command_doc</span><span class="p">,</span> <span class="n">command</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">command_doc</span><span class="p">)</span>
+</pre></div>
 
+        </details>
+
+    
 
                 </section>
     </main>
