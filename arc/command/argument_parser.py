@@ -50,6 +50,7 @@ class ArgumentParser:
                     key, value = self.handle_match(match, name)
                     if any((key, value)):
                         matched_args[key] = value
+                    break
 
         return self.fill_unmatched(matched_args, context)
 
@@ -116,7 +117,40 @@ class ArgumentParser:
         if groups := match.groupdict():
             return groups
 
-        return match.group(1)
+        return match.group()
+
+
+class StandardParser(ArgumentParser):
+    matchers = {
+        "flag": re.compile(
+            fr"^(?:{config.flag_denoter}|{config.short_flag_denoter})(?P<name>\b{IDENT})$"
+        ),
+        "value": re.compile("^(.+)$"),
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.current_arg = None
+        self.current_value: str = ""
+
+    def handle_flag(self, flag):
+        name = flag["name"]
+        arg = self.get_or_raise(name, f"Option {config.flag_denoter}{name} not found.")
+        self.current_arg = arg
+        self.current_value = ""
+        if arg.is_flag():
+            return arg.name, not arg.default
+
+        return arg.name, arg.default
+
+    def handle_value(self, value):
+        self.current_value += " " + value
+        if not self.current_arg:
+            raise errors.ParserError("Values must come after options")
+
+        return self.current_arg.name, self.current_arg.convert(
+            self.current_value.strip()
+        )
 
 
 FLAG = re.compile(
@@ -264,6 +298,7 @@ class RawParser(ArgumentParser):
 
 
 class ParsingMethod:
+    STANDARD: Type[ArgumentParser] = StandardParser
     KEYWORD: Type[ArgumentParser] = KeywordParser
     POSITIONAL: Type[ArgumentParser] = PositionalParser
     RAW: Type[ArgumentParser] = RawParser

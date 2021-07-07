@@ -1,6 +1,7 @@
 import textwrap
 from typing import Union
-from arc.command import Command
+from arc.command import Command, ParsingMethod
+from arc.command.argument import Argument
 from arc.color import fg, effects
 from arc.config import config
 from arc.run import find_command
@@ -101,23 +102,45 @@ def generate_usage(
         args_str = "[arguments ...]"
     else:
         command_str = config.namespace_sep.join(namespace)
-        args = []
-        for arg in command.parser.args.values():
-            if arg.is_flag():
-                args.append(f"[{config.flag_denoter}{arg.name}]")
-            else:
-                arg_str = f"{arg.name}{config.arg_assignment}<...>"
-                if arg.is_optional():
-                    arg_str = f"[{arg_str}]"
-                args.append(arg_str)
-
-        args_str = " ".join(args)
+        args_str = generate_options_string(command)
 
     doc.add_section(
         "usage",
         f"{fg.ARC_BLUE}{root.name}{effects.CLEAR}"
         f" {effects.UNDERLINE}{command_str}{effects.CLEAR} {args_str}",
     )
+
+
+def generate_options_string(command: Command):
+    format_strings = {
+        ParsingMethod.STANDARD: f"{config.flag_denoter}{{name}} <...>",
+        ParsingMethod.KEYWORD: f"{{name}}{config.arg_assignment}<...>",
+        ParsingMethod.POSITIONAL: "<{name}>",
+        "flag": f"{config.flag_denoter}{{name}}",
+    }
+
+    def format_single_arg(arg: Argument):
+        format_string = (
+            format_strings["flag"]
+            if arg.is_flag()
+            else format_strings[type(command.parser)]
+        )
+        arg_str = format_string.format(name=arg.name)
+        if arg.is_optional():
+            arg_str = f"[{arg_str}]"
+
+        return arg_str
+
+    args = []
+    flags = []
+    for arg in command.parser.args.values():
+        formatted = format_single_arg(arg)
+        if arg.is_flag():
+            flags.append(formatted)
+        else:
+            args.append(formatted)
+
+    return " ".join(args + flags)
 
 
 def generate_aliases(
