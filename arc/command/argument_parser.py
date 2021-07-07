@@ -294,7 +294,8 @@ class PositionalParser(FlagParser):
 
 
 class RawParser(ArgumentParser):
-    ...
+    def parse(self, cli_args, _context):
+        return {"_args": cli_args}
 
 
 class ParsingMethod:
