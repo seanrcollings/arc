@@ -152,6 +152,12 @@ class StandardParser(ArgumentParser):
             self.current_value.strip()
         )
 
+    def arg_hook(self, param, meta):
+        if param.kind in (param.VAR_POSITIONAL, param.VAR_KEYWORD):
+            raise errors.CommandError(
+                "Standard Commands do not accept *args or **kwargs"
+            )
+
 
 FLAG = re.compile(
     fr"^(?:{config.flag_denoter}|{config.short_flag_denoter})(?P<name>\b{IDENT})$"
@@ -296,6 +302,12 @@ class PositionalParser(FlagParser):
 class RawParser(ArgumentParser):
     def parse(self, cli_args, _context):
         return {"_args": cli_args}
+
+    def arg_hook(self, param, meta):
+        if param.kind is not param.VAR_POSITIONAL:
+            raise errors.CommandError(
+                "Raw commands must only have a single *args argument"
+            )
 
 
 class ParsingMethod:
