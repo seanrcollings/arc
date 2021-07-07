@@ -81,7 +81,7 @@ class bg:
     CYAN     = Color(46)
     WHITE    = Color(47)
     GREY     = BLACK.bright
-    ARC_BLUE = '\x1b[38;2;59;192;240m'
+    ARC_BLUE = '\x1b[48;2;59;192;240m'
 
     @staticmethod
     def rgb(red: int = 0, green: int = 0, blue: int = 0):
