@@ -11,7 +11,7 @@ from arc.errors import ConversionError, CommandError
 from arc import CLI
 
 
-def test_keybab(cli: CLI):
+def test_kebab(cli: CLI):
     @cli.subcommand()
     def two_words(first_name):
         assert first_name == "sean"
@@ -26,6 +26,22 @@ def test_positional(cli: CLI):
         assert val == 2
 
     cli("pos 2")
+
+
+def test_raw(cli: CLI):
+    @cli.subcommand(parsing_method=ParsingMethod.RAW)
+    def raw(*args):
+        return args
+
+    assert cli("raw 2") == ("2",)
+
+
+def test_standard(cli: CLI):
+    @cli.subcommand(parsing_method=ParsingMethod.STANDARD)
+    def sta(val: int):
+        return val
+
+    assert cli("sta --val 2") == 2
 
 
 def test_float(cli: CLI):
@@ -68,24 +84,24 @@ def test_list(cli: CLI):
     cli("li val=1")
 
 
-def test_list_alias(cli: CLI):
+def test_list_generic(cli: CLI):
     @cli.subcommand()
     def li(val: list[int]):
-        assert val == [1, 2, 3]
+        return val
 
-    cli("li val=1,2,3")
+    assert cli("li val=1,2,3") == [1, 2, 3]
 
     with pytest.raises(CommandError):
         cli("li val=ainfe")
 
     @cli.subcommand()
     def liu(val: list[Union[int, str]]):
-        assert val == ["word", 1]
+        return val
 
-    cli("liu val=word,1")
+    assert cli("liu val=word,1") == ["word", 1]
 
 
-def test_tuple_alias(cli: CLI):
+def test_tuple_generic(cli: CLI):
     @cli.subcommand()
     def tu(val: tuple[int]):
         assert val == (1,)
@@ -105,7 +121,7 @@ def test_tuple_alias(cli: CLI):
     cli("any-size val=1,2,3,4,5,6")
 
 
-def test_set_alias(cli: CLI):
+def test_set_generic(cli: CLI):
     @cli.subcommand()
     def se(val: set[int]):
         assert val == {1}
@@ -188,7 +204,7 @@ def test_nested_union(cli: CLI):
     assert cli("un2 val=1,string,3,4") == ["1", "string", "3", "4"]
 
 
-def test_arg_alias(cli: CLI):
+def test_arg_generic(cli: CLI):
     @cli.subcommand(arg_aliases={"name": "na", "flag": ("f", "fl")})
     def ar(name: str, flag: bool):
         assert name == "sean"
@@ -205,7 +221,7 @@ def test_arg_alias(cli: CLI):
             ...
 
 
-def test_literL(cli: CLI):
+def test_literal(cli: CLI):
     @cli.subcommand()
     def li(mode: Literal["small", "big", "medium"] = "medium"):
         return mode
