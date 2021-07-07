@@ -1,4 +1,4 @@
-from typing import Callable, Any, Union, TypedDict, Type
+from typing import Callable, Any, Optional, Union, TypedDict, Type
 from inspect import Parameter
 import re
 
@@ -57,7 +57,15 @@ class ArgumentParser:
     def handle_match(self, match: re.Match, name: str) -> tuple[str, Any]:
         groups: Union[dict[str, str], str] = self.get_match_values(match)
         handler: Callable = getattr(self, f"handle_{name}")
-        return handler(groups)
+        try:
+            return handler(groups)
+        except errors.MissingArgError as e:
+            arg = self.find_correct_argument(e.data["name"])
+            if arg:
+                e.message += (
+                    f"\n\tPerhaps you meant {fg.YELLOW}{arg.name}{effects.CLEAR}?"
+                )
+            raise
 
     def fill_unmatched(
         self, matched_args: dict[str, Any], context: dict[str, Any]
@@ -79,7 +87,7 @@ class ArgumentParser:
             if value is NO_DEFAULT:
                 raise errors.ParserError(
                     "No value provided for required argument: "
-                    f"{fg.YELLOW}{key}{effects.CLEAR}"
+                    f"{fg.YELLOW}{key}{effects.CLEAR}",
                 )
 
         return matched_args | unfilled
@@ -110,7 +118,7 @@ class ArgumentParser:
             if key in arg.aliases and not arg.hidden:
                 return arg
 
-        raise errors.ParserError(message)
+        raise errors.MissingArgError(message, name=key)
 
     @staticmethod
     def get_match_values(match: re.Match) -> Union[dict[str, str], str]:
@@ -118,6 +126,44 @@ class ArgumentParser:
             return groups
 
         return match.group()
+
+    def find_correct_argument(self, missing: str) -> Optional[Argument]:
+
+        if config.suggest_on_missing_argument:
+            distance, arg = min(
+                ((levenshtein(arg.name, missing), arg) for arg in self.args.values()),
+                key=lambda tup: tup[0],
+            )
+
+            if distance <= 2:
+                return arg
+
+        return None
+
+
+# https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
+def levenshtein(s1: str, s2: str):
+    if len(s1) < len(s2):
+        # pylint: disable=arguments-out-of-order
+        return levenshtein(s2, s1)
+
+    # len(s1) >= len(s2)
+    if len(s2) == 0:
+        return len(s1)
+
+    previous_row = range(len(s2) + 1)
+    for i, c1 in enumerate(s1):
+        current_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            insertions = (
+                previous_row[j + 1] + 1
+            )  # j+1 instead of j since previous_row and current_row are one character longer
+            deletions = current_row[j] + 1  # than s2
+            substitutions = previous_row[j] + (c1 != c2)
+            current_row.append(min(insertions, deletions, substitutions))
+        previous_row = current_row  # type: ignore
+
+    return previous_row[-1]
 
 
 class StandardParser(ArgumentParser):

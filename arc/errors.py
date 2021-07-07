@@ -45,7 +45,13 @@ class TokenizerError(ArcError):
 
 
 class ParserError(ArcError):
-    """Raised when there is an error parsing the token stream"""
+    """Raised when there is an error parsing the arguments"""
+
+
+class MissingArgError(ParserError):
+    def __init__(self, message: str, **data):
+        super().__init__(message)
+        self.data = data
 
 
 class ConversionError(ArcError):

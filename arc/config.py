@@ -155,6 +155,9 @@ class Config(ConfigBase):
     - development
     - test
     """
+    suggest_on_missing_argument = True
+    """Wether or not to provide suggestions for possible mispellings
+    when an argument is not found"""
 
     mode_map = {
         "development": logging.DEBUG,
