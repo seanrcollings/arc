@@ -67,6 +67,30 @@
 
             </li>
             <li>
+                    <a class="class" href="#StandardParser">StandardParser</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#StandardParser.__init__">StandardParser</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#StandardParser.matchers">matchers</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#StandardParser.current_value">current_value</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#StandardParser.handle_flag">handle_flag</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#StandardParser.handle_value">handle_value</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#StandardParser.arg_hook">arg_hook</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
                     <a class="class" href="#FlagParser">FlagParser</a>
                             <ul class="memberlist">
                         <li>
@@ -135,6 +159,12 @@
             <li>
                     <a class="class" href="#RawParser">RawParser</a>
                             <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#RawParser.parse">parse</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#RawParser.arg_hook">arg_hook</a>
+                        </li>
                 </ul>
 
             </li>
@@ -143,6 +173,9 @@
                             <ul class="memberlist">
                         <li>
                                 <a class="function" href="#ParsingMethod.__init__">ParsingMethod</a>
+                        </li>
+                        <li>
+                                <a class="class" href="#ParsingMethod.STANDARD">ParsingMethod.STANDARD</a>
                         </li>
                         <li>
                                 <a class="class" href="#ParsingMethod.KEYWORD">ParsingMethod.KEYWORD</a>
@@ -229,6 +262,7 @@
                     <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_match</span><span class="p">(</span><span class="n">match</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
                     <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)):</span>
                         <span class="n">matched_args</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                    <span class="k">break</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fill_unmatched</span><span class="p">(</span><span class="n">matched_args</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
 
@@ -295,7 +329,46 @@
         <span class="k">if</span> <span class="n">groups</span> <span class="o">:=</span> <span class="n">match</span><span class="o">.</span><span class="n">groupdict</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">groups</span>
 
-        <span class="k">return</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">StandardParser</span><span class="p">(</span><span class="n">ArgumentParser</span><span class="p">):</span>
+    <span class="n">matchers</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;flag&quot;</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+            <span class="sa">fr</span><span class="s2">&quot;^(?:</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">flag_denoter</span><span class="si">}</span><span class="s2">|</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">short_flag_denoter</span><span class="si">}</span><span class="s2">)(?P&lt;name&gt;\b</span><span class="si">{</span><span class="n">IDENT</span><span class="si">}</span><span class="s2">)$&quot;</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^(.+)$&quot;</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">handle_flag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">flag</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_or_raise</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Option </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">flag_denoter</span><span class="si">}{</span><span class="n">name</span><span class="si">}</span><span class="s2"> not found.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span> <span class="o">=</span> <span class="n">arg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_flag</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">arg</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="ow">not</span> <span class="n">arg</span><span class="o">.</span><span class="n">default</span>
+
+        <span class="k">return</span> <span class="n">arg</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">arg</span><span class="o">.</span><span class="n">default</span>
+
+    <span class="k">def</span> <span class="nf">handle_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ParserError</span><span class="p">(</span><span class="s2">&quot;Values must come after options&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">arg_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">meta</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">VAR_POSITIONAL</span><span class="p">,</span> <span class="n">param</span><span class="o">.</span><span class="n">VAR_KEYWORD</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">CommandError</span><span class="p">(</span>
+                <span class="s2">&quot;Standard Commands do not accept *args or **kwargs&quot;</span>
+            <span class="p">)</span>
 
 
 <span class="n">FLAG</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
@@ -439,10 +512,18 @@
 
 
 <span class="k">class</span> <span class="nc">RawParser</span><span class="p">(</span><span class="n">ArgumentParser</span><span class="p">):</span>
-    <span class="o">...</span>
+    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cli_args</span><span class="p">,</span> <span class="n">_context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;_args&quot;</span><span class="p">:</span> <span class="n">cli_args</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">arg_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">meta</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">kind</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">param</span><span class="o">.</span><span class="n">VAR_POSITIONAL</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">CommandError</span><span class="p">(</span>
+                <span class="s2">&quot;Raw commands must only have a single *args argument&quot;</span>
+            <span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">ParsingMethod</span><span class="p">:</span>
+    <span class="n">STANDARD</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="n">StandardParser</span>
     <span class="n">KEYWORD</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="n">KeywordParser</span>
     <span class="n">POSITIONAL</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="n">PositionalParser</span>
     <span class="n">RAW</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="n">RawParser</span>
@@ -502,6 +583,7 @@
                     <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_match</span><span class="p">(</span><span class="n">match</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
                     <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)):</span>
                         <span class="n">matched_args</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                    <span class="k">break</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fill_unmatched</span><span class="p">(</span><span class="n">matched_args</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
 
@@ -568,7 +650,7 @@
         <span class="k">if</span> <span class="n">groups</span> <span class="o">:=</span> <span class="n">match</span><span class="o">.</span><span class="n">groupdict</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">groups</span>
 
-        <span class="k">return</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
 </pre></div>
 
         </details>
@@ -660,6 +742,7 @@ of it's own.</p>
                     <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_match</span><span class="p">(</span><span class="n">match</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
                     <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)):</span>
                         <span class="n">matched_args</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                    <span class="k">break</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fill_unmatched</span><span class="p">(</span><span class="n">matched_args</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
 </pre></div>
@@ -827,13 +910,209 @@ doesn't do anything</p>
         <span class="k">if</span> <span class="n">groups</span> <span class="o">:=</span> <span class="n">match</span><span class="o">.</span><span class="n">groupdict</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">groups</span>
 
-        <span class="k">return</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
 </pre></div>
 
         </details>
 
     
 
+                            </div>
+                </section>
+                <section id="StandardParser">
+                                <div class="attr class">
+        <a class="headerlink" href="#StandardParser">#&nbsp;&nbsp</a>
+
+        
+        <span class="def">class</span>
+        <span class="name">StandardParser</span><wbr>(<span class="base"><a href="#ArgumentParser">ArgumentParser</a></span>):
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">StandardParser</span><span class="p">(</span><span class="n">ArgumentParser</span><span class="p">):</span>
+    <span class="n">matchers</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;flag&quot;</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+            <span class="sa">fr</span><span class="s2">&quot;^(?:</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">flag_denoter</span><span class="si">}</span><span class="s2">|</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">short_flag_denoter</span><span class="si">}</span><span class="s2">)(?P&lt;name&gt;\b</span><span class="si">{</span><span class="n">IDENT</span><span class="si">}</span><span class="s2">)$&quot;</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^(.+)$&quot;</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">handle_flag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">flag</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_or_raise</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Option </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">flag_denoter</span><span class="si">}{</span><span class="n">name</span><span class="si">}</span><span class="s2"> not found.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span> <span class="o">=</span> <span class="n">arg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_flag</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">arg</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="ow">not</span> <span class="n">arg</span><span class="o">.</span><span class="n">default</span>
+
+        <span class="k">return</span> <span class="n">arg</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">arg</span><span class="o">.</span><span class="n">default</span>
+
+    <span class="k">def</span> <span class="nf">handle_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ParserError</span><span class="p">(</span><span class="s2">&quot;Values must come after options&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">arg_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">meta</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">VAR_POSITIONAL</span><span class="p">,</span> <span class="n">param</span><span class="o">.</span><span class="n">VAR_KEYWORD</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">CommandError</span><span class="p">(</span>
+                <span class="s2">&quot;Standard Commands do not accept *args or **kwargs&quot;</span>
+            <span class="p">)</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Base class for ArgumentParsers</p>
+
+<p>Handles analyzing the provided function signature to generate
+The Argument data structure</p>
+
+<p>Attempts to match provided data to <code>cls.matchers</code> regexes. If it finds a match,
+it'll pass control over to the match handler (<code>handle_&lt;matcher-name&gt;</code>). This class
+should not be used to parse anything, as it does not provide any matchers or handlers
+of it's own.</p>
+</div>
+
+
+                            <div id="StandardParser.__init__" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#StandardParser.__init__">#&nbsp;&nbsp</a>
+
+        
+            <span class="name">StandardParser</span><span class="signature">(*args, **kwargs)</span>
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+</pre></div>
+
+        </details>
+
+    
+
+                            </div>
+                            <div id="StandardParser.matchers" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#StandardParser.matchers">#&nbsp;&nbsp</a>
+
+        <span class="name">matchers</span><span class="default_value"> = {&#39;flag&#39;: re.compile(&#39;^(?:--|-)(?P&lt;name&gt;\\b[a-zA-Z-_0-9]+)$&#39;), &#39;value&#39;: re.compile(&#39;^(.+)$&#39;)}</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="StandardParser.current_value" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#StandardParser.current_value">#&nbsp;&nbsp</a>
+
+        <span class="name">current_value</span><span class="annotation">: str</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="StandardParser.handle_flag" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#StandardParser.handle_flag">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">handle_flag</span><span class="signature">(self, flag)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">handle_flag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">flag</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_or_raise</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Option </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">flag_denoter</span><span class="si">}{</span><span class="n">name</span><span class="si">}</span><span class="s2"> not found.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span> <span class="o">=</span> <span class="n">arg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_flag</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">arg</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="ow">not</span> <span class="n">arg</span><span class="o">.</span><span class="n">default</span>
+
+        <span class="k">return</span> <span class="n">arg</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">arg</span><span class="o">.</span><span class="n">default</span>
+</pre></div>
+
+        </details>
+
+    
+
+                            </div>
+                            <div id="StandardParser.handle_value" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#StandardParser.handle_value">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">handle_value</span><span class="signature">(self, value)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">handle_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ParserError</span><span class="p">(</span><span class="s2">&quot;Values must come after options&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="p">)</span>
+</pre></div>
+
+        </details>
+
+    
+
+                            </div>
+                            <div id="StandardParser.arg_hook" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#StandardParser.arg_hook">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">arg_hook</span><span class="signature">(self, param, meta)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">arg_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">meta</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">VAR_POSITIONAL</span><span class="p">,</span> <span class="n">param</span><span class="o">.</span><span class="n">VAR_KEYWORD</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">CommandError</span><span class="p">(</span>
+                <span class="s2">&quot;Standard Commands do not accept *args or **kwargs&quot;</span>
+            <span class="p">)</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Callback to assert that the param being processed
+is valid for this given parser. Default implementation
+doesn't do anything</p>
+</div>
+
+
+                            </div>
+                            <div class="inherited">
+                                <h5>Inherited Members</h5>
+                                <dl>
+                                    <div><dt><a href="#ArgumentParser">ArgumentParser</a></dt>
+                                <dd id="StandardParser.args" class="variable"><a href="#ArgumentParser.args">args</a></dd>
+                <dd id="StandardParser.get_matchers" class="function"><a href="#ArgumentParser.get_matchers">get_matchers</a></dd>
+                <dd id="StandardParser.parse" class="function"><a href="#ArgumentParser.parse">parse</a></dd>
+                <dd id="StandardParser.handle_match" class="function"><a href="#ArgumentParser.handle_match">handle_match</a></dd>
+                <dd id="StandardParser.fill_unmatched" class="function"><a href="#ArgumentParser.fill_unmatched">fill_unmatched</a></dd>
+                <dd id="StandardParser.build_args" class="function"><a href="#ArgumentParser.build_args">build_args</a></dd>
+                <dd id="StandardParser.get_or_raise" class="function"><a href="#ArgumentParser.get_or_raise">get_or_raise</a></dd>
+                <dd id="StandardParser.get_match_values" class="function"><a href="#ArgumentParser.get_match_values">get_match_values</a></dd>
+
+            </div>
+                                </dl>
                             </div>
                 </section>
                 <section id="FlagParser">
@@ -1418,7 +1697,14 @@ doesn't do anything</p>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RawParser</span><span class="p">(</span><span class="n">ArgumentParser</span><span class="p">):</span>
-    <span class="o">...</span>
+    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cli_args</span><span class="p">,</span> <span class="n">_context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;_args&quot;</span><span class="p">:</span> <span class="n">cli_args</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">arg_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">meta</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">kind</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">param</span><span class="o">.</span><span class="n">VAR_POSITIONAL</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">CommandError</span><span class="p">(</span>
+                <span class="s2">&quot;Raw commands must only have a single *args argument&quot;</span>
+            <span class="p">)</span>
 </pre></div>
 
         </details>
@@ -1435,6 +1721,55 @@ of it's own.</p>
 </div>
 
 
+                            <div id="RawParser.parse" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#RawParser.parse">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">parse</span><span class="signature">(self, cli_args, _context)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cli_args</span><span class="p">,</span> <span class="n">_context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;_args&quot;</span><span class="p">:</span> <span class="n">cli_args</span><span class="p">}</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Parses the provided command-line arguments into
+a dictionary of arguments to be passed to a python
+function</p>
+</div>
+
+
+                            </div>
+                            <div id="RawParser.arg_hook" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#RawParser.arg_hook">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">arg_hook</span><span class="signature">(self, param, meta)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">arg_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">meta</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">kind</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">param</span><span class="o">.</span><span class="n">VAR_POSITIONAL</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">CommandError</span><span class="p">(</span>
+                <span class="s2">&quot;Raw commands must only have a single *args argument&quot;</span>
+            <span class="p">)</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Callback to assert that the param being processed
+is valid for this given parser. Default implementation
+doesn't do anything</p>
+</div>
+
+
+                            </div>
                             <div class="inherited">
                                 <h5>Inherited Members</h5>
                                 <dl>
@@ -1442,11 +1777,9 @@ of it's own.</p>
                                 <dd id="RawParser.__init__" class="function"><a href="#ArgumentParser.__init__">ArgumentParser</a></dd>
                 <dd id="RawParser.args" class="variable"><a href="#ArgumentParser.args">args</a></dd>
                 <dd id="RawParser.get_matchers" class="function"><a href="#ArgumentParser.get_matchers">get_matchers</a></dd>
-                <dd id="RawParser.parse" class="function"><a href="#ArgumentParser.parse">parse</a></dd>
                 <dd id="RawParser.handle_match" class="function"><a href="#ArgumentParser.handle_match">handle_match</a></dd>
                 <dd id="RawParser.fill_unmatched" class="function"><a href="#ArgumentParser.fill_unmatched">fill_unmatched</a></dd>
                 <dd id="RawParser.build_args" class="function"><a href="#ArgumentParser.build_args">build_args</a></dd>
-                <dd id="RawParser.arg_hook" class="function"><a href="#ArgumentParser.arg_hook">arg_hook</a></dd>
                 <dd id="RawParser.get_or_raise" class="function"><a href="#ArgumentParser.get_or_raise">get_or_raise</a></dd>
                 <dd id="RawParser.get_match_values" class="function"><a href="#ArgumentParser.get_match_values">get_match_values</a></dd>
 
@@ -1466,6 +1799,7 @@ of it's own.</p>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">ParsingMethod</span><span class="p">:</span>
+    <span class="n">STANDARD</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="n">StandardParser</span>
     <span class="n">KEYWORD</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="n">KeywordParser</span>
     <span class="n">POSITIONAL</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="n">PositionalParser</span>
     <span class="n">RAW</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="n">RawParser</span>
@@ -1486,6 +1820,96 @@ of it's own.</p>
         
     
 
+                            </div>
+                </section>
+                <section id="ParsingMethod.STANDARD">
+                                <div class="attr class">
+        <a class="headerlink" href="#ParsingMethod.STANDARD">#&nbsp;&nbsp</a>
+
+        
+        <span class="def">class</span>
+        <span class="name">ParsingMethod.STANDARD</span><wbr>(<span class="base"><a href="#ArgumentParser">ArgumentParser</a></span>):
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">StandardParser</span><span class="p">(</span><span class="n">ArgumentParser</span><span class="p">):</span>
+    <span class="n">matchers</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;flag&quot;</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+            <span class="sa">fr</span><span class="s2">&quot;^(?:</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">flag_denoter</span><span class="si">}</span><span class="s2">|</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">short_flag_denoter</span><span class="si">}</span><span class="s2">)(?P&lt;name&gt;\b</span><span class="si">{</span><span class="n">IDENT</span><span class="si">}</span><span class="s2">)$&quot;</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^(.+)$&quot;</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">handle_flag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">flag</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_or_raise</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Option </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">flag_denoter</span><span class="si">}{</span><span class="n">name</span><span class="si">}</span><span class="s2"> not found.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span> <span class="o">=</span> <span class="n">arg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_flag</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">arg</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="ow">not</span> <span class="n">arg</span><span class="o">.</span><span class="n">default</span>
+
+        <span class="k">return</span> <span class="n">arg</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">arg</span><span class="o">.</span><span class="n">default</span>
+
+    <span class="k">def</span> <span class="nf">handle_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ParserError</span><span class="p">(</span><span class="s2">&quot;Values must come after options&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_arg</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">arg_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">meta</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">VAR_POSITIONAL</span><span class="p">,</span> <span class="n">param</span><span class="o">.</span><span class="n">VAR_KEYWORD</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">CommandError</span><span class="p">(</span>
+                <span class="s2">&quot;Standard Commands do not accept *args or **kwargs&quot;</span>
+            <span class="p">)</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Base class for ArgumentParsers</p>
+
+<p>Handles analyzing the provided function signature to generate
+The Argument data structure</p>
+
+<p>Attempts to match provided data to <code>cls.matchers</code> regexes. If it finds a match,
+it'll pass control over to the match handler (<code>handle_&lt;matcher-name&gt;</code>). This class
+should not be used to parse anything, as it does not provide any matchers or handlers
+of it's own.</p>
+</div>
+
+
+                            <div class="inherited">
+                                <h5>Inherited Members</h5>
+                                <dl>
+                                    <div><dt><a href="#StandardParser">StandardParser</a></dt>
+                                <dd id="ParsingMethod.STANDARD.__init__" class="function"><a href="#StandardParser.__init__">StandardParser</a></dd>
+                <dd id="ParsingMethod.STANDARD.matchers" class="variable"><a href="#StandardParser.matchers">matchers</a></dd>
+                <dd id="ParsingMethod.STANDARD.current_value" class="variable"><a href="#StandardParser.current_value">current_value</a></dd>
+                <dd id="ParsingMethod.STANDARD.handle_flag" class="function"><a href="#StandardParser.handle_flag">handle_flag</a></dd>
+                <dd id="ParsingMethod.STANDARD.handle_value" class="function"><a href="#StandardParser.handle_value">handle_value</a></dd>
+                <dd id="ParsingMethod.STANDARD.arg_hook" class="function"><a href="#StandardParser.arg_hook">arg_hook</a></dd>
+
+            </div>
+            <div><dt><a href="#ArgumentParser">ArgumentParser</a></dt>
+                                <dd id="ParsingMethod.STANDARD.args" class="variable"><a href="#ArgumentParser.args">args</a></dd>
+                <dd id="ParsingMethod.STANDARD.get_matchers" class="function"><a href="#ArgumentParser.get_matchers">get_matchers</a></dd>
+                <dd id="ParsingMethod.STANDARD.parse" class="function"><a href="#ArgumentParser.parse">parse</a></dd>
+                <dd id="ParsingMethod.STANDARD.handle_match" class="function"><a href="#ArgumentParser.handle_match">handle_match</a></dd>
+                <dd id="ParsingMethod.STANDARD.fill_unmatched" class="function"><a href="#ArgumentParser.fill_unmatched">fill_unmatched</a></dd>
+                <dd id="ParsingMethod.STANDARD.build_args" class="function"><a href="#ArgumentParser.build_args">build_args</a></dd>
+                <dd id="ParsingMethod.STANDARD.get_or_raise" class="function"><a href="#ArgumentParser.get_or_raise">get_or_raise</a></dd>
+                <dd id="ParsingMethod.STANDARD.get_match_values" class="function"><a href="#ArgumentParser.get_match_values">get_match_values</a></dd>
+
+            </div>
+                                </dl>
                             </div>
                 </section>
                 <section id="ParsingMethod.KEYWORD">
@@ -1693,7 +2117,14 @@ of it's own.</p>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RawParser</span><span class="p">(</span><span class="n">ArgumentParser</span><span class="p">):</span>
-    <span class="o">...</span>
+    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cli_args</span><span class="p">,</span> <span class="n">_context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;_args&quot;</span><span class="p">:</span> <span class="n">cli_args</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">arg_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">meta</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">kind</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">param</span><span class="o">.</span><span class="n">VAR_POSITIONAL</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">CommandError</span><span class="p">(</span>
+                <span class="s2">&quot;Raw commands must only have a single *args argument&quot;</span>
+            <span class="p">)</span>
 </pre></div>
 
         </details>
@@ -1717,13 +2148,16 @@ of it's own.</p>
                                 <dd id="ParsingMethod.RAW.__init__" class="function"><a href="#ArgumentParser.__init__">ArgumentParser</a></dd>
                 <dd id="ParsingMethod.RAW.args" class="variable"><a href="#ArgumentParser.args">args</a></dd>
                 <dd id="ParsingMethod.RAW.get_matchers" class="function"><a href="#ArgumentParser.get_matchers">get_matchers</a></dd>
-                <dd id="ParsingMethod.RAW.parse" class="function"><a href="#ArgumentParser.parse">parse</a></dd>
                 <dd id="ParsingMethod.RAW.handle_match" class="function"><a href="#ArgumentParser.handle_match">handle_match</a></dd>
                 <dd id="ParsingMethod.RAW.fill_unmatched" class="function"><a href="#ArgumentParser.fill_unmatched">fill_unmatched</a></dd>
                 <dd id="ParsingMethod.RAW.build_args" class="function"><a href="#ArgumentParser.build_args">build_args</a></dd>
-                <dd id="ParsingMethod.RAW.arg_hook" class="function"><a href="#ArgumentParser.arg_hook">arg_hook</a></dd>
                 <dd id="ParsingMethod.RAW.get_or_raise" class="function"><a href="#ArgumentParser.get_or_raise">get_or_raise</a></dd>
                 <dd id="ParsingMethod.RAW.get_match_values" class="function"><a href="#ArgumentParser.get_match_values">get_match_values</a></dd>
+
+            </div>
+            <div><dt><a href="#RawParser">RawParser</a></dt>
+                                <dd id="ParsingMethod.RAW.parse" class="function"><a href="#RawParser.parse">parse</a></dd>
+                <dd id="ParsingMethod.RAW.arg_hook" class="function"><a href="#RawParser.arg_hook">arg_hook</a></dd>
 
             </div>
                                 </dl>
