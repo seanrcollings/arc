@@ -31,7 +31,13 @@ class CLI(Command):
             version: Version string to display with `--version`
         """
 
-        super().__init__(name, self.missing_command, parsing_method, context)
+        super().__init__(
+            name,
+            self.missing_command,
+            parsing_method,
+            context,
+            arg_aliases={"help": "h", "version": "v"},
+        )
         config.from_file(arcfile)
         self.__logging_setup()
         utils.header("INIT")
@@ -76,6 +82,7 @@ class CLI(Command):
     # pylint: disable=redefined-builtin
     def missing_command(self, help: bool, version: bool, **kwargs):
         """Handles default arguments
+        View specific help with "help <command-name>"
 
         # Arguments
             --help     shows this help
@@ -86,7 +93,17 @@ class CLI(Command):
         elif version:
             print(self.name, self.version)
         elif self.default_action:
-            return self.default_action(**kwargs)
+            # Sinces the parserse don't do any checking on **kwargs
+            # we re-form the args back into a string and send them down
+            # to the default_actions execute. It's not going to be the most
+            # effecient (performs a parse twice for example), but that
+            # doesn't really matter in this case as the performace impact is minimal
+            args = [
+                f"{name}{config.arg_assignment}{value}"
+                for name, value in kwargs.items()
+            ]
+            context = self.context | self.default_action.context
+            return self.default_action.run([], args, context)
 
     def autocomplete(self, completions_for: str = None, completions_from: str = None):
         """Enables autocompletion support for this CLI

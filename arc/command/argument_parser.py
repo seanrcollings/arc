@@ -177,7 +177,9 @@ class FlagParser(ArgumentParser):
         else:
             flag_denoter = config.flag_denoter
 
-        arg = self.get_or_raise(name, f"Flag {flag_denoter}{name} not recognized")
+        arg = self.get_or_raise(
+            name, f"Flag {fg.YELLOW}{flag_denoter}{name}{effects.CLEAR} not recognized"
+        )
         return arg.name, not arg.default
 
 
