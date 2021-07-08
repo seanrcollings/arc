@@ -4,11 +4,11 @@ import shlex
 import re
 import logging
 
-from arc import utils
+from arc import utils, present
 from .errors import CommandError
 from .command import Command
 from .config import config
-from .color import fg, effects
+from .color import fg, effects, bg
 
 logger = logging.getLogger("arc_logger")
 
@@ -43,15 +43,24 @@ def run(
     command_namespace, command_args = get_command_namespace(user_input)
 
     with utils.handle(CommandError):
-        command, command_ctx = find_command(command, command_namespace)
+        try:
+            command, command_ctx = find_command(command, command_namespace)
+        except CommandError as e:
+            if possible_command := find_correct_command(command, command_namespace):
+                e.message += f"\n\tPerhaps you meant {fg.YELLOW}{possible_command}{effects.CLEAR}?"
+            raise
 
-        logger.debug(
-            "Executing command: %s%s%s",
-            fg.YELLOW,
-            ":".join(command_namespace) or "root",
-            effects.CLEAR,
-        )
-        return command.run(command_namespace, command_args, command_ctx)
+    logger.debug(
+        str(
+            present.Box(
+                f"{bg.ARC_BLUE} {':'.join(command_namespace) or 'root'} {effects.CLEAR} "
+                f"{bg.GREY} {': '.join(command_args)} {effects.CLEAR}",
+                justify="center",
+                padding=1,
+            )
+        ),
+    )
+    return command.run(command_namespace, command_args, command_ctx)
 
 
 def get_input(execute: Optional[str]) -> list[str]:
@@ -108,3 +117,45 @@ def find_command(
 
         command_ctx = command.context | command_ctx
     return command, command_ctx
+
+
+def find_correct_command(command: Command, namespace_list: list[str]):
+    if config.suggest_on_missing_command:
+        namespace_str = config.namespace_sep.join(namespace_list)
+        command_names = get_all_command_names(command)
+
+        distance, command_name = min(
+            (
+                (utils.levenshtein(namespace_str, command_name), command_name)
+                for command_name in command_names
+            ),
+            key=lambda tup: tup[0],
+        )
+
+        if distance <= config.suggest_levenshtein_distance:
+            return command_name
+
+    return None
+
+
+def get_all_command_names(
+    command: Command, parent_namespace: str = "", root=True
+) -> list[str]:
+    """Recursively walks down the command tree and
+    generates fully-qualified names for all commands"""
+    if root:
+        current = ""
+    else:
+        current = config.namespace_sep.join((parent_namespace, command.name)).lstrip(
+            config.namespace_sep
+        )
+
+    names = [current]
+
+    if len(command.subcommands) == 0:
+        return names
+
+    for subcommand in command.subcommands.values():
+        names += get_all_command_names(subcommand, current, False)
+
+    return names

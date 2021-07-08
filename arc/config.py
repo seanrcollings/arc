@@ -155,6 +155,17 @@ class Config(ConfigBase):
     - development
     - test
     """
+    suggest_on_missing_argument = True
+    """Wether or not to provide suggestions for possible misspellings
+    when an argument is not found"""
+
+    suggest_on_missing_command = True
+    """Wether or not to provide suggestions for possible misspellings
+    when a command is not found"""
+
+    suggest_levenshtein_distance = 2
+    """The max Levenshtein between input and a
+    possible correction to trigger a suggestion """
 
     mode_map = {
         "development": logging.DEBUG,

@@ -1,11 +1,11 @@
-from typing import Callable, Any, Union, TypedDict, Type
+from typing import Callable, Any, Optional, Union, TypedDict, Type
 from inspect import Parameter
 import re
 
 from arc import errors
 from arc.config import config
 from arc.color import fg, effects
-from arc.utils import IDENT
+from arc.utils import IDENT, levenshtein
 from .helpers import ArgBuilder
 from .argument import Argument, NO_DEFAULT
 from .context import Context
@@ -57,7 +57,15 @@ class ArgumentParser:
     def handle_match(self, match: re.Match, name: str) -> tuple[str, Any]:
         groups: Union[dict[str, str], str] = self.get_match_values(match)
         handler: Callable = getattr(self, f"handle_{name}")
-        return handler(groups)
+        try:
+            return handler(groups)
+        except errors.MissingArgError as e:
+            arg = self.find_correct_argument(e.data["name"])
+            if arg:
+                e.message += (
+                    f"\n\tPerhaps you meant {fg.YELLOW}{arg.name}{effects.CLEAR}?"
+                )
+            raise
 
     def fill_unmatched(
         self, matched_args: dict[str, Any], context: dict[str, Any]
@@ -79,7 +87,7 @@ class ArgumentParser:
             if value is NO_DEFAULT:
                 raise errors.ParserError(
                     "No value provided for required argument: "
-                    f"{fg.YELLOW}{key}{effects.CLEAR}"
+                    f"{fg.YELLOW}{key}{effects.CLEAR}",
                 )
 
         return matched_args | unfilled
@@ -110,7 +118,7 @@ class ArgumentParser:
             if key in arg.aliases and not arg.hidden:
                 return arg
 
-        raise errors.ParserError(message)
+        raise errors.MissingArgError(message, name=key)
 
     @staticmethod
     def get_match_values(match: re.Match) -> Union[dict[str, str], str]:
@@ -118,6 +126,19 @@ class ArgumentParser:
             return groups
 
         return match.group()
+
+    def find_correct_argument(self, missing: str) -> Optional[Argument]:
+
+        if config.suggest_on_missing_argument:
+            distance, arg = min(
+                ((levenshtein(arg.name, missing), arg) for arg in self.args.values()),
+                key=lambda tup: tup[0],
+            )
+
+            if distance <= config.suggest_levenshtein_distance:
+                return arg
+
+        return None
 
 
 class StandardParser(ArgumentParser):
