@@ -42,14 +42,13 @@ def run(
     user_input = get_input(execute)
     command_namespace, command_args = get_command_namespace(user_input)
 
-    try:
-        command, command_ctx = find_command(command, command_namespace)
-    except CommandError as e:
-        if possible_command := find_correct_command(command, command_namespace):
-            e.message += (
-                f"\n\tPerhaps you meant {fg.YELLOW}{possible_command}{effects.CLEAR}?"
-            )
-        raise
+    with utils.handle(CommandError):
+        try:
+            command, command_ctx = find_command(command, command_namespace)
+        except CommandError as e:
+            if possible_command := find_correct_command(command, command_namespace):
+                e.message += f"\n\tPerhaps you meant {fg.YELLOW}{possible_command}{effects.CLEAR}?"
+            raise
 
     logger.debug(
         str(
