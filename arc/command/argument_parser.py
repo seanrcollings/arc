@@ -83,14 +83,15 @@ class ArgumentParser:
                 except TypeError:
                     unfilled[key] = arg.default
 
-        for key, value in unfilled.items():
+        filled = matched_args | unfilled
+        for key, value in filled.items():
             if value is NO_DEFAULT:
                 raise errors.ParserError(
-                    "No value provided for required argument: "
+                    "No value provided for argument: "
                     f"{fg.YELLOW}{key}{effects.CLEAR}",
                 )
 
-        return matched_args | unfilled
+        return filled
 
     ### Argument Schema Building ###
 
@@ -142,6 +143,7 @@ class ArgumentParser:
 
 
 class StandardParser(ArgumentParser):
+    __pass_kwargs: bool = False
     matchers = {
         "flag": re.compile(
             fr"^(?:{config.flag_denoter}|{config.short_flag_denoter})(?P<name>\b{IDENT})$"
@@ -156,7 +158,14 @@ class StandardParser(ArgumentParser):
 
     def handle_flag(self, flag):
         name = flag["name"]
-        arg = self.get_or_raise(name, f"Option {config.flag_denoter}{name} not found.")
+        try:
+            arg = self.get_arg(name)
+        except errors.MissingArgError:
+            if not self.__pass_kwargs:
+                raise
+            self.args[name] = Argument(name, str, NO_DEFAULT)
+            arg = self.get_arg(name)
+
         self.current_arg = arg
         self.current_value = ""
         if arg.is_flag():
@@ -173,11 +182,14 @@ class StandardParser(ArgumentParser):
             self.current_value.strip()
         )
 
+    def get_arg(self, name):
+        return self.get_or_raise(name, f"Option {config.flag_denoter}{name} not found.")
+
     def arg_hook(self, param, meta):
-        if param.kind in (param.VAR_POSITIONAL, param.VAR_KEYWORD):
-            raise errors.CommandError(
-                "Standard Commands do not accept *args or **kwargs"
-            )
+        if param.kind is param.VAR_POSITIONAL:
+            raise errors.CommandError("Standard Commands do not accept *args")
+        if param.kind is param.VAR_KEYWORD:
+            self.__pass_kwargs = True
 
 
 FLAG = re.compile(

@@ -54,7 +54,7 @@ def run(
         str(
             present.Box(
                 f"{bg.ARC_BLUE} {':'.join(command_namespace) or 'root'} {effects.CLEAR} "
-                f"{bg.GREY} {': '.join(command_args)} {effects.CLEAR}",
+                + " ".join(f"{bg.GREY} {arg} {effects.CLEAR}" for arg in command_args),
                 justify="center",
                 padding=1,
             )
