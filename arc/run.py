@@ -8,7 +8,7 @@ from arc import utils, present
 from .errors import CommandError
 from .command import Command
 from .config import config
-from .color import fg, effects, bg, colorize
+from .color import fg, effects, bg
 
 logger = logging.getLogger("arc_logger")
 
@@ -109,7 +109,7 @@ def find_command(
                 f"{':'.join(command_namespace)}{effects.CLEAR} not found. "
                 f"Check {fg.BLUE}--help{effects.CLEAR} for available commands"
             )
-            if possible_command := find_correct_command(command, command_namespace):
+            if possible_command := find_command_suggestion(command, command_namespace):
                 message += f"\n\tPerhaps you meant {fg.YELLOW}{possible_command}{effects.CLEAR}?"
 
             raise CommandError(message)
@@ -118,7 +118,7 @@ def find_command(
     return command, command_ctx
 
 
-def find_correct_command(command: Command, namespace_list: list[str]):
+def find_command_suggestion(command: Command, namespace_list: list[str]):
     if config.suggest_on_missing_command:
         namespace_str = config.namespace_sep.join(namespace_list)
         command_names = get_all_command_names(command)

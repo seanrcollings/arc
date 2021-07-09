@@ -60,7 +60,7 @@ class ArgumentParser:
         try:
             return handler(groups)
         except errors.MissingArgError as e:
-            arg = self.find_correct_argument(e.data["name"])
+            arg = self.find_argument_suggestions(e.data["name"])
             if arg:
                 e.message += (
                     f"\n\tPerhaps you meant {fg.YELLOW}{arg.name}{effects.CLEAR}?"
@@ -128,7 +128,7 @@ class ArgumentParser:
 
         return match.group()
 
-    def find_correct_argument(self, missing: str) -> Optional[Argument]:
+    def find_argument_suggestions(self, missing: str) -> Optional[Argument]:
 
         if config.suggest_on_missing_argument:
             distance, arg = min(
