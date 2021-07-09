@@ -83,7 +83,7 @@ if os.getenv("ARC_DEVELOPMENT") == "true":
         with init.open("r+") as f:
             subbed = re.sub(
                 r"__version__ = \".+\"\n",
-                f'__version__ = "{version}    "',
+                f'__version__ = "{version}"       ',
                 f.read(),
             )
             f.seek(0)

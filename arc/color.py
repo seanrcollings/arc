@@ -105,3 +105,20 @@ class effects:
     STRIKETHROUGH = Color(9)
 
 # fmt: on
+
+
+def colorize(string: str, *codes: str, clear: bool = True):
+    """Applies colors / effects to an entire string
+
+    Args:
+        string (str): String to colorize
+        *codes (Color): colors / effects to apply to the string
+        clear (bool): Whether or not to append `effects.CLEAR`
+            to the end of the string which will prevent any
+            subsequent strings from recieving the styles. Defaults
+            to True
+
+    Returns:
+        str: The colorized string
+    """
+    return f"{''.join(codes)}{string}{effects.CLEAR if clear else ''}"

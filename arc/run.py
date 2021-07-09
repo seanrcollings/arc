@@ -8,7 +8,7 @@ from arc import utils, present
 from .errors import CommandError
 from .command import Command
 from .config import config
-from .color import fg, effects, bg
+from .color import fg, effects, bg, colorize
 
 logger = logging.getLogger("arc_logger")
 
@@ -20,7 +20,7 @@ namespace_seperated = re.compile(
 
 @utils.timer("Running")
 def run(
-    command: Command,
+    root: Command,
     execute: Optional[str] = None,
     arcfile: Optional[str] = None,
 ):
@@ -29,7 +29,7 @@ def run(
     Finds the command referenced, then passes over control to it
 
     Args:
-        command (Command): command object to run
+        root (Command): command object to run
         execute (str): string to parse and execute. If it's not provided
             `sys.argv` will be used
         arcfile (str): file path to an arc config file to load,
@@ -43,7 +43,7 @@ def run(
     command_namespace, command_args = get_command_namespace(user_input)
 
     with utils.handle(CommandError):
-        command, command_ctx = find_command(command, command_namespace)
+        command, command_ctx = find_command(root, command_namespace)
 
     logger.debug(
         str(
