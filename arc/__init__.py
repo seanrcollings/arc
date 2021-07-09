@@ -3,7 +3,7 @@
 """
 from arc.config import config
 from arc.cli import CLI, run
-from arc.command import Context, namespace, ParsingMethod
+from arc.command import Context, namespace, ParsingMethod, command
 from arc import callbacks
 from arc.errors import NoOpError, ExecutionError, ValidationError
 

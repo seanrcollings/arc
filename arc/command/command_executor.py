@@ -3,8 +3,8 @@ import pprint
 import logging
 
 from arc.color import effects, fg
-from arc import errors
-from arc import utils
+from arc.config import config
+from arc import errors, utils
 
 
 logger = logging.getLogger("arc_logger")
@@ -26,7 +26,7 @@ class CommandExecutor:
         self.__gens: list[Generator] = []
 
     @utils.timer("Command Execution")
-    def execute(self, arguments: dict[str, Any]):
+    def execute(self, cli_namespace: list[str], arguments: dict[str, Any]):
         """Executes the command's functions
 
         Args:
@@ -54,9 +54,15 @@ class CommandExecutor:
                 value = self.function(**arguments)
 
         except errors.NoOpError as e:
-            print(
-                f"{fg.RED}This namespace cannot be executed. "
-                f"Check --help for possible subcommands{effects.CLEAR}"
+            namespace_str = config.namespace_sep.join(cli_namespace)
+            logger.error(
+                "%s%s%s is not executable. \n\tCheck %shelp %s%s for subcommands",
+                fg.YELLOW,
+                namespace_str,
+                effects.CLEAR,
+                fg.ARC_BLUE,
+                namespace_str,
+                effects.CLEAR,
             )
         except errors.ExecutionError as e:
             logger.error(e)

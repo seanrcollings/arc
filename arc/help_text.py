@@ -97,6 +97,9 @@ def generate_usage(
     command: Command,
     namespace: list[str],
 ):
+    if command.is_namespace():
+        return
+
     if root == command:
         command_str = "<command>"
         args_str = "[arguments ...]"

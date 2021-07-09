@@ -43,12 +43,7 @@ def run(
     command_namespace, command_args = get_command_namespace(user_input)
 
     with utils.handle(CommandError):
-        try:
-            command, command_ctx = find_command(command, command_namespace)
-        except CommandError as e:
-            if possible_command := find_correct_command(command, command_namespace):
-                e.message += f"\n\tPerhaps you meant {fg.YELLOW}{possible_command}{effects.CLEAR}?"
-            raise
+        command, command_ctx = find_command(command, command_namespace)
 
     logger.debug(
         str(
@@ -109,11 +104,15 @@ def find_command(
         elif subcommand_name in command.subcommand_aliases:
             command = command.subcommands[command.subcommand_aliases[subcommand_name]]
         else:
-            raise CommandError(
+            message = (
                 f"The command {fg.YELLOW}"
                 f"{':'.join(command_namespace)}{effects.CLEAR} not found. "
                 f"Check {fg.BLUE}--help{effects.CLEAR} for available commands"
             )
+            if possible_command := find_correct_command(command, command_namespace):
+                message += f"\n\tPerhaps you meant {fg.YELLOW}{possible_command}{effects.CLEAR}?"
+
+            raise CommandError(message)
 
         command_ctx = command.context | command_ctx
     return command, command_ctx

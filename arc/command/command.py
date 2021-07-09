@@ -51,7 +51,7 @@ class Command:
     ### Execution ###
 
     def run(
-        self, _cli_namespace: list[str], cli_args: list[str], context: dict[str, Any]
+        self, cli_namespace: list[str], cli_args: list[str], context: dict[str, Any]
     ):
         """External interface to execute a command"""
         self.context = context | self.context
@@ -59,7 +59,7 @@ class Command:
             parsed_args = self.parser.parse(cli_args, self.context)
 
         logger.debug("Parsed arguments: %s", pprint.pformat(parsed_args))
-        return self.executor.execute(parsed_args)
+        return self.executor.execute(cli_namespace, parsed_args)
 
     ### Building Subcommands ###
 
@@ -103,17 +103,6 @@ class Command:
                 arg_aliases,
             )
             return self.install_command(command)
-
-        return decorator
-
-    def base(self):
-        """Decorator to replace the function
-        of the current command"""
-
-        @self.ensure_function
-        def decorator(function):
-            self.function = function
-            return self
 
         return decorator
 
@@ -174,3 +163,6 @@ class Command:
             )
 
         return decorator
+
+    def is_namespace(self):
+        return self.function is utils.no_op
