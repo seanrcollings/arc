@@ -8,7 +8,7 @@ from arc.utilities.debug import debug
 
 
 def test_base(cli: CLI):
-    @cli.base()
+    @cli.default()
     def base(val: int):
         return val
 

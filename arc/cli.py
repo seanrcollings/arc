@@ -25,7 +25,7 @@ class CLI(Command):
         Args:
             name: name of the CLI, will be used in the help command.
             function: function that defines the CLI's default behavior.
-                Identical to calling `@cli.base()`.
+                Identical to calling `@cli.default()`.
             arcfile: arc config file to load. defaults to ./.arc
             context: dictionary of key value pairs to pass to children as context
             version: Version string to display with `--version`
@@ -44,7 +44,7 @@ class CLI(Command):
         self.version = version
         self.install_command(Command("help", self.helper, parser=PositionalParser))
         self.default_action: Optional[Command] = (
-            self.base()(function) if function else self.subcommands["help"]
+            self.default()(function) if function else self.subcommands["help"]
         )
 
     # pylint: disable=arguments-differ
@@ -59,7 +59,7 @@ class CLI(Command):
         """
         return self.subcommand(*args, **kwargs)
 
-    def base(self, name=None, parse_method=None, **kwargs):
+    def default(self, name=None, parse_method=None, **kwargs):
         """Define The CLI's default behavior
         when not given a specific command. Has the same interface
         as `Command.subcommand`
