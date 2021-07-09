@@ -95,8 +95,8 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">effects</span><span class="p">,</span> <span class="n">fg</span>
-<span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">errors</span>
-<span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">arc.config</span> <span class="kn">import</span> <span class="n">config</span>
+<span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">errors</span><span class="p">,</span> <span class="n">utils</span>
 
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;arc_logger&quot;</span><span class="p">)</span>
@@ -118,7 +118,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">__gens</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Generator</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="nd">@utils</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s2">&quot;Command Execution&quot;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cli_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;Executes the command&#39;s functions</span>
 
 <span class="sd">        Args:</span>
@@ -146,9 +146,15 @@
                 <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">**</span><span class="n">arguments</span><span class="p">)</span>
 
         <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">NoOpError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">RED</span><span class="si">}</span><span class="s2">This namespace cannot be executed. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Check --help for possible subcommands</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">namespace_str</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">namespace_sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cli_namespace</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">%s%s%s</span><span class="s2"> is not executable. </span><span class="se">\n\t</span><span class="s2">Check </span><span class="si">%s</span><span class="s2">help </span><span class="si">%s%s</span><span class="s2"> for subcommands&quot;</span><span class="p">,</span>
+                <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span>
+                <span class="n">namespace_str</span><span class="p">,</span>
+                <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">,</span>
+                <span class="n">fg</span><span class="o">.</span><span class="n">ARC_BLUE</span><span class="p">,</span>
+                <span class="n">namespace_str</span><span class="p">,</span>
+                <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">ExecutionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
@@ -254,7 +260,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">__gens</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Generator</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="nd">@utils</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s2">&quot;Command Execution&quot;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cli_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;Executes the command&#39;s functions</span>
 
 <span class="sd">        Args:</span>
@@ -282,9 +288,15 @@
                 <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">**</span><span class="n">arguments</span><span class="p">)</span>
 
         <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">NoOpError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">RED</span><span class="si">}</span><span class="s2">This namespace cannot be executed. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Check --help for possible subcommands</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">namespace_str</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">namespace_sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cli_namespace</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">%s%s%s</span><span class="s2"> is not executable. </span><span class="se">\n\t</span><span class="s2">Check </span><span class="si">%s</span><span class="s2">help </span><span class="si">%s%s</span><span class="s2"> for subcommands&quot;</span><span class="p">,</span>
+                <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span>
+                <span class="n">namespace_str</span><span class="p">,</span>
+                <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">,</span>
+                <span class="n">fg</span><span class="o">.</span><span class="n">ARC_BLUE</span><span class="p">,</span>
+                <span class="n">namespace_str</span><span class="p">,</span>
+                <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">ExecutionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
@@ -426,13 +438,13 @@
                 <div class="decorator">@utils.timer(&#39;Command Execution&#39;)</div>
 
             <span class="def">def</span>
-            <span class="name">execute</span><span class="signature">(self, arguments: dict)</span>:
+            <span class="name">execute</span><span class="signature">(self, cli_namespace: list, arguments: dict)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="nd">@utils</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s2">&quot;Command Execution&quot;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cli_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;Executes the command&#39;s functions</span>
 
 <span class="sd">        Args:</span>
@@ -460,9 +472,15 @@
                 <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">**</span><span class="n">arguments</span><span class="p">)</span>
 
         <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">NoOpError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">RED</span><span class="si">}</span><span class="s2">This namespace cannot be executed. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Check --help for possible subcommands</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">namespace_str</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">namespace_sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cli_namespace</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">%s%s%s</span><span class="s2"> is not executable. </span><span class="se">\n\t</span><span class="s2">Check </span><span class="si">%s</span><span class="s2">help </span><span class="si">%s%s</span><span class="s2"> for subcommands&quot;</span><span class="p">,</span>
+                <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span>
+                <span class="n">namespace_str</span><span class="p">,</span>
+                <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">,</span>
+                <span class="n">fg</span><span class="o">.</span><span class="n">ARC_BLUE</span><span class="p">,</span>
+                <span class="n">namespace_str</span><span class="p">,</span>
+                <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">ExecutionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>

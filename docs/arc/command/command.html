@@ -55,9 +55,6 @@
                                 <a class="function" href="#Command.subcommand">subcommand</a>
                         </li>
                         <li>
-                                <a class="function" href="#Command.base">base</a>
-                        </li>
-                        <li>
                                 <a class="function" href="#Command.install_commands">install_commands</a>
                         </li>
                         <li>
@@ -68,6 +65,9 @@
                         </li>
                         <li>
                                 <a class="function" href="#Command.ensure_function">ensure_function</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Command.is_namespace">is_namespace</a>
                         </li>
                 </ul>
 
@@ -143,7 +143,7 @@
     <span class="c1">### Execution ###</span>
 
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">_cli_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">cli_args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">cli_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">cli_args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;External interface to execute a command&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span>
@@ -151,7 +151,7 @@
             <span class="n">parsed_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">cli_args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Parsed arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">parsed_args</span><span class="p">))</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">parsed_args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">cli_namespace</span><span class="p">,</span> <span class="n">parsed_args</span><span class="p">)</span>
 
     <span class="c1">### Building Subcommands ###</span>
 
@@ -195,17 +195,6 @@
                 <span class="n">arg_aliases</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">install_command</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">decorator</span>
-
-    <span class="k">def</span> <span class="nf">base</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Decorator to replace the function</span>
-<span class="sd">        of the current command&quot;&quot;&quot;</span>
-
-        <span class="nd">@self</span><span class="o">.</span><span class="n">ensure_function</span>
-        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">function</span> <span class="o">=</span> <span class="n">function</span>
-            <span class="k">return</span> <span class="bp">self</span>
 
         <span class="k">return</span> <span class="n">decorator</span>
 
@@ -266,6 +255,9 @@
             <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">decorator</span>
+
+    <span class="k">def</span> <span class="nf">is_namespace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span> <span class="ow">is</span> <span class="n">utils</span><span class="o">.</span><span class="n">no_op</span>
 </pre></div>
 
         </details>
@@ -319,7 +311,7 @@
     <span class="c1">### Execution ###</span>
 
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">_cli_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">cli_args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">cli_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">cli_args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;External interface to execute a command&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span>
@@ -327,7 +319,7 @@
             <span class="n">parsed_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">cli_args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Parsed arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">parsed_args</span><span class="p">))</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">parsed_args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">cli_namespace</span><span class="p">,</span> <span class="n">parsed_args</span><span class="p">)</span>
 
     <span class="c1">### Building Subcommands ###</span>
 
@@ -371,17 +363,6 @@
                 <span class="n">arg_aliases</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">install_command</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">decorator</span>
-
-    <span class="k">def</span> <span class="nf">base</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Decorator to replace the function</span>
-<span class="sd">        of the current command&quot;&quot;&quot;</span>
-
-        <span class="nd">@self</span><span class="o">.</span><span class="n">ensure_function</span>
-        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">function</span> <span class="o">=</span> <span class="n">function</span>
-            <span class="k">return</span> <span class="bp">self</span>
 
         <span class="k">return</span> <span class="n">decorator</span>
 
@@ -442,6 +423,9 @@
             <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">decorator</span>
+
+    <span class="k">def</span> <span class="nf">is_namespace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span> <span class="ow">is</span> <span class="n">utils</span><span class="o">.</span><span class="n">no_op</span>
 </pre></div>
 
         </details>
@@ -527,13 +511,13 @@
 
         
             <span class="def">def</span>
-            <span class="name">run</span><span class="signature">(self, _cli_namespace: list, cli_args: list, context: dict)</span>:
+            <span class="name">run</span><span class="signature">(self, cli_namespace: list, cli_args: list, context: dict)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">_cli_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">cli_args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">cli_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">cli_args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;External interface to execute a command&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span>
@@ -541,7 +525,7 @@
             <span class="n">parsed_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">cli_args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Parsed arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">parsed_args</span><span class="p">))</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">parsed_args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">cli_namespace</span><span class="p">,</span> <span class="n">parsed_args</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -636,36 +620,6 @@ that arguments can be referred to by. Defaults to None.</li>
 <blockquote>
   <p>Command: the subcommand created</p>
 </blockquote>
-</div>
-
-
-                            </div>
-                            <div id="Command.base" class="classattr">
-                                        <div class="attr function"><a class="headerlink" href="#Command.base">#&nbsp;&nbsp</a>
-
-        
-            <span class="def">def</span>
-            <span class="name">base</span><span class="signature">(self)</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">base</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Decorator to replace the function</span>
-<span class="sd">        of the current command&quot;&quot;&quot;</span>
-
-        <span class="nd">@self</span><span class="o">.</span><span class="n">ensure_function</span>
-        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">function</span> <span class="o">=</span> <span class="n">function</span>
-            <span class="k">return</span> <span class="bp">self</span>
-
-        <span class="k">return</span> <span class="n">decorator</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Decorator to replace the function
-of the current command</p>
 </div>
 
 
@@ -795,6 +749,25 @@ of the current object</p>
 can be created for the same function.</p>
 </div>
 
+
+                            </div>
+                            <div id="Command.is_namespace" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Command.is_namespace">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">is_namespace</span><span class="signature">(self)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">is_namespace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span> <span class="ow">is</span> <span class="n">utils</span><span class="o">.</span><span class="n">no_op</span>
+</pre></div>
+
+        </details>
+
+    
 
                             </div>
                 </section>

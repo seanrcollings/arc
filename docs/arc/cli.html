@@ -43,7 +43,7 @@
                                 <a class="function" href="#CLI.command">command</a>
                         </li>
                         <li>
-                                <a class="function" href="#CLI.base">base</a>
+                                <a class="function" href="#CLI.default">default</a>
                         </li>
                         <li>
                                 <a class="function" href="#CLI.missing_command">missing_command</a>
@@ -117,20 +117,26 @@
 <span class="sd">        Args:</span>
 <span class="sd">            name: name of the CLI, will be used in the help command.</span>
 <span class="sd">            function: function that defines the CLI&#39;s default behavior.</span>
-<span class="sd">                Identical to calling `@cli.base()`.</span>
+<span class="sd">                Identical to calling `@cli.default()`.</span>
 <span class="sd">            arcfile: arc config file to load. defaults to ./.arc</span>
 <span class="sd">            context: dictionary of key value pairs to pass to children as context</span>
 <span class="sd">            version: Version string to display with `--version`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_command</span><span class="p">,</span> <span class="n">parsing_method</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">name</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">missing_command</span><span class="p">,</span>
+            <span class="n">parsing_method</span><span class="p">,</span>
+            <span class="n">context</span><span class="p">,</span>
+            <span class="n">arg_aliases</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;h&quot;</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;v&quot;</span><span class="p">},</span>
+        <span class="p">)</span>
         <span class="n">config</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">arcfile</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__logging_setup</span><span class="p">()</span>
         <span class="n">utils</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;INIT&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">version</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">install_command</span><span class="p">(</span><span class="n">Command</span><span class="p">(</span><span class="s2">&quot;help&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">helper</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="n">PositionalParser</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">default_action</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Command</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">()(</span><span class="n">function</span><span class="p">)</span> <span class="k">if</span> <span class="n">function</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">subcommands</span><span class="p">[</span><span class="s2">&quot;help&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="p">()(</span><span class="n">function</span><span class="p">)</span> <span class="k">if</span> <span class="n">function</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">subcommands</span><span class="p">[</span><span class="s2">&quot;help&quot;</span><span class="p">]</span>
         <span class="p">)</span>
 
     <span class="c1"># pylint: disable=arguments-differ</span>
@@ -145,7 +151,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">base</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parse_method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parse_method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Define The CLI&#39;s default behavior</span>
 <span class="sd">        when not given a specific command. Has the same interface</span>
 <span class="sd">        as `Command.subcommand`</span>
@@ -168,6 +174,7 @@
     <span class="c1"># pylint: disable=redefined-builtin</span>
     <span class="k">def</span> <span class="nf">missing_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">help</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Handles default arguments</span>
+<span class="sd">        View specific help with &quot;help &lt;command-name&gt;&quot;</span>
 
 <span class="sd">        # Arguments</span>
 <span class="sd">            --help     shows this help</span>
@@ -178,7 +185,17 @@
         <span class="k">elif</span> <span class="n">version</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_action</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_action</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="c1"># Sinces the parserse don&#39;t do any checking on **kwargs</span>
+            <span class="c1"># we re-form the args back into a string and send them down</span>
+            <span class="c1"># to the default_actions execute. It&#39;s not going to be the most</span>
+            <span class="c1"># effecient (performs a parse twice for example), but that</span>
+            <span class="c1"># doesn&#39;t really matter in this case as the performace impact is minimal</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}{</span><span class="n">config</span><span class="o">.</span><span class="n">arg_assignment</span><span class="si">}{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">]</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_action</span><span class="o">.</span><span class="n">context</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_action</span><span class="o">.</span><span class="n">run</span><span class="p">([],</span> <span class="n">args</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">autocomplete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">completions_for</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">completions_from</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Enables autocompletion support for this CLI</span>
@@ -278,20 +295,26 @@
 <span class="sd">        Args:</span>
 <span class="sd">            name: name of the CLI, will be used in the help command.</span>
 <span class="sd">            function: function that defines the CLI&#39;s default behavior.</span>
-<span class="sd">                Identical to calling `@cli.base()`.</span>
+<span class="sd">                Identical to calling `@cli.default()`.</span>
 <span class="sd">            arcfile: arc config file to load. defaults to ./.arc</span>
 <span class="sd">            context: dictionary of key value pairs to pass to children as context</span>
 <span class="sd">            version: Version string to display with `--version`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_command</span><span class="p">,</span> <span class="n">parsing_method</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">name</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">missing_command</span><span class="p">,</span>
+            <span class="n">parsing_method</span><span class="p">,</span>
+            <span class="n">context</span><span class="p">,</span>
+            <span class="n">arg_aliases</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;h&quot;</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;v&quot;</span><span class="p">},</span>
+        <span class="p">)</span>
         <span class="n">config</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">arcfile</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__logging_setup</span><span class="p">()</span>
         <span class="n">utils</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;INIT&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">version</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">install_command</span><span class="p">(</span><span class="n">Command</span><span class="p">(</span><span class="s2">&quot;help&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">helper</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="n">PositionalParser</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">default_action</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Command</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">()(</span><span class="n">function</span><span class="p">)</span> <span class="k">if</span> <span class="n">function</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">subcommands</span><span class="p">[</span><span class="s2">&quot;help&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="p">()(</span><span class="n">function</span><span class="p">)</span> <span class="k">if</span> <span class="n">function</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">subcommands</span><span class="p">[</span><span class="s2">&quot;help&quot;</span><span class="p">]</span>
         <span class="p">)</span>
 
     <span class="c1"># pylint: disable=arguments-differ</span>
@@ -306,7 +329,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">base</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parse_method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parse_method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Define The CLI&#39;s default behavior</span>
 <span class="sd">        when not given a specific command. Has the same interface</span>
 <span class="sd">        as `Command.subcommand`</span>
@@ -329,6 +352,7 @@
     <span class="c1"># pylint: disable=redefined-builtin</span>
     <span class="k">def</span> <span class="nf">missing_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">help</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Handles default arguments</span>
+<span class="sd">        View specific help with &quot;help &lt;command-name&gt;&quot;</span>
 
 <span class="sd">        # Arguments</span>
 <span class="sd">            --help     shows this help</span>
@@ -339,7 +363,17 @@
         <span class="k">elif</span> <span class="n">version</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_action</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_action</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="c1"># Sinces the parserse don&#39;t do any checking on **kwargs</span>
+            <span class="c1"># we re-form the args back into a string and send them down</span>
+            <span class="c1"># to the default_actions execute. It&#39;s not going to be the most</span>
+            <span class="c1"># effecient (performs a parse twice for example), but that</span>
+            <span class="c1"># doesn&#39;t really matter in this case as the performace impact is minimal</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}{</span><span class="n">config</span><span class="o">.</span><span class="n">arg_assignment</span><span class="si">}{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">]</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_action</span><span class="o">.</span><span class="n">context</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_action</span><span class="o">.</span><span class="n">run</span><span class="p">([],</span> <span class="n">args</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">autocomplete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">completions_for</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">completions_from</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Enables autocompletion support for this CLI</span>
@@ -431,20 +465,26 @@
 <span class="sd">        Args:</span>
 <span class="sd">            name: name of the CLI, will be used in the help command.</span>
 <span class="sd">            function: function that defines the CLI&#39;s default behavior.</span>
-<span class="sd">                Identical to calling `@cli.base()`.</span>
+<span class="sd">                Identical to calling `@cli.default()`.</span>
 <span class="sd">            arcfile: arc config file to load. defaults to ./.arc</span>
 <span class="sd">            context: dictionary of key value pairs to pass to children as context</span>
 <span class="sd">            version: Version string to display with `--version`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_command</span><span class="p">,</span> <span class="n">parsing_method</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">name</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">missing_command</span><span class="p">,</span>
+            <span class="n">parsing_method</span><span class="p">,</span>
+            <span class="n">context</span><span class="p">,</span>
+            <span class="n">arg_aliases</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;h&quot;</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;v&quot;</span><span class="p">},</span>
+        <span class="p">)</span>
         <span class="n">config</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">arcfile</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__logging_setup</span><span class="p">()</span>
         <span class="n">utils</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;INIT&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">version</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">install_command</span><span class="p">(</span><span class="n">Command</span><span class="p">(</span><span class="s2">&quot;help&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">helper</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="n">PositionalParser</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">default_action</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Command</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">()(</span><span class="n">function</span><span class="p">)</span> <span class="k">if</span> <span class="n">function</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">subcommands</span><span class="p">[</span><span class="s2">&quot;help&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="p">()(</span><span class="n">function</span><span class="p">)</span> <span class="k">if</span> <span class="n">function</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">subcommands</span><span class="p">[</span><span class="s2">&quot;help&quot;</span><span class="p">]</span>
         <span class="p">)</span>
 </pre></div>
 
@@ -457,7 +497,7 @@
 <ul>
 <li><strong>name:</strong>  name of the CLI, will be used in the help command.</li>
 <li><strong>function:</strong>  function that defines the CLI's default behavior.
-Identical to calling <code>@cli.base()</code>.</li>
+Identical to calling <code>@cli.default()</code>.</li>
 <li><strong>arcfile:</strong>  arc config file to load. defaults to ./.arc</li>
 <li><strong>context:</strong>  dictionary of key value pairs to pass to children as context</li>
 <li><strong>version:</strong>  Version string to display with <code>--version</code></li>
@@ -507,17 +547,17 @@ Identical to calling <code>@cli.base()</code>.</li>
 
 
                             </div>
-                            <div id="CLI.base" class="classattr">
-                                        <div class="attr function"><a class="headerlink" href="#CLI.base">#&nbsp;&nbsp</a>
+                            <div id="CLI.default" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#CLI.default">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">base</span><span class="signature">(self, name=None, parse_method=None, **kwargs)</span>:
+            <span class="name">default</span><span class="signature">(self, name=None, parse_method=None, **kwargs)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">base</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parse_method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parse_method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Define The CLI&#39;s default behavior</span>
 <span class="sd">        when not given a specific command. Has the same interface</span>
 <span class="sd">        as `Command.subcommand`</span>
@@ -559,6 +599,7 @@ as <code>Command.subcommand</code></p>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">missing_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">help</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Handles default arguments</span>
+<span class="sd">        View specific help with &quot;help &lt;command-name&gt;&quot;</span>
 
 <span class="sd">        # Arguments</span>
 <span class="sd">            --help     shows this help</span>
@@ -569,12 +610,23 @@ as <code>Command.subcommand</code></p>
         <span class="k">elif</span> <span class="n">version</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_action</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_action</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="c1"># Sinces the parserse don&#39;t do any checking on **kwargs</span>
+            <span class="c1"># we re-form the args back into a string and send them down</span>
+            <span class="c1"># to the default_actions execute. It&#39;s not going to be the most</span>
+            <span class="c1"># effecient (performs a parse twice for example), but that</span>
+            <span class="c1"># doesn&#39;t really matter in this case as the performace impact is minimal</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}{</span><span class="n">config</span><span class="o">.</span><span class="n">arg_assignment</span><span class="si">}{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">]</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_action</span><span class="o">.</span><span class="n">context</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_action</span><span class="o">.</span><span class="n">run</span><span class="p">([],</span> <span class="n">args</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
 </pre></div>
 
         </details>
 
-            <div class="docstring"><p>Handles default arguments</p>
+            <div class="docstring"><p>Handles default arguments
+View specific help with "help <command-name>"</p>
 
 <h1 id="arguments">Arguments</h1>
 
@@ -722,6 +774,7 @@ a command name (some:command:name)</p>
                 <dd id="CLI.install_command" class="function"><a href="command/command.html#Command.install_command">install_command</a></dd>
                 <dd id="CLI.handle_command_aliases" class="function"><a href="command/command.html#Command.handle_command_aliases">handle_command_aliases</a></dd>
                 <dd id="CLI.ensure_function" class="function"><a href="command/command.html#Command.ensure_function">ensure_function</a></dd>
+                <dd id="CLI.is_namespace" class="function"><a href="command/command.html#Command.is_namespace">is_namespace</a></dd>
 
             </div>
                                 </dl>

@@ -163,7 +163,7 @@
         <span class="k">with</span> <span class="n">init</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;r+&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">subbed</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span>
                 <span class="sa">r</span><span class="s2">&quot;__version__ = </span><span class="se">\&quot;</span><span class="s2">.+</span><span class="se">\&quot;</span><span class="s2">\n&quot;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s1">&#39;__version__ = &quot;</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s1">    &quot;&#39;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s1">&#39;__version__ = &quot;</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s1">&quot;       &#39;</span><span class="p">,</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span>
             <span class="p">)</span>
             <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
