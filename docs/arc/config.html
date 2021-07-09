@@ -85,6 +85,15 @@
                                 <a class="variable" href="#Config.mode">mode</a>
                         </li>
                         <li>
+                                <a class="variable" href="#Config.suggest_on_missing_argument">suggest_on_missing_argument</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Config.suggest_on_missing_command">suggest_on_missing_command</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Config.suggest_levenshtein_distance">suggest_levenshtein_distance</a>
+                        </li>
+                        <li>
                                 <a class="variable" href="#Config.mode_map">mode_map</a>
                         </li>
                 </ul>
@@ -268,6 +277,17 @@
 <span class="sd">    - development</span>
 <span class="sd">    - test</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">suggest_on_missing_argument</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="sd">&quot;&quot;&quot;Wether or not to provide suggestions for possible misspellings</span>
+<span class="sd">    when an argument is not found&quot;&quot;&quot;</span>
+
+    <span class="n">suggest_on_missing_command</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="sd">&quot;&quot;&quot;Wether or not to provide suggestions for possible misspellings</span>
+<span class="sd">    when a command is not found&quot;&quot;&quot;</span>
+
+    <span class="n">suggest_levenshtein_distance</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="sd">&quot;&quot;&quot;The max Levenshtein between input and a</span>
+<span class="sd">    possible correction to trigger a suggestion &quot;&quot;&quot;</span>
 
     <span class="n">mode_map</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;development&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
@@ -735,6 +755,17 @@ for post-load setup</p>
 <span class="sd">    - development</span>
 <span class="sd">    - test</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">suggest_on_missing_argument</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="sd">&quot;&quot;&quot;Wether or not to provide suggestions for possible misspellings</span>
+<span class="sd">    when an argument is not found&quot;&quot;&quot;</span>
+
+    <span class="n">suggest_on_missing_command</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="sd">&quot;&quot;&quot;Wether or not to provide suggestions for possible misspellings</span>
+<span class="sd">    when a command is not found&quot;&quot;&quot;</span>
+
+    <span class="n">suggest_levenshtein_distance</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="sd">&quot;&quot;&quot;The max Levenshtein between input and a</span>
+<span class="sd">    possible correction to trigger a suggestion &quot;&quot;&quot;</span>
 
     <span class="n">mode_map</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;development&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
@@ -834,6 +865,42 @@ when parsing via keyword <code>name=value</code></p>
 <li>development</li>
 <li>test</li>
 </ul>
+</div>
+
+
+                            </div>
+                            <div id="Config.suggest_on_missing_argument" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#Config.suggest_on_missing_argument">#&nbsp;&nbsp</a>
+
+        <span class="name">suggest_on_missing_argument</span><span class="default_value"> = True</span>
+    </div>
+
+            <div class="docstring"><p>Wether or not to provide suggestions for possible misspellings
+when an argument is not found</p>
+</div>
+
+
+                            </div>
+                            <div id="Config.suggest_on_missing_command" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#Config.suggest_on_missing_command">#&nbsp;&nbsp</a>
+
+        <span class="name">suggest_on_missing_command</span><span class="default_value"> = True</span>
+    </div>
+
+            <div class="docstring"><p>Wether or not to provide suggestions for possible misspellings
+when a command is not found</p>
+</div>
+
+
+                            </div>
+                            <div id="Config.suggest_levenshtein_distance" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#Config.suggest_levenshtein_distance">#&nbsp;&nbsp</a>
+
+        <span class="name">suggest_levenshtein_distance</span><span class="default_value"> = 2</span>
+    </div>
+
+            <div class="docstring"><p>The max Levenshtein between input and a
+possible correction to trigger a suggestion</p>
 </div>
 
 
