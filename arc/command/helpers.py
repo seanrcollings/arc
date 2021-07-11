@@ -1,6 +1,6 @@
 from __future__ import annotations
 import inspect
-from typing import TYPE_CHECKING, get_type_hints, Union, Iterable
+from typing import TYPE_CHECKING, get_type_hints
 
 from arc import utils, errors
 from arc.config import config

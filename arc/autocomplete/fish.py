@@ -92,9 +92,9 @@ def generate(name: str, root: Command) -> str:
         FishCompletion(name)
         .comment("Setup")
         .set("commands", " ".join(name for _, name in commands))
+        .no_files()
+        .flush()
     )
-
-    # argument_completions(completions, [(root, "Root")])
 
     completions.comment("Commands")
     command_completions(completions, commands)
@@ -136,11 +136,14 @@ def argument_completions(completions: FishCompletion, command: Command, cmd_name
 
         elif parse_type is ParsingMethod.STANDARD:
             completions.seen_subcommand(cmd_name).required().long(arg.name)
+            if arg.short:
+                completions.short(arg.short)
         elif parse_type is ParsingMethod.KEYWORD:
             completions.seen_subcommand(cmd_name).arguments(
                 f"{arg.name}{config.arg_assignment}"
             )
 
+        completions.description(f"{arg.name}: {arg.annotation}")
         if issubclass(arg.annotation, Path):
             completions.force_files()
         else:
