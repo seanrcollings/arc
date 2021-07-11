@@ -21,7 +21,7 @@ class EnumConverter(BaseConverter[Type[Enum]]):
         except ValueError as e:
             raise ConversionError(
                 value,
-                expected=f"to be one of: {', '.join(str(data.value) for data in self.annotation)}",
+                expected=f"to be: {', '.join(str(data.value) for data in self.annotation)}",
             ) from e
 
 

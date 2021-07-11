@@ -4,7 +4,7 @@ from pathlib import Path
 from arc.config import config
 from arc.command import Command, helpers, ParsingMethod
 
-COMPLETE = "complete -c "
+COMPLETE = "complete -c"
 SEEN_SUBCOMMAND = "__fish_seen_subcommand_from"
 
 
@@ -22,7 +22,7 @@ class FishCompletion:
         if no_format:
             self.lines.append(content)
         else:
-            self.lines.append(f"{COMPLETE}{self.command}{content}")
+            self.lines.append(f"{COMPLETE} {self.command}{content}")
 
     def comment(self, comment: str):
         self.add(f"\n# {comment}", no_format=True)
@@ -83,7 +83,7 @@ class FishCompletion:
         return self.condition(f"not {SEEN_SUBCOMMAND} {' '.join(args)}")
 
 
-def generate(name: str, root: Command):
+def generate(name: str, root: Command) -> str:
     commands = [
         command for command in helpers.get_all_commands(root) if command[0] != root
     ]
@@ -92,15 +92,13 @@ def generate(name: str, root: Command):
         FishCompletion(name)
         .comment("Setup")
         .set("commands", " ".join(name for _, name in commands))
-        .no_files()
-        .flush()
     )
 
     completions.comment("Commands")
     command_completions(completions, commands)
     argument_completions(completions, commands)
 
-    print(completions)
+    return str(completions)
 
 
 def command_completions(
