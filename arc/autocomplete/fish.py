@@ -108,11 +108,10 @@ def command_completions(
     completions: FishCompletion, commands: list[tuple[Command, str]]
 ):
     for command, cmd_name in commands:
-        desc = command.doc.split("\n")[0]
         (
             completions.not_seen_subcommand("$commands")
             .arguments(cmd_name)
-            .description(desc)
+            .description(command.doc.short_description)
             .flush()
         )
 
