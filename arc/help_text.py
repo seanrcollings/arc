@@ -136,7 +136,7 @@ def generate_options_string(command: Command):
 
     args = []
     flags = []
-    for arg in command.parser.args.values():
+    for arg in (arg for arg in command.parser.args.values() if not arg.hidden):
         formatted = format_single_arg(arg)
         if arg.is_flag():
             flags.append(formatted)

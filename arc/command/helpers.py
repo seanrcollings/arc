@@ -121,11 +121,11 @@ def find_similar_command(command: Command, namespace_list: list[str]):
     return None
 
 
-def get_all_command_names(
+def get_all_commands(
     command: Command, parent_namespace: str = "", root=True
-) -> list[str]:
-    """Recursively walks down the command tree and
-    generates fully-qualified names for all commands
+) -> list[tuple[Command, str]]:
+    """Recursively walks down the command tree, retrieves each command
+    and generates fully-qualified names for all commands
 
     Args:
         command (Command): Root of the command tree you want to generates
@@ -134,21 +134,23 @@ def get_all_command_names(
             Defaults to True.
 
     Returns:
-        list[str]: Names of every command in the command-tree, fully qualified
+        list[tuple[Command, str]]: List of commands and their fully-qualified names
     """
     if root:
-        current = ""
+        current_name = ""
     else:
-        current = config.namespace_sep.join((parent_namespace, command.name)).lstrip(
-            config.namespace_sep
-        )
+        current_name = config.namespace_sep.join(
+            (parent_namespace, command.name)
+        ).lstrip(config.namespace_sep)
 
-    names = [current]
-
-    if len(command.subcommands) == 0:
-        return names
+    commands = [(command, current_name)]
 
     for subcommand in command.subcommands.values():
-        names += get_all_command_names(subcommand, current, False)
+        commands += get_all_commands(subcommand, current_name, False)
 
-    return names
+    return commands
+
+
+def get_all_command_names(*args, **kwargs) -> list[str]:
+    """Helper function that only returns the names from `get_all_commands`"""
+    return list(name for command, name in get_all_commands(*args, **kwargs))

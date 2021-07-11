@@ -1,5 +1,4 @@
 import inspect
-import enum
 
 from arc.config import config
 from arc.utils import symbol

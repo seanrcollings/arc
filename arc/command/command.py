@@ -27,7 +27,7 @@ class Command:
         self.subcommands: Dict[str, Command] = {}
         self.subcommand_aliases: dict[str, str] = {}
         self.context = context or {}
-        self.doc = function.__doc__
+        self.doc = function.__doc__ or ""
 
         self.parser: ArgumentParser = parser(function, arg_aliases)
         self.executor = CommandExecutor(function)
@@ -46,7 +46,7 @@ class Command:
     def function(self, func: Callable):
         self.parser.build_args(func)
         self.executor.function = func
-        self.doc = func.__doc__
+        self.doc = func.__doc__ or ""
 
     ### Execution ###
 
