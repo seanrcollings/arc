@@ -9,12 +9,15 @@ from arc import utils
 
 from .argument_parser import ArgumentParser, ParsingMethod
 from .command_executor import CommandExecutor
+from .command_doc import CommandDoc
 
 
 logger = logging.getLogger("arc_logger")
 
 
 class Command:
+    _command_doc: Optional[CommandDoc] = None
+
     def __init__(
         self,
         name: str,
@@ -27,7 +30,6 @@ class Command:
         self.subcommands: Dict[str, Command] = {}
         self.subcommand_aliases: dict[str, str] = {}
         self.context = context or {}
-        self.doc = function.__doc__ or ""
 
         self.parser: ArgumentParser = parser(function, arg_aliases)
         self.executor = CommandExecutor(function)
@@ -46,7 +48,13 @@ class Command:
     def function(self, func: Callable):
         self.parser.build_args(func)
         self.executor.function = func
-        self.doc = func.__doc__ or ""
+
+    @property
+    def doc(self) -> CommandDoc:
+        if not self._command_doc:
+            self._command_doc = CommandDoc(self.function.__doc__ or "", ("usage",))
+
+        return self._command_doc
 
     ### Execution ###
 
