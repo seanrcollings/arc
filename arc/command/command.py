@@ -1,4 +1,4 @@
-from typing import Dict, Callable, Optional, Any, Type, Union, Iterable
+from typing import Dict, Callable, Optional, Any, Type, Union
 import functools
 import pprint
 import logging
@@ -24,14 +24,14 @@ class Command:
         function: Callable,
         parser: Type[ArgumentParser] = ParsingMethod.KEYWORD,
         context: Optional[Dict] = None,
-        arg_aliases=None,
+        short_args=None,
     ):
         self.name = name
         self.subcommands: Dict[str, Command] = {}
         self.subcommand_aliases: dict[str, str] = {}
         self.context = context or {}
 
-        self.parser: ArgumentParser = parser(function, arg_aliases)
+        self.parser: ArgumentParser = parser(function, short_args)
         self.executor = CommandExecutor(function)
 
     def __repr__(self):
@@ -76,7 +76,7 @@ class Command:
         name: Union[str, list[str], tuple[str, ...]] = None,
         parsing_method: type[ArgumentParser] = None,
         context: dict[str, Any] = None,
-        arg_aliases: dict[str, Union[Iterable[str], str]] = None,
+        short_args: dict[str, str] = None,
     ):
         """Create and install a subcommands
 
@@ -90,7 +90,7 @@ class Command:
                 Defaults to the parsing method of `self`.
             context (dict[str, Any], optional): Special data that will be
                 passed to this command (and any subcommands) at runtime. Defaults to None.
-            arg_aliases (dict[str, Union[Iterable[str], str]], optional): Secondary names
+            short_args (dict[str, Union[Iterable[str], str]], optional): Secondary names
                 that arguments can be referred to by. Defaults to None.
 
         Returns:
@@ -108,7 +108,7 @@ class Command:
                 function,
                 parsing_method,
                 context,
-                arg_aliases,
+                short_args,
             )
             return self.install_command(command)
 

@@ -36,7 +36,7 @@ class CLI(Command):
             self.missing_command,
             parsing_method,
             context,
-            arg_aliases={"help": "h", "version": "v"},
+            short_args={"help": "h", "version": "v"},
         )
         config.from_file(arcfile)
         self.__logging_setup()
