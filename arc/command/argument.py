@@ -18,9 +18,7 @@ class Argument:
         self.annotation = str if annotation is EMPTY else annotation
         self.default = NO_DEFAULT if default is EMPTY else default
         self.hidden = hidden
-        # Aliases are optional secondary names for arguments
-        # currently only used to store shorter names for flags
-        self.aliases = aliases or set()
+        self.short: str = ""
 
     def __repr__(self):
         return f"<Argument : {self.name}={self.default}>"

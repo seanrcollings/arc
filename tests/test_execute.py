@@ -204,19 +204,24 @@ def test_nested_union(cli: CLI):
     assert cli("un2 val=1,string,3,4") == ["1", "string", "3", "4"]
 
 
-def test_arg_generic(cli: CLI):
-    @cli.subcommand(arg_aliases={"name": "na", "flag": ("f", "fl")})
+def test_short_args(cli: CLI):
+    @cli.subcommand(short_args={"name": "n", "flag": "f"})
     def ar(name: str, flag: bool):
         assert name == "sean"
         assert flag
 
     cli("ar name=sean --flag")
-    cli("ar na=sean -f")
-    cli("ar na=sean -fl")
+    cli("ar n=sean -f")
 
     with pytest.raises(CommandError):
 
-        @cli.subcommand(arg_aliases={"arg1": "arg", "arg2": ("arg", "2")})
+        @cli.subcommand(short_args={"arg1": "a", "arg2": "a"})
+        def un(arg1: str, arg2: str):
+            ...
+
+    with pytest.raises(CommandError):
+
+        @cli.subcommand(short_args={"arg1": "a", "arg2": "a2"})
         def un(arg1: str, arg2: str):
             ...
 

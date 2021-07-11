@@ -116,7 +116,7 @@ class ArgumentParser:
             return arg
 
         for arg in self.args.values():
-            if key in arg.aliases and not arg.hidden:
+            if key == arg.short and not arg.hidden:
                 return arg
 
         raise errors.MissingArgError(message, name=key)
@@ -142,12 +142,32 @@ class ArgumentParser:
         return None
 
 
-class StandardParser(ArgumentParser):
-    __pass_kwargs: bool = False
+class FlagParser(ArgumentParser):
+    """Class to handle parsing out the `--flags` or `-f`"""
+
     matchers = {
         "flag": re.compile(
             fr"^(?:{config.flag_denoter}|{config.short_flag_denoter})(?P<name>\b{IDENT})$"
-        ),
+        )
+    }
+
+    def handle_flag(self, flag: dict[str, str]) -> tuple[str, Any]:
+        name = flag["name"]
+
+        if len(name) == 1:
+            flag_denoter = config.short_flag_denoter
+        else:
+            flag_denoter = config.flag_denoter
+
+        arg = self.get_or_raise(
+            name, f"Flag {fg.YELLOW}{flag_denoter}{name}{effects.CLEAR} not recognized"
+        )
+        return arg.name, not arg.default
+
+
+class StandardParser(FlagParser):
+    __pass_kwargs: bool = False
+    matchers = {
         "value": re.compile("^(.+)$"),
     }
 
@@ -190,30 +210,6 @@ class StandardParser(ArgumentParser):
             raise errors.CommandError("Standard Commands do not accept *args")
         if param.kind is param.VAR_KEYWORD:
             self.__pass_kwargs = True
-
-
-FLAG = re.compile(
-    fr"^(?:{config.flag_denoter}|{config.short_flag_denoter})(?P<name>\b{IDENT})$"
-)
-
-
-class FlagParser(ArgumentParser):
-    """Class to handle parsing out the `--flags` or `-f`"""
-
-    matchers = {"flag": FLAG}
-
-    def handle_flag(self, flag: dict[str, str]) -> tuple[str, Any]:
-        name = flag["name"]
-
-        if len(name) == 1:
-            flag_denoter = config.short_flag_denoter
-        else:
-            flag_denoter = config.flag_denoter
-
-        arg = self.get_or_raise(
-            name, f"Flag {fg.YELLOW}{flag_denoter}{name}{effects.CLEAR} not recognized"
-        )
-        return arg.name, not arg.default
 
 
 # pylint: disable=inherit-non-class
