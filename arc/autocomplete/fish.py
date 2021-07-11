@@ -96,6 +96,8 @@ def generate(name: str, root: Command) -> str:
         .flush()
     )
 
+    completions.comment("Help").seen_subcommand("help").arguments("$commands").flush()
+
     completions.comment("Commands")
     command_completions(completions, commands)
     for command, cmd_name in commands:
