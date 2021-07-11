@@ -36,6 +36,14 @@ class CommandDoc:
 
         return string.strip("\n")
 
+    @property
+    def description(self):
+        return self.sections.get("description", "")
+
+    @property
+    def short_description(self):
+        return self.description.split("\n")[0]
+
     def parse_docstring(self, doc: str):
         """Parses a doc string into sections
 

@@ -97,13 +97,9 @@ def generate_subcommands(doc: CommandDoc, command: Command):
     subcommands = ""
 
     for sub in command.subcommands.values():
-        lines = sub.doc.sections.get("description", "").split("\n")
-        if len(lines) > 0:
-            first_line = lines[0].strip("\n")
-        else:
-            first_line = ""
         subcommands += (
-            f"{fg.ARC_BLUE}{sub.name:<{name_size}}{effects.CLEAR}   {first_line}\n"
+            f"{fg.ARC_BLUE}{sub.name:<{name_size}}"
+            f"{effects.CLEAR}   {sub.doc.short_description}\n"
         )
 
     doc.add_section("subcommands", subcommands)
