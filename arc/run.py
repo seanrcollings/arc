@@ -6,7 +6,7 @@ import logging
 
 from arc import utils, present
 from .errors import CommandError
-from .command import Command
+from .command import Command, helpers
 from .config import config
 from .color import fg, effects, bg
 
@@ -109,52 +109,12 @@ def find_command(
                 f"{':'.join(command_namespace)}{effects.CLEAR} not found. "
                 f"Check {fg.BLUE}--help{effects.CLEAR} for available commands"
             )
-            if possible_command := find_command_suggestion(command, command_namespace):
+            if possible_command := helpers.find_similar_command(
+                command, command_namespace
+            ):
                 message += f"\n\tPerhaps you meant {fg.YELLOW}{possible_command}{effects.CLEAR}?"
 
             raise CommandError(message)
 
         command_ctx = command.context | command_ctx
     return command, command_ctx
-
-
-def find_command_suggestion(command: Command, namespace_list: list[str]):
-    if config.suggest_on_missing_command:
-        namespace_str = config.namespace_sep.join(namespace_list)
-        command_names = get_all_command_names(command)
-
-        distance, command_name = min(
-            (
-                (utils.levenshtein(namespace_str, command_name), command_name)
-                for command_name in command_names
-            ),
-            key=lambda tup: tup[0],
-        )
-
-        if distance <= config.suggest_levenshtein_distance:
-            return command_name
-
-    return None
-
-
-def get_all_command_names(
-    command: Command, parent_namespace: str = "", root=True
-) -> list[str]:
-    """Recursively walks down the command tree and
-    generates fully-qualified names for all commands"""
-    if root:
-        current = ""
-    else:
-        current = config.namespace_sep.join((parent_namespace, command.name)).lstrip(
-            config.namespace_sep
-        )
-
-    names = [current]
-
-    if len(command.subcommands) == 0:
-        return names
-
-    for subcommand in command.subcommands.values():
-        names += get_all_command_names(subcommand, current, False)
-
-    return names
