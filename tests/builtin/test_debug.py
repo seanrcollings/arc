@@ -1,7 +1,7 @@
 from io import StringIO
 from unittest.mock import patch
 from unittest import TestCase
-from arc.utilities.debug import debug
+from arc.builtin.debug import debug
 from arc import CLI
 
 
