@@ -6,9 +6,9 @@ from arc import errors
 from arc.config import config
 from arc.color import fg, effects
 from arc.utils import IDENT, levenshtein
-from .helpers import ArgBuilder
-from .argument import Argument, NO_DEFAULT
-from .context import Context
+from arc.command.arg_builder import ArgBuilder
+from arc.command.argument import Argument, NO_DEFAULT
+from arc.command.context import Context
 
 
 class ArgumentParser:
