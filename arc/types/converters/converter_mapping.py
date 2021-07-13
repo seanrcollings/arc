@@ -1,5 +1,5 @@
 from typing import _SpecialForm as SpecialForm, Union
-from arc import utils, errors
+from arc import errors, types
 
 from .base_converter import BaseConverter
 
@@ -22,7 +22,7 @@ def register(*kinds: Union[type, SpecialForm]):
 # 2. The type is an Alias (AliasConverter)
 # 3. The type is a key
 def get_converter(kind: type) -> type[BaseConverter]:
-    kind = utils.unwrap_type(kind)
+    kind = types.unwrap_type(kind)
 
     if kind in converter_mapping:
         return converter_mapping[kind]

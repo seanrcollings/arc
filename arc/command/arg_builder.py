@@ -3,6 +3,7 @@ import inspect
 from typing import TYPE_CHECKING, get_type_hints
 
 from arc import errors, utils
+from arc import types
 from arc.command.argument import EMPTY, Argument
 from arc.command.context import Context
 
@@ -68,7 +69,7 @@ class ArgBuilder:
             self.__args[param.name] = arg
 
     def is_hidden_arg(self, param: ParamProxy) -> bool:
-        annotation = utils.unwrap_type(param.annotation)
+        annotation = types.unwrap_type(param.annotation)
 
         try:
             for kind in HIDDEN_ARG_TYPES:
