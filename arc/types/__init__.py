@@ -1,13 +1,34 @@
-class ArcType:
-    """Class that each Type sublcasses
-    to provide a signal to the converter process"""
+"""
+.. include:: ../../wiki/Data-Types.md
+"""
+from .converters import *
+
+from arc.errors import ConversionError, CommandError
+from arc.color import fg, effects as ef
+
+from .converters import *
 
 
-# pylint: disable=wrong-import-position
-from .file import File
-from .range import Range
-from .paths import *
+def convert(value, kind, name: str = ""):
+    """Converts the provided string to the provided type
+    Args:
+        value: value to convert
+        kind: type to attempt the convertion to
+        name: optional descriptive name of the argument
+    """
+    # pylint: disable=import-outside-toplevel
+    from arc.utils import handle
 
+    converter_cls = get_converter(kind)
+    converter = converter_cls(kind)
 
-def needs_cleanup(kind):
-    return kind in (File,)
+    with handle(CommandError):
+        try:
+            value = converter.convert(value)
+        except ConversionError as e:
+            raise CommandError(
+                f"Argument {fg.BLUE}{name}{ef.CLEAR} expected {e.expected}, but was "
+                f"{fg.YELLOW}{value}{ef.CLEAR}. {e.helper_text}"
+            ) from e
+
+    return value

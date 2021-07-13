@@ -1,7 +1,7 @@
 import os
 
 from arc import namespace, config
-from arc.convert import converter_mapping
+from arc.types.converters import converter_mapping
 from arc.present import Table, Box
 
 debug = namespace("debug")
