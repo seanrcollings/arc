@@ -1,14 +1,25 @@
-from typing import GenericAlias, Union, cast, Optional, Literal  # type: ignore
+from typing import (  # type: ignore
+    GenericAlias,
+    Union,
+    cast,
+    Optional,
+    Literal,
+    Any,
+    get_args,
+    get_origin,
+    Sequence,
+)
 
-from arc import errors, types
+from arc import errors
 from arc.types.type_store import register, type_store
+from .. import helpers
 from .base_converter import BaseConverter
 
 
 class GenericConverter(BaseConverter[GenericAlias]):
     def __init__(self, annotation: GenericAlias = None):
         super().__init__(annotation)
-        if types.is_alias(annotation):
+        if helpers.is_alias(annotation):
             annotation = cast(GenericAlias, annotation)
             self.args: tuple[type, ...] = annotation.__args__
             self.origin: Optional[type] = annotation.__origin__
@@ -17,7 +28,13 @@ class GenericConverter(BaseConverter[GenericAlias]):
             self.origin = annotation
 
 
-@register(Union)
+def format_union(union: type[Union[Any]]) -> str:
+    args = get_args(union)
+    names = list(type_store.get_display_name(arg) for arg in args)
+    return helpers.join_or(names)
+
+
+@register(Union, format_union)
 class UnionConverter(GenericConverter):
     def convert(self, value: str):
         for union_type in self.args:
@@ -33,7 +50,7 @@ class UnionConverter(GenericConverter):
         )
 
 
-@register(Literal)
+@register(Literal, lambda l: helpers.join_or(get_args(l)))
 class LiteralConverter(GenericConverter):
     args: tuple[str, ...]  # type: ignore
 
@@ -68,17 +85,41 @@ class MutableCollectionConverter(CollectionConverter):
         return self.convert_to(converter.convert(item) for item in items)
 
 
-@register(list)
+def format_collection(collection: type[Sequence]):
+    origin = get_origin(collection)
+    origin_display_name = origin.__name__ if origin else collection.__name__
+    args = get_args(collection)
+    arg_display_name = type_store.get_display_name(args[0]) if args else None
+
+    if arg_display_name:
+        return f"{origin_display_name} of {arg_display_name}s"
+
+    return f"{origin_display_name}"
+
+
+@register(list, format_collection)
 class ListConverter(MutableCollectionConverter):
     convert_to = list
 
 
-@register(set)
+@register(set, format_collection)
 class SetConverter(MutableCollectionConverter):
     convert_to = set
 
 
-@register(tuple)
+def format_tuple(tup: type[tuple]):
+    args = get_args(tup)
+
+    if args:
+        if args[-1] is Ellipsis:
+            return f"tuple of {type_store.get_display_name(args[0])}s"
+
+        names = helpers.join_and(list(type_store.get_display_name(arg) for arg in args))
+        return f"tuple of {names}"
+    return "tuple"
+
+
+@register(tuple, format_tuple)
 class TupleConverter(CollectionConverter):
     convert_to = tuple
 

@@ -1,5 +1,4 @@
 """ Converters for types in the Standard Library """
-from typing import Type
 from enum import Enum
 from pathlib import Path
 
@@ -10,12 +9,13 @@ from .base_converter import BaseConverter
 __all__ = ["EnumConverter", "PathConverter"]
 
 
-def enum_name(enum: "EnumConverter") -> str:
-    return "enum"
+def format_enum(enum: type[Enum]) -> str:
+    vals = [member.value for member in enum.__members__.values()]
+    return ", ".join(vals[:-1]) + f" or {vals[-1]}"
 
 
-@register(Enum, enum_name)
-class EnumConverter(BaseConverter[Type[Enum]]):
+@register(Enum, format_enum)
+class EnumConverter(BaseConverter[type[Enum]]):
     def convert(self, value):
         if value.isnumeric():
             value = int(value)

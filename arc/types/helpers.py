@@ -1,6 +1,4 @@
-from typing import _GenericAlias as GenericAlias, _SpecialForm as SpecialForm  # type: ignore
-from typing import Union, Literal
-from pathlib import Path
+from typing import Union, GenericAlias, Sequence  # type: ignore
 
 
 def unwrap(annotation) -> type:
@@ -35,26 +33,42 @@ def is_alias(alias):
     return isinstance(alias, GenericAlias) or getattr(alias, "__origin__", False)
 
 
-simple_types = {
-    str: "string",
-    int: "integer",
-    float: "decimal",
-    bool: "flag",
-    Path: "filepath",
-}
+def joiner(values: Sequence, join_str: str = ", ", last_str: str = ", "):
+    """Joins values together with an additional `last_str` to format how
+    the final value is joined to the rest of the list
 
-or_types = {Union, Literal}
+    Args:
+        values (Sequence): Values to join
+        join_str (str, optional): What to join values 0 - penultimate value with. Defaults to ", ".
+        last_str (str, optional): [description]. What to use to join the last
+            value to the rest. Defaults to ", ".
+    """
+    return join_str.join(str(v) for v in values[:-1]) + last_str + str(values[-1])
 
 
-def readable_type_name(kind: Union[type, SpecialForm]) -> str:
-    unwrapped = unwrap(kind)
-    if unwrapped in simple_types:
-        return simple_types[unwrapped]
+def join_or(values: Sequence) -> str:
+    """Joins a sequence of items with commas
+    and an or at the end
 
-    if unwrapped in or_types:
-        return (
-            ", ".join(simple_types.get(arg) for arg in kind.__args__[:-1])  # type: ignore
-            + f" or {simple_types.get(kind.__args__[-1])}"  # type: ignore
-        )
+    [1, 2, 3, 4] -> "1, 2, 3 or 4"
 
-    return str(kind)
+    Args:
+        values (Sequence): Values to join
+
+    Returns:
+        str: joined values
+    """
+    return joiner(values, last_str=" or ")
+
+
+def join_and(values: Sequence) -> str:
+    """Joins a sequence of items with commas
+    and an "and" at the end
+
+    Args:
+        values (Sequence): Values to join
+
+    Returns:
+        str: joined values
+    """
+    return joiner(values, last_str=" and ")

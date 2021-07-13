@@ -3,7 +3,6 @@ from typing import (
     Union,
     TypedDict,
     Callable,
-    TypeVar,
 )
 from arc import errors, types
 
@@ -11,8 +10,7 @@ from .converters.base_converter import BaseConverter
 
 
 TypeKey = Union[type, SpecialForm]
-TConverter = TypeVar("TConverter", bound=BaseConverter)
-DisplayName = Union[str, Callable[[TConverter], str]]
+DisplayName = Union[str, Callable[[type], str]]
 
 
 class TypeValue(TypedDict):
@@ -50,7 +48,7 @@ class TypeStore(dict[TypeKey, TypeValue]):
             display_name = val["display_name"]
 
             if callable(display_name):
-                return display_name(kind)
+                return display_name(kind)  # type: ignore
             return display_name
 
         raise errors.ArcError(f"{kind} not registered to TypeStore")

@@ -6,6 +6,7 @@ from arc.errors import ConversionError, CommandError
 from arc.color import fg, effects as ef
 from .converters import *
 from .helpers import *
+from .type_store import register, type_store
 
 
 def convert(value, kind, name: str = ""):
