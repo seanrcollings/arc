@@ -18,7 +18,7 @@ def convert(value, kind, name: str = ""):
     # pylint: disable=import-outside-toplevel
     from arc.utils import handle
 
-    converter_cls = get_converter(kind)
+    converter_cls = type_store.get_converter(kind)
     converter = converter_cls(kind)
 
     with handle(CommandError):

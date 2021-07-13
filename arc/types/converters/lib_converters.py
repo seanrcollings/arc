@@ -2,15 +2,19 @@
 from typing import Type
 from enum import Enum
 from pathlib import Path
-from arc.errors import ConversionError
 
+from arc.errors import ConversionError
+from arc.types.type_store import register
 from .base_converter import BaseConverter
-from .converter_mapping import register
 
 __all__ = ["EnumConverter", "PathConverter"]
 
 
-@register(Enum)
+def enum_name(enum: "EnumConverter") -> str:
+    return "enum"
+
+
+@register(Enum, enum_name)
 class EnumConverter(BaseConverter[Type[Enum]]):
     def convert(self, value):
         if value.isnumeric():
@@ -25,7 +29,7 @@ class EnumConverter(BaseConverter[Type[Enum]]):
             ) from e
 
 
-@register(Path)
+@register(Path, "filepath")
 class PathConverter(BaseConverter[Path]):
     def convert(self, value: str) -> Path:
         return Path(value)

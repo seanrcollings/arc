@@ -3,7 +3,7 @@ from typing import Union, Literal
 from pathlib import Path
 
 
-def unwrap_type(annotation) -> type:
+def unwrap(annotation) -> type:
     """Handles unwrapping `GenericTypes`, `SpecialForms`, etc...
     To retrive the inner origin type.
 
@@ -24,7 +24,7 @@ def safe_issubclass(cls, classes: Union[type, tuple[type, ...]]) -> bool:
     """Safe wrapper around issubclass for
     generic types like Union
     """
-    cls = unwrap_type(cls)
+    cls = unwrap(cls)
     try:
         return issubclass(cls, classes)
     except TypeError:
@@ -47,7 +47,7 @@ or_types = {Union, Literal}
 
 
 def readable_type_name(kind: Union[type, SpecialForm]) -> str:
-    unwrapped = unwrap_type(kind)
+    unwrapped = unwrap(kind)
     if unwrapped in simple_types:
         return simple_types[unwrapped]
 

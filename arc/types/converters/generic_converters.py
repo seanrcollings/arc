@@ -1,8 +1,8 @@
-from typing import _GenericAlias as GenericAlias, Union, cast, Optional, Literal  # type: ignore
+from typing import GenericAlias, Union, cast, Optional, Literal  # type: ignore
 
 from arc import errors, types
+from arc.types.type_store import register, type_store
 from .base_converter import BaseConverter
-from .converter_mapping import register, get_converter
 
 
 class GenericConverter(BaseConverter[GenericAlias]):
@@ -22,7 +22,7 @@ class UnionConverter(GenericConverter):
     def convert(self, value: str):
         for union_type in self.args:
             try:
-                converter = get_converter(union_type)
+                converter = type_store.get_converter(union_type)
                 return converter(union_type).convert(value)
             except errors.ConversionError:
                 continue
@@ -41,7 +41,7 @@ class LiteralConverter(GenericConverter):
         if value in self.args:
             return value
 
-        expected = ", ".join(arg for arg in self.args[: len(self.args) - 1])
+        expected = ", ".join(arg for arg in self.args[:-1])
         raise errors.ConversionError(value, expected=expected + f" or {self.args[-1]}")
 
 
@@ -64,7 +64,7 @@ class CollectionConverter(GenericConverter):
 class MutableCollectionConverter(CollectionConverter):
     def generic_convert(self, items: list):
         item_type = self.args[0]
-        converter = get_converter(item_type)(item_type)
+        converter = type_store.get_converter(item_type)(item_type)
         return self.convert_to(converter.convert(item) for item in items)
 
 
@@ -86,7 +86,7 @@ class TupleConverter(CollectionConverter):
         # Handle arbitrarily sized tuples
         if len(self.args) == 2 and self.args[-1] is Ellipsis:
             item_type = self.args[0]
-            converter = get_converter(item_type)(item_type)
+            converter = type_store.get_converter(item_type)(item_type)
             return tuple(converter.convert(item) for item in items)
         else:
             # Handle statically sized tuples
@@ -97,6 +97,6 @@ class TupleConverter(CollectionConverter):
                     f"({', '.join(arg.__name__ for arg in self.args)})",
                 )
             return tuple(
-                get_converter(item_type)(item_type).convert(item)
+                type_store.get_converter(item_type)(item_type).convert(item)
                 for item_type, item in zip(self.args, items)
             )

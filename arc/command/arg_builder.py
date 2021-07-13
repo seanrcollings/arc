@@ -69,7 +69,7 @@ class ArgBuilder:
             self.__args[param.name] = arg
 
     def is_hidden_arg(self, param: ParamProxy) -> bool:
-        annotation = types.unwrap_type(param.annotation)
+        annotation = types.unwrap(param.annotation)
 
         try:
             for kind in HIDDEN_ARG_TYPES:

@@ -1,0 +1,113 @@
+from typing import (
+    _SpecialForm as SpecialForm,
+    Union,
+    TypedDict,
+    Callable,
+    TypeVar,
+)
+from arc import errors, types
+
+from .converters.base_converter import BaseConverter
+
+
+TypeKey = Union[type, SpecialForm]
+TConverter = TypeVar("TConverter", bound=BaseConverter)
+DisplayName = Union[str, Callable[[TConverter], str]]
+
+
+class TypeValue(TypedDict):
+    converter: type[BaseConverter]
+    display_name: DisplayName
+
+
+class TypeStore(dict[TypeKey, TypeValue]):
+    def get(self, kind: TypeKey, default=None) -> TypeValue:
+        # Unwrap to handle generic types (list[int])
+        kind = types.unwrap(kind)
+
+        # Type is a key
+        # We perform this check once before hand
+        # because some typing types don't have
+        # the mro() method
+        if kind in self:
+            return self[kind]
+
+        # Type is a subclass of a key
+        for cls in kind.mro():
+            if cls in self:
+                return self[cls]
+
+        return default
+
+    def get_converter(self, kind: TypeKey) -> type[BaseConverter]:
+        if val := self.get(kind):
+            return val["converter"]
+
+        raise errors.ArcError(f"No Converter found for {kind}")
+
+    def get_display_name(self, kind: TypeKey):
+        if val := self.get(kind):
+            display_name = val["display_name"]
+
+            if callable(display_name):
+                return display_name(kind)
+            return display_name
+
+        raise errors.ArcError(f"{kind} not registered to TypeStore")
+
+    def register(
+        self,
+        kinds: Union[TypeKey, tuple[TypeKey, ...]],
+        cls: type[BaseConverter],
+        display_name: DisplayName = None,
+    ):
+        """Registers decorated `cls` as the converter for `kinds`"""
+
+        if isinstance(kinds, tuple):
+            name = display_name or ", ".join(str(kind) for kind in kinds)
+            for kind in kinds:
+                self[kind] = {"converter": cls, "display_name": name}
+        else:
+            name = display_name or str(kinds)
+            self[kinds] = {"converter": cls, "display_name": name}
+
+        return cls
+
+
+def register(
+    kinds: Union[TypeKey, tuple[TypeKey, ...]],
+    display_name: DisplayName = None,
+):
+    """Decorator wrapper around `type_store.register()`. Use to register a converter
+    to one or more types. This can be used to register custom converters and types
+    to arc.
+
+    Args:
+        kinds (Union[TypeKey, tuple[TypeKey, ...]]): Class(es) to register the
+        decorated converter to
+        display_name (Union[str, Callable[[type], str]], optional): A human-readable name
+        for the given type. Can be a string, or a function that recieves the
+        converter and returns a string. Defaults to None.
+
+    Example:
+
+    ```py
+    from arc.types import register
+
+    class CustomType():
+        ...
+
+    @register(CustomType, "custom-type")
+    class CustomConverter(BaseConverter):
+        def convert(self, value):
+            ...
+    ```
+    """
+
+    def wrapper(cls: type[BaseConverter]):
+        return type_store.register(kinds, cls, display_name)
+
+    return wrapper
+
+
+type_store = TypeStore()
