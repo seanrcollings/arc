@@ -2,7 +2,7 @@
 .. include:: ../../wiki/Data-Types.md
 """
 from arc.errors import ConversionError, CommandError
-from arc.color import fg, effects as ef
+from arc.color import fg, effects as ef, colorize
 
 from .converters import *
 
@@ -25,8 +25,8 @@ def convert(value, kind, name: str = ""):
             value = converter.convert(value)
         except ConversionError as e:
             raise CommandError(
-                f"Argument {fg.BLUE}{name}{ef.CLEAR} expected {e.expected}, but was "
-                f"{fg.YELLOW}{value}{ef.CLEAR}. {e.helper_text}"
+                f"Argument {colorize(name, fg.BLUE)} expected {e.expected}, but was "
+                f"{colorize(value, fg.YELLOW)}. {e.helper_text}"
             ) from e
 
     return value

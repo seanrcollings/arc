@@ -1,6 +1,7 @@
 """Autcompletion support for the fish shell"""
 from typing import Union
 from pathlib import Path
+from arc import utils
 from arc.config import config
 from arc.command import Command, helpers, ParsingMethod
 
@@ -145,8 +146,10 @@ def argument_completions(completions: FishCompletion, command: Command, cmd_name
                 f"{arg.name}{config.arg_assignment}"
             )
 
-        completions.description(f"{arg.name}: {arg.annotation}")
-        if issubclass(arg.annotation, Path):
+        completions.description(
+            f"{arg.name}: {utils.readable_type_name(arg.annotation)}"
+        )
+        if utils.safe_issubclass(arg.annotation, Path):
             completions.force_files()
         else:
             completions.no_files()
