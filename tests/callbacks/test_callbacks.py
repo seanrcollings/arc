@@ -50,6 +50,25 @@ def test_around(cli: CLI):
     assert cli("thing val=2") == 4
 
 
+def test_around_exception(cli: CLI):
+    @callbacks.around
+    def around(arguments):
+        try:
+            yield
+        except RuntimeError:
+            ...
+
+    @around
+    @cli.subcommand()
+    def raises():
+        raise RuntimeError("RuntimeError")
+
+    try:
+        cli("raises")
+    except RuntimeError as e:
+        pytest.fail("Unexpected exception. Expected @around callback to handle it")
+
+
 def test_inheritance(cli: CLI):
     @callbacks.before(inherit=False)
     def no_inherit(args):
