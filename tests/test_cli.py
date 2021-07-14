@@ -4,7 +4,7 @@ import pytest
 
 from arc import CLI, namespace, ParsingMethod
 from arc.errors import CommandError
-from arc.utilities.debug import debug
+from arc.builtin.debug import debug
 
 
 def test_base(cli: CLI):
@@ -35,26 +35,23 @@ def test_nonexistant_command(cli: CLI):
         cli("doesnotexist x=2")
 
 
-def test_autoload_file(cli: CLI):
-    cli.autoload(  # type: ignore
-        str(Path(__file__).parent.parent / "arc/utilities/debug.py")
-    )
-    assert "debug" in cli.subcommands
+class TestAutoload:
+    root = Path(__file__).parent.parent
 
+    def test_autoload_file(self, cli: CLI):
+        cli.autoload(str(self.root / "arc/builtin/debug.py"))
+        assert "debug" in cli.subcommands
 
-def test_autoload_dir(cli: CLI):
-    cli.autoload(str(Path(__file__).parent.parent / "arc/utilities"))  # type: ignore
-    assert "debug" in cli.subcommands
-    assert "files" in cli.subcommands
-    assert "https" in cli.subcommands
+    def test_autoload_dir(self, cli: CLI):
+        cli.autoload(str(self.root / "arc/builtin"))
+        assert "debug" in cli.subcommands
+        assert "files" in cli.subcommands
+        assert "https" in cli.subcommands
 
-
-def test_autoload_error(cli: CLI):
-    cli.install_command(debug)
-    with pytest.raises(CommandError):
-        cli.autoload(  # type: ignore
-            str(Path(__file__).parent.parent / "arc/utilities/debug.py")
-        )
+    def test_autoload_error(self, cli: CLI):
+        cli.install_command(debug)
+        with pytest.raises(CommandError):
+            cli.autoload(str(self.root / "arc/builtin/debug.py"))
 
 
 def test_command_alias(cli: CLI):

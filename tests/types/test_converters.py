@@ -2,9 +2,8 @@ import pytest
 from typing import Literal, Union
 from enum import Enum, IntEnum
 
-from arc.convert import *
+from arc.types.converters import *
 from arc.errors import ConversionError, ArcError
-from arc.types import Range
 
 
 def test_int():
@@ -143,18 +142,3 @@ def test_int_enum():
 
     with pytest.raises(ConversionError):
         EnumConverter(Numbers).convert("4")
-
-
-def test_range():
-    assert RangeConverter(Range[Literal[1], Literal[10]]).convert("2") == 2
-    assert RangeConverter(Range[Literal[1], Literal[10]]).convert("1") == 1
-    assert RangeConverter(Range[Literal[1], Literal[10]]).convert("8") == 8
-
-    with pytest.raises(ConversionError):
-        RangeConverter(Range[Literal[1], Literal[10]]).convert("10")
-
-    with pytest.raises(ConversionError):
-        RangeConverter(Range[Literal[5], Literal[10]]).convert("3")
-
-    with pytest.raises(ArcError):
-        RangeConverter(Range[Literal[5], Literal["string"]]).convert("3")

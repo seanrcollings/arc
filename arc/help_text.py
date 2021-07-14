@@ -26,9 +26,9 @@ def generate_usage(
     namespace: list[str],
 ):
     if command.is_namespace():
-        return
-
-    if root == command:
+        command_str = f"{command.name}{config.namespace_sep}<subcommand>"
+        args_str = "[arguments ...]"
+    elif root == command:
         command_str = "<command>"
         args_str = "[arguments ...]"
     else:
@@ -64,7 +64,7 @@ def generate_options_string(command: Command):
 
     args = []
     flags = []
-    for arg in command.parser.args.values():
+    for arg in (arg for arg in command.parser.args.values() if not arg.hidden):
         formatted = format_single_arg(arg)
         if arg.is_flag():
             flags.append(formatted)

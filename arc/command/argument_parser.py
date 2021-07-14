@@ -6,9 +6,9 @@ from arc import errors
 from arc.config import config
 from arc.color import fg, effects
 from arc.utils import IDENT, levenshtein
-from .helpers import ArgBuilder
-from .argument import Argument, NO_DEFAULT
-from .context import Context
+from arc.command.arg_builder import ArgBuilder
+from arc.command.argument import Argument, NO_DEFAULT
+from arc.command.context import Context
 
 
 class ArgumentParser:
@@ -162,6 +162,12 @@ class FlagParser(ArgumentParser):
         arg = self.get_or_raise(
             name, f"Flag {fg.YELLOW}{flag_denoter}{name}{effects.CLEAR} not recognized"
         )
+
+        if not arg.is_flag():
+            raise errors.CommandError(
+                f"Argument {fg.YELLOW}{name}{effects.CLEAR} requires a value"
+            )
+
         return arg.name, not arg.default
 
 

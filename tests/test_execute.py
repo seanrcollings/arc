@@ -5,7 +5,6 @@ from pathlib import Path
 import enum
 import pytest
 
-from arc.types import Range, ValidPath
 from arc import ParsingMethod
 from arc.errors import ConversionError, CommandError
 from arc import CLI
@@ -132,17 +131,6 @@ def test_set_generic(cli: CLI):
         cli("se val=word")
 
 
-def test_range(cli: CLI):
-    @cli.subcommand()
-    def ra(val: Range[Literal[1], Literal[10]]):
-        assert val == Range(2, 1, 10)
-
-    cli("ra val=2")
-
-    with pytest.raises(CommandError):
-        cli("ra val=99")
-
-
 def test_enum(cli: CLI):
     class Color(enum.Enum):
         RED = "red"
@@ -165,17 +153,6 @@ def test_path(cli: CLI):
         assert path == Path("./arc")
 
     cli("pa path=./arc")
-
-
-def test_validated_path(cli: CLI):
-    @cli.subcommand()
-    def pa(path: ValidPath):
-        assert path == ValidPath("./arc")
-
-    cli("pa path=./arc")
-
-    with pytest.raises(CommandError):
-        cli("pa path=doesnotexist")
 
 
 def test_union(cli: CLI):

@@ -112,7 +112,7 @@ class ConfigBase:
 
         # Check if it needs to be converted
         # pylint: disable=import-outside-toplevel
-        from arc.convert import converters, BaseConverter
+        from arc.types import converters, BaseConverter
 
         config_converters: tuple[type[BaseConverter], ...] = (
             converters.IntConverter,

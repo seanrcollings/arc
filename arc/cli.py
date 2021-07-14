@@ -105,31 +105,21 @@ class CLI(Command):
             context = self.context | self.default_action.context
             return self.default_action.run([], args, context)
 
-    def autocomplete(self, completions_for: str = None, completions_from: str = None):
+    def autocomplete(self, completions_for: str = None):
         """Enables autocompletion support for this CLI
-
-        **Currently disabled**
 
         Args:
             completions_for: command for the shell to run autocompletions against.
                 This will default the name of the CLI, which should generally be the name of
                 the executable being built. It's useful to set this during testing, if you're
                 not actually installing a binary locally in development
-            completions_from: command for the shell to run to generate the
-                autocompletions
-        Raises:
-            NotImplementedError
         """
-        raise NotImplementedError("Autocompletion disabled until further notice")
         # pylint: disable=import-outside-toplevel
-        # from .autocomplete import autocomplete
+        from .autocomplete import autocomplete
 
-        # autocomplete.context["cli"] = self
-        # autocomplete.context["init"] = {
-        #     "completions_for": completions_for or self.name,
-        #     "completions_from": completions_from or self.name,
-        # }
-        # self.install_command(autocomplete)
+        autocomplete.context["cli"] = self
+        autocomplete.context["init"] = {"completions_for": completions_for or self.name}
+        self.install_command(autocomplete)
 
     @utils.timer("Autoloading")
     def autoload(self, *paths: str):

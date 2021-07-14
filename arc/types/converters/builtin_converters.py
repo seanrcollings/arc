@@ -4,25 +4,25 @@ because those converters also handle their generic form (`list[int]`) and are
 placed in `generic_convertrs.py`
 """
 from typing import TextIO, IO, BinaryIO
+
 from arc.errors import ConversionError
+from arc.types.type_store import register
 from .base_converter import BaseConverter
 
-from .converter_mapping import register
 
-
-@register(TextIO, IO, BinaryIO)
+@register((TextIO, IO, BinaryIO), "filepath")
 class EmptyConverter(BaseConverter):
     def convert(self, value):
         return value
 
 
-@register(str)
+@register(str, "string")
 class StringConverter(BaseConverter[str]):
     def convert(self, value: str) -> str:
         return str(value)
 
 
-@register(int)
+@register(int, "integer")
 class IntConverter(BaseConverter[int]):
     def convert(self, value: str) -> int:
         if value.isnumeric():
@@ -30,7 +30,7 @@ class IntConverter(BaseConverter[int]):
         raise ConversionError(value, expected="a whole number integer")
 
 
-@register(float)
+@register(float, "decimal")
 class FloatConverter(BaseConverter[float]):
     def convert(self, value):
         try:
@@ -39,13 +39,13 @@ class FloatConverter(BaseConverter[float]):
             raise ConversionError(value, expected="a float (1.3, 4, 1.7)") from e
 
 
-@register(bytes)
+@register(bytes, "bytes")
 class BytesConverter(BaseConverter):
     def convert(self, value: str):
         return value.encode()
 
 
-@register(bool)
+@register(bool, "flag")
 class BoolConverter(BaseConverter[bool]):
     """Converts a string to a boolean
     True / true - True

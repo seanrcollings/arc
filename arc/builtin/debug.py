@@ -1,7 +1,7 @@
 import os
 
 from arc import namespace, config
-from arc.convert import converter_mapping
+from arc.types.type_store import type_store
 from arc.present import Table, Box
 
 debug = namespace("debug")
@@ -27,9 +27,20 @@ def converters():
     """Displays information aboubt the currently accessible converters"""
     table = Table(
         columns=[
-            {"name": "Converter Name", "justify": "center"},
+            {"name": "TYPE", "justify": "left", "width": 40},
+            {"name": "CONVERTER", "justify": "right"},
+            {"name": "DISPLAY NAME", "justify": "right", "width": 30},
         ],
-        rows=[[v.__name__] for v in converter_mapping.values()],
+        rows=[
+            [
+                k,
+                v["converter"].__name__,
+                v["display_name"]
+                if isinstance(v["display_name"], str)
+                else "Context dependant",
+            ]
+            for k, v in type_store.items()
+        ],
     )
     print(Box(str(table), justify="center", padding=1))
 
