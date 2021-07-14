@@ -4,6 +4,7 @@ from pathlib import Path
 
 from arc.errors import ConversionError
 from arc.types.type_store import register
+from arc.types import helpers
 from .base_converter import BaseConverter
 
 __all__ = ["EnumConverter", "PathConverter"]
@@ -11,7 +12,7 @@ __all__ = ["EnumConverter", "PathConverter"]
 
 def format_enum(enum: type[Enum]) -> str:
     vals = [member.value for member in enum.__members__.values()]
-    return ", ".join(vals[:-1]) + f" or {vals[-1]}"
+    return helpers.join_or(vals)
 
 
 @register(Enum, format_enum)

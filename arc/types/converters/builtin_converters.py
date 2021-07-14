@@ -45,7 +45,7 @@ class BytesConverter(BaseConverter):
         return value.encode()
 
 
-@register(bool, "boolean")
+@register(bool, "flag")
 class BoolConverter(BaseConverter[bool]):
     """Converts a string to a boolean
     True / true - True

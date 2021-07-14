@@ -43,6 +43,9 @@ def joiner(values: Sequence, join_str: str = ", ", last_str: str = ", "):
         last_str (str, optional): [description]. What to use to join the last
             value to the rest. Defaults to ", ".
     """
+    if len(values) == 1:
+        return values[0]
+
     return join_str.join(str(v) for v in values[:-1]) + last_str + str(values[-1])
 
 
