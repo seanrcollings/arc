@@ -5,16 +5,17 @@ import logging
 from arc.color import fg, colorize
 from arc.config import config
 from arc import errors, utils
-
+from arc.result import Ok, Err, Result
 
 logger = logging.getLogger("arc_logger")
+BAR = "\u2500" * 40
 
 
 class CommandExecutor:
     """Handles the execution of a commands's function"""
 
-    def __init__(self, function: Callable):
-        self.function: Callable = function
+    def __init__(self, function: Callable[..., Result]):
+        self.function: Callable[..., Result] = function
         self.callbacks: dict[str, set[Callable]] = {
             "before": set(),
             "around": set(),
@@ -26,6 +27,7 @@ class CommandExecutor:
         self.__gens: list[Generator] = []
 
     @utils.timer("Command Execution")
+    @utils.handle(errors.ExecutionError)
     def execute(self, cli_namespace: list[str], arguments: dict[str, Any]):
         """Executes the command's functions
 
@@ -35,43 +37,56 @@ class CommandExecutor:
         Returns:
             Any: What the command's function returns
         """
-        BAR = "\u2500" * 40
-        value = None
-        try:
-            self.before_callbacks(arguments)
-            self.start_around_callbacks(arguments)
-            logger.debug("Function Arguments: %s", pprint.pformat(arguments))
-            logger.debug(BAR)
-            function_error = None
-            try:
-                # The parsers always spit out a dictionary of arguements
-                # and values. This doesn't allow *args to work, because you can't
-                # spread *args after **kwargs. So the parser stores the *args in
-                # _args and then we spread it manually. Note that this relies
-                # on dictionaires being ordered
-                if "_args" in arguments:
-                    var_args = arguments.pop("_args")
-                    value = self.function(*arguments.values(), *var_args)
-                else:
-                    value = self.function(**arguments)
-            except Exception as e:
-                function_error = e
-            finally:
-                self.end_around_callbacks(value, function_error)
-                self.after_callbacks(value)
-                logger.debug(BAR)
+        result: Result[Any, Any] = Ok()
+        self.setup(arguments)
 
-        except errors.NoOpError as e:
+        try:
+            logger.debug(BAR)
+            result = self.call_function(arguments)
+        except Exception as e:
+            result = Err(e)
+            raise
+        finally:
+            logger.debug(BAR)
+            self.end_around_callbacks(result)
+            self.after_callbacks(result)
+
+        return self.handle_value(result, cli_namespace)
+
+    def setup(self, arguments: dict[str, Any]):
+        self.before_callbacks(arguments)
+        self.start_around_callbacks(arguments)
+        logger.debug("Function Arguments: %s", pprint.pformat(arguments))
+
+    def call_function(self, arguments):
+        # The parsers always spit out a dictionary of arguements
+        # and values. This doesn't allow *args to work, because you can't
+        # spread *args after **kwargs. So the parser stores the *args in
+        # _args and then we spread it manually. Note that this relies
+        # on dictionaires being ordered
+        if "_args" in arguments:
+            var_args = arguments.pop("_args")
+            result = self.function(*arguments.values(), *var_args)
+        else:
+            result = self.function(**arguments)
+
+        if not isinstance(result, (Ok, Err)):
+            return Ok(result)
+        return result
+
+    def handle_value(self, result: Result, cli_namespace: list[str]):
+        if result is utils.NO_OP:
             namespace_str = config.namespace_sep.join(cli_namespace)
             logger.error(
                 "%s is not executable. \n\tCheck %s for subcommands",
                 colorize(namespace_str, fg.YELLOW),
                 colorize("help " + namespace_str, fg.ARC_BLUE),
             )
-        except errors.ExecutionError as e:
-            logger.error(e)
 
-        return value
+        elif result.err:
+            raise errors.CommandError(result.unwrap())
+
+        return result.unwrap()
 
     def inheritable_callbacks(self):
         return {
@@ -124,16 +139,11 @@ class CommandExecutor:
                 self.__gens.append(gen)
 
     @utils.handle(errors.ValidationError)
-    def end_around_callbacks(self, value, error: Exception):
+    def end_around_callbacks(self, value):
         if len(self.callbacks["around"]) > 0:
             logger.debug("Completing %s callbacks", colorize("around", fg.YELLOW))
             for callback in self.__gens:
                 try:
-                    if error:
-                        callback.throw(error)
-                    else:
-                        callback.send(value)
+                    callback.send(value)
                 except StopIteration:
                     ...
-        elif error:
-            raise error

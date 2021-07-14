@@ -1,7 +1,8 @@
-from typing import Literal, Callable
+from typing import Literal, Callable, Any, Generator
 import functools
 
 from arc.command import Command
+from arc.result import Result
 
 CallbackTime = Literal["before", "around", "after"]
 
@@ -54,16 +55,21 @@ def callback_helper(when: CallbackTime, func=None, *, inherit=True):
     return wrapped
 
 
-def before(*args, **kwargs) -> Callable[..., Command]:
-    return callback_helper("before", *args, **kwargs)
+BeforeCallback = Callable[[dict[str, Any]], None]
+AfterCallback = Callable[[Result], None]
+AroundCallback = Callable[[dict[str, Any]], Generator[None, Result, None]]
 
 
-def after(*args, **kwargs) -> Callable[..., Command]:
-    return callback_helper("after", *args, **kwargs)
+def before(func: BeforeCallback = None, *, inherit=True) -> Callable[..., Command]:
+    return callback_helper("before", func=func, inherit=inherit)
 
 
-def around(*args, **kwargs) -> Callable[..., Command]:
-    return callback_helper("around", *args, **kwargs)
+def after(func: AfterCallback = None, *, inherit=True) -> Callable[..., Command]:
+    return callback_helper("after", func=func, inherit=inherit)
+
+
+def around(func: AroundCallback = None, *, inherit=True) -> Callable[..., Command]:
+    return callback_helper("around", func=func, inherit=inherit)
 
 
 def skip(*skip_callbacks):
