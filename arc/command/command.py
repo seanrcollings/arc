@@ -6,6 +6,7 @@ import logging
 from arc.color import effects, fg
 from arc.errors import CommandError, ParserError
 from arc import utils
+from arc.result import Result
 
 from .argument_parser import ArgumentParser, ParsingMethod
 from .command_executor import CommandExecutor
@@ -97,17 +98,14 @@ class Command:
             Command: the subcommand created
         """
 
-        parsing_method = parsing_method or type(self.parser)
-        context = context or {}
-
         @self.ensure_function
-        def decorator(function):
+        def decorator(function: Callable[..., Result]):
             command_name = self.handle_command_aliases(name or function.__name__)
             command = Command(
                 command_name,
                 function,
-                parsing_method,
-                context,
+                parsing_method or type(self.parser),
+                context or {},
                 short_args,
             )
             return self.install_command(command)
