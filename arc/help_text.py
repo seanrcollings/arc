@@ -26,9 +26,9 @@ def generate_usage(
     namespace: list[str],
 ):
     if command.is_namespace():
-        return
-
-    if root == command:
+        command_str = f"{command.name}{config.namespace_sep}<subcommand>"
+        args_str = "[arguments ...]"
+    elif root == command:
         command_str = "<command>"
         args_str = "[arguments ...]"
     else:

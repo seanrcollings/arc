@@ -146,9 +146,7 @@ def argument_completions(completions: FishCompletion, command: Command, cmd_name
                 f"{arg.name}{config.arg_assignment}"
             )
 
-        completions.description(
-            f"{arg.name}: {types.type_store.get_display_name(arg.annotation)}"
-        )
+        completions.description(f"{types.type_store.get_display_name(arg.annotation)}")
         if types.safe_issubclass(arg.annotation, Path):
             completions.force_files()
         else:

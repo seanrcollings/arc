@@ -162,6 +162,12 @@ class FlagParser(ArgumentParser):
         arg = self.get_or_raise(
             name, f"Flag {fg.YELLOW}{flag_denoter}{name}{effects.CLEAR} not recognized"
         )
+
+        if not arg.is_flag():
+            raise errors.CommandError(
+                f"Argument {fg.YELLOW}{name}{effects.CLEAR} requires a value"
+            )
+
         return arg.name, not arg.default
 
 
