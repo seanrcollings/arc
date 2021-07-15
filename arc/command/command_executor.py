@@ -27,7 +27,7 @@ class CommandExecutor:
         self.__gens: list[Generator] = []
 
     @utils.timer("Command Execution")
-    def execute(self, cli_namespace: list[str], arguments: dict[str, Any]):
+    def execute(self, _cli_namespace: list[str], arguments: dict[str, Any]):
         """Executes the command's functions
 
         Args:

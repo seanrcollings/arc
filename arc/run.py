@@ -21,11 +21,15 @@ namespace_seperated = re.compile(
 
 @contextlib.contextmanager
 def error_handler(handle_exception):
+    """Handle all exceptions that occur while executing
+    If `config.mode` is development or `handle_exception` is `False`
+    The exception will be reraised. Otherwise, it will be logged
+    and a system exit will be triggered.
+    """
     try:
         yield
-        # pylint: disable=broad-except
-    except Exception as e:
-        if config.mode == "development" or not handle_exception:
+    except Exception as e:  # pylint: disable=broad-except
+        if not handle_exception or config.mode == "development":
             raise
 
         logger.error(e)
@@ -162,6 +166,6 @@ def handle_result(result: Result, command_namespace: list[str]):
         )
 
     if result.err:
-        raise errors.ExecutionError(result.unwrap())
+        raise errors.ExecutionError(result.unwrap() or "No message")
 
     return result.unwrap()
