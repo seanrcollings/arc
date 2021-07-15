@@ -4,7 +4,7 @@ import pprint
 import logging
 
 from arc.color import effects, fg
-from arc.errors import CommandError, ParserError
+from arc.errors import CommandError
 from arc import utils
 from arc.result import Result
 
@@ -64,8 +64,7 @@ class Command:
     ):
         """External interface to execute a command"""
         self.context = context | self.context
-        with utils.handle(ParserError):
-            parsed_args = self.parser.parse(cli_args, self.context)
+        parsed_args = self.parser.parse(cli_args, self.context)
 
         logger.debug("Parsed arguments: %s", pprint.pformat(parsed_args))
         return self.executor.execute(cli_namespace, parsed_args)

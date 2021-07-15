@@ -27,7 +27,6 @@ class CommandExecutor:
         self.__gens: list[Generator] = []
 
     @utils.timer("Command Execution")
-    @utils.handle(errors.ExecutionError)
     def execute(self, cli_namespace: list[str], arguments: dict[str, Any]):
         """Executes the command's functions
 
@@ -43,8 +42,6 @@ class CommandExecutor:
         try:
             logger.debug(BAR)
             result = self.call_function(arguments)
-        except Exception as e:
-            result = Err(e)
         finally:
             logger.debug(BAR)
             self.end_around_callbacks(result)
@@ -100,21 +97,18 @@ class CommandExecutor:
         if not inherit:
             self.non_inheritable.add(call)
 
-    @utils.handle(errors.ValidationError)
     def before_callbacks(self, arguments: dict[str, Any]):
         if len(self.callbacks["before"]) > 0:
             logger.debug("Executing %s callbacks", colorize("before", fg.YELLOW))
             for callback in self.callbacks["before"]:
                 callback(arguments)
 
-    @utils.handle(errors.ValidationError)
     def after_callbacks(self, value: Any):
         if len(self.callbacks["after"]) > 0:
             logger.debug("Executing %s callbacks", colorize("after", fg.YELLOW))
             for callback in self.callbacks["after"]:
                 callback(value)
 
-    @utils.handle(errors.ValidationError)
     def start_around_callbacks(self, arguments):
         if len(self.callbacks["around"]) > 0:
             logger.debug("Starting %s callbacks", colorize("around", fg.YELLOW))
@@ -123,7 +117,6 @@ class CommandExecutor:
                 next(gen)
                 self.__gens.append(gen)
 
-    @utils.handle(errors.ValidationError)
     def end_around_callbacks(self, value):
         if len(self.callbacks["around"]) > 0:
             logger.debug("Completing %s callbacks", colorize("around", fg.YELLOW))
