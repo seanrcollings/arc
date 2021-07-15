@@ -1,14 +1,16 @@
-from typing import Optional, Union, Any
-import sys
-import shlex
-import re
 import logging
+import re
+import shlex
+import sys
+from typing import Any, Optional, Union
 
-from arc import utils, present
-from .errors import CommandError
+from arc import present, utils
+from arc.result import Result
+
+from .color import bg, colorize, effects, fg
 from .command import Command, helpers
 from .config import config
-from .color import fg, effects, bg
+from .errors import CommandError, ExecutionError
 
 logger = logging.getLogger("arc_logger")
 
@@ -23,6 +25,7 @@ def run(
     root: Command,
     execute: Optional[str] = None,
     arcfile: Optional[str] = None,
+    check_result: bool = False,
 ):
     """Core function of the ARC API.
     Loads up the config file, parses the user input
@@ -34,6 +37,8 @@ def run(
             `sys.argv` will be used
         arcfile (str): file path to an arc config file to load,
             will ignore if path does not exsit
+        check_result (bool): whether or not to check if the result contains
+            errors. Defaults to False.
     """
     utils.header("EXECUTE")
     if arcfile:
@@ -55,7 +60,20 @@ def run(
             )
         ),
     )
-    return command.run(command_namespace, command_args, command_ctx)
+
+    result = command.run(
+        command_namespace,
+        command_args,
+        command_ctx,
+    )
+
+    if check_result:
+        return handle_result(
+            result,
+            command_namespace,
+        )
+
+    return result
 
 
 def get_input(execute: Optional[str]) -> list[str]:
@@ -118,3 +136,21 @@ def find_command(
 
         command_ctx = command.context | command_ctx
     return command, command_ctx
+
+
+@utils.handle(CommandError, ExecutionError)
+def handle_result(result: Result, command_namespace: list[str]):
+    if result is utils.NO_OP:
+        namespace_str = config.namespace_sep.join(command_namespace)
+        raise ExecutionError(
+            f"{colorize(namespace_str, fg.YELLOW)} is not executable. "
+            f"\n\tCheck {colorize('help ' + namespace_str, fg.ARC_BLUE)} for subcommands"
+        )
+
+    if result.err:
+        val = result.unwrap()
+        if isinstance(val, BaseException):
+            raise val
+        raise ExecutionError(val)
+
+    return result.unwrap()

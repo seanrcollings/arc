@@ -45,13 +45,12 @@ class CommandExecutor:
             result = self.call_function(arguments)
         except Exception as e:
             result = Err(e)
-            raise
         finally:
             logger.debug(BAR)
             self.end_around_callbacks(result)
             self.after_callbacks(result)
 
-        return self.handle_value(result, cli_namespace)
+        return result
 
     def setup(self, arguments: dict[str, Any]):
         self.before_callbacks(arguments)
@@ -73,20 +72,6 @@ class CommandExecutor:
         if not isinstance(result, (Ok, Err)):
             return Ok(result)
         return result
-
-    def handle_value(self, result: Result, cli_namespace: list[str]):
-        if result is utils.NO_OP:
-            namespace_str = config.namespace_sep.join(cli_namespace)
-            logger.error(
-                "%s is not executable. \n\tCheck %s for subcommands",
-                colorize(namespace_str, fg.YELLOW),
-                colorize("help " + namespace_str, fg.ARC_BLUE),
-            )
-
-        elif result.err:
-            raise errors.CommandError(result.unwrap())
-
-        return result.unwrap()
 
     def inheritable_callbacks(self):
         return {

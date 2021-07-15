@@ -1,7 +1,3 @@
-from typing import Optional
-from arc.color import fg, effects
-
-
 class ArcError(Exception):
     """Base Arc Exception"""
 
@@ -12,18 +8,9 @@ class ArcError(Exception):
     def __str__(self):
         return self.message
 
-    # @staticmethod
-    # def colorize(string: str):
-    #     return f"{fg.RED}{string}{effects.CLEAR}"
-
 
 class ExecutionError(ArcError):
     """Raised if there is a problem during the execution of a command"""
-
-
-class NoOpError(ExecutionError):
-    """Sepcial Execution to raise when
-    the specific namespace CANT be executed"""
 
 
 class CommandError(ArcError):

@@ -48,8 +48,8 @@ class CLI(Command):
         )
 
     # pylint: disable=arguments-differ
-    def __call__(self, execute: str = None):  # type: ignore
-        return run(self, execute)
+    def __call__(self, execute: str = None, check_result: bool = True):  # type: ignore
+        return run(self, execute, check_result=check_result)
 
     def command(self, *args, **kwargs):
         """Alias for `Command.subcommand`
