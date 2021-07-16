@@ -2,6 +2,7 @@ from unittest.mock import create_autospec
 import pytest
 
 from arc import callbacks, errors, CLI
+from arc.result import Ok, Err
 
 
 @callbacks.before
@@ -40,7 +41,7 @@ def test_around(cli: CLI):
     def before(arguments):
         assert arguments == {"val": 2}
         val = yield
-        assert val == 4
+        assert val == Ok(4)
 
     @before
     @cli.subcommand()
@@ -48,25 +49,6 @@ def test_around(cli: CLI):
         return val + 2
 
     assert cli("thing val=2") == 4
-
-
-def test_around_exception(cli: CLI):
-    @callbacks.around
-    def around(arguments):
-        try:
-            yield
-        except RuntimeError:
-            ...
-
-    @around
-    @cli.subcommand()
-    def raises():
-        raise RuntimeError("RuntimeError")
-
-    try:
-        cli("raises")
-    except RuntimeError as e:
-        pytest.fail("Unexpected exception. Expected @around callback to handle it")
 
 
 def test_inheritance(cli: CLI):

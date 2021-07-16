@@ -4,13 +4,15 @@ import traceback
 import sys
 
 from arc import config
-from arc.errors import NoOpError
+from arc.result import Err
 
 logger = logging.getLogger("arc_logger")
 
+NO_OP = Err("NoOp")
+
 
 def no_op():
-    raise NoOpError()
+    return NO_OP
 
 
 class handle:

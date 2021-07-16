@@ -1,14 +1,15 @@
-from typing import Optional, Union, Any
-import sys
-import shlex
-import re
+from typing import Any, Optional, Union
 import logging
+import re
+import shlex
+import sys
+import contextlib
 
-from arc import utils, present
-from .errors import CommandError
-from .command import Command, helpers
-from .config import config
-from .color import fg, effects, bg
+from arc import present, utils, errors
+from arc.color import bg, colorize, effects, fg
+from arc.command import Command, helpers
+from arc.config import config
+from arc.result import Result
 
 logger = logging.getLogger("arc_logger")
 
@@ -18,11 +19,30 @@ namespace_seperated = re.compile(
 )
 
 
+@contextlib.contextmanager
+def error_handler(handle_exception):
+    """Handle all exceptions that occur while executing
+    If `config.mode` is development or `handle_exception` is `False`
+    The exception will be reraised. Otherwise, it will be logged
+    and a system exit will be triggered.
+    """
+    try:
+        yield
+    except Exception as e:  # pylint: disable=broad-except
+        if not handle_exception or config.mode == "development":
+            raise
+
+        logger.error(e)
+        sys.exit(1)
+
+
 @utils.timer("Running")
 def run(
     root: Command,
     execute: Optional[str] = None,
     arcfile: Optional[str] = None,
+    handle_exception: bool = False,
+    check_result: bool = False,
 ):
     """Core function of the ARC API.
     Loads up the config file, parses the user input
@@ -33,29 +53,46 @@ def run(
         execute (str): string to parse and execute. If it's not provided
             `sys.argv` will be used
         arcfile (str): file path to an arc config file to load,
-            will ignore if path does not exsit
+            will ignore if path does not exist
+        handle_exception (bool): handle the exception interanally, or bubble it
+        check_result (bool): whether or not to check if the result contains
+            errors. Defaults to False.
     """
     utils.header("EXECUTE")
-    if arcfile:
-        config.from_file(arcfile)
+    with error_handler(handle_exception):
+        if arcfile:
+            config.from_file(arcfile)
 
-    user_input = get_input(execute)
-    command_namespace, command_args = get_command_namespace(user_input)
-
-    with utils.handle(CommandError):
+        user_input = get_input(execute)
+        command_namespace, command_args = get_command_namespace(user_input)
         command, command_ctx = find_command(root, command_namespace)
 
-    logger.debug(
-        str(
-            present.Box(
-                f"{bg.ARC_BLUE} {':'.join(command_namespace) or 'root'} {effects.CLEAR} "
-                + " ".join(f"{bg.GREY} {arg} {effects.CLEAR}" for arg in command_args),
-                justify="center",
-                padding=1,
+        logger.debug(
+            str(
+                present.Box(
+                    f"{bg.ARC_BLUE} {':'.join(command_namespace) or 'root'} {effects.CLEAR} "
+                    + " ".join(
+                        f"{bg.GREY} {arg} {effects.CLEAR}" for arg in command_args
+                    ),
+                    justify="center",
+                    padding=1,
+                )
+            ),
+        )
+
+        result = command.run(
+            command_namespace,
+            command_args,
+            command_ctx,
+        )
+
+        if check_result:
+            return handle_result(
+                result,
+                command_namespace,
             )
-        ),
-    )
-    return command.run(command_namespace, command_args, command_ctx)
+
+        return result
 
 
 def get_input(execute: Optional[str]) -> list[str]:
@@ -114,7 +151,21 @@ def find_command(
             ):
                 message += f"\n\tPerhaps you meant {fg.YELLOW}{possible_command}{effects.CLEAR}?"
 
-            raise CommandError(message)
+            raise errors.CommandError(message)
 
         command_ctx = command.context | command_ctx
     return command, command_ctx
+
+
+def handle_result(result: Result, command_namespace: list[str]):
+    if result is utils.NO_OP:
+        namespace_str = config.namespace_sep.join(command_namespace)
+        raise errors.ExecutionError(
+            f"{colorize(namespace_str, fg.YELLOW)} is not executable. "
+            f"\n\tCheck {colorize('help ' + namespace_str, fg.ARC_BLUE)} for subcommands"
+        )
+
+    if result.err:
+        raise errors.ExecutionError(result.unwrap() or "No message")
+
+    return result.unwrap()
