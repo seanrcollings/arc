@@ -1,9 +1,10 @@
 """Callbacks that perform some action on a type, should be treated with caution"""
 import os
+import sys
 from arc.color import fg, effects
 from arc import errors
 
-from .callbacks import around
+from .callbacks import around, before
 
 
 @around(inherit=False)
@@ -32,5 +33,18 @@ def open_file(argument: str, mode="r", *args, **kwargs):
         with open(filepath, mode, *args, **kwargs) as file:
             arguments[argument] = file
             yield
+
+    return inner
+
+
+# HACK: For this to take effect, the argument must have a falsey
+# default value. Otherwise, this will not trigger a read
+@before(inherit=False)
+def stdin(argument: str, take_precedence: bool = False):
+    def inner(arguments: dict):
+        arg_value = arguments[argument]
+        # isattry may not always work :(
+        if (not arg_value or take_precedence) and not sys.stdin.isatty():
+            arguments[argument] = sys.stdin.read()
 
     return inner
