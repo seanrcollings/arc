@@ -3,6 +3,7 @@ import os
 import sys
 from arc.color import fg, effects
 from arc import errors
+from arc.command.argument import NO_DEFAULT
 
 from .callbacks import around, before
 
@@ -43,8 +44,8 @@ def open_file(argument: str, mode="r", *args, **kwargs):
 def stdin(argument: str, take_precedence: bool = False):
     def inner(arguments: dict):
         arg_value = arguments[argument]
-        # isattry may not always work :(
-        if (not arg_value or take_precedence) and not sys.stdin.isatty():
+        arg_exists = arg_value and arg_value is not NO_DEFAULT
+        if (not arg_exists or take_precedence) and not sys.stdin.isatty():
             arguments[argument] = sys.stdin.read()
 
     return inner
