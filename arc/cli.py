@@ -44,7 +44,7 @@ class CLI(Command):
         self.version = version
         self.install_command(Command("help", self.helper, parser=PositionalParser))
         self.default_action: Optional[Command] = (
-            self.default()(function) if function else self.subcommands["help"]
+            self.default()(function) if function else None
         )
 
     # pylint: disable=arguments-differ
@@ -99,21 +99,24 @@ class CLI(Command):
             --version  displays the version
         """
         if help:
-            self("help")
+            return self("help")
         elif version:
             print(self.name, self.version)
         elif self.default_action:
-            # Sinces the parserse don't do any checking on **kwargs
-            # we re-form the args back into a string and send them down
-            # to the default_actions execute. It's not going to be the most
-            # effecient (performs a parse twice for example), but that
-            # doesn't really matter in this case as the performace impact is minimal
-            args = [
-                f"{name}{config.arg_assignment}{value}"
-                for name, value in kwargs.items()
-            ]
-            context = self.context | self.default_action.context
-            return self.default_action.run([], args, context)
+            if self.default_action:
+                # Sinces the parserse don't do any checking on **kwargs
+                # we re-form the args back into a string and send them down
+                # to the default_actions execute. It's not going to be the most
+                # effecient (performs a parse twice for example), but that
+                # doesn't really matter in this case as the performace impact is minimal
+                args = [
+                    f"{name}{config.arg_assignment}{value}"
+                    for name, value in kwargs.items()
+                ]
+                context = self.context | self.default_action.context
+                return self.default_action.run([], args, context)
+
+            return self("help")
 
     def autocomplete(self, completions_for: str = None):
         """Enables autocompletion support for this CLI
