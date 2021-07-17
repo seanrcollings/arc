@@ -95,8 +95,8 @@ class CLI(Command):
         View specific help with "help <command-name>"
 
         # Arguments
-            --help     shows this help
-            --version  displays the version
+            help: shows this help
+            version: displays the version
         """
         if help:
             return self("help")
