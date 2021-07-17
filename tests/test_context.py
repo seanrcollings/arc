@@ -1,5 +1,5 @@
 import pytest
-from arc import run, CLI, namespace
+from arc import run, CLI, namespace, errors
 from arc.command import Context
 
 
@@ -58,3 +58,12 @@ def test_custom_context(ctx_cli: CLI):
         return ctx
 
     assert ctx_cli("custom") == CustomContext({"test": 1})
+
+
+def test_override(ctx_cli: CLI):
+    @ctx_cli.subcommand()
+    def override(ctx: Context):
+        ...
+
+    with pytest.raises(errors.MissingArgError):
+        ctx_cli("override --ctx 2")
