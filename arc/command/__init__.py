@@ -5,7 +5,7 @@ from .context import Context
 from .argument_parser import ParsingMethod, ArgumentParser, PositionalParser
 
 
-def namespace(name: str, parsing_method=ParsingMethod.KEYWORD, **kwargs) -> Command:
+def namespace(name: str, parsing_method=ParsingMethod.STANDARD, **kwargs) -> Command:
     """Creates a non-executable Command namespace.
 
     Namespaces are autoloadable with `cli.autoload()`
@@ -33,7 +33,7 @@ def namespace(name: str, parsing_method=ParsingMethod.KEYWORD, **kwargs) -> Comm
     return c
 
 
-def command(name: str = None, parsing_method=ParsingMethod.KEYWORD, **kwargs):
+def command(name: str = None, parsing_method=ParsingMethod.STANDARD, **kwargs):
     """Creates an executable Command namespace.
 
     Autoloadable with `cli.autoload()`

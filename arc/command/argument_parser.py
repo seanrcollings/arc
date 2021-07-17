@@ -56,6 +56,11 @@ class ArgumentParser:
 
     def handle_match(self, match: re.Match, name: str) -> tuple[str, Any]:
         groups: Union[dict[str, str], str] = self.get_match_values(match)
+        if isinstance(groups, dict):
+            groups = {key: value.replace("-", "_") for key, value in groups.items()}
+        else:
+            groups = groups.replace("-", "_")
+
         handler: Callable = getattr(self, f"handle_{name}")
         try:
             return handler(groups)
