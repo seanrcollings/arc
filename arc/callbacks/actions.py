@@ -38,14 +38,12 @@ def open_file(argument: str, mode="r", *args, **kwargs):
     return inner
 
 
-# HACK: For this to take effect, the argument must have a falsey
-# default value. Otherwise, this will not trigger a read
 @before(inherit=False)
 def stdin(argument: str, take_precedence: bool = False):
     def inner(arguments: dict):
         arg_value = arguments[argument]
         arg_exists = arg_value and arg_value is not NO_DEFAULT
-        if (not arg_exists or take_precedence) and not sys.stdin.isatty():
+        if not arg_exists or take_precedence:
             arguments[argument] = sys.stdin.read()
 
     return inner

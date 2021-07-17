@@ -6,7 +6,7 @@ import logging
 from arc.color import fg, colorize
 from arc import errors, utils
 from arc.result import Ok, Err, Result
-from arc.callbacks.internal import INTERNAL_CALLBACKS
+from arc.command.argument import NO_DEFAULT
 from arc.callbacks.callbacks import CallbackTime
 
 logger = logging.getLogger("arc_logger")
@@ -23,10 +23,6 @@ class CommandExecutor:
             "around": set(),
             "after": set(),
         }
-
-        # Internal Callbacks are executed after user-defined callbacks
-        # and are applied to every CallbackExecutor.
-        self._internal_callbacks: dict[CallbackTime, set[Callable]] = INTERNAL_CALLBACKS
 
         self.non_inheritable: set[Callable] = set()
 
@@ -58,7 +54,15 @@ class CommandExecutor:
     def setup(self, arguments: dict[str, Any]):
         self.exec_callbacks("before", arguments)
         self.start_around_callbacks(arguments)
+        self.verify_args_filled(arguments)
         logger.debug("Function Arguments: %s", pprint.pformat(arguments))
+
+    def verify_args_filled(self, arguments: dict):
+        for key, value in arguments.items():
+            if value is NO_DEFAULT:
+                raise errors.ValidationError(
+                    f"No value provided for argument: {colorize(key, fg.YELLOW)}",
+                )
 
     def call_function(self, arguments):
         # The parsers always spit out a dictionary of arguements
@@ -107,11 +111,6 @@ class CommandExecutor:
         if len(self.callbacks[when]) > 0:
             logger.debug("Executing %s callbacks", colorize(when, fg.YELLOW))
             for callback in self.callbacks[when]:
-                callback(*arguments)
-
-        if len(self._internal_callbacks[when]) > 0:
-            logger.debug("Executing internal %s callbacks", colorize(when, fg.YELLOW))
-            for callback in self._internal_callbacks[when]:
                 callback(*arguments)
 
     def start_around_callbacks(self, arguments):
