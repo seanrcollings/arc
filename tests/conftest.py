@@ -1,7 +1,7 @@
 import logging
 import pytest
 
-from arc import CLI
+from arc import CLI, ParsingMethod
 
 logger = logging.getLogger("arc_logger")
 
@@ -9,7 +9,7 @@ logger = logging.getLogger("arc_logger")
 @pytest.fixture
 def cli():
     # logger.setLevel(logging.ERROR)
-    cli = CLI(arcfile="tests/.arc")
+    cli = CLI(parsing_method=ParsingMethod.KEYWORD, arcfile="tests/.arc")
 
     @cli.subcommand()
     def func1(x):

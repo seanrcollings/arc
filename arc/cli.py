@@ -16,7 +16,7 @@ class CLI(Command):
         self,
         name: str = "cli",
         function: Callable = None,
-        parsing_method: Type[ArgumentParser] = ParsingMethod.KEYWORD,
+        parsing_method: Type[ArgumentParser] = ParsingMethod.STANDARD,
         arcfile: str = ".arc",
         context: dict = None,
         version: str = "¯\\_(ツ)_/¯",

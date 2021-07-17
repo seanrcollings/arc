@@ -23,7 +23,7 @@ class Command:
         self,
         name: str,
         function: Callable,
-        parser: Type[ArgumentParser] = ParsingMethod.KEYWORD,
+        parser: Type[ArgumentParser] = ParsingMethod.STANDARD,
         context: Optional[Dict] = None,
         short_args=None,
     ):
