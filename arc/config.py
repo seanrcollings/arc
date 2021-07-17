@@ -167,6 +167,10 @@ class Config(ConfigBase):
     """The max Levenshtein between input and a
     possible correction to trigger a suggestion """
 
+    parse_argument_help = False
+    """Wether or not to attempt to parse the argument
+    section of help documentation to provide better documentation"""
+
     mode_map = {
         "development": logging.DEBUG,
         "production": logging.WARNING,

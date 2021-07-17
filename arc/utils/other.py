@@ -1,11 +1,18 @@
 import logging
 import functools
+import re
 import time
 from arc.color import fg, effects
 
 logger = logging.getLogger("arc_logger")
 
 IDENT = r"[a-zA-Z-_0-9]+"
+
+
+def clean(string):
+    """Gets rid of escape sequences"""
+    ansi_escape = re.compile(r"(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]")
+    return ansi_escape.sub("", string)
 
 
 def timer(name):
