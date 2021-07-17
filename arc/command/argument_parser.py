@@ -72,7 +72,6 @@ class ArgumentParser:
     ) -> dict[str, Any]:
 
         unfilled = {}
-        # breakpoint()
         for key, arg in self.args.items():
             if key not in matched_args:
                 try:
@@ -83,15 +82,7 @@ class ArgumentParser:
                 except TypeError:
                     unfilled[key] = arg.default
 
-        filled = matched_args | unfilled
-        for key, value in filled.items():
-            if value is NO_DEFAULT:
-                raise errors.ParserError(
-                    "No value provided for argument: "
-                    f"{fg.YELLOW}{key}{effects.CLEAR}",
-                )
-
-        return filled
+        return matched_args | unfilled
 
     ### Argument Schema Building ###
 

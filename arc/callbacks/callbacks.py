@@ -1,8 +1,11 @@
-from typing import Literal, Callable, Any, Generator, TypeVar, Union
+from __future__ import annotations
+from typing import Literal, Callable, Any, Generator, TypeVar, Union, TYPE_CHECKING
 import functools
 
-from arc.command import Command
 from arc.result import Result
+
+if TYPE_CHECKING:
+    from arc.command import Command
 
 CallbackTime = Literal["before", "around", "after"]
 
@@ -26,6 +29,8 @@ def callback(when: CallbackTime, **options):
     def wrapper(func):
         @functools.wraps(func)
         def handle_args(*args, **kwargs):
+            from arc.command import Command
+
             if isinstance(args[0], Command):
                 return register_wrapper(when, func, **options)(args[0])
 

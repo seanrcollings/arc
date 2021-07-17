@@ -1,11 +1,13 @@
-from typing import Callable, Any, Generator, Literal
+from __future__ import annotations
+from typing import Callable, Any, Generator
 import pprint
 import logging
 
 from arc.color import fg, colorize
-from arc.config import config
 from arc import errors, utils
 from arc.result import Ok, Err, Result
+from arc.command.argument import NO_DEFAULT
+from arc.callbacks.callbacks import CallbackTime
 
 logger = logging.getLogger("arc_logger")
 BAR = "\u2500" * 40
@@ -16,7 +18,7 @@ class CommandExecutor:
 
     def __init__(self, function: Callable[..., Result]):
         self.function: Callable[..., Result] = function
-        self.callbacks: dict[str, set[Callable]] = {
+        self.callbacks: dict[CallbackTime, set[Callable]] = {
             "before": set(),
             "around": set(),
             "after": set(),
@@ -45,14 +47,22 @@ class CommandExecutor:
         finally:
             logger.debug(BAR)
             self.end_around_callbacks(result)
-            self.after_callbacks(result)
+            self.exec_callbacks("after", result)
 
         return result
 
     def setup(self, arguments: dict[str, Any]):
-        self.before_callbacks(arguments)
+        self.exec_callbacks("before", arguments)
         self.start_around_callbacks(arguments)
+        self.verify_args_filled(arguments)
         logger.debug("Function Arguments: %s", pprint.pformat(arguments))
+
+    def verify_args_filled(self, arguments: dict):
+        for key, value in arguments.items():
+            if value is NO_DEFAULT:
+                raise errors.ValidationError(
+                    f"No value provided for argument: {colorize(key, fg.YELLOW)}",
+                )
 
     def call_function(self, arguments):
         # The parsers always spit out a dictionary of arguements
@@ -86,7 +96,7 @@ class CommandExecutor:
                 self.register_callback(when, callback)
 
     def register_callback(
-        self, when: Literal["before", "around", "after"], call, inherit: bool = True
+        self, when: CallbackTime, call: Callable, inherit: bool = True
     ):
         if when not in self.callbacks.keys():
             raise errors.CommandError(
@@ -97,17 +107,11 @@ class CommandExecutor:
         if not inherit:
             self.non_inheritable.add(call)
 
-    def before_callbacks(self, arguments: dict[str, Any]):
-        if len(self.callbacks["before"]) > 0:
-            logger.debug("Executing %s callbacks", colorize("before", fg.YELLOW))
-            for callback in self.callbacks["before"]:
-                callback(arguments)
-
-    def after_callbacks(self, value: Any):
-        if len(self.callbacks["after"]) > 0:
-            logger.debug("Executing %s callbacks", colorize("after", fg.YELLOW))
-            for callback in self.callbacks["after"]:
-                callback(value)
+    def exec_callbacks(self, when: CallbackTime, *arguments):
+        if len(self.callbacks[when]) > 0:
+            logger.debug("Executing %s callbacks", colorize(when, fg.YELLOW))
+            for callback in self.callbacks[when]:
+                callback(*arguments)
 
     def start_around_callbacks(self, arguments):
         if len(self.callbacks["around"]) > 0:

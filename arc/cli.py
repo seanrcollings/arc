@@ -1,12 +1,12 @@
-from typing import Optional, Callable, Type
 import logging
+from typing import Callable, Optional, Type
 
-from arc import utils, help_text
+from arc import help_text, utils
+from arc.autoload import Autoload
+from arc.color import effects, fg
+from arc.command import ArgumentParser, Command, ParsingMethod, PositionalParser
 from arc.config import config
-from .color import effects, fg
-from .command import Command, ParsingMethod, ArgumentParser, PositionalParser
-from .autoload import Autoload
-from .run import run, find_command
+from arc.run import find_command, run
 
 
 class CLI(Command):
