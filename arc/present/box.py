@@ -3,6 +3,7 @@ import re
 import shutil
 
 from arc import color
+from arc.utils import clean
 from .data import justifications, Justification
 
 border_styles = {
@@ -27,12 +28,6 @@ border_styles = {
         },
     },
 }
-
-
-def _clean(string):
-    """Gets rid of escape sequences"""
-    ansi_escape = re.compile(r"(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]")
-    return ansi_escape.sub("", string)
 
 
 Border = Union[Literal["regular"], Literal["heavy"]]
@@ -84,7 +79,7 @@ class Box:
 
     def __str__(self):
         cleaned = list(
-            self.pad_line(_clean(string)) for string in self.string.split("\n")
+            self.pad_line(clean(string)) for string in self.string.split("\n")
         )
         width = len(max(cleaned, key=len)) + 4
         term_width, _ = shutil.get_terminal_size()
