@@ -3,17 +3,6 @@ from typing import Union
 from arc.color import fg, effects
 
 
-def header(text: str):
-    return f"{effects.BOLD}{fg.WHITE.bright}{text.upper()}{effects.CLEAR}"
-
-
-def section(heading: str, content: Union[str, list[str]]):
-    if isinstance(content, list):
-        content = textwrap.dedent("\n".join(content)).strip("\n")
-
-    return header(heading) + "\n" + textwrap.indent(content, prefix="  ") + "\n\n"
-
-
 class CommandDoc:
 
     DEFAULT_SECTION = "description"
@@ -27,12 +16,12 @@ class CommandDoc:
     def __str__(self):
         string = ""
         for key in self.order:
-            string += section(key, self.sections[key].strip("\n"))
+            string += self.section(key, self.sections[key].strip("\n"))
 
         for title, content in [
             (key, val) for key, val in self.sections.items() if key not in self.order
         ]:
-            string += section(title, content.strip("\n"))
+            string += self.section(title, content.strip("\n"))
 
         return string.strip("\n")
 
@@ -78,3 +67,19 @@ class CommandDoc:
             self.sections[key] += to_add
         else:
             self.add_section(key, to_add)
+
+    @staticmethod
+    def header(text: str):
+        return f"{effects.BOLD}{fg.WHITE.bright}{text.upper()}{effects.CLEAR}"
+
+    @staticmethod
+    def section(heading: str, content: Union[str, list[str]]):
+        if isinstance(content, list):
+            content = textwrap.dedent("\n".join(content)).strip("\n")
+
+        return (
+            CommandDoc.header(heading)
+            + "\n"
+            + textwrap.indent(content, prefix="  ")
+            + "\n\n"
+        )

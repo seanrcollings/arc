@@ -2,7 +2,7 @@ import inspect
 
 from arc.config import config
 from arc.utils import symbol
-from arc.convert import convert
+from arc.types import convert
 
 
 NO_DEFAULT = symbol("NO_DEFAULT")

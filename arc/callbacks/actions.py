@@ -1,9 +1,12 @@
 """Callbacks that perform some action on a type, should be treated with caution"""
+from typing import TextIO
 import os
+import sys
 from arc.color import fg, effects
 from arc import errors
+from arc.command.argument import NO_DEFAULT
 
-from .callbacks import around
+from .callbacks import around, before
 
 
 @around(inherit=False)
@@ -32,5 +35,30 @@ def open_file(argument: str, mode="r", *args, **kwargs):
         with open(filepath, mode, *args, **kwargs) as file:
             arguments[argument] = file
             yield
+
+    return inner
+
+
+def _input_stream(
+    stream: TextIO, arguments: dict, argument: str, take_precedence: bool
+):
+    arg_value = arguments[argument]
+    arg_exists = arg_value and arg_value is not NO_DEFAULT
+    if not arg_exists or take_precedence:
+        arguments[argument] = stream.read()
+
+
+@before(inherit=False)
+def stdin(argument: str, take_precedence: bool = False):
+    def inner(arguments: dict):
+        _input_stream(sys.stdin, arguments, argument, take_precedence)
+
+    return inner
+
+
+@before(inherit=False)
+def stderr(argument: str, take_precedence: bool = False):
+    def inner(arguments: dict):
+        _input_stream(sys.stderr, arguments, argument, take_precedence)
 
     return inner

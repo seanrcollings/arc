@@ -112,7 +112,7 @@ class ConfigBase:
 
         # Check if it needs to be converted
         # pylint: disable=import-outside-toplevel
-        from arc.convert import converters, BaseConverter
+        from arc.types import converters, BaseConverter
 
         config_converters: tuple[type[BaseConverter], ...] = (
             converters.IntConverter,
@@ -166,6 +166,10 @@ class Config(ConfigBase):
     suggest_levenshtein_distance = 2
     """The max Levenshtein between input and a
     possible correction to trigger a suggestion """
+
+    parse_argument_help = False
+    """Wether or not to attempt to parse the argument
+    section of help documentation to provide better documentation"""
 
     mode_map = {
         "development": logging.DEBUG,

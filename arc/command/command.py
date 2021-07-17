@@ -4,8 +4,9 @@ import pprint
 import logging
 
 from arc.color import effects, fg
-from arc.errors import CommandError, ParserError
+from arc.errors import CommandError
 from arc import utils
+from arc.result import Result
 
 from .argument_parser import ArgumentParser, ParsingMethod
 from .command_executor import CommandExecutor
@@ -22,7 +23,7 @@ class Command:
         self,
         name: str,
         function: Callable,
-        parser: Type[ArgumentParser] = ParsingMethod.KEYWORD,
+        parser: Type[ArgumentParser] = ParsingMethod.STANDARD,
         context: Optional[Dict] = None,
         short_args=None,
     ):
@@ -63,8 +64,7 @@ class Command:
     ):
         """External interface to execute a command"""
         self.context = context | self.context
-        with utils.handle(ParserError):
-            parsed_args = self.parser.parse(cli_args, self.context)
+        parsed_args = self.parser.parse(cli_args, self.context)
 
         logger.debug("Parsed arguments: %s", pprint.pformat(parsed_args))
         return self.executor.execute(cli_namespace, parsed_args)
@@ -97,17 +97,14 @@ class Command:
             Command: the subcommand created
         """
 
-        parsing_method = parsing_method or type(self.parser)
-        context = context or {}
-
         @self.ensure_function
-        def decorator(function):
+        def decorator(function: Callable[..., Result]):
             command_name = self.handle_command_aliases(name or function.__name__)
             command = Command(
                 command_name,
                 function,
-                parsing_method,
-                context,
+                parsing_method or type(self.parser),
+                context or {},
                 short_args,
             )
             return self.install_command(command)

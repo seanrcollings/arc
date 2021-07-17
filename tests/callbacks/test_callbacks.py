@@ -2,6 +2,7 @@ from unittest.mock import create_autospec
 import pytest
 
 from arc import callbacks, errors, CLI
+from arc.result import Ok, Err
 
 
 @callbacks.before
@@ -40,7 +41,7 @@ def test_around(cli: CLI):
     def before(arguments):
         assert arguments == {"val": 2}
         val = yield
-        assert val == 4
+        assert val == Ok(4)
 
     @before
     @cli.subcommand()

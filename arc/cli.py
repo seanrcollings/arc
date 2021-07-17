@@ -1,12 +1,12 @@
-from typing import Optional, Callable, Type
 import logging
+from typing import Callable, Optional, Type
 
-from arc import utils, help_text
+from arc import help_text, utils
+from arc.autoload import Autoload
+from arc.color import effects, fg
+from arc.command import ArgumentParser, Command, ParsingMethod, PositionalParser
 from arc.config import config
-from .color import effects, fg
-from .command import Command, ParsingMethod, ArgumentParser, PositionalParser
-from .autoload import Autoload
-from .run import run, find_command
+from arc.run import find_command, run
 
 
 class CLI(Command):
@@ -16,7 +16,7 @@ class CLI(Command):
         self,
         name: str = "cli",
         function: Callable = None,
-        parsing_method: Type[ArgumentParser] = ParsingMethod.KEYWORD,
+        parsing_method: Type[ArgumentParser] = ParsingMethod.STANDARD,
         arcfile: str = ".arc",
         context: dict = None,
         version: str = "¯\\_(ツ)_/¯",
@@ -44,12 +44,22 @@ class CLI(Command):
         self.version = version
         self.install_command(Command("help", self.helper, parser=PositionalParser))
         self.default_action: Optional[Command] = (
-            self.default()(function) if function else self.subcommands["help"]
+            self.default()(function) if function else None
         )
 
     # pylint: disable=arguments-differ
-    def __call__(self, execute: str = None):  # type: ignore
-        return run(self, execute)
+    def __call__(  # type: ignore
+        self,
+        execute: str = None,
+        handle_exception: bool = True,
+        check_result: bool = True,
+    ):
+        return run(
+            self,
+            execute,
+            handle_exception=handle_exception,
+            check_result=check_result,
+        )
 
     def command(self, *args, **kwargs):
         """Alias for `Command.subcommand`
@@ -85,51 +95,44 @@ class CLI(Command):
         View specific help with "help <command-name>"
 
         # Arguments
-            --help     shows this help
-            --version  displays the version
+            help: shows this help
+            version: displays the version
         """
         if help:
-            self("help")
+            return self("help")
         elif version:
             print(self.name, self.version)
         elif self.default_action:
-            # Sinces the parserse don't do any checking on **kwargs
-            # we re-form the args back into a string and send them down
-            # to the default_actions execute. It's not going to be the most
-            # effecient (performs a parse twice for example), but that
-            # doesn't really matter in this case as the performace impact is minimal
-            args = [
-                f"{name}{config.arg_assignment}{value}"
-                for name, value in kwargs.items()
-            ]
-            context = self.context | self.default_action.context
-            return self.default_action.run([], args, context)
+            if self.default_action:
+                # Sinces the parserse don't do any checking on **kwargs
+                # we re-form the args back into a string and send them down
+                # to the default_actions execute. It's not going to be the most
+                # effecient (performs a parse twice for example), but that
+                # doesn't really matter in this case as the performace impact is minimal
+                args = [
+                    f"{name}{config.arg_assignment}{value}"
+                    for name, value in kwargs.items()
+                ]
+                context = self.context | self.default_action.context
+                return self.default_action.run([], args, context)
 
-    def autocomplete(self, completions_for: str = None, completions_from: str = None):
+            return self("help")
+
+    def autocomplete(self, completions_for: str = None):
         """Enables autocompletion support for this CLI
-
-        **Currently disabled**
 
         Args:
             completions_for: command for the shell to run autocompletions against.
                 This will default the name of the CLI, which should generally be the name of
                 the executable being built. It's useful to set this during testing, if you're
                 not actually installing a binary locally in development
-            completions_from: command for the shell to run to generate the
-                autocompletions
-        Raises:
-            NotImplementedError
         """
-        raise NotImplementedError("Autocompletion disabled until further notice")
         # pylint: disable=import-outside-toplevel
-        # from .autocomplete import autocomplete
+        from .autocomplete import autocomplete
 
-        # autocomplete.context["cli"] = self
-        # autocomplete.context["init"] = {
-        #     "completions_for": completions_for or self.name,
-        #     "completions_from": completions_from or self.name,
-        # }
-        # self.install_command(autocomplete)
+        autocomplete.context["cli"] = self
+        autocomplete.context["init"] = {"completions_for": completions_for or self.name}
+        self.install_command(autocomplete)
 
     @utils.timer("Autoloading")
     def autoload(self, *paths: str):

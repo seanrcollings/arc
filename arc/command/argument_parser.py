@@ -6,9 +6,9 @@ from arc import errors
 from arc.config import config
 from arc.color import fg, effects
 from arc.utils import IDENT, levenshtein
-from .helpers import ArgBuilder
-from .argument import Argument, NO_DEFAULT
-from .context import Context
+from arc.command.arg_builder import ArgBuilder
+from arc.command.argument import Argument, NO_DEFAULT
+from arc.command.context import Context
 
 
 class ArgumentParser:
@@ -56,6 +56,11 @@ class ArgumentParser:
 
     def handle_match(self, match: re.Match, name: str) -> tuple[str, Any]:
         groups: Union[dict[str, str], str] = self.get_match_values(match)
+        if isinstance(groups, dict):
+            groups = {key: value.replace("-", "_") for key, value in groups.items()}
+        else:
+            groups = groups.replace("-", "_")
+
         handler: Callable = getattr(self, f"handle_{name}")
         try:
             return handler(groups)
@@ -72,7 +77,6 @@ class ArgumentParser:
     ) -> dict[str, Any]:
 
         unfilled = {}
-        # breakpoint()
         for key, arg in self.args.items():
             if key not in matched_args:
                 try:
@@ -83,15 +87,7 @@ class ArgumentParser:
                 except TypeError:
                     unfilled[key] = arg.default
 
-        filled = matched_args | unfilled
-        for key, value in filled.items():
-            if value is NO_DEFAULT:
-                raise errors.ParserError(
-                    "No value provided for argument: "
-                    f"{fg.YELLOW}{key}{effects.CLEAR}",
-                )
-
-        return filled
+        return matched_args | unfilled
 
     ### Argument Schema Building ###
 
@@ -162,6 +158,12 @@ class FlagParser(ArgumentParser):
         arg = self.get_or_raise(
             name, f"Flag {fg.YELLOW}{flag_denoter}{name}{effects.CLEAR} not recognized"
         )
+
+        if not arg.is_flag():
+            raise errors.CommandError(
+                f"Argument {fg.YELLOW}{name}{effects.CLEAR} requires a value"
+            )
+
         return arg.name, not arg.default
 
 

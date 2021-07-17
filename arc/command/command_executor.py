@@ -1,21 +1,24 @@
-from typing import Callable, Any, Generator, Literal
+from __future__ import annotations
+from typing import Callable, Any, Generator
 import pprint
 import logging
 
-from arc.color import effects, fg
-from arc.config import config
+from arc.color import fg, colorize
 from arc import errors, utils
-
+from arc.result import Ok, Err, Result
+from arc.command.argument import NO_DEFAULT
+from arc.callbacks.callbacks import CallbackTime
 
 logger = logging.getLogger("arc_logger")
+BAR = "\u2500" * 40
 
 
 class CommandExecutor:
     """Handles the execution of a commands's function"""
 
-    def __init__(self, function: Callable):
-        self.function: Callable = function
-        self.callbacks: dict[str, set[Callable]] = {
+    def __init__(self, function: Callable[..., Result]):
+        self.function: Callable[..., Result] = function
+        self.callbacks: dict[CallbackTime, set[Callable]] = {
             "before": set(),
             "around": set(),
             "after": set(),
@@ -26,7 +29,7 @@ class CommandExecutor:
         self.__gens: list[Generator] = []
 
     @utils.timer("Command Execution")
-    def execute(self, cli_namespace: list[str], arguments: dict[str, Any]):
+    def execute(self, _cli_namespace: list[str], arguments: dict[str, Any]):
         """Executes the command's functions
 
         Args:
@@ -35,43 +38,47 @@ class CommandExecutor:
         Returns:
             Any: What the command's function returns
         """
-        BAR = "\u2500" * 40
-        value = None
-        try:
-            self.before_callbacks(arguments)
-            self.start_around_callbacks(arguments)
-            logger.debug("Function Arguments: %s", pprint.pformat(arguments))
-            logger.debug(BAR)
-            # The parsers always spit out a dictionary of arguements
-            # and values. This doesn't allow *args to work, because you can't
-            # spread *args after **kwargs. So the parser stores the *args in
-            # _args and then we spread it manually. Note that this relies
-            # on dictionaires being ordered
-            if "_args" in arguments:
-                var_args = arguments.pop("_args")
-                value = self.function(*arguments.values(), *var_args)
-            else:
-                value = self.function(**arguments)
+        result: Result[Any, Any] = Ok()
+        self.setup(arguments)
 
-        except errors.NoOpError as e:
-            namespace_str = config.namespace_sep.join(cli_namespace)
-            logger.error(
-                "%s%s%s is not executable. \n\tCheck %shelp %s%s for subcommands",
-                fg.YELLOW,
-                namespace_str,
-                effects.CLEAR,
-                fg.ARC_BLUE,
-                namespace_str,
-                effects.CLEAR,
-            )
-        except errors.ExecutionError as e:
-            logger.error(e)
+        try:
+            logger.debug(BAR)
+            result = self.call_function(arguments)
         finally:
             logger.debug(BAR)
-            self.end_around_callbacks(value)
-            self.after_callbacks(value)
+            self.end_around_callbacks(result)
+            self.exec_callbacks("after", result)
 
-        return value
+        return result
+
+    def setup(self, arguments: dict[str, Any]):
+        self.exec_callbacks("before", arguments)
+        self.start_around_callbacks(arguments)
+        self.verify_args_filled(arguments)
+        logger.debug("Function Arguments: %s", pprint.pformat(arguments))
+
+    def verify_args_filled(self, arguments: dict):
+        for key, value in arguments.items():
+            if value is NO_DEFAULT:
+                raise errors.ValidationError(
+                    f"No value provided for argument: {colorize(key, fg.YELLOW)}",
+                )
+
+    def call_function(self, arguments):
+        # The parsers always spit out a dictionary of arguements
+        # and values. This doesn't allow *args to work, because you can't
+        # spread *args after **kwargs. So the parser stores the *args in
+        # _args and then we spread it manually. Note that this relies
+        # on dictionaires being ordered
+        if "_args" in arguments:
+            var_args = arguments.pop("_args")
+            result = self.function(*arguments.values(), *var_args)
+        else:
+            result = self.function(**arguments)
+
+        if not isinstance(result, (Ok, Err)):
+            return Ok(result)
+        return result
 
     def inheritable_callbacks(self):
         return {
@@ -89,7 +96,7 @@ class CommandExecutor:
                 self.register_callback(when, callback)
 
     def register_callback(
-        self, when: Literal["before", "around", "after"], call, inherit: bool = True
+        self, when: CallbackTime, call: Callable, inherit: bool = True
     ):
         if when not in self.callbacks.keys():
             raise errors.CommandError(
@@ -100,37 +107,23 @@ class CommandExecutor:
         if not inherit:
             self.non_inheritable.add(call)
 
-    @utils.handle(errors.ValidationError)
-    def before_callbacks(self, arguments: dict[str, Any]):
-        if len(self.callbacks["before"]) > 0:
-            logger.debug("Executing %sbefore%s callbacks", fg.YELLOW, effects.CLEAR)
-            for callback in self.callbacks["before"]:
-                callback(arguments)
+    def exec_callbacks(self, when: CallbackTime, *arguments):
+        if len(self.callbacks[when]) > 0:
+            logger.debug("Executing %s callbacks", colorize(when, fg.YELLOW))
+            for callback in self.callbacks[when]:
+                callback(*arguments)
 
-    @utils.handle(errors.ValidationError)
-    def after_callbacks(self, value: Any):
-        if len(self.callbacks["after"]) > 0:
-            logger.debug("Executing %safter%s callbacks", fg.YELLOW, effects.CLEAR)
-            for callback in self.callbacks["after"]:
-                callback(value)
-
-    @utils.handle(errors.ValidationError)
     def start_around_callbacks(self, arguments):
         if len(self.callbacks["around"]) > 0:
-            logger.debug("Starting %saround%s callbacks", fg.YELLOW, effects.CLEAR)
+            logger.debug("Starting %s callbacks", colorize("around", fg.YELLOW))
             for callback in self.callbacks["around"]:
                 gen = callback(arguments)
                 next(gen)
                 self.__gens.append(gen)
 
-    @utils.handle(errors.ValidationError)
     def end_around_callbacks(self, value):
         if len(self.callbacks["around"]) > 0:
-            logger.debug(
-                "Completing %saround%s callbacks",
-                fg.YELLOW,
-                effects.CLEAR,
-            )
+            logger.debug("Completing %s callbacks", colorize("around", fg.YELLOW))
             for callback in self.__gens:
                 try:
                     callback.send(value)

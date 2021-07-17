@@ -1,7 +1,11 @@
-from typing import Literal, Callable
+from __future__ import annotations
+from typing import Literal, Callable, Any, Generator, TypeVar, Union, TYPE_CHECKING
 import functools
 
-from arc.command import Command
+from arc.result import Result
+
+if TYPE_CHECKING:
+    from arc.command import Command
 
 CallbackTime = Literal["before", "around", "after"]
 
@@ -25,6 +29,8 @@ def callback(when: CallbackTime, **options):
     def wrapper(func):
         @functools.wraps(func)
         def handle_args(*args, **kwargs):
+            from arc.command import Command
+
             if isinstance(args[0], Command):
                 return register_wrapper(when, func, **options)(args[0])
 
@@ -54,16 +60,24 @@ def callback_helper(when: CallbackTime, func=None, *, inherit=True):
     return wrapped
 
 
-def before(*args, **kwargs) -> Callable[..., Command]:
-    return callback_helper("before", *args, **kwargs)
+T = TypeVar("T")
+Callback = Union[T, Callable[..., T]]
+
+Before = Callable[[dict[str, Any]], None]
+After = Callable[[Result], None]
+Around = Callable[[dict[str, Any]], Generator[None, Result, None]]
 
 
-def after(*args, **kwargs) -> Callable[..., Command]:
-    return callback_helper("after", *args, **kwargs)
+def before(func: Callback[Before] = None, *, inherit=True) -> Callable[..., Command]:
+    return callback_helper("before", func=func, inherit=inherit)
 
 
-def around(*args, **kwargs) -> Callable[..., Command]:
-    return callback_helper("around", *args, **kwargs)
+def after(func: Callback[After] = None, *, inherit=True) -> Callable[..., Command]:
+    return callback_helper("after", func=func, inherit=inherit)
+
+
+def around(func: Callback[Around] = None, *, inherit=True) -> Callable[..., Command]:
+    return callback_helper("around", func=func, inherit=inherit)
 
 
 def skip(*skip_callbacks):
