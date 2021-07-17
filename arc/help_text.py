@@ -20,7 +20,7 @@ def generate_help(root: Command, command: Command, namespace: list[str]) -> str:
     generate_usage(command.doc, root, command, namespace)
     generate_aliases(command.doc, root, command, namespace)
     generate_subcommands(command.doc, command)
-    if config.parse_argument_help:
+    if config.parse_argument_help or command is root:
         parse_argument_section(command.doc, command)
     return str(command.doc)
 
