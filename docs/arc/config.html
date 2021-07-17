@@ -94,6 +94,9 @@
                                 <a class="variable" href="#Config.suggest_levenshtein_distance">suggest_levenshtein_distance</a>
                         </li>
                         <li>
+                                <a class="variable" href="#Config.parse_argument_help">parse_argument_help</a>
+                        </li>
+                        <li>
                                 <a class="variable" href="#Config.mode_map">mode_map</a>
                         </li>
                 </ul>
@@ -234,7 +237,7 @@
 
         <span class="c1"># Check if it needs to be converted</span>
         <span class="c1"># pylint: disable=import-outside-toplevel</span>
-        <span class="kn">from</span> <span class="nn">arc.convert</span> <span class="kn">import</span> <span class="n">converters</span><span class="p">,</span> <span class="n">BaseConverter</span>
+        <span class="kn">from</span> <span class="nn">arc.types</span> <span class="kn">import</span> <span class="n">converters</span><span class="p">,</span> <span class="n">BaseConverter</span>
 
         <span class="n">config_converters</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">BaseConverter</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">converters</span><span class="o">.</span><span class="n">IntConverter</span><span class="p">,</span>
@@ -288,6 +291,10 @@
     <span class="n">suggest_levenshtein_distance</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="sd">&quot;&quot;&quot;The max Levenshtein between input and a</span>
 <span class="sd">    possible correction to trigger a suggestion &quot;&quot;&quot;</span>
+
+    <span class="n">parse_argument_help</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="sd">&quot;&quot;&quot;Wether or not to attempt to parse the argument</span>
+<span class="sd">    section of help documentation to provide better documentation&quot;&quot;&quot;</span>
 
     <span class="n">mode_map</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;development&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
@@ -420,7 +427,7 @@
 
         <span class="c1"># Check if it needs to be converted</span>
         <span class="c1"># pylint: disable=import-outside-toplevel</span>
-        <span class="kn">from</span> <span class="nn">arc.convert</span> <span class="kn">import</span> <span class="n">converters</span><span class="p">,</span> <span class="n">BaseConverter</span>
+        <span class="kn">from</span> <span class="nn">arc.types</span> <span class="kn">import</span> <span class="n">converters</span><span class="p">,</span> <span class="n">BaseConverter</span>
 
         <span class="n">config_converters</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">BaseConverter</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">converters</span><span class="o">.</span><span class="n">IntConverter</span><span class="p">,</span>
@@ -767,6 +774,10 @@ for post-load setup</p>
     <span class="sd">&quot;&quot;&quot;The max Levenshtein between input and a</span>
 <span class="sd">    possible correction to trigger a suggestion &quot;&quot;&quot;</span>
 
+    <span class="n">parse_argument_help</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="sd">&quot;&quot;&quot;Wether or not to attempt to parse the argument</span>
+<span class="sd">    section of help documentation to provide better documentation&quot;&quot;&quot;</span>
+
     <span class="n">mode_map</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;development&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
         <span class="s2">&quot;production&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
@@ -901,6 +912,18 @@ when a command is not found</p>
 
             <div class="docstring"><p>The max Levenshtein between input and a
 possible correction to trigger a suggestion</p>
+</div>
+
+
+                            </div>
+                            <div id="Config.parse_argument_help" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#Config.parse_argument_help">#&nbsp;&nbsp</a>
+
+        <span class="name">parse_argument_help</span><span class="default_value"> = False</span>
+    </div>
+
+            <div class="docstring"><p>Wether or not to attempt to parse the argument
+section of help documentation to provide better documentation</p>
 </div>
 
 

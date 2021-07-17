@@ -49,6 +49,9 @@
                                 <a class="variable" href="#Command.function">function</a>
                         </li>
                         <li>
+                                <a class="variable" href="#Command.doc">doc</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#Command.run">run</a>
                         </li>
                         <li>
@@ -90,38 +93,41 @@
                 
                         <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Iterable</span>
+            <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">import</span> <span class="nn">functools</span>
 <span class="kn">import</span> <span class="nn">pprint</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">effects</span><span class="p">,</span> <span class="n">fg</span>
-<span class="kn">from</span> <span class="nn">arc.errors</span> <span class="kn">import</span> <span class="n">CommandError</span><span class="p">,</span> <span class="n">ParserError</span>
+<span class="kn">from</span> <span class="nn">arc.errors</span> <span class="kn">import</span> <span class="n">CommandError</span>
 <span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">arc.result</span> <span class="kn">import</span> <span class="n">Result</span>
 
 <span class="kn">from</span> <span class="nn">.argument_parser</span> <span class="kn">import</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">ParsingMethod</span>
 <span class="kn">from</span> <span class="nn">.command_executor</span> <span class="kn">import</span> <span class="n">CommandExecutor</span>
+<span class="kn">from</span> <span class="nn">.command_doc</span> <span class="kn">import</span> <span class="n">CommandDoc</span>
 
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;arc_logger&quot;</span><span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">Command</span><span class="p">:</span>
+    <span class="n">_command_doc</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CommandDoc</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-        <span class="n">parser</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="n">ParsingMethod</span><span class="o">.</span><span class="n">KEYWORD</span><span class="p">,</span>
+        <span class="n">parser</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="n">ParsingMethod</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">,</span>
         <span class="n">context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">arg_aliases</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">short_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommands</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Command</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommand_aliases</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span> <span class="ow">or</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">function</span><span class="o">.</span><span class="vm">__doc__</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="p">:</span> <span class="n">ArgumentParser</span> <span class="o">=</span> <span class="n">parser</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">arg_aliases</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="p">:</span> <span class="n">ArgumentParser</span> <span class="o">=</span> <span class="n">parser</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">short_args</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">executor</span> <span class="o">=</span> <span class="n">CommandExecutor</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -138,7 +144,13 @@
     <span class="k">def</span> <span class="nf">function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">build_args</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">function</span> <span class="o">=</span> <span class="n">func</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__doc__</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">doc</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CommandDoc</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_command_doc</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_command_doc</span> <span class="o">=</span> <span class="n">CommandDoc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="vm">__doc__</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;usage&quot;</span><span class="p">,))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_command_doc</span>
 
     <span class="c1">### Execution ###</span>
 
@@ -147,8 +159,7 @@
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;External interface to execute a command&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span>
-        <span class="k">with</span> <span class="n">utils</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">ParserError</span><span class="p">):</span>
-            <span class="n">parsed_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">cli_args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">)</span>
+        <span class="n">parsed_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">cli_args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Parsed arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">parsed_args</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">cli_namespace</span><span class="p">,</span> <span class="n">parsed_args</span><span class="p">)</span>
@@ -160,7 +171,7 @@
         <span class="n">name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">parsing_method</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">arg_aliases</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">short_args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create and install a subcommands</span>
 
@@ -174,25 +185,22 @@
 <span class="sd">                Defaults to the parsing method of `self`.</span>
 <span class="sd">            context (dict[str, Any], optional): Special data that will be</span>
 <span class="sd">                passed to this command (and any subcommands) at runtime. Defaults to None.</span>
-<span class="sd">            arg_aliases (dict[str, Union[Iterable[str], str]], optional): Secondary names</span>
+<span class="sd">            short_args (dict[str, Union[Iterable[str], str]], optional): Secondary names</span>
 <span class="sd">                that arguments can be referred to by. Defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Command: the subcommand created</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">parsing_method</span> <span class="o">=</span> <span class="n">parsing_method</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="p">)</span>
-        <span class="n">context</span> <span class="o">=</span> <span class="n">context</span> <span class="ow">or</span> <span class="p">{}</span>
-
         <span class="nd">@self</span><span class="o">.</span><span class="n">ensure_function</span>
-        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Result</span><span class="p">]):</span>
             <span class="n">command_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_command_aliases</span><span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
             <span class="n">command</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span>
                 <span class="n">command_name</span><span class="p">,</span>
                 <span class="n">function</span><span class="p">,</span>
-                <span class="n">parsing_method</span><span class="p">,</span>
-                <span class="n">context</span><span class="p">,</span>
-                <span class="n">arg_aliases</span><span class="p">,</span>
+                <span class="n">parsing_method</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="p">),</span>
+                <span class="n">context</span> <span class="ow">or</span> <span class="p">{},</span>
+                <span class="n">short_args</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">install_command</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
 
@@ -275,21 +283,22 @@
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">Command</span><span class="p">:</span>
+    <span class="n">_command_doc</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CommandDoc</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-        <span class="n">parser</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="n">ParsingMethod</span><span class="o">.</span><span class="n">KEYWORD</span><span class="p">,</span>
+        <span class="n">parser</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="n">ParsingMethod</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">,</span>
         <span class="n">context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">arg_aliases</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">short_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommands</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Command</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommand_aliases</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span> <span class="ow">or</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">function</span><span class="o">.</span><span class="vm">__doc__</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="p">:</span> <span class="n">ArgumentParser</span> <span class="o">=</span> <span class="n">parser</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">arg_aliases</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="p">:</span> <span class="n">ArgumentParser</span> <span class="o">=</span> <span class="n">parser</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">short_args</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">executor</span> <span class="o">=</span> <span class="n">CommandExecutor</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -306,7 +315,13 @@
     <span class="k">def</span> <span class="nf">function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">build_args</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">function</span> <span class="o">=</span> <span class="n">func</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__doc__</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">doc</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CommandDoc</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_command_doc</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_command_doc</span> <span class="o">=</span> <span class="n">CommandDoc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="vm">__doc__</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;usage&quot;</span><span class="p">,))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_command_doc</span>
 
     <span class="c1">### Execution ###</span>
 
@@ -315,8 +330,7 @@
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;External interface to execute a command&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span>
-        <span class="k">with</span> <span class="n">utils</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">ParserError</span><span class="p">):</span>
-            <span class="n">parsed_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">cli_args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">)</span>
+        <span class="n">parsed_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">cli_args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Parsed arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">parsed_args</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">cli_namespace</span><span class="p">,</span> <span class="n">parsed_args</span><span class="p">)</span>
@@ -328,7 +342,7 @@
         <span class="n">name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">parsing_method</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">arg_aliases</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">short_args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create and install a subcommands</span>
 
@@ -342,25 +356,22 @@
 <span class="sd">                Defaults to the parsing method of `self`.</span>
 <span class="sd">            context (dict[str, Any], optional): Special data that will be</span>
 <span class="sd">                passed to this command (and any subcommands) at runtime. Defaults to None.</span>
-<span class="sd">            arg_aliases (dict[str, Union[Iterable[str], str]], optional): Secondary names</span>
+<span class="sd">            short_args (dict[str, Union[Iterable[str], str]], optional): Secondary names</span>
 <span class="sd">                that arguments can be referred to by. Defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Command: the subcommand created</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">parsing_method</span> <span class="o">=</span> <span class="n">parsing_method</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="p">)</span>
-        <span class="n">context</span> <span class="o">=</span> <span class="n">context</span> <span class="ow">or</span> <span class="p">{}</span>
-
         <span class="nd">@self</span><span class="o">.</span><span class="n">ensure_function</span>
-        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Result</span><span class="p">]):</span>
             <span class="n">command_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_command_aliases</span><span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
             <span class="n">command</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span>
                 <span class="n">command_name</span><span class="p">,</span>
                 <span class="n">function</span><span class="p">,</span>
-                <span class="n">parsing_method</span><span class="p">,</span>
-                <span class="n">context</span><span class="p">,</span>
-                <span class="n">arg_aliases</span><span class="p">,</span>
+                <span class="n">parsing_method</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="p">),</span>
+                <span class="n">context</span> <span class="ow">or</span> <span class="p">{},</span>
+                <span class="n">short_args</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">install_command</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
 
@@ -439,9 +450,9 @@
             <span class="name">Command</span><span class="signature">(
     name: str,
     function: Callable,
-    parser: Type[<a href="argument_parser.html#ArgumentParser">arc.command.argument_parser.ArgumentParser</a>] = &lt;class &#39;<a href="argument_parser.html#KeywordParser">arc.command.argument_parser.KeywordParser</a>&#39;&gt;,
+    parser: Type[<a href="argument_parser.html#ArgumentParser">arc.command.argument_parser.ArgumentParser</a>] = &lt;class &#39;<a href="argument_parser.html#StandardParser">arc.command.argument_parser.StandardParser</a>&#39;&gt;,
     context: Optional[Dict] = None,
-    arg_aliases=None
+    short_args=None
 )</span>
     </div>
 
@@ -451,17 +462,16 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-        <span class="n">parser</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="n">ParsingMethod</span><span class="o">.</span><span class="n">KEYWORD</span><span class="p">,</span>
+        <span class="n">parser</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="n">ParsingMethod</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">,</span>
         <span class="n">context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">arg_aliases</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">short_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommands</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Command</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommand_aliases</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span> <span class="ow">or</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">function</span><span class="o">.</span><span class="vm">__doc__</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="p">:</span> <span class="n">ArgumentParser</span> <span class="o">=</span> <span class="n">parser</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">arg_aliases</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="p">:</span> <span class="n">ArgumentParser</span> <span class="o">=</span> <span class="n">parser</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">short_args</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">executor</span> <span class="o">=</span> <span class="n">CommandExecutor</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
 </pre></div>
 
@@ -506,6 +516,15 @@
     
 
                             </div>
+                            <div id="Command.doc" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#Command.doc">#&nbsp;&nbsp</a>
+
+        <span class="name">doc</span><span class="annotation">: <a href="command_doc.html#CommandDoc">arc.command.command_doc.CommandDoc</a></span>
+    </div>
+
+    
+
+                            </div>
                             <div id="Command.run" class="classattr">
                                         <div class="attr function"><a class="headerlink" href="#Command.run">#&nbsp;&nbsp</a>
 
@@ -521,8 +540,7 @@
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;External interface to execute a command&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span>
-        <span class="k">with</span> <span class="n">utils</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">ParserError</span><span class="p">):</span>
-            <span class="n">parsed_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">cli_args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">)</span>
+        <span class="n">parsed_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">cli_args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Parsed arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">parsed_args</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">cli_namespace</span><span class="p">,</span> <span class="n">parsed_args</span><span class="p">)</span>
@@ -545,7 +563,7 @@
     name: Union[str, list[str], tuple[str, ...]] = None,
     parsing_method: type = None,
     context: dict = None,
-    arg_aliases: dict = None
+    short_args: dict = None
 )</span>:
     </div>
 
@@ -556,7 +574,7 @@
         <span class="n">name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">parsing_method</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">arg_aliases</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">short_args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create and install a subcommands</span>
 
@@ -570,25 +588,22 @@
 <span class="sd">                Defaults to the parsing method of `self`.</span>
 <span class="sd">            context (dict[str, Any], optional): Special data that will be</span>
 <span class="sd">                passed to this command (and any subcommands) at runtime. Defaults to None.</span>
-<span class="sd">            arg_aliases (dict[str, Union[Iterable[str], str]], optional): Secondary names</span>
+<span class="sd">            short_args (dict[str, Union[Iterable[str], str]], optional): Secondary names</span>
 <span class="sd">                that arguments can be referred to by. Defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Command: the subcommand created</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">parsing_method</span> <span class="o">=</span> <span class="n">parsing_method</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="p">)</span>
-        <span class="n">context</span> <span class="o">=</span> <span class="n">context</span> <span class="ow">or</span> <span class="p">{}</span>
-
         <span class="nd">@self</span><span class="o">.</span><span class="n">ensure_function</span>
-        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Result</span><span class="p">]):</span>
             <span class="n">command_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_command_aliases</span><span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
             <span class="n">command</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span>
                 <span class="n">command_name</span><span class="p">,</span>
                 <span class="n">function</span><span class="p">,</span>
-                <span class="n">parsing_method</span><span class="p">,</span>
-                <span class="n">context</span><span class="p">,</span>
-                <span class="n">arg_aliases</span><span class="p">,</span>
+                <span class="n">parsing_method</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="p">),</span>
+                <span class="n">context</span> <span class="ow">or</span> <span class="p">{},</span>
+                <span class="n">short_args</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">install_command</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
 
@@ -611,7 +626,7 @@ arguments. <code>ParsingMethod</code> contains constants to reference for each m
 Defaults to the parsing method of <code>self</code>.</li>
 <li><strong>context (dict[str, Any], optional):</strong>  Special data that will be
 passed to this command (and any subcommands) at runtime. Defaults to None.</li>
-<li><strong>arg_aliases (dict[str, Union[Iterable[str], str]], optional):</strong>  Secondary names
+<li><strong>short_args (dict[str, Union[Iterable[str], str]], optional):</strong>  Secondary names
 that arguments can be referred to by. Defaults to None.</li>
 </ul>
 

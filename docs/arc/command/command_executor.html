@@ -49,6 +49,15 @@
                                 <a class="function" href="#CommandExecutor.execute">execute</a>
                         </li>
                         <li>
+                                <a class="function" href="#CommandExecutor.setup">setup</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#CommandExecutor.verify_args_filled">verify_args_filled</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#CommandExecutor.call_function">call_function</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#CommandExecutor.inheritable_callbacks">inheritable_callbacks</a>
                         </li>
                         <li>
@@ -58,10 +67,7 @@
                                 <a class="function" href="#CommandExecutor.register_callback">register_callback</a>
                         </li>
                         <li>
-                                <a class="function" href="#CommandExecutor.before_callbacks">before_callbacks</a>
-                        </li>
-                        <li>
-                                <a class="function" href="#CommandExecutor.after_callbacks">after_callbacks</a>
+                                <a class="function" href="#CommandExecutor.exec_callbacks">exec_callbacks</a>
                         </li>
                         <li>
                                 <a class="function" href="#CommandExecutor.start_around_callbacks">start_around_callbacks</a>
@@ -90,24 +96,27 @@
                 
                         <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Literal</span>
+            <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generator</span>
 <span class="kn">import</span> <span class="nn">pprint</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 
-<span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">effects</span><span class="p">,</span> <span class="n">fg</span>
-<span class="kn">from</span> <span class="nn">arc.config</span> <span class="kn">import</span> <span class="n">config</span>
+<span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">fg</span><span class="p">,</span> <span class="n">colorize</span>
 <span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">errors</span><span class="p">,</span> <span class="n">utils</span>
-
+<span class="kn">from</span> <span class="nn">arc.result</span> <span class="kn">import</span> <span class="n">Ok</span><span class="p">,</span> <span class="n">Err</span><span class="p">,</span> <span class="n">Result</span>
+<span class="kn">from</span> <span class="nn">arc.command.argument</span> <span class="kn">import</span> <span class="n">NO_DEFAULT</span>
+<span class="kn">from</span> <span class="nn">arc.callbacks.callbacks</span> <span class="kn">import</span> <span class="n">CallbackTime</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;arc_logger&quot;</span><span class="p">)</span>
+<span class="n">BAR</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\u2500</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">40</span>
 
 
 <span class="k">class</span> <span class="nc">CommandExecutor</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Handles the execution of a commands&#39;s function&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">function</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">set</span><span class="p">[</span><span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Result</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Result</span><span class="p">]</span> <span class="o">=</span> <span class="n">function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">CallbackTime</span><span class="p">,</span> <span class="nb">set</span><span class="p">[</span><span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;before&quot;</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
             <span class="s2">&quot;around&quot;</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
             <span class="s2">&quot;after&quot;</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
@@ -118,7 +127,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">__gens</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Generator</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="nd">@utils</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s2">&quot;Command Execution&quot;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cli_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_cli_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;Executes the command&#39;s functions</span>
 
 <span class="sd">        Args:</span>
@@ -127,43 +136,47 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            Any: What the command&#39;s function returns</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">BAR</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\u2500</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">40</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">before_callbacks</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">start_around_callbacks</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Function Arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">arguments</span><span class="p">))</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">BAR</span><span class="p">)</span>
-            <span class="c1"># The parsers always spit out a dictionary of arguements</span>
-            <span class="c1"># and values. This doesn&#39;t allow *args to work, because you can&#39;t</span>
-            <span class="c1"># spread *args after **kwargs. So the parser stores the *args in</span>
-            <span class="c1"># _args and then we spread it manually. Note that this relies</span>
-            <span class="c1"># on dictionaires being ordered</span>
-            <span class="k">if</span> <span class="s2">&quot;_args&quot;</span> <span class="ow">in</span> <span class="n">arguments</span><span class="p">:</span>
-                <span class="n">var_args</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;_args&quot;</span><span class="p">)</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">*</span><span class="n">arguments</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="o">*</span><span class="n">var_args</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">**</span><span class="n">arguments</span><span class="p">)</span>
+        <span class="n">result</span><span class="p">:</span> <span class="n">Result</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Ok</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
 
-        <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">NoOpError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">namespace_str</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">namespace_sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cli_namespace</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="s2">&quot;</span><span class="si">%s%s%s</span><span class="s2"> is not executable. </span><span class="se">\n\t</span><span class="s2">Check </span><span class="si">%s</span><span class="s2">help </span><span class="si">%s%s</span><span class="s2"> for subcommands&quot;</span><span class="p">,</span>
-                <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span>
-                <span class="n">namespace_str</span><span class="p">,</span>
-                <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">,</span>
-                <span class="n">fg</span><span class="o">.</span><span class="n">ARC_BLUE</span><span class="p">,</span>
-                <span class="n">namespace_str</span><span class="p">,</span>
-                <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">ExecutionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">BAR</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_function</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
         <span class="k">finally</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">BAR</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">end_around_callbacks</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">after_callbacks</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">end_around_callbacks</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exec_callbacks</span><span class="p">(</span><span class="s2">&quot;after&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exec_callbacks</span><span class="p">(</span><span class="s2">&quot;before&quot;</span><span class="p">,</span> <span class="n">arguments</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_around_callbacks</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verify_args_filled</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Function Arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">arguments</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">verify_args_filled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">arguments</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="n">NO_DEFAULT</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;No value provided for argument: </span><span class="si">{</span><span class="n">colorize</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">call_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">):</span>
+        <span class="c1"># The parsers always spit out a dictionary of arguements</span>
+        <span class="c1"># and values. This doesn&#39;t allow *args to work, because you can&#39;t</span>
+        <span class="c1"># spread *args after **kwargs. So the parser stores the *args in</span>
+        <span class="c1"># _args and then we spread it manually. Note that this relies</span>
+        <span class="c1"># on dictionaires being ordered</span>
+        <span class="k">if</span> <span class="s2">&quot;_args&quot;</span> <span class="ow">in</span> <span class="n">arguments</span><span class="p">:</span>
+            <span class="n">var_args</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;_args&quot;</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">*</span><span class="n">arguments</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="o">*</span><span class="n">var_args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">**</span><span class="n">arguments</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="p">(</span><span class="n">Ok</span><span class="p">,</span> <span class="n">Err</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">Ok</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
 
     <span class="k">def</span> <span class="nf">inheritable_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span>
@@ -181,7 +194,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">register_callback</span><span class="p">(</span><span class="n">when</span><span class="p">,</span> <span class="n">callback</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">register_callback</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">when</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;before&quot;</span><span class="p">,</span> <span class="s2">&quot;around&quot;</span><span class="p">,</span> <span class="s2">&quot;after&quot;</span><span class="p">],</span> <span class="n">call</span><span class="p">,</span> <span class="n">inherit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">when</span><span class="p">:</span> <span class="n">CallbackTime</span><span class="p">,</span> <span class="n">call</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">inherit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="n">when</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">CommandError</span><span class="p">(</span>
@@ -192,37 +205,23 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">inherit</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">non_inheritable</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">call</span><span class="p">)</span>
 
-    <span class="nd">@utils</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">errors</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">before_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;before&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Executing </span><span class="si">%s</span><span class="s2">before</span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;before&quot;</span><span class="p">]:</span>
-                <span class="n">callback</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">exec_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">when</span><span class="p">:</span> <span class="n">CallbackTime</span><span class="p">,</span> <span class="o">*</span><span class="n">arguments</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="n">when</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Executing </span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span> <span class="n">colorize</span><span class="p">(</span><span class="n">when</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="n">when</span><span class="p">]:</span>
+                <span class="n">callback</span><span class="p">(</span><span class="o">*</span><span class="n">arguments</span><span class="p">)</span>
 
-    <span class="nd">@utils</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">errors</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">after_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;after&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Executing </span><span class="si">%s</span><span class="s2">after</span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;after&quot;</span><span class="p">]:</span>
-                <span class="n">callback</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-
-    <span class="nd">@utils</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">errors</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">start_around_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;around&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Starting </span><span class="si">%s</span><span class="s2">around</span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Starting </span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;around&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;around&quot;</span><span class="p">]:</span>
                 <span class="n">gen</span> <span class="o">=</span> <span class="n">callback</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
                 <span class="nb">next</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">__gens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
 
-    <span class="nd">@utils</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">errors</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">end_around_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;around&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Completing </span><span class="si">%s</span><span class="s2">around</span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span>
-                <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span>
-                <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Completing </span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;around&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gens</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">callback</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
@@ -247,9 +246,9 @@
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">CommandExecutor</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Handles the execution of a commands&#39;s function&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">function</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">set</span><span class="p">[</span><span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Result</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Result</span><span class="p">]</span> <span class="o">=</span> <span class="n">function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">CallbackTime</span><span class="p">,</span> <span class="nb">set</span><span class="p">[</span><span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;before&quot;</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
             <span class="s2">&quot;around&quot;</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
             <span class="s2">&quot;after&quot;</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
@@ -260,7 +259,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">__gens</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Generator</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="nd">@utils</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s2">&quot;Command Execution&quot;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cli_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_cli_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;Executes the command&#39;s functions</span>
 
 <span class="sd">        Args:</span>
@@ -269,43 +268,47 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            Any: What the command&#39;s function returns</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">BAR</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\u2500</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">40</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">before_callbacks</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">start_around_callbacks</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Function Arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">arguments</span><span class="p">))</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">BAR</span><span class="p">)</span>
-            <span class="c1"># The parsers always spit out a dictionary of arguements</span>
-            <span class="c1"># and values. This doesn&#39;t allow *args to work, because you can&#39;t</span>
-            <span class="c1"># spread *args after **kwargs. So the parser stores the *args in</span>
-            <span class="c1"># _args and then we spread it manually. Note that this relies</span>
-            <span class="c1"># on dictionaires being ordered</span>
-            <span class="k">if</span> <span class="s2">&quot;_args&quot;</span> <span class="ow">in</span> <span class="n">arguments</span><span class="p">:</span>
-                <span class="n">var_args</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;_args&quot;</span><span class="p">)</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">*</span><span class="n">arguments</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="o">*</span><span class="n">var_args</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">**</span><span class="n">arguments</span><span class="p">)</span>
+        <span class="n">result</span><span class="p">:</span> <span class="n">Result</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Ok</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
 
-        <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">NoOpError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">namespace_str</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">namespace_sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cli_namespace</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="s2">&quot;</span><span class="si">%s%s%s</span><span class="s2"> is not executable. </span><span class="se">\n\t</span><span class="s2">Check </span><span class="si">%s</span><span class="s2">help </span><span class="si">%s%s</span><span class="s2"> for subcommands&quot;</span><span class="p">,</span>
-                <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span>
-                <span class="n">namespace_str</span><span class="p">,</span>
-                <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">,</span>
-                <span class="n">fg</span><span class="o">.</span><span class="n">ARC_BLUE</span><span class="p">,</span>
-                <span class="n">namespace_str</span><span class="p">,</span>
-                <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">ExecutionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">BAR</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_function</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
         <span class="k">finally</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">BAR</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">end_around_callbacks</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">after_callbacks</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">end_around_callbacks</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exec_callbacks</span><span class="p">(</span><span class="s2">&quot;after&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exec_callbacks</span><span class="p">(</span><span class="s2">&quot;before&quot;</span><span class="p">,</span> <span class="n">arguments</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_around_callbacks</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verify_args_filled</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Function Arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">arguments</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">verify_args_filled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">arguments</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="n">NO_DEFAULT</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;No value provided for argument: </span><span class="si">{</span><span class="n">colorize</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">call_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">):</span>
+        <span class="c1"># The parsers always spit out a dictionary of arguements</span>
+        <span class="c1"># and values. This doesn&#39;t allow *args to work, because you can&#39;t</span>
+        <span class="c1"># spread *args after **kwargs. So the parser stores the *args in</span>
+        <span class="c1"># _args and then we spread it manually. Note that this relies</span>
+        <span class="c1"># on dictionaires being ordered</span>
+        <span class="k">if</span> <span class="s2">&quot;_args&quot;</span> <span class="ow">in</span> <span class="n">arguments</span><span class="p">:</span>
+            <span class="n">var_args</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;_args&quot;</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">*</span><span class="n">arguments</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="o">*</span><span class="n">var_args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">**</span><span class="n">arguments</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="p">(</span><span class="n">Ok</span><span class="p">,</span> <span class="n">Err</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">Ok</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
 
     <span class="k">def</span> <span class="nf">inheritable_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span>
@@ -323,7 +326,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">register_callback</span><span class="p">(</span><span class="n">when</span><span class="p">,</span> <span class="n">callback</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">register_callback</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">when</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;before&quot;</span><span class="p">,</span> <span class="s2">&quot;around&quot;</span><span class="p">,</span> <span class="s2">&quot;after&quot;</span><span class="p">],</span> <span class="n">call</span><span class="p">,</span> <span class="n">inherit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">when</span><span class="p">:</span> <span class="n">CallbackTime</span><span class="p">,</span> <span class="n">call</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">inherit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="n">when</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">CommandError</span><span class="p">(</span>
@@ -334,37 +337,23 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">inherit</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">non_inheritable</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">call</span><span class="p">)</span>
 
-    <span class="nd">@utils</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">errors</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">before_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;before&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Executing </span><span class="si">%s</span><span class="s2">before</span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;before&quot;</span><span class="p">]:</span>
-                <span class="n">callback</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">exec_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">when</span><span class="p">:</span> <span class="n">CallbackTime</span><span class="p">,</span> <span class="o">*</span><span class="n">arguments</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="n">when</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Executing </span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span> <span class="n">colorize</span><span class="p">(</span><span class="n">when</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="n">when</span><span class="p">]:</span>
+                <span class="n">callback</span><span class="p">(</span><span class="o">*</span><span class="n">arguments</span><span class="p">)</span>
 
-    <span class="nd">@utils</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">errors</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">after_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;after&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Executing </span><span class="si">%s</span><span class="s2">after</span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;after&quot;</span><span class="p">]:</span>
-                <span class="n">callback</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-
-    <span class="nd">@utils</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">errors</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">start_around_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;around&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Starting </span><span class="si">%s</span><span class="s2">around</span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Starting </span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;around&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;around&quot;</span><span class="p">]:</span>
                 <span class="n">gen</span> <span class="o">=</span> <span class="n">callback</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
                 <span class="nb">next</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">__gens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
 
-    <span class="nd">@utils</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">errors</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">end_around_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;around&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Completing </span><span class="si">%s</span><span class="s2">around</span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span>
-                <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span>
-                <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Completing </span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;around&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gens</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">callback</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
@@ -382,14 +371,16 @@
                                         <div class="attr function"><a class="headerlink" href="#CommandExecutor.__init__">#&nbsp;&nbsp</a>
 
         
-            <span class="name">CommandExecutor</span><span class="signature">(function: Callable)</span>
+            <span class="name">CommandExecutor</span><span class="signature">(
+    function: Callable[..., Union[<a href="../result.html#Ok">arc.result.Ok</a>[~O], <a href="../result.html#Err">arc.result.Err</a>[~E]]]
+)</span>
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">function</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">set</span><span class="p">[</span><span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Result</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Result</span><span class="p">]</span> <span class="o">=</span> <span class="n">function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">CallbackTime</span><span class="p">,</span> <span class="nb">set</span><span class="p">[</span><span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;before&quot;</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
             <span class="s2">&quot;around&quot;</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
             <span class="s2">&quot;after&quot;</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
@@ -408,7 +399,7 @@
                             <div id="CommandExecutor.function" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#CommandExecutor.function">#&nbsp;&nbsp</a>
 
-        <span class="name">function</span><span class="annotation">: Callable</span>
+        <span class="name">function</span><span class="annotation">: Callable[..., Union[<a href="../result.html#Ok">arc.result.Ok</a>[~O], <a href="../result.html#Err">arc.result.Err</a>[~E]]]</span>
     </div>
 
     
@@ -417,7 +408,7 @@
                             <div id="CommandExecutor.callbacks" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#CommandExecutor.callbacks">#&nbsp;&nbsp</a>
 
-        <span class="name">callbacks</span><span class="annotation">: dict[str, set[typing.Callable]]</span>
+        <span class="name">callbacks</span><span class="annotation">: dict[typing.Literal[&#39;before&#39;, &#39;around&#39;, &#39;after&#39;], set[typing.Callable]]</span>
     </div>
 
     
@@ -438,13 +429,13 @@
                 <div class="decorator">@utils.timer(&#39;Command Execution&#39;)</div>
 
             <span class="def">def</span>
-            <span class="name">execute</span><span class="signature">(self, cli_namespace: list, arguments: dict)</span>:
+            <span class="name">execute</span><span class="signature">(self, _cli_namespace: list, arguments: dict)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="nd">@utils</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s2">&quot;Command Execution&quot;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cli_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_cli_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;Executes the command&#39;s functions</span>
 
 <span class="sd">        Args:</span>
@@ -453,43 +444,18 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            Any: What the command&#39;s function returns</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">BAR</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\u2500</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">40</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">before_callbacks</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">start_around_callbacks</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Function Arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">arguments</span><span class="p">))</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">BAR</span><span class="p">)</span>
-            <span class="c1"># The parsers always spit out a dictionary of arguements</span>
-            <span class="c1"># and values. This doesn&#39;t allow *args to work, because you can&#39;t</span>
-            <span class="c1"># spread *args after **kwargs. So the parser stores the *args in</span>
-            <span class="c1"># _args and then we spread it manually. Note that this relies</span>
-            <span class="c1"># on dictionaires being ordered</span>
-            <span class="k">if</span> <span class="s2">&quot;_args&quot;</span> <span class="ow">in</span> <span class="n">arguments</span><span class="p">:</span>
-                <span class="n">var_args</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;_args&quot;</span><span class="p">)</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">*</span><span class="n">arguments</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="o">*</span><span class="n">var_args</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">**</span><span class="n">arguments</span><span class="p">)</span>
+        <span class="n">result</span><span class="p">:</span> <span class="n">Result</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Ok</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
 
-        <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">NoOpError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">namespace_str</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">namespace_sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cli_namespace</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="s2">&quot;</span><span class="si">%s%s%s</span><span class="s2"> is not executable. </span><span class="se">\n\t</span><span class="s2">Check </span><span class="si">%s</span><span class="s2">help </span><span class="si">%s%s</span><span class="s2"> for subcommands&quot;</span><span class="p">,</span>
-                <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span>
-                <span class="n">namespace_str</span><span class="p">,</span>
-                <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">,</span>
-                <span class="n">fg</span><span class="o">.</span><span class="n">ARC_BLUE</span><span class="p">,</span>
-                <span class="n">namespace_str</span><span class="p">,</span>
-                <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">ExecutionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">BAR</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_function</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
         <span class="k">finally</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">BAR</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">end_around_callbacks</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">after_callbacks</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">end_around_callbacks</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exec_callbacks</span><span class="p">(</span><span class="s2">&quot;after&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">result</span>
 </pre></div>
 
         </details>
@@ -509,6 +475,83 @@
 </blockquote>
 </div>
 
+
+                            </div>
+                            <div id="CommandExecutor.setup" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#CommandExecutor.setup">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">setup</span><span class="signature">(self, arguments: dict)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exec_callbacks</span><span class="p">(</span><span class="s2">&quot;before&quot;</span><span class="p">,</span> <span class="n">arguments</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_around_callbacks</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verify_args_filled</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Function Arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">arguments</span><span class="p">))</span>
+</pre></div>
+
+        </details>
+
+    
+
+                            </div>
+                            <div id="CommandExecutor.verify_args_filled" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#CommandExecutor.verify_args_filled">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">verify_args_filled</span><span class="signature">(self, arguments: dict)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">verify_args_filled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">arguments</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="n">NO_DEFAULT</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;No value provided for argument: </span><span class="si">{</span><span class="n">colorize</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+</pre></div>
+
+        </details>
+
+    
+
+                            </div>
+                            <div id="CommandExecutor.call_function" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#CommandExecutor.call_function">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">call_function</span><span class="signature">(self, arguments)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">call_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">):</span>
+        <span class="c1"># The parsers always spit out a dictionary of arguements</span>
+        <span class="c1"># and values. This doesn&#39;t allow *args to work, because you can&#39;t</span>
+        <span class="c1"># spread *args after **kwargs. So the parser stores the *args in</span>
+        <span class="c1"># _args and then we spread it manually. Note that this relies</span>
+        <span class="c1"># on dictionaires being ordered</span>
+        <span class="k">if</span> <span class="s2">&quot;_args&quot;</span> <span class="ow">in</span> <span class="n">arguments</span><span class="p">:</span>
+            <span class="n">var_args</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;_args&quot;</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">*</span><span class="n">arguments</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="o">*</span><span class="n">var_args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="o">**</span><span class="n">arguments</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="p">(</span><span class="n">Ok</span><span class="p">,</span> <span class="n">Err</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">Ok</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+</pre></div>
+
+        </details>
+
+    
 
                             </div>
                             <div id="CommandExecutor.inheritable_callbacks" class="classattr">
@@ -566,7 +609,7 @@
             <span class="name">register_callback</span><span class="signature">(
     self,
     when: Literal[&#39;before&#39;, &#39;around&#39;, &#39;after&#39;],
-    call,
+    call: Callable,
     inherit: bool = True
 )</span>:
     </div>
@@ -574,7 +617,7 @@
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">register_callback</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">when</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;before&quot;</span><span class="p">,</span> <span class="s2">&quot;around&quot;</span><span class="p">,</span> <span class="s2">&quot;after&quot;</span><span class="p">],</span> <span class="n">call</span><span class="p">,</span> <span class="n">inherit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">when</span><span class="p">:</span> <span class="n">CallbackTime</span><span class="p">,</span> <span class="n">call</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">inherit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="n">when</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">CommandError</span><span class="p">(</span>
@@ -591,47 +634,21 @@
     
 
                             </div>
-                            <div id="CommandExecutor.before_callbacks" class="classattr">
-                                        <div class="attr function"><a class="headerlink" href="#CommandExecutor.before_callbacks">#&nbsp;&nbsp</a>
+                            <div id="CommandExecutor.exec_callbacks" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#CommandExecutor.exec_callbacks">#&nbsp;&nbsp</a>
 
-                <div class="decorator">@utils.handle(errors.ValidationError)</div>
-
+        
             <span class="def">def</span>
-            <span class="name">before_callbacks</span><span class="signature">(self, arguments: dict)</span>:
+            <span class="name">exec_callbacks</span><span class="signature">(self, when: Literal[&#39;before&#39;, &#39;around&#39;, &#39;after&#39;], *arguments)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="nd">@utils</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">errors</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">before_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;before&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Executing </span><span class="si">%s</span><span class="s2">before</span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;before&quot;</span><span class="p">]:</span>
-                <span class="n">callback</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
-</pre></div>
-
-        </details>
-
-    
-
-                            </div>
-                            <div id="CommandExecutor.after_callbacks" class="classattr">
-                                        <div class="attr function"><a class="headerlink" href="#CommandExecutor.after_callbacks">#&nbsp;&nbsp</a>
-
-                <div class="decorator">@utils.handle(errors.ValidationError)</div>
-
-            <span class="def">def</span>
-            <span class="name">after_callbacks</span><span class="signature">(self, value: Any)</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="nd">@utils</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">errors</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">after_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;after&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Executing </span><span class="si">%s</span><span class="s2">after</span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;after&quot;</span><span class="p">]:</span>
-                <span class="n">callback</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">exec_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">when</span><span class="p">:</span> <span class="n">CallbackTime</span><span class="p">,</span> <span class="o">*</span><span class="n">arguments</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="n">when</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Executing </span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span> <span class="n">colorize</span><span class="p">(</span><span class="n">when</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="n">when</span><span class="p">]:</span>
+                <span class="n">callback</span><span class="p">(</span><span class="o">*</span><span class="n">arguments</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -642,18 +659,16 @@
                             <div id="CommandExecutor.start_around_callbacks" class="classattr">
                                         <div class="attr function"><a class="headerlink" href="#CommandExecutor.start_around_callbacks">#&nbsp;&nbsp</a>
 
-                <div class="decorator">@utils.handle(errors.ValidationError)</div>
-
+        
             <span class="def">def</span>
             <span class="name">start_around_callbacks</span><span class="signature">(self, arguments)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="nd">@utils</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">errors</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">start_around_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">start_around_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;around&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Starting </span><span class="si">%s</span><span class="s2">around</span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Starting </span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;around&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;around&quot;</span><span class="p">]:</span>
                 <span class="n">gen</span> <span class="o">=</span> <span class="n">callback</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
                 <span class="nb">next</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
@@ -668,22 +683,16 @@
                             <div id="CommandExecutor.end_around_callbacks" class="classattr">
                                         <div class="attr function"><a class="headerlink" href="#CommandExecutor.end_around_callbacks">#&nbsp;&nbsp</a>
 
-                <div class="decorator">@utils.handle(errors.ValidationError)</div>
-
+        
             <span class="def">def</span>
             <span class="name">end_around_callbacks</span><span class="signature">(self, value)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="nd">@utils</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">errors</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">end_around_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">end_around_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">[</span><span class="s2">&quot;around&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Completing </span><span class="si">%s</span><span class="s2">around</span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span>
-                <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span>
-                <span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Completing </span><span class="si">%s</span><span class="s2"> callbacks&quot;</span><span class="p">,</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;around&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gens</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">callback</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>

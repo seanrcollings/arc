@@ -33,6 +33,12 @@
             <li>
                     <a class="function" href="#open_file">open_file</a>
             </li>
+            <li>
+                    <a class="function" href="#stdin">stdin</a>
+            </li>
+            <li>
+                    <a class="function" href="#stderr">stderr</a>
+            </li>
     </ul>
 
 
@@ -54,11 +60,14 @@
                         <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="sd">&quot;&quot;&quot;Callbacks that perform some action on a type, should be treated with caution&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TextIO</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">fg</span><span class="p">,</span> <span class="n">effects</span>
 <span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">arc.command.argument</span> <span class="kn">import</span> <span class="n">NO_DEFAULT</span>
 
-<span class="kn">from</span> <span class="nn">.callbacks</span> <span class="kn">import</span> <span class="n">around</span>
+<span class="kn">from</span> <span class="nn">.callbacks</span> <span class="kn">import</span> <span class="n">around</span><span class="p">,</span> <span class="n">before</span>
 
 
 <span class="nd">@around</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -87,6 +96,31 @@
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
             <span class="n">arguments</span><span class="p">[</span><span class="n">argument</span><span class="p">]</span> <span class="o">=</span> <span class="n">file</span>
             <span class="k">yield</span>
+
+    <span class="k">return</span> <span class="n">inner</span>
+
+
+<span class="k">def</span> <span class="nf">_input_stream</span><span class="p">(</span>
+    <span class="n">stream</span><span class="p">:</span> <span class="n">TextIO</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">argument</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">take_precedence</span><span class="p">:</span> <span class="nb">bool</span>
+<span class="p">):</span>
+    <span class="n">arg_value</span> <span class="o">=</span> <span class="n">arguments</span><span class="p">[</span><span class="n">argument</span><span class="p">]</span>
+    <span class="n">arg_exists</span> <span class="o">=</span> <span class="n">arg_value</span> <span class="ow">and</span> <span class="n">arg_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">NO_DEFAULT</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">arg_exists</span> <span class="ow">or</span> <span class="n">take_precedence</span><span class="p">:</span>
+        <span class="n">arguments</span><span class="p">[</span><span class="n">argument</span><span class="p">]</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+
+<span class="nd">@before</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">stdin</span><span class="p">(</span><span class="n">argument</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">take_precedence</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">_input_stream</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="p">,</span> <span class="n">arguments</span><span class="p">,</span> <span class="n">argument</span><span class="p">,</span> <span class="n">take_precedence</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">inner</span>
+
+
+<span class="nd">@before</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">stderr</span><span class="p">(</span><span class="n">argument</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">take_precedence</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">_input_stream</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="n">arguments</span><span class="p">,</span> <span class="n">argument</span><span class="p">,</span> <span class="n">take_precedence</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">inner</span>
 </pre></div>
@@ -156,6 +190,54 @@ Is not inherited by subcommands</p>
 </ul>
 </div>
 
+
+                </section>
+                <section id="stdin">
+                            <div class="attr function"><a class="headerlink" href="#stdin">#&nbsp;&nbsp</a>
+
+                <div class="decorator">@before(inherit=False)</div>
+
+            <span class="def">def</span>
+            <span class="name">stdin</span><span class="signature">(argument: str, take_precedence: bool = False)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="nd">@before</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">stdin</span><span class="p">(</span><span class="n">argument</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">take_precedence</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">_input_stream</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="p">,</span> <span class="n">arguments</span><span class="p">,</span> <span class="n">argument</span><span class="p">,</span> <span class="n">take_precedence</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">inner</span>
+</pre></div>
+
+        </details>
+
+    
+
+                </section>
+                <section id="stderr">
+                            <div class="attr function"><a class="headerlink" href="#stderr">#&nbsp;&nbsp</a>
+
+                <div class="decorator">@before(inherit=False)</div>
+
+            <span class="def">def</span>
+            <span class="name">stderr</span><span class="signature">(argument: str, take_precedence: bool = False)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="nd">@before</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">stderr</span><span class="p">(</span><span class="n">argument</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">take_precedence</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">_input_stream</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="n">arguments</span><span class="p">,</span> <span class="n">argument</span><span class="p">,</span> <span class="n">take_precedence</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">inner</span>
+</pre></div>
+
+        </details>
+
+    
 
                 </section>
     </main>

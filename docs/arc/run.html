@@ -31,6 +31,9 @@
                     <h2>API Documentation</h2>
                         <ul class="memberlist">
             <li>
+                    <a class="function" href="#error_handler">error_handler</a>
+            </li>
+            <li>
                     <a class="function" href="#run">run</a>
             </li>
             <li>
@@ -43,10 +46,7 @@
                     <a class="function" href="#find_command">find_command</a>
             </li>
             <li>
-                    <a class="function" href="#find_command_suggestion">find_command_suggestion</a>
-            </li>
-            <li>
-                    <a class="function" href="#get_all_command_names">get_all_command_names</a>
+                    <a class="function" href="#handle_result">handle_result</a>
             </li>
     </ul>
 
@@ -66,17 +66,18 @@
                 
                         <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">shlex</span>
-<span class="kn">import</span> <span class="nn">re</span>
+            <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">shlex</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">contextlib</span>
 
-<span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">utils</span><span class="p">,</span> <span class="n">present</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">CommandError</span>
-<span class="kn">from</span> <span class="nn">.command</span> <span class="kn">import</span> <span class="n">Command</span>
-<span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">config</span>
-<span class="kn">from</span> <span class="nn">.color</span> <span class="kn">import</span> <span class="n">fg</span><span class="p">,</span> <span class="n">effects</span><span class="p">,</span> <span class="n">bg</span>
+<span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">present</span><span class="p">,</span> <span class="n">utils</span><span class="p">,</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">bg</span><span class="p">,</span> <span class="n">colorize</span><span class="p">,</span> <span class="n">effects</span><span class="p">,</span> <span class="n">fg</span>
+<span class="kn">from</span> <span class="nn">arc.command</span> <span class="kn">import</span> <span class="n">Command</span><span class="p">,</span> <span class="n">helpers</span>
+<span class="kn">from</span> <span class="nn">arc.config</span> <span class="kn">import</span> <span class="n">config</span>
+<span class="kn">from</span> <span class="nn">arc.result</span> <span class="kn">import</span> <span class="n">Result</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;arc_logger&quot;</span><span class="p">)</span>
 
@@ -86,11 +87,30 @@
 <span class="p">)</span>
 
 
+<span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+<span class="k">def</span> <span class="nf">error_handler</span><span class="p">(</span><span class="n">handle_exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handle all exceptions that occur while executing</span>
+<span class="sd">    If `config.mode` is development or `handle_exception` is `False`</span>
+<span class="sd">    The exception will be reraised. Otherwise, it will be logged</span>
+<span class="sd">    and a system exit will be triggered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">handle_exception</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;development&quot;</span><span class="p">:</span>
+            <span class="k">raise</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
 <span class="nd">@utils</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s2">&quot;Running&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
     <span class="n">root</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span>
     <span class="n">execute</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">arcfile</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">handle_exception</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">check_result</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Core function of the ARC API.</span>
 <span class="sd">    Loads up the config file, parses the user input</span>
@@ -101,29 +121,46 @@
 <span class="sd">        execute (str): string to parse and execute. If it&#39;s not provided</span>
 <span class="sd">            `sys.argv` will be used</span>
 <span class="sd">        arcfile (str): file path to an arc config file to load,</span>
-<span class="sd">            will ignore if path does not exsit</span>
+<span class="sd">            will ignore if path does not exist</span>
+<span class="sd">        handle_exception (bool): handle the exception interanally, or bubble it</span>
+<span class="sd">        check_result (bool): whether or not to check if the result contains</span>
+<span class="sd">            errors. Defaults to False.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">utils</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;EXECUTE&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">arcfile</span><span class="p">:</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">arcfile</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">error_handler</span><span class="p">(</span><span class="n">handle_exception</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">arcfile</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">arcfile</span><span class="p">)</span>
 
-    <span class="n">user_input</span> <span class="o">=</span> <span class="n">get_input</span><span class="p">(</span><span class="n">execute</span><span class="p">)</span>
-    <span class="n">command_namespace</span><span class="p">,</span> <span class="n">command_args</span> <span class="o">=</span> <span class="n">get_command_namespace</span><span class="p">(</span><span class="n">user_input</span><span class="p">)</span>
-
-    <span class="k">with</span> <span class="n">utils</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">CommandError</span><span class="p">):</span>
+        <span class="n">user_input</span> <span class="o">=</span> <span class="n">get_input</span><span class="p">(</span><span class="n">execute</span><span class="p">)</span>
+        <span class="n">command_namespace</span><span class="p">,</span> <span class="n">command_args</span> <span class="o">=</span> <span class="n">get_command_namespace</span><span class="p">(</span><span class="n">user_input</span><span class="p">)</span>
         <span class="n">command</span><span class="p">,</span> <span class="n">command_ctx</span> <span class="o">=</span> <span class="n">find_command</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">command_namespace</span><span class="p">)</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-        <span class="nb">str</span><span class="p">(</span>
-            <span class="n">present</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bg</span><span class="o">.</span><span class="n">ARC_BLUE</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command_namespace</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;root&#39;</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2"> &quot;</span>
-                <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bg</span><span class="o">.</span><span class="n">GREY</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">command_args</span><span class="p">),</span>
-                <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
-                <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="nb">str</span><span class="p">(</span>
+                <span class="n">present</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bg</span><span class="o">.</span><span class="n">ARC_BLUE</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command_namespace</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;root&#39;</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2"> &quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bg</span><span class="o">.</span><span class="n">GREY</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">command_args</span>
+                    <span class="p">),</span>
+                    <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                    <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="n">command_namespace</span><span class="p">,</span>
+            <span class="n">command_args</span><span class="p">,</span>
+            <span class="n">command_ctx</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">check_result</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">handle_result</span><span class="p">(</span>
+                <span class="n">result</span><span class="p">,</span>
+                <span class="n">command_namespace</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="p">),</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">command</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">command_namespace</span><span class="p">,</span> <span class="n">command_args</span><span class="p">,</span> <span class="n">command_ctx</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span>
 
 
 <span class="k">def</span> <span class="nf">get_input</span><span class="p">(</span><span class="n">execute</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -177,60 +214,72 @@
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command_namespace</span><span class="p">)</span><span class="si">}{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2"> not found. &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;Check </span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">BLUE</span><span class="si">}</span><span class="s2">--help</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2"> for available commands&quot;</span>
             <span class="p">)</span>
-            <span class="k">if</span> <span class="n">possible_command</span> <span class="o">:=</span> <span class="n">find_command_suggestion</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">command_namespace</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">possible_command</span> <span class="o">:=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">find_similar_command</span><span class="p">(</span>
+                <span class="n">command</span><span class="p">,</span> <span class="n">command_namespace</span>
+            <span class="p">):</span>
                 <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">Perhaps you meant </span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="si">}{</span><span class="n">possible_command</span><span class="si">}{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">?&quot;</span>
 
-            <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">CommandError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
 
         <span class="n">command_ctx</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">context</span> <span class="o">|</span> <span class="n">command_ctx</span>
     <span class="k">return</span> <span class="n">command</span><span class="p">,</span> <span class="n">command_ctx</span>
 
 
-<span class="k">def</span> <span class="nf">find_command_suggestion</span><span class="p">(</span><span class="n">command</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">namespace_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
-    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">suggest_on_missing_command</span><span class="p">:</span>
-        <span class="n">namespace_str</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">namespace_sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">namespace_list</span><span class="p">)</span>
-        <span class="n">command_names</span> <span class="o">=</span> <span class="n">get_all_command_names</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
-
-        <span class="n">distance</span><span class="p">,</span> <span class="n">command_name</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
-            <span class="p">(</span>
-                <span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">levenshtein</span><span class="p">(</span><span class="n">namespace_str</span><span class="p">,</span> <span class="n">command_name</span><span class="p">),</span> <span class="n">command_name</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">command_name</span> <span class="ow">in</span> <span class="n">command_names</span>
-            <span class="p">),</span>
-            <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">tup</span><span class="p">:</span> <span class="n">tup</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+<span class="k">def</span> <span class="nf">handle_result</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">Result</span><span class="p">,</span> <span class="n">command_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+    <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="n">utils</span><span class="o">.</span><span class="n">NO_OP</span><span class="p">:</span>
+        <span class="n">namespace_str</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">namespace_sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command_namespace</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ExecutionError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">colorize</span><span class="p">(</span><span class="n">namespace_str</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">)</span><span class="si">}</span><span class="s2"> is not executable. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">Check </span><span class="si">{</span><span class="n">colorize</span><span class="p">(</span><span class="s1">&#39;help &#39;</span> <span class="o">+</span> <span class="n">namespace_str</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">ARC_BLUE</span><span class="p">)</span><span class="si">}</span><span class="s2"> for subcommands&quot;</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">distance</span> <span class="o">&lt;=</span> <span class="n">config</span><span class="o">.</span><span class="n">suggest_levenshtein_distance</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">command_name</span>
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">err</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ExecutionError</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">unwrap</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;No message&quot;</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="kc">None</span>
-
-
-<span class="k">def</span> <span class="nf">get_all_command_names</span><span class="p">(</span>
-    <span class="n">command</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">parent_namespace</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="kc">True</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;Recursively walks down the command tree and</span>
-<span class="sd">    generates fully-qualified names for all commands&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">root</span><span class="p">:</span>
-        <span class="n">current</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">current</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">namespace_sep</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">parent_namespace</span><span class="p">,</span> <span class="n">command</span><span class="o">.</span><span class="n">name</span><span class="p">))</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span>
-            <span class="n">config</span><span class="o">.</span><span class="n">namespace_sep</span>
-        <span class="p">)</span>
-
-    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">current</span><span class="p">]</span>
-
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">command</span><span class="o">.</span><span class="n">subcommands</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">names</span>
-
-    <span class="k">for</span> <span class="n">subcommand</span> <span class="ow">in</span> <span class="n">command</span><span class="o">.</span><span class="n">subcommands</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-        <span class="n">names</span> <span class="o">+=</span> <span class="n">get_all_command_names</span><span class="p">(</span><span class="n">subcommand</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">names</span>
+    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">unwrap</span><span class="p">()</span>
 </pre></div>
 
         </details>
 
             </section>
+                <section id="error_handler">
+                            <div class="attr function"><a class="headerlink" href="#error_handler">#&nbsp;&nbsp</a>
+
+                <div class="decorator">@contextlib.contextmanager</div>
+
+            <span class="def">def</span>
+            <span class="name">error_handler</span><span class="signature">(handle_exception)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+<span class="k">def</span> <span class="nf">error_handler</span><span class="p">(</span><span class="n">handle_exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handle all exceptions that occur while executing</span>
+<span class="sd">    If `config.mode` is development or `handle_exception` is `False`</span>
+<span class="sd">    The exception will be reraised. Otherwise, it will be logged</span>
+<span class="sd">    and a system exit will be triggered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">handle_exception</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;development&quot;</span><span class="p">:</span>
+            <span class="k">raise</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Handle all exceptions that occur while executing
+If <code>config.mode</code> is development or <code>handle_exception</code> is <code>False</code>
+The exception will be reraised. Otherwise, it will be logged
+and a system exit will be triggered.</p>
+</div>
+
+
+                </section>
                 <section id="run">
                             <div class="attr function"><a class="headerlink" href="#run">#&nbsp;&nbsp</a>
 
@@ -240,7 +289,9 @@
             <span class="name">run</span><span class="signature">(
     root: <a href="command/command.html#Command">arc.command.command.Command</a>,
     execute: Optional[str] = None,
-    arcfile: Optional[str] = None
+    arcfile: Optional[str] = None,
+    handle_exception: bool = False,
+    check_result: bool = False
 )</span>:
     </div>
 
@@ -251,6 +302,8 @@
     <span class="n">root</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span>
     <span class="n">execute</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">arcfile</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">handle_exception</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">check_result</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Core function of the ARC API.</span>
 <span class="sd">    Loads up the config file, parses the user input</span>
@@ -261,29 +314,46 @@
 <span class="sd">        execute (str): string to parse and execute. If it&#39;s not provided</span>
 <span class="sd">            `sys.argv` will be used</span>
 <span class="sd">        arcfile (str): file path to an arc config file to load,</span>
-<span class="sd">            will ignore if path does not exsit</span>
+<span class="sd">            will ignore if path does not exist</span>
+<span class="sd">        handle_exception (bool): handle the exception interanally, or bubble it</span>
+<span class="sd">        check_result (bool): whether or not to check if the result contains</span>
+<span class="sd">            errors. Defaults to False.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">utils</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;EXECUTE&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">arcfile</span><span class="p">:</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">arcfile</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">error_handler</span><span class="p">(</span><span class="n">handle_exception</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">arcfile</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">arcfile</span><span class="p">)</span>
 
-    <span class="n">user_input</span> <span class="o">=</span> <span class="n">get_input</span><span class="p">(</span><span class="n">execute</span><span class="p">)</span>
-    <span class="n">command_namespace</span><span class="p">,</span> <span class="n">command_args</span> <span class="o">=</span> <span class="n">get_command_namespace</span><span class="p">(</span><span class="n">user_input</span><span class="p">)</span>
-
-    <span class="k">with</span> <span class="n">utils</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">CommandError</span><span class="p">):</span>
+        <span class="n">user_input</span> <span class="o">=</span> <span class="n">get_input</span><span class="p">(</span><span class="n">execute</span><span class="p">)</span>
+        <span class="n">command_namespace</span><span class="p">,</span> <span class="n">command_args</span> <span class="o">=</span> <span class="n">get_command_namespace</span><span class="p">(</span><span class="n">user_input</span><span class="p">)</span>
         <span class="n">command</span><span class="p">,</span> <span class="n">command_ctx</span> <span class="o">=</span> <span class="n">find_command</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">command_namespace</span><span class="p">)</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-        <span class="nb">str</span><span class="p">(</span>
-            <span class="n">present</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bg</span><span class="o">.</span><span class="n">ARC_BLUE</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command_namespace</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;root&#39;</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2"> &quot;</span>
-                <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bg</span><span class="o">.</span><span class="n">GREY</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">command_args</span><span class="p">),</span>
-                <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
-                <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="nb">str</span><span class="p">(</span>
+                <span class="n">present</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bg</span><span class="o">.</span><span class="n">ARC_BLUE</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command_namespace</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;root&#39;</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2"> &quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bg</span><span class="o">.</span><span class="n">GREY</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">command_args</span>
+                    <span class="p">),</span>
+                    <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                    <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="n">command_namespace</span><span class="p">,</span>
+            <span class="n">command_args</span><span class="p">,</span>
+            <span class="n">command_ctx</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">check_result</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">handle_result</span><span class="p">(</span>
+                <span class="n">result</span><span class="p">,</span>
+                <span class="n">command_namespace</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="p">),</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">command</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">command_namespace</span><span class="p">,</span> <span class="n">command_args</span><span class="p">,</span> <span class="n">command_ctx</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span>
 </pre></div>
 
         </details>
@@ -299,7 +369,10 @@ Finds the command referenced, then passes over control to it</p>
 <li><strong>execute (str):</strong>  string to parse and execute. If it's not provided
 <code>sys.argv</code> will be used</li>
 <li><strong>arcfile (str):</strong>  file path to an arc config file to load,
-will ignore if path does not exsit</li>
+will ignore if path does not exist</li>
+<li><strong>handle_exception (bool):</strong>  handle the exception interanally, or bubble it</li>
+<li><strong>check_result (bool):</strong>  whether or not to check if the result contains
+errors. Defaults to False.</li>
 </ul>
 </div>
 
@@ -408,10 +481,12 @@ cli.missing_command will be executed.</p>
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command_namespace</span><span class="p">)</span><span class="si">}{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2"> not found. &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;Check </span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">BLUE</span><span class="si">}</span><span class="s2">--help</span><span class="si">{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2"> for available commands&quot;</span>
             <span class="p">)</span>
-            <span class="k">if</span> <span class="n">possible_command</span> <span class="o">:=</span> <span class="n">find_command_suggestion</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">command_namespace</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">possible_command</span> <span class="o">:=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">find_similar_command</span><span class="p">(</span>
+                <span class="n">command</span><span class="p">,</span> <span class="n">command_namespace</span>
+            <span class="p">):</span>
                 <span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">Perhaps you meant </span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="si">}{</span><span class="n">possible_command</span><span class="si">}{</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">?&quot;</span>
 
-            <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">CommandError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
 
         <span class="n">command_ctx</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">context</span> <span class="o">|</span> <span class="n">command_ctx</span>
     <span class="k">return</span> <span class="n">command</span><span class="p">,</span> <span class="n">command_ctx</span>
@@ -430,83 +505,36 @@ and will return it.</p>
 
 
                 </section>
-                <section id="find_command_suggestion">
-                            <div class="attr function"><a class="headerlink" href="#find_command_suggestion">#&nbsp;&nbsp</a>
+                <section id="handle_result">
+                            <div class="attr function"><a class="headerlink" href="#handle_result">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">find_command_suggestion</span><span class="signature">(command: <a href="command/command.html#Command">arc.command.command.Command</a>, namespace_list: list)</span>:
+            <span class="name">handle_result</span><span class="signature">(
+    result: Union[<a href="result.html#Ok">arc.result.Ok</a>[~O], <a href="result.html#Err">arc.result.Err</a>[~E]],
+    command_namespace: list
+)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">find_command_suggestion</span><span class="p">(</span><span class="n">command</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">namespace_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
-    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">suggest_on_missing_command</span><span class="p">:</span>
-        <span class="n">namespace_str</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">namespace_sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">namespace_list</span><span class="p">)</span>
-        <span class="n">command_names</span> <span class="o">=</span> <span class="n">get_all_command_names</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
-
-        <span class="n">distance</span><span class="p">,</span> <span class="n">command_name</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
-            <span class="p">(</span>
-                <span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">levenshtein</span><span class="p">(</span><span class="n">namespace_str</span><span class="p">,</span> <span class="n">command_name</span><span class="p">),</span> <span class="n">command_name</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">command_name</span> <span class="ow">in</span> <span class="n">command_names</span>
-            <span class="p">),</span>
-            <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">tup</span><span class="p">:</span> <span class="n">tup</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">handle_result</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">Result</span><span class="p">,</span> <span class="n">command_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+    <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="n">utils</span><span class="o">.</span><span class="n">NO_OP</span><span class="p">:</span>
+        <span class="n">namespace_str</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">namespace_sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command_namespace</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ExecutionError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">colorize</span><span class="p">(</span><span class="n">namespace_str</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">)</span><span class="si">}</span><span class="s2"> is not executable. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">Check </span><span class="si">{</span><span class="n">colorize</span><span class="p">(</span><span class="s1">&#39;help &#39;</span> <span class="o">+</span> <span class="n">namespace_str</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">ARC_BLUE</span><span class="p">)</span><span class="si">}</span><span class="s2"> for subcommands&quot;</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">distance</span> <span class="o">&lt;=</span> <span class="n">config</span><span class="o">.</span><span class="n">suggest_levenshtein_distance</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">command_name</span>
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">err</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ExecutionError</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">unwrap</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;No message&quot;</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">unwrap</span><span class="p">()</span>
 </pre></div>
 
         </details>
 
     
-
-                </section>
-                <section id="get_all_command_names">
-                            <div class="attr function"><a class="headerlink" href="#get_all_command_names">#&nbsp;&nbsp</a>
-
-        
-            <span class="def">def</span>
-            <span class="name">get_all_command_names</span><span class="signature">(
-    command: <a href="command/command.html#Command">arc.command.command.Command</a>,
-    parent_namespace: str = &#39;&#39;,
-    root=True
-) -&gt; list[str]</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_all_command_names</span><span class="p">(</span>
-    <span class="n">command</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">parent_namespace</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="kc">True</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;Recursively walks down the command tree and</span>
-<span class="sd">    generates fully-qualified names for all commands&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">root</span><span class="p">:</span>
-        <span class="n">current</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">current</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">namespace_sep</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">parent_namespace</span><span class="p">,</span> <span class="n">command</span><span class="o">.</span><span class="n">name</span><span class="p">))</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span>
-            <span class="n">config</span><span class="o">.</span><span class="n">namespace_sep</span>
-        <span class="p">)</span>
-
-    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">current</span><span class="p">]</span>
-
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">command</span><span class="o">.</span><span class="n">subcommands</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">names</span>
-
-    <span class="k">for</span> <span class="n">subcommand</span> <span class="ow">in</span> <span class="n">command</span><span class="o">.</span><span class="n">subcommands</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-        <span class="n">names</span> <span class="o">+=</span> <span class="n">get_all_command_names</span><span class="p">(</span><span class="n">subcommand</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">names</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Recursively walks down the command tree and
-generates fully-qualified names for all commands</p>
-</div>
-
 
                 </section>
     </main>

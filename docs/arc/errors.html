@@ -46,12 +46,6 @@
 
             </li>
             <li>
-                    <a class="class" href="#NoOpError">NoOpError</a>
-                            <ul class="memberlist">
-                </ul>
-
-            </li>
-            <li>
                     <a class="class" href="#CommandError">CommandError</a>
                             <ul class="memberlist">
                 </ul>
@@ -120,11 +114,7 @@
                 
                         <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
-<span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">fg</span><span class="p">,</span> <span class="n">effects</span>
-
-
-<span class="k">class</span> <span class="nc">ArcError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">ArcError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Base Arc Exception&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
@@ -134,18 +124,9 @@
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span>
 
-    <span class="c1"># @staticmethod</span>
-    <span class="c1"># def colorize(string: str):</span>
-    <span class="c1">#     return f&quot;{fg.RED}{string}{effects.CLEAR}&quot;</span>
-
 
 <span class="k">class</span> <span class="nc">ExecutionError</span><span class="p">(</span><span class="n">ArcError</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Raised if there is a problem during the execution of a command&quot;&quot;&quot;</span>
-
-
-<span class="k">class</span> <span class="nc">NoOpError</span><span class="p">(</span><span class="n">ExecutionError</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Sepcial Execution to raise when</span>
-<span class="sd">    the specific namespace CANT be executed&quot;&quot;&quot;</span>
 
 
 <span class="k">class</span> <span class="nc">CommandError</span><span class="p">(</span><span class="n">ArcError</span><span class="p">):</span>
@@ -215,10 +196,6 @@
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span>
-
-    <span class="c1"># @staticmethod</span>
-    <span class="c1"># def colorize(string: str):</span>
-    <span class="c1">#     return f&quot;{fg.RED}{string}{effects.CLEAR}&quot;</span>
 </pre></div>
 
         </details>
@@ -288,44 +265,6 @@
             <div><dt>builtins.BaseException</dt>
                                 <dd id="ExecutionError.with_traceback" class="function">with_traceback</dd>
                 <dd id="ExecutionError.args" class="variable">args</dd>
-
-            </div>
-                                </dl>
-                            </div>
-                </section>
-                <section id="NoOpError">
-                                <div class="attr class">
-        <a class="headerlink" href="#NoOpError">#&nbsp;&nbsp</a>
-
-        
-        <span class="def">class</span>
-        <span class="name">NoOpError</span><wbr>(<span class="base"><a href="#ExecutionError">ExecutionError</a></span>):
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">NoOpError</span><span class="p">(</span><span class="n">ExecutionError</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Sepcial Execution to raise when</span>
-<span class="sd">    the specific namespace CANT be executed&quot;&quot;&quot;</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Sepcial Execution to raise when
-the specific namespace CANT be executed</p>
-</div>
-
-
-                            <div class="inherited">
-                                <h5>Inherited Members</h5>
-                                <dl>
-                                    <div><dt><a href="#ArcError">ArcError</a></dt>
-                                <dd id="NoOpError.__init__" class="function"><a href="#ArcError.__init__">ArcError</a></dd>
-
-            </div>
-            <div><dt>builtins.BaseException</dt>
-                                <dd id="NoOpError.with_traceback" class="function">with_traceback</dd>
-                <dd id="NoOpError.args" class="variable">args</dd>
 
             </div>
                                 </dl>

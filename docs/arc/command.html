@@ -29,9 +29,11 @@
 
                     <h2>Submodules</h2>
                     <ul>
+                            <li><a href="command/arg_builder.html">arc.command.arg_builder</a></li>
                             <li><a href="command/argument.html">arc.command.argument</a></li>
                             <li><a href="command/argument_parser.html">arc.command.argument_parser</a></li>
                             <li><a href="command/command.html">arc.command.command</a></li>
+                            <li><a href="command/command_doc.html">arc.command.command_doc</a></li>
                             <li><a href="command/command_executor.html">arc.command.command_executor</a></li>
                             <li><a href="command/context.html">arc.command.context</a></li>
                             <li><a href="command/helpers.html">arc.command.helpers</a></li>
@@ -70,7 +72,7 @@
 <span class="kn">from</span> <span class="nn">.argument_parser</span> <span class="kn">import</span> <span class="n">ParsingMethod</span><span class="p">,</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">PositionalParser</span>
 
 
-<span class="k">def</span> <span class="nf">namespace</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parsing_method</span><span class="o">=</span><span class="n">ParsingMethod</span><span class="o">.</span><span class="n">KEYWORD</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Command</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">namespace</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parsing_method</span><span class="o">=</span><span class="n">ParsingMethod</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Command</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Creates a non-executable Command namespace.</span>
 
 <span class="sd">    Namespaces are autoloadable with `cli.autoload()`</span>
@@ -98,7 +100,7 @@
     <span class="k">return</span> <span class="n">c</span>
 
 
-<span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">parsing_method</span><span class="o">=</span><span class="n">ParsingMethod</span><span class="o">.</span><span class="n">KEYWORD</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">parsing_method</span><span class="o">=</span><span class="n">ParsingMethod</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Creates an executable Command namespace.</span>
 
 <span class="sd">    Autoloadable with `cli.autoload()`</span>
@@ -137,14 +139,14 @@
             <span class="def">def</span>
             <span class="name">namespace</span><span class="signature">(
     name: str,
-    parsing_method=&lt;class &#39;<a href="command/argument_parser.html#KeywordParser">arc.command.argument_parser.KeywordParser</a>&#39;&gt;,
+    parsing_method=&lt;class &#39;<a href="command/argument_parser.html#StandardParser">arc.command.argument_parser.StandardParser</a>&#39;&gt;,
     **kwargs
 ) -&gt; <a href="command/command.html#Command">arc.command.command.Command</a></span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">namespace</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parsing_method</span><span class="o">=</span><span class="n">ParsingMethod</span><span class="o">.</span><span class="n">KEYWORD</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Command</span><span class="p">:</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">namespace</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parsing_method</span><span class="o">=</span><span class="n">ParsingMethod</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Command</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Creates a non-executable Command namespace.</span>
 
 <span class="sd">    Namespaces are autoloadable with `cli.autoload()`</span>
@@ -210,14 +212,14 @@ and <code>ns</code> would not be a valid command</p>
             <span class="def">def</span>
             <span class="name">command</span><span class="signature">(
     name: str = None,
-    parsing_method=&lt;class &#39;<a href="command/argument_parser.html#KeywordParser">arc.command.argument_parser.KeywordParser</a>&#39;&gt;,
+    parsing_method=&lt;class &#39;<a href="command/argument_parser.html#StandardParser">arc.command.argument_parser.StandardParser</a>&#39;&gt;,
     **kwargs
 )</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">parsing_method</span><span class="o">=</span><span class="n">ParsingMethod</span><span class="o">.</span><span class="n">KEYWORD</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">parsing_method</span><span class="o">=</span><span class="n">ParsingMethod</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Creates an executable Command namespace.</span>
 
 <span class="sd">    Autoloadable with `cli.autoload()`</span>

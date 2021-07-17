@@ -40,6 +40,9 @@
                                 <a class="variable" href="#Argument.name">name</a>
                         </li>
                         <li>
+                                <a class="variable" href="#Argument.short">short</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#Argument.convert">convert</a>
                         </li>
                         <li>
@@ -70,11 +73,10 @@
                         <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">inspect</span>
-<span class="kn">import</span> <span class="nn">enum</span>
 
 <span class="kn">from</span> <span class="nn">arc.config</span> <span class="kn">import</span> <span class="n">config</span>
 <span class="kn">from</span> <span class="nn">arc.utils</span> <span class="kn">import</span> <span class="n">symbol</span>
-<span class="kn">from</span> <span class="nn">arc.convert</span> <span class="kn">import</span> <span class="n">convert</span>
+<span class="kn">from</span> <span class="nn">arc.types</span> <span class="kn">import</span> <span class="n">convert</span>
 
 
 <span class="n">NO_DEFAULT</span> <span class="o">=</span> <span class="n">symbol</span><span class="p">(</span><span class="s2">&quot;NO_DEFAULT&quot;</span><span class="p">)</span>
@@ -90,9 +92,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">annotation</span> <span class="o">=</span> <span class="nb">str</span> <span class="k">if</span> <span class="n">annotation</span> <span class="ow">is</span> <span class="n">EMPTY</span> <span class="k">else</span> <span class="n">annotation</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">NO_DEFAULT</span> <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="n">EMPTY</span> <span class="k">else</span> <span class="n">default</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hidden</span> <span class="o">=</span> <span class="n">hidden</span>
-        <span class="c1"># Aliases are optional secondary names for arguments</span>
-        <span class="c1"># currently only used to store shorter names for flags</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">aliases</span> <span class="o">=</span> <span class="n">aliases</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">short</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;Argument : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
@@ -133,9 +133,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">annotation</span> <span class="o">=</span> <span class="nb">str</span> <span class="k">if</span> <span class="n">annotation</span> <span class="ow">is</span> <span class="n">EMPTY</span> <span class="k">else</span> <span class="n">annotation</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">NO_DEFAULT</span> <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="n">EMPTY</span> <span class="k">else</span> <span class="n">default</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hidden</span> <span class="o">=</span> <span class="n">hidden</span>
-        <span class="c1"># Aliases are optional secondary names for arguments</span>
-        <span class="c1"># currently only used to store shorter names for flags</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">aliases</span> <span class="o">=</span> <span class="n">aliases</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">short</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;Argument : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
@@ -174,9 +172,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">annotation</span> <span class="o">=</span> <span class="nb">str</span> <span class="k">if</span> <span class="n">annotation</span> <span class="ow">is</span> <span class="n">EMPTY</span> <span class="k">else</span> <span class="n">annotation</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">NO_DEFAULT</span> <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="n">EMPTY</span> <span class="k">else</span> <span class="n">default</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hidden</span> <span class="o">=</span> <span class="n">hidden</span>
-        <span class="c1"># Aliases are optional secondary names for arguments</span>
-        <span class="c1"># currently only used to store shorter names for flags</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">aliases</span> <span class="o">=</span> <span class="n">aliases</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">short</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 </pre></div>
 
         </details>
@@ -188,6 +184,15 @@
                                             <div class="attr variable"><a class="headerlink" href="#Argument.name">#&nbsp;&nbsp</a>
 
         <span class="name">name</span><span class="annotation">: str</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="Argument.short" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#Argument.short">#&nbsp;&nbsp</a>
+
+        <span class="name">short</span><span class="annotation">: str</span>
     </div>
 
     

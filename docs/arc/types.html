@@ -26,27 +26,46 @@
                                pattern=".+" required>
 
 
+                    <h2>Contents</h2>
+                    <ul>
+  <li><a href="#data-types">Data Types</a>
+  <ul>
+    <li><a href="#use">Use</a></li>
+  </ul></li>
+  <li><a href="#builtins">Builtins</a>
+  <ul>
+    <li><a href="#examples">Examples</a>
+    <ul>
+      <li><a href="#int-conversion">Int Conversion</a></li>
+      <li><a href="#float-converion">Float Converion</a></li>
+      <li><a href="#list-conversion">List conversion</a></li>
+      <li><a href="#bool-conversion">Bool conversion</a></li>
+    </ul></li>
+    <li><a href="#path-type">Path Type</a></li>
+    <li><a href="#enum-type">Enum Type</a></li>
+    <li><a href="#literal-type">Literal Type</a></li>
+  </ul></li>
+  <li><a href="#custom-types">Custom Types</a>
+  <ul>
+    <li><a href="#file-type">File Type</a></li>
+    <li><a href="#range-type">Range Type</a></li>
+    <li><a href="#validpath-type">ValidPath Type</a></li>
+    <li><a href="#input-data-type-converter-functions">Input Data Type Converter Functions</a></li>
+  </ul></li>
+</ul>
+
 
                     <h2>Submodules</h2>
                     <ul>
-                            <li><a href="types/file.html">arc.types.file</a></li>
-                            <li><a href="types/paths.html">arc.types.paths</a></li>
-                            <li><a href="types/range.html">arc.types.range</a></li>
+                            <li><a href="types/converters.html">arc.types.converters</a></li>
+                            <li><a href="types/helpers.html">arc.types.helpers</a></li>
+                            <li><a href="types/type_store.html">arc.types.type_store</a></li>
                     </ul>
 
                     <h2>API Documentation</h2>
                         <ul class="memberlist">
             <li>
-                    <a class="class" href="#ArcType">ArcType</a>
-                            <ul class="memberlist">
-                        <li>
-                                <a class="function" href="#ArcType.__init__">ArcType</a>
-                        </li>
-                </ul>
-
-            </li>
-            <li>
-                    <a class="function" href="#needs_cleanup">needs_cleanup</a>
+                    <a class="function" href="#convert">convert</a>
             </li>
     </ul>
 
@@ -63,79 +82,401 @@
                     <h1 class="modulename">
 <a href="./../arc.html">arc</a><wbr>.types    </h1>
 
-                
+                        <div class="docstring"><h1 id="data-types">Data Types</h1>
+
+<h2 id="use">Use</h2>
+
+<p>Typically, you don't want numbers, booleans, lists, represented as just strings. Arc provides type conversions that will convert the input to your desired type before passing it on to the command. If you've used Flask before, it's URL converters work in essentially the same way. If no type is specified, the input will be left as a string</p>
+
+<p>Check <a href="https://github.com/seanrcollings/arc/blob/master/examples/converters.py">examples/converters.py</a> for full examples</p>
+
+<h1 id="builtins">Builtins</h1>
+
+<p>Arc supports type conversion to these builtin types:</p>
+
+<ul>
+<li><code>int</code></li>
+<li><code>float</code></li>
+<li><code>bool</code></li>
+<li><code>bytes</code></li>
+<li><code>list</code></li>
+<li><code>set</code></li>
+<li><code>tuple</code></li>
+</ul>
+
+<h2 id="examples">Examples</h2>
+
+<h3 id="int-conversion">Int Conversion</h3>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">CLI</span>
+
+<span class="n">cli</span> <span class="o">=</span> <span class="n">CLI</span><span class="p">()</span>
+
+<span class="nd">@cli</span><span class="o">.</span><span class="n">subcommand</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">number_type</span><span class="p">(</span><span class="n">number</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Prints the type of a number&#39;&#39;&#39;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">number</span><span class="p">))</span>
+
+<span class="n">cli</span><span class="p">()</span>
+</code></pre></div>
+
+<pre><code>$ python3 example.py number_type number=5
+&lt;class 'int'&gt;
+</code></pre>
+
+<h3 id="float-converion">Float Converion</h3>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">CLI</span>
+<span class="n">cli</span> <span class="o">=</span> <span class="n">CLI</span><span class="p">()</span>
+
+<span class="nd">@cli</span><span class="o">.</span><span class="n">subcommand</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">float_type</span><span class="p">(</span><span class="n">number</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Prints the type of a float&#39;&#39;&#39;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">number</span><span class="p">))</span>
+
+<span class="n">cli</span><span class="p">()</span>
+</code></pre></div>
+
+<pre><code>$ python3 example.py float_type number=5.3
+&lt;class 'float'&gt;
+</code></pre>
+
+<h3 id="list-conversion">List conversion</h3>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">CLI</span>
+<span class="n">cli</span> <span class="o">=</span> <span class="n">CLI</span><span class="p">()</span>
+
+<span class="nd">@cli</span><span class="o">.</span><span class="n">subcommand</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">list_type</span><span class="p">(</span><span class="n">numbers</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Prints the type of a float&#39;&#39;&#39;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">number</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span>
+
+<span class="n">cli</span><span class="p">()</span>
+</code></pre></div>
+
+<pre><code>$ python3 example.py list_type numbers=1,2,3
+&lt;class 'list'&gt;
+["1", "2", "3"]
+</code></pre>
+
+<p>Collection Types can also be typed generically, to enable each element to be converted. Replace <code>list</code> with <code>list[int]</code> in the example above and then each item will be a integer, rather than a string. This works for <code>set</code> and <code>tuple</code> as well.</p>
+
+<h3 id="bool-conversion">Bool conversion</h3>
+
+<p>Bool types doen't require a value and simple test for presence. By default, flags are considered <code>False</code> when not passed, and <code>True</code> when passed. This can be swapped by providing the arguments with the default value of <code>True</code></p>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">CLI</span>
+<span class="n">cli</span> <span class="o">=</span> <span class="n">CLI</span><span class="p">()</span>
+
+<span class="nd">@cli</span><span class="o">.</span><span class="n">subcommand</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">reverse</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Command that prints greets someone&#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">reverse</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Hello, </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
+
+<span class="n">cli</span><span class="p">()</span>
+</code></pre></div>
+
+<pre><code>$ python3 example.py hello --name Sean
+Hello, Sean!
+</code></pre>
+
+<p>```out
+$ python3 example.py hello --name Sean --reverse
+Hello, naeS!</p>
+
+<pre><code>Note that flags are actually just syntatic suguar for arguments, so writing:
+</code></pre>
+
+<p>$ python3 example.py hello --name Sean --reverse true</p>
+
+<pre><code>Would have the same result
+
+
+# Standard Lib Types
+## Union Type
+The union type is used to specify that an argument has two or more possible types.
+```py
+from typing import Union
+from arc import CLI
+cli = CLI()
+
+@cli.subcommand()
+def union_type(number: Union[int, str]):
+    '''Prints the type of a float'''
+    print(type(number))
+
+cli()
+</code></pre>
+
+<pre><code>$ python3 example.py union_type number=5.3
+&lt;class 'int'&gt;
+
+$ python3 example.py union_type number=somestring
+&lt;class 'str'&gt;
+</code></pre>
+
+<p>Arc will attempt to convert to each type within the union, from left to right, and the first one to succeed will be passed to the command. If none succeed, an error will be raised.</p>
+
+<h2 id="path-type">Path Type</h2>
+
+<p>The Path conversion doesn't perform any validation, but it just offers the convenience of working with path objects rather than strings.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">CLI</span>
+
+<span class="n">cli</span> <span class="o">=</span> <span class="n">CLI</span><span class="p">()</span>
+
+<span class="nd">@cli</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">())</span>
+
+<span class="n">cli</span><span class="p">()</span>
+</code></pre></div>
+
+<h2 id="enum-type">Enum Type</h2>
+
+<p>You can use the Python standard library Enum to define a specific subset of acceptable values to an argument.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">CLI</span>
+
+<span class="n">cli</span> <span class="o">=</span> <span class="n">CLI</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">Color</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">RED</span> <span class="o">=</span> <span class="s2">&quot;red&quot;</span>
+    <span class="n">YELLOW</span> <span class="o">=</span> <span class="s2">&quot;yellow&quot;</span>
+    <span class="n">GREEN</span> <span class="o">=</span> <span class="s2">&quot;green&quot;</span>
+
+<span class="nd">@cli</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="n">color</span><span class="p">:</span> <span class="n">Color</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">color</span> <span class="o">==</span> <span class="n">Color</span><span class="o">.</span><span class="n">RED</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;You painted the walls the bloodiest of reds&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">color</span> <span class="o">==</span> <span class="n">Color</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;You painted the walls the most fabulous yellow&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;You painted the walls the deepest of blues&quot;</span><span class="p">)</span>
+
+<span class="n">cli</span><span class="p">()</span>
+</code></pre></div>
+
+<pre><code>$ python3 example.py paint color=red
+You painted the walls the bloodiest of reds
+</code></pre>
+
+<p>Since red is a defined value on the <code>Color</code> enumeration.</p>
+
+<h2 id="literal-type">Literal Type</h2>
+
+<p>The literal type can also be used to define a limited subset of values that are acceptable.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">CLI</span>
+
+<span class="n">cli</span> <span class="o">=</span> <span class="n">CLI</span><span class="p">()</span>
+
+<span class="nd">@cli</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">pick_pain</span><span class="p">(</span><span class="n">color</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="s2">&quot;yellow&quot;</span><span class="p">]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;You picked </span><span class="si">{</span><span class="n">color</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">cli</span><span class="p">()</span>
+</code></pre></div>
+
+<h1 id="custom-types">Custom Types</h1>
+
+<h2 id="file-type">File Type</h2>
+
+<p>A file type will take in a file path and return a file handler object</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">CLI</span>
+<span class="kn">from</span> <span class="nn"><a href="">arc.types</a></span> <span class="kn">import</span> <span class="n">File</span>
+<span class="n">cli</span> <span class="o">=</span> <span class="n">CLI</span><span class="p">()</span>
+
+<span class="nd">@cli</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">file_test</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">File</span><span class="p">[</span><span class="n">File</span><span class="o">.</span><span class="n">READ</span><span class="p">]):</span>
+    <span class="c1"># file will be of custom type File, but has the</span>
+    <span class="c1"># same interface as the TextIOWrapper returned by open()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">())</span>
+</code></pre></div>
+
+<p>The format for a File types is File[<FILE_MODE>] with the available file modes being:</p>
+
+<ul>
+<li>READ</li>
+<li>WRITE</li>
+<li>APPEND</li>
+<li>CREATE</li>
+</ul>
+
+<p>Arc should handle the file cleanup process, however if you want to control when the file closes, you can with <code>file.close()</code>. Additionally, the file object implements <code>__enter__</code> and <code>__exit__</code> so can be used as a context manager.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">CLI</span>
+<span class="kn">from</span> <span class="nn"><a href="">arc.types</a></span> <span class="kn">import</span> <span class="n">File</span>
+<span class="n">cli</span> <span class="o">=</span> <span class="n">CLI</span><span class="p">()</span>
+
+<span class="nd">@cli</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">file_test</span><span class="p">(</span><span class="n">file</span><span class="p">:</span> <span class="n">File</span><span class="p">[</span><span class="n">File</span><span class="o">.</span><span class="n">READ</span><span class="p">]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">())</span>
+    <span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># OR</span>
+
+    <span class="k">with</span> <span class="n">file</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">())</span>
+
+    <span class="c1"># With either approach, file will defintely be closed at this point</span>
+
+<span class="c1"># unless something goes horribly wrong, once the function finishes execution ARC will close the file for you though.</span>
+</code></pre></div>
+
+<h2 id="range-type">Range Type</h2>
+
+<p>The range type can assure that the user's input is within a specific value range</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">CLI</span>
+<span class="kn">from</span> <span class="nn"><a href="">arc.types</a></span> <span class="kn">import</span> <span class="n">Range</span>
+
+<span class="n">cli</span> <span class="o">=</span> <span class="n">CLI</span><span class="p">()</span>
+
+<span class="nd">@cli</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">range_test</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Range</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">Litearl</span><span class="p">[</span><span class="mi">10</span><span class="p">]]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">val</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The above example will only allows values between 1 and 10 (like the builtin this is inclusive on the minimum end and exclusive on the maximum end). While the type of <code>value</code> will be Range, Range is a subclass of <code>int</code> and so can be treated as such.</p>
+
+<p>There are a couple of useful methods to note on the Range.</p>
+
+<ul>
+<li><code>range</code> - returns a builtin <code>range()</code> with the provided minimums and maximums</li>
+<li><code>range_with_picked</code> - Generator that returns a tuple pair of the value and whether or not that value was the one picked by the user.</li>
+</ul>
+
+<h2 id="validpath-type">ValidPath Type</h2>
+
+<p>Acts like a <code>pathlib.Path</code> object, but validates that the path exists first</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">CLI</span>
+<span class="kn">from</span> <span class="nn"><a href="">arc.types</a></span> <span class="kn">import</span> <span class="n">ValidPath</span>
+<span class="n">cli</span> <span class="o">=</span> <span class="n">CLI</span><span class="p">()</span>
+
+<span class="nd">@cli</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">ValidPath</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">())</span>
+
+<span class="n">cli</span><span class="p">()</span>
+</code></pre></div>
+
+<h2 id="input-data-type-converter-functions">Input Data Type Converter Functions</h2>
+
+<p>Arc also allows you to use it's converter functionality when gathering user input from within a command</p>
+
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">CLI</span>
+<span class="kn">from</span> <span class="nn"><a href="../arc.html#convert.input">arc.convert.input</a></span> <span class="kn">import</span> <span class="n">convert_to_int</span>
+
+<span class="n">cli</span> <span class="o">=</span> <span class="n">CLI</span><span class="p">()</span>
+
+<span class="nd">@cli</span><span class="o">.</span><span class="n">subcommand</span><span class="p">(</span><span class="s2">&quot;example&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">example</span><span class="p">():</span>
+  <span class="n">cool_number</span> <span class="o">=</span> <span class="n">convert_to_int</span><span class="p">(</span><span class="s2">&quot;Please enter a number: &quot;</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">cool_number</span><span class="p">))</span> <span class="c1"># &#39;&lt;class : int&gt;&#39;</span>
+
+<span class="n">cli</span><span class="p">()</span>
+</code></pre></div>
+
+<p>Note that all convereters in <code>Config.converter</code> will have a function associated with it. This includes all custom converters. The functions will be named <code>convert_to_&lt;indicator&gt;</code></p>
+
+<p>Note that if the command defines a custom converter, it's respective input function will need to be imported after it is added to <code>Config.converter</code> otherwise it doesn't yet exist to import.</p>
+</div>
+
                         <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">ArcType</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Class that each Type sublcasses</span>
-<span class="sd">    to provide a signal to the converter process&quot;&quot;&quot;</span>
+            <div class="codehilite"><pre><span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. include:: ../../wiki/Data-Types.md</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">arc.errors</span> <span class="kn">import</span> <span class="n">ConversionError</span><span class="p">,</span> <span class="n">CommandError</span>
+<span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">fg</span><span class="p">,</span> <span class="n">effects</span> <span class="k">as</span> <span class="n">ef</span>
+<span class="kn">from</span> <span class="nn">.converters</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.helpers</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.type_store</span> <span class="kn">import</span> <span class="n">register</span><span class="p">,</span> <span class="n">type_store</span>
 
 
-<span class="c1"># pylint: disable=wrong-import-position</span>
-<span class="kn">from</span> <span class="nn">.file</span> <span class="kn">import</span> <span class="n">File</span>
-<span class="kn">from</span> <span class="nn">.range</span> <span class="kn">import</span> <span class="n">Range</span>
-<span class="kn">from</span> <span class="nn">.paths</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts the provided string to the provided type</span>
+<span class="sd">    Args:</span>
+<span class="sd">        value: value to convert</span>
+<span class="sd">        kind: type to attempt the convertion to</span>
+<span class="sd">        name: optional descriptive name of the argument</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="n">converter_cls</span> <span class="o">=</span> <span class="n">type_store</span><span class="o">.</span><span class="n">get_converter</span><span class="p">(</span><span class="n">kind</span><span class="p">)</span>
+    <span class="n">converter</span> <span class="o">=</span> <span class="n">converter_cls</span><span class="p">(</span><span class="n">kind</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">needs_cleanup</span><span class="p">(</span><span class="n">kind</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="n">File</span><span class="p">,)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">converter</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">ConversionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Argument </span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">BLUE</span><span class="si">}{</span><span class="n">name</span><span class="si">}{</span><span class="n">ef</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2"> expected </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">expected</span><span class="si">}</span><span class="s2">, but was &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="si">}{</span><span class="n">value</span><span class="si">}{</span><span class="n">ef</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">helper_text</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+    <span class="k">return</span> <span class="n">value</span>
 </pre></div>
 
         </details>
 
             </section>
-                <section id="ArcType">
-                                <div class="attr class">
-        <a class="headerlink" href="#ArcType">#&nbsp;&nbsp</a>
-
-        
-        <span class="def">class</span>
-        <span class="name">ArcType</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">ArcType</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Class that each Type sublcasses</span>
-<span class="sd">    to provide a signal to the converter process&quot;&quot;&quot;</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Class that each Type sublcasses
-to provide a signal to the converter process</p>
-</div>
-
-
-                            <div id="ArcType.__init__" class="classattr">
-                                        <div class="attr function"><a class="headerlink" href="#ArcType.__init__">#&nbsp;&nbsp</a>
-
-        
-            <span class="name">ArcType</span><span class="signature">()</span>
-    </div>
-
-        
-    
-
-                            </div>
-                </section>
-                <section id="needs_cleanup">
-                            <div class="attr function"><a class="headerlink" href="#needs_cleanup">#&nbsp;&nbsp</a>
+                <section id="convert">
+                            <div class="attr function"><a class="headerlink" href="#convert">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">needs_cleanup</span><span class="signature">(kind)</span>:
+            <span class="name">convert</span><span class="signature">(value, kind, name: str = &#39;&#39;)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">needs_cleanup</span><span class="p">(</span><span class="n">kind</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="n">File</span><span class="p">,)</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts the provided string to the provided type</span>
+<span class="sd">    Args:</span>
+<span class="sd">        value: value to convert</span>
+<span class="sd">        kind: type to attempt the convertion to</span>
+<span class="sd">        name: optional descriptive name of the argument</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">converter_cls</span> <span class="o">=</span> <span class="n">type_store</span><span class="o">.</span><span class="n">get_converter</span><span class="p">(</span><span class="n">kind</span><span class="p">)</span>
+    <span class="n">converter</span> <span class="o">=</span> <span class="n">converter_cls</span><span class="p">(</span><span class="n">kind</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">converter</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">ConversionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Argument </span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">BLUE</span><span class="si">}{</span><span class="n">name</span><span class="si">}{</span><span class="n">ef</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2"> expected </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">expected</span><span class="si">}</span><span class="s2">, but was &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="si">}{</span><span class="n">value</span><span class="si">}{</span><span class="n">ef</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">helper_text</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+    <span class="k">return</span> <span class="n">value</span>
 </pre></div>
 
         </details>
 
-    
+            <div class="docstring"><p>Converts the provided string to the provided type</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>value:</strong>  value to convert</li>
+<li><strong>kind:</strong>  type to attempt the convertion to</li>
+<li><strong>name:</strong>  optional descriptive name of the argument</li>
+</ul>
+</div>
+
 
                 </section>
     </main>
