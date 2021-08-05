@@ -82,10 +82,12 @@ class TestFindCommand:
         def _():
             ...
 
-        assert find_command(cli, ["func1"])[0] == cli.subcommands["func1"]
-        assert find_command(cli, ["func2"])[0] == cli.subcommands["func2"]
-        assert find_command(cli, ["func2copy"])[0] == cli.subcommands["func2copy"]
-        assert find_command(cli, ["name2"])[0] == cli.subcommands["name1"]
+        assert find_command_chain(cli, ["func1"])[-1] == cli.subcommands["func1"]
+        assert find_command_chain(cli, ["func2"])[-1] == cli.subcommands["func2"]
+        assert (
+            find_command_chain(cli, ["func2copy"])[-1] == cli.subcommands["func2copy"]
+        )
+        assert find_command_chain(cli, ["name2"])[-1] == cli.subcommands["name1"]
 
         with pytest.raises(errors.CommandError):
-            find_command(cli, ["doesnotexist"])
+            find_command_chain(cli, ["doesnotexist"])

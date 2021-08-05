@@ -4,9 +4,15 @@ from typing import Callable, Optional, Type
 from arc import help_text, utils
 from arc.autoload import Autoload
 from arc.color import effects, fg
-from arc.command import ArgumentParser, Command, ParsingMethod, PositionalParser
+from arc.command import (
+    ArgumentParser,
+    Command,
+    ParsingMethod,
+    PositionalParser,
+    Context,
+)
 from arc.config import config
-from arc.run import find_command, run
+from arc.run import find_command_chain, run
 
 
 class CLI(Command):
@@ -84,13 +90,12 @@ class CLI(Command):
                 **kwargs,
             )
 
-            self.parser.args |= self.default_action.parser.args
             return self.default_action
 
         return decorator
 
     # pylint: disable=redefined-builtin
-    def missing_command(self, help: bool, version: bool, **kwargs):
+    def missing_command(self, help: bool, version: bool, ctx: Context, **_kwargs):
         """Handles default arguments
         View specific help with "help <command-name>"
 
@@ -104,17 +109,8 @@ class CLI(Command):
             print(self.name, self.version)
         elif self.default_action:
             if self.default_action:
-                # Sinces the parserse don't do any checking on **kwargs
-                # we re-form the args back into a string and send them down
-                # to the default_actions execute. It's not going to be the most
-                # effecient (performs a parse twice for example), but that
-                # doesn't really matter in this case as the performace impact is minimal
-                args = [
-                    f"{name}{config.arg_assignment}{value}"
-                    for name, value in kwargs.items()
-                ]
-                context = self.context | self.default_action.context
-                return self.default_action.run([], args, context)
+                ctx.execution_state.command = self.default_action
+                return self.default_action.run(ctx.execution_state)
 
             return self("help")
 
@@ -149,7 +145,7 @@ class CLI(Command):
         namespace = command_name.split(config.namespace_sep) if command_name else []
         help_text.display_help(
             self,
-            find_command(self, namespace)[0],
+            find_command_chain(self, namespace)[-1],
             namespace,
         )
 

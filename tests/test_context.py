@@ -18,7 +18,9 @@ def test_parent_context(ctx_cli: CLI):
     def ignore_parent_context(val: int):
         return val
 
-    assert ctx_cli("parent-context val=2") == (2, Context({"test": 1}))
+    val, context = ctx_cli("parent-context val=2")
+    assert val == 2
+    assert context.test == 1
     assert ctx_cli("ignore-parent-context val=2") == 2
 
 
@@ -27,7 +29,9 @@ def test_my_context(ctx_cli: CLI):
     def local_context(context: Context):
         return context
 
-    assert ctx_cli("local-context") == Context({"test": 1, "test2": 3})
+    context = ctx_cli("local-context")
+    assert context.test == 1
+    assert context.test2 == 3
 
 
 def test_context_name(ctx_cli: CLI):
@@ -35,7 +39,8 @@ def test_context_name(ctx_cli: CLI):
     def other_context_name(foo: Context):
         return foo
 
-    assert ctx_cli("other-context-name") == Context({"test": 1})
+    context = ctx_cli("other-context-name")
+    assert context.test == 1
 
 
 def test_propagate(ctx_cli: CLI):
@@ -46,7 +51,9 @@ def test_propagate(ctx_cli: CLI):
         return ctx
 
     ctx_cli.install_command(ns)
-    assert ctx_cli("ns:test") == Context({"test": 1, "test2": 2})
+    ctx = ctx_cli("ns:test")
+    assert ctx.test == 1
+    assert ctx.test2 == 2
 
 
 def test_custom_context(ctx_cli: CLI):
@@ -57,7 +64,9 @@ def test_custom_context(ctx_cli: CLI):
     def custom(ctx: CustomContext):
         return ctx
 
-    assert ctx_cli("custom") == CustomContext({"test": 1})
+    ctx = ctx_cli("custom")
+    assert isinstance(ctx, CustomContext)
+    assert ctx.test == 1
 
 
 def test_override(ctx_cli: CLI):

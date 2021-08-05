@@ -1,4 +1,4 @@
-from typing import Any, Optional, Union
+from typing import Optional, Union
 import logging
 import re
 import shlex
@@ -10,6 +10,7 @@ from arc.color import bg, colorize, effects, fg
 from arc.command import Command, helpers
 from arc.config import config
 from arc.result import Result
+from arc.execution_state import ExecutionState
 
 logger = logging.getLogger("arc_logger")
 
@@ -65,7 +66,15 @@ def run(
 
         user_input = get_input(execute)
         command_namespace, command_args = get_command_namespace(user_input)
-        command, command_ctx = find_command(root, command_namespace)
+        command_chain = find_command_chain(root, command_namespace)
+        command = command_chain[-1]
+        exec_state = ExecutionState(
+            user_input=user_input,
+            command_namespace=command_namespace,
+            command_args=command_args,
+            command_chain=command_chain,
+            command=command,
+        )
 
         logger.debug(
             str(
@@ -80,17 +89,10 @@ def run(
             ),
         )
 
-        result = command.run(
-            command_namespace,
-            command_args,
-            command_ctx,
-        )
+        result = command.run(exec_state)
 
         if check_result:
-            return handle_result(
-                result,
-                command_namespace,
-            )
+            return handle_result(result, command_namespace)
 
         return result
 
@@ -123,9 +125,7 @@ def get_command_namespace(
     return [], user_input
 
 
-def find_command(
-    command: Command, command_namespace: list[str]
-) -> tuple[Command, dict[str, Any]]:
+def find_command_chain(command: Command, command_namespace: list[str]) -> list[Command]:
     """Walks down the subcommand tree using the proveded list of `command_namespace`.
     As it traverses the tree, it merges each levels context together, which will result
     in the final context to pass to the command in the end.
@@ -134,12 +134,15 @@ def find_command(
     (so long as none of them were invalid namespaces) it has found the called command
     and will return it.
     """
-    command_ctx = command.context
+    command_chain = [command]
+
     for subcommand_name in command_namespace:
         if subcommand_name in command.subcommands:
             command = command.subcommands[subcommand_name]
+            command_chain.append(command)
         elif subcommand_name in command.subcommand_aliases:
             command = command.subcommands[command.subcommand_aliases[subcommand_name]]
+            command_chain.append(command)
         else:
             message = (
                 f"The command {fg.YELLOW}"
@@ -153,8 +156,7 @@ def find_command(
 
             raise errors.CommandError(message)
 
-        command_ctx = command.context | command_ctx
-    return command, command_ctx
+    return command_chain
 
 
 def handle_result(result: Result, command_namespace: list[str]):
