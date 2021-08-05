@@ -109,6 +109,7 @@ class CLI(Command):
             print(self.name, self.version)
         elif self.default_action:
             if self.default_action:
+                ctx.execution_state.command = self.default_action
                 return self.default_action.run(ctx.execution_state)
 
             return self("help")

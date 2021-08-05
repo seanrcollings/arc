@@ -5,20 +5,22 @@ from arc.command import Command, Context
 
 @dataclass
 class ExecutionState:
+    """Central place to store state about the current command execution"""
+
     user_input: list[str]
     command_namespace: list[str]
     command_args: list[str]
     command_chain: list[Command]
     command: Command
-    _ctx: Optional[Context] = None
+    __ctx: Optional[Context] = None
 
     @property
     def context(self):
-        if self._ctx is None:
+        if self.__ctx is None:
             ctx: dict = {}
             for command in self.command_chain:
                 ctx = command.context | ctx
             ctx["execution_state"] = self
-            self._ctx = Context(ctx)
+            self.__ctx = Context(ctx)
 
-        return self._ctx
+        return self.__ctx
