@@ -6,7 +6,7 @@ from arc.command.argument import Argument
 from arc.command.command_doc import CommandDoc
 from arc.color import fg, effects, colorize
 from arc.config import config
-from arc.run import find_command
+from arc.run import find_command_chain
 from arc import errors
 
 __all__ = ["display_help", "generate_help"]
@@ -100,7 +100,11 @@ def generate_aliases(
     command: Command,
     namespace: list[str],
 ):
-    parent, _ = find_command(root, namespace[:-1])
+    chain = find_command_chain(root, namespace)
+    if len(chain) <= 1:
+        return
+
+    parent = chain[-2]
     aliases = [
         key for key, value in parent.subcommand_aliases.items() if value == command.name
     ]
