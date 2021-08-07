@@ -1,4 +1,5 @@
-from typing import Callable, Any, Optional, Union, TypedDict, Type
+from __future__ import annotations
+from typing import Callable, Any, Optional, Union, TypedDict, Type, TYPE_CHECKING
 from inspect import Parameter
 import re
 
@@ -6,9 +7,10 @@ from arc import errors
 from arc.config import config
 from arc.color import fg, effects
 from arc.utils import IDENT, levenshtein
-from arc.command.arg_builder import ArgBuilder
 from arc.command.argument import Argument, NO_DEFAULT
-from arc.command.context import Context
+
+if TYPE_CHECKING:
+    from arc.command.executable import Executable
 
 
 class ArgumentParser:
@@ -23,9 +25,9 @@ class ArgumentParser:
     of it's own.
     """
 
-    def __init__(self, function: Callable, arg_aliases=None):
-        self.args: dict[str, Argument] = {}
-        self.build_args(function, arg_aliases)
+    def __init__(self, executable: Executable):
+        self.executable = executable
+        self.args = executable.args
 
     def get_matchers(self):
         all_matchers = {}
@@ -37,7 +39,7 @@ class ArgumentParser:
 
     ### Argument Parsing ###
 
-    def parse(self, cli_args: list[str], context: dict[str, Any]) -> dict[str, Any]:
+    def parse(self, cli_args: list[str]) -> dict[str, Any]:
         """Parses the provided command-line arguments into
         a dictionary of arguments to be passed to a python
         function
@@ -52,7 +54,7 @@ class ArgumentParser:
                         matched_args[key] = value
                     break
 
-        return self.fill_unmatched(matched_args, context)
+        return matched_args
 
     def handle_match(self, match: re.Match, name: str) -> tuple[str, Any]:
         groups: Union[dict[str, str], str] = self.get_match_values(match)
@@ -71,32 +73,6 @@ class ArgumentParser:
                     f"\n\tPerhaps you meant {fg.YELLOW}{arg.name}{effects.CLEAR}?"
                 )
             raise
-
-    def fill_unmatched(
-        self, matched_args: dict[str, Any], context: dict[str, Any]
-    ) -> dict[str, Any]:
-
-        unfilled = {}
-        for key, arg in self.args.items():
-            if key not in matched_args:
-                try:
-                    if issubclass(arg.annotation, Context):
-                        unfilled[key] = arg.annotation(context)
-                    else:
-                        unfilled[key] = arg.default
-                except TypeError:
-                    unfilled[key] = arg.default
-
-        return matched_args | unfilled
-
-    ### Argument Schema Building ###
-
-    def build_args(self, function: Callable, arg_aliases=None):
-        with ArgBuilder(function, arg_aliases) as builder:
-            for idx, param in enumerate(builder):
-                self.arg_hook(param, builder.get_meta(index=idx))
-
-            self.args = builder.args
 
     def arg_hook(self, param, meta):
         """Callback to assert that the param being processed
@@ -333,7 +309,7 @@ class PositionalParser(FlagParser):
 
 
 class RawParser(ArgumentParser):
-    def parse(self, cli_args, _context):
+    def parse(self, cli_args):
         return {"_args": cli_args}
 
     def arg_hook(self, param, meta):

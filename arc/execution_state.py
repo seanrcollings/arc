@@ -1,6 +1,11 @@
-from typing import Optional
+from __future__ import annotations
+from typing import Optional, TYPE_CHECKING
 from dataclasses import dataclass
-from arc.command import Command, Context
+
+from arc.command.context import Context
+
+if TYPE_CHECKING:
+    from arc.command import Command
 
 
 @dataclass
