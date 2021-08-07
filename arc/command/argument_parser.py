@@ -74,7 +74,8 @@ class ArgumentParser:
                 )
             raise
 
-    def arg_hook(self, param, meta):
+    @classmethod
+    def arg_hook(cls, param, meta):
         """Callback to assert that the param being processed
         is valid for this given parser. Default implementation
         doesn't do anything
@@ -102,7 +103,7 @@ class ArgumentParser:
 
     def find_argument_suggestions(self, missing: str) -> Optional[Argument]:
 
-        if config.suggest_on_missing_argument:
+        if config.suggest_on_missing_argument and len(self.args) > 0:
             distance, arg = min(
                 ((levenshtein(arg.name, missing), arg) for arg in self.args.values()),
                 key=lambda tup: tup[0],
@@ -183,11 +184,12 @@ class StandardParser(FlagParser):
     def get_arg(self, name):
         return self.get_or_raise(name, f"Option {config.flag_denoter}{name} not found.")
 
-    def arg_hook(self, param, meta):
+    @classmethod
+    def arg_hook(cls, param, meta):
         if param.kind is param.VAR_POSITIONAL:
             raise errors.CommandError("Standard Commands do not accept *args")
         if param.kind is param.VAR_KEYWORD:
-            self.__pass_kwargs = True
+            cls.__pass_kwargs = True
 
 
 # pylint: disable=inherit-non-class
@@ -224,7 +226,8 @@ class KeywordParser(FlagParser):
 
         return name, value
 
-    def arg_hook(self, param: Parameter, meta):
+    @classmethod
+    def arg_hook(cls, param: Parameter, meta):
         idx = meta["index"]
 
         if param.kind is param.VAR_POSITIONAL:
@@ -242,7 +245,7 @@ class KeywordParser(FlagParser):
                     "must be the last argument of the command",
                 )
 
-            self.__pass_kwargs = True
+            cls.__pass_kwargs = True
 
 
 # NOTE: This currently also matches to flags
@@ -287,7 +290,8 @@ class PositionalParser(FlagParser):
         self.current_pos += 1
         return name, argument.convert(value)
 
-    def arg_hook(self, param, meta):
+    @classmethod
+    def arg_hook(cls, param, meta):
         idx = meta["index"]
 
         if param.kind is param.VAR_KEYWORD:
@@ -305,14 +309,15 @@ class PositionalParser(FlagParser):
                     "must be the last argument of the command",
                 )
 
-            self.__pass_args = True
+            cls.__pass_args = True
 
 
 class RawParser(ArgumentParser):
     def parse(self, cli_args):
         return {"_args": cli_args}
 
-    def arg_hook(self, param, meta):
+    @classmethod
+    def arg_hook(cls, param, meta):
         if param.kind is not param.VAR_POSITIONAL:
             raise errors.CommandError(
                 "Raw commands must only have a single *args argument"

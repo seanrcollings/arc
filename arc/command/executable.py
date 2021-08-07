@@ -34,9 +34,14 @@ class Executable:
             wrapped = cast(type[WrappedClassExecutable], wrapped)
             return ClassExecutable(wrapped, *args, **kwargs)
 
-    def __init__(self, wrapped: WrappedExectuable, short_args: dict[str, str]):
+    def __init__(
+        self,
+        wrapped: WrappedExectuable,
+        arg_hook: Callable,
+        short_args: dict[str, str],
+    ):
         self.wrapped = wrapped
-        self.build_args(short_args)
+        self.build_args(arg_hook, short_args)
 
     def run(self, args: dict[str, Any], state: ExecutionState) -> Result:
         args = self.fill_defaults(args, state.context)
@@ -46,6 +51,9 @@ class Executable:
         if not isinstance(result, (Ok, Err)):
             return Ok(result)
         return result
+
+    def setup(self, args: dict[str, Any], state: ExecutionState):
+        """Perform pre-execution setup"""
 
     def call(self, _args: dict[str, Any]) -> Result:
         return Err("Not a valid call")
@@ -71,8 +79,11 @@ class Executable:
                     f"No value provided for argument: {colorize(key, fg.YELLOW)}",
                 )
 
-    def build_args(self, short_args=None):
+    def build_args(self, arg_hook: Callable, short_args=None):
         with ArgBuilder(self.wrapped, short_args) as builder:
+            for idx, param in enumerate(builder):
+                meta = builder.get_meta(index=idx)
+                arg_hook(param, meta)
             self.args = builder.args
 
 
@@ -80,7 +91,16 @@ class FunctionExecutable(Executable):
     wrapped: Callable
 
     def call(self, args: dict[str, Any]):
-        return self.wrapped(**args)
+        # The parsers always spit out a dictionary of arguements
+        # and values. This doesn't allow *args to work, because you can't
+        # spread *args after **kwargs. So the parser stores the *args in
+        # _args and then we spread it manually. Note that this relies
+        # on dictionaires being ordered
+        if "_args" in args:
+            var_args = args.pop("_args")
+            return self.wrapped(*args.values(), *var_args)
+        else:
+            return self.wrapped(**args)
 
 
 class ClassExecutable(Executable):
@@ -89,6 +109,7 @@ class ClassExecutable(Executable):
     def __init__(self, wrapped: type[WrappedClassExecutable], *args, **kwargs):
         assert hasattr(wrapped, "handle")
         self.__build_class_params(wrapped)
+        self.instance = self.wrapped()
         super().__init__(wrapped, *args, **kwargs)
 
     def call(self, args: dict[str, Any]):

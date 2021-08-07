@@ -151,12 +151,13 @@ class CLI(Command):
 
     def __logging_setup(self):
         root = logging.getLogger("arc_logger")
-        level = config.mode_map.get(config.mode, logging.WARNING)
-        root.setLevel(level)
-        handler = logging.StreamHandler()
-        formatter = ArcFormatter()
-        handler.setFormatter(formatter)
-        root.addHandler(handler)
+        if len(root.handlers) == 0:
+            level = config.mode_map.get(config.mode, logging.WARNING)
+            root.setLevel(level)
+            handler = logging.StreamHandler()
+            formatter = ArcFormatter()
+            handler.setFormatter(formatter)
+            root.addHandler(handler)
 
 
 class ArcFormatter(logging.Formatter):

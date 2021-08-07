@@ -36,7 +36,7 @@ class Command:
         self.subcommand_aliases: dict[str, str] = {}
         self.context = context or {}
 
-        self.executable = Executable(executable, short_args)
+        self.executable = Executable(executable, parser.arg_hook, short_args)
         self.parser: ArgumentParser = parser(self.executable)
         self.executor = CommandExecutor(self.executable)
 
@@ -53,7 +53,7 @@ class Command:
     @function.setter
     def function(self, func: Callable):
         self.executable.wrapped = func
-        self.executable.build_args()
+        self.executable.build_args(self.parser.arg_hook)
 
     @property
     def doc(self) -> CommandDoc:

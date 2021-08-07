@@ -43,6 +43,18 @@ def test_standard(cli: CLI):
     assert cli("sta --val 2") == 2
 
 
+def test_kwargs(cli: CLI):
+    @cli.subcommand(parsing_method=ParsingMethod.STANDARD)
+    def kwa(**kwargs):
+        return kwargs
+
+    assert cli("kwa --first 1 --second 2 --third 3") == {
+        "first": "1",
+        "second": "2",
+        "third": "3",
+    }
+
+
 def test_float(cli: CLI):
     @cli.subcommand()
     def fl(val: float):
