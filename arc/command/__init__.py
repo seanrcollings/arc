@@ -3,6 +3,7 @@ from arc import utils
 from .command import Command
 from .context import Context
 from .argument_parser import ParsingMethod, ArgumentParser, PositionalParser
+from .executable import VarKeyword, VarPositional
 
 
 def namespace(name: str, parsing_method=ParsingMethod.STANDARD, **kwargs) -> Command:

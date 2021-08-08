@@ -1,6 +1,6 @@
 import inspect
 from types import MappingProxyType, MethodType, FunctionType
-from typing import Protocol, Union, Any, Callable, cast, get_type_hints
+from typing import Protocol, Union, Any, Callable, cast, get_type_hints, NewType
 
 from arc.result import Err, Ok, Result
 from arc.execution_state import ExecutionState
@@ -103,13 +103,21 @@ class FunctionExecutable(Executable):
             return self.wrapped(**args)
 
 
+VarPositional = NewType("VarPositional", list)
+VarKeyword = NewType("VarKeyword", dict)
+
+kind_mapping = {
+    VarPositional: inspect.Parameter.VAR_POSITIONAL,
+    VarKeyword: inspect.Parameter.VAR_KEYWORD,
+}
+
+
 class ClassExecutable(Executable):
     wrapped: type[WrappedClassExecutable]
 
     def __init__(self, wrapped: type[WrappedClassExecutable], *args, **kwargs):
         assert hasattr(wrapped, "handle")
         self.__build_class_params(wrapped)
-        self.instance = self.wrapped()
         super().__init__(wrapped, *args, **kwargs)
 
     def call(self, args: dict[str, Any]):
@@ -130,7 +138,7 @@ class ClassExecutable(Executable):
         params = {
             name: inspect.Parameter(
                 name,
-                inspect.Parameter.KEYWORD_ONLY,
+                kind_mapping.get(annotation, inspect.Parameter.KEYWORD_ONLY),
                 default=defaults.get(name, inspect.Parameter.empty),
                 annotation=annotation,
             )

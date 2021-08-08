@@ -208,7 +208,17 @@ class KeywordParser(FlagParser):
 
     matchers = {"keyword_argument": KEY_ARGUMENT}
 
-    def handle_keyword_argument(self, argument: KeyArg) -> tuple[str, Any]:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.var_kwargs = {}
+
+    def parse(self, *args):
+        parsed = super().parse(*args)
+        if self.__pass_kwargs:
+            parsed["_kwargs"] = self.var_kwargs
+        return parsed
+
+    def handle_keyword_argument(self, argument: KeyArg):
         name = argument["name"].replace("-", "_")
         try:
             arg = self.get_or_raise(
@@ -221,6 +231,8 @@ class KeywordParser(FlagParser):
         except errors.ParserError:
             if self.__pass_kwargs:
                 value = argument["value"]
+                self.var_kwargs[name] = value
+                return None, None
             else:
                 raise
 

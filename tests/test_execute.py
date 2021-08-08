@@ -1,5 +1,4 @@
 """End to end testing for Commands"""
-from unittest import mock
 from typing import Literal, Union
 from pathlib import Path
 import enum
