@@ -7,8 +7,6 @@ from arc.color import effects, fg
 from arc.command import (
     ArgumentParser,
     Command,
-    ParsingMethod,
-    PositionalParser,
     Context,
 )
 from arc.config import config
@@ -22,7 +20,6 @@ class CLI(Command):
         self,
         name: str = "cli",
         function: Callable = None,
-        parsing_method: Type[ArgumentParser] = ParsingMethod.STANDARD,
         arcfile: str = ".arc",
         context: dict = None,
         version: str = "¯\\_(ツ)_/¯",
@@ -40,7 +37,6 @@ class CLI(Command):
         super().__init__(
             name,
             self.missing_command,
-            parsing_method,
             context,
             short_args={"help": "h", "version": "v"},
         )
@@ -48,7 +44,7 @@ class CLI(Command):
         self.__logging_setup()
         utils.header("INIT")
         self.version = version
-        self.install_command(Command("help", self.helper, parser=PositionalParser))
+        self.install_command(Command("help", self.helper))
         self.default_action: Optional[Command] = (
             self.default()(function) if function else None
         )

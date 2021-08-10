@@ -1,19 +1,15 @@
 import inspect
 
-from arc.config import config
 from arc.utils import symbol
 from arc.types import convert
 
 
 NO_DEFAULT = symbol("NO_DEFAULT")
-# pylint: disable=protected-access
-EMPTY = inspect._empty  # type: ignore
+EMPTY = inspect.Parameter.empty
 
 
 class Argument:
-    def __init__(
-        self, name, annotation, default, hidden=False, aliases: set[str] = None
-    ):
+    def __init__(self, name, annotation, default, hidden=False):
         self.name: str = name
         self.annotation = str if annotation is EMPTY else annotation
         self.default = NO_DEFAULT if default is EMPTY else default
@@ -33,5 +29,8 @@ class Argument:
     def is_flag(self):
         return self.annotation is bool
 
-    def is_optional(self):
+    def is_option(self):
         return self.default is not NO_DEFAULT
+
+    def is_positional(self):
+        return self.default is NO_DEFAULT

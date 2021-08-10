@@ -1,5 +1,5 @@
 cli = """\
-from arc import CLI, ExecutionError, ParsingMethod
+from arc import CLI, ExecutionError
 
 cli = CLI(name="{name}")
 

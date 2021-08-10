@@ -7,7 +7,7 @@ from arc.execution_state import ExecutionState
 from arc.command.arg_builder import ArgBuilder
 from arc import errors
 from arc.color import colorize, fg
-from arc.command.argument import NO_DEFAULT
+from arc.command.argument import NO_DEFAULT, Argument
 from arc.command.context import Context
 
 
@@ -37,11 +37,15 @@ class Executable:
     def __init__(
         self,
         wrapped: WrappedExectuable,
-        arg_hook: Callable,
         short_args: dict[str, str],
     ):
         self.wrapped = wrapped
-        self.build_args(arg_hook, short_args)
+        self.pass_args = False
+        self.pass_kwargs = False
+        self.build_args(short_args)
+        self._pos_args: list[Argument] = []
+        self._flags: list[Argument] = []
+        self._options: list[Argument] = []
 
     def run(self, args: dict[str, Any], state: ExecutionState) -> Result:
         args = self.fill_defaults(args, state.context)
@@ -58,6 +62,28 @@ class Executable:
     def call(self, _args: dict[str, Any]) -> Result:
         return Err("Not a valid call")
 
+    ### Helpers ###
+
+    @property
+    def pos_args(self):
+        if not self._pos_args:
+            self._pos_args = [
+                arg for _name, arg in self.args.items() if arg.is_positional()
+            ]
+        return self._pos_args
+
+    @property
+    def optional_args(self):
+        if not self._options:
+            self._options = [arg for _name, arg in self.args.items() if arg.is_option()]
+        return self._options
+
+    @property
+    def flag_args(self):
+        if not self._flags:
+            self._flags = [arg for _name, arg in self.args.items() if arg.is_flag()]
+        return self._flags
+
     def fill_defaults(self, args: dict[str, Any], context: dict[str, Any]):
         unfilled = {}
         for key, arg in self.args.items():
@@ -72,18 +98,34 @@ class Executable:
 
         return args | unfilled
 
+    def get_or_raise(self, key: str, message):
+        arg = self.args.get(key)
+        if arg and not arg.hidden:
+            return arg
+
+        for arg in self.args.values():
+            if key == arg.short and not arg.hidden:
+                return arg
+
+        raise errors.MissingArgError(message, name=key)
+
+    ### Validators ###
     def verify_args_filled(self, arguments: dict):
         for key, value in arguments.items():
             if value is NO_DEFAULT:
                 raise errors.ValidationError(
-                    f"No value provided for argument: {colorize(key, fg.YELLOW)}",
+                    f"No value provided for argument: {colorize(key, fg.YELLOW)}"
                 )
 
-    def build_args(self, arg_hook: Callable, short_args=None):
+    ### Setup ###
+    def build_args(self, short_args=None):
         with ArgBuilder(self.wrapped, short_args) as builder:
-            for idx, param in enumerate(builder):
-                meta = builder.get_meta(index=idx)
-                arg_hook(param, meta)
+            for param in builder:
+                if param.kind is param.VAR_KEYWORD:
+                    self.pass_kwargs = True
+                elif param.kind is param.VAR_POSITIONAL:
+                    self.pass_args = True
+
             self.args = builder.args
 
 

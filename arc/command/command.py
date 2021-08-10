@@ -1,4 +1,4 @@
-from typing import Dict, Callable, Optional, Any, Type, Union, TYPE_CHECKING
+from typing import Dict, Callable, Optional, Any, Union, TYPE_CHECKING
 import functools
 import pprint
 import logging
@@ -8,7 +8,7 @@ from arc.errors import CommandError
 from arc import utils
 from arc.result import Result
 
-from .argument_parser import ArgumentParser, ParsingMethod
+from .argument_parser import ArgumentParser
 from .command_executor import CommandExecutor
 from .command_doc import CommandDoc
 from .executable import Executable, WrappedExectuable
@@ -27,7 +27,6 @@ class Command:
         self,
         name: str,
         executable: WrappedExectuable,
-        parser: Type[ArgumentParser] = ParsingMethod.STANDARD,
         context: Optional[Dict] = None,
         short_args=None,
     ):
@@ -36,8 +35,8 @@ class Command:
         self.subcommand_aliases: dict[str, str] = {}
         self.context = context or {}
 
-        self.executable = Executable(executable, parser.arg_hook, short_args)
-        self.parser: ArgumentParser = parser(self.executable)
+        self.executable = Executable(executable, short_args)
+        self.parser = ArgumentParser(self.executable)
         self.executor = CommandExecutor(self.executable)
 
     def __repr__(self):
@@ -53,7 +52,7 @@ class Command:
     @function.setter
     def function(self, func: Callable):
         self.executable.wrapped = func
-        self.executable.build_args(self.parser.arg_hook)
+        self.executable.build_args()
 
     @property
     def doc(self) -> CommandDoc:
@@ -76,7 +75,6 @@ class Command:
     def subcommand(
         self,
         name: Union[str, list[str], tuple[str, ...]] = None,
-        parsing_method: type[ArgumentParser] = None,
         context: dict[str, Any] = None,
         short_args: dict[str, str] = None,
     ):
@@ -87,9 +85,6 @@ class Command:
                 this subcommand by. Can optionally be a `list` of names. In this case,
                 the first in the list will be treated as the "true" name, and the others
                 will be treated as aliases. If no value is provided, `function.__name__` is used
-            parsing_method (type[ArgumentParser], optional): The way to parse this command's
-                arguments. `ParsingMethod` contains constants to reference for each method.
-                Defaults to the parsing method of `self`.
             context (dict[str, Any], optional): Special data that will be
                 passed to this command (and any subcommands) at runtime. Defaults to None.
             short_args (dict[str, Union[Iterable[str], str]], optional): Secondary names
@@ -108,7 +103,6 @@ class Command:
             command = Command(
                 command_name,
                 wrapped,
-                parsing_method or type(self.parser),
                 context or {},
                 short_args,
             )

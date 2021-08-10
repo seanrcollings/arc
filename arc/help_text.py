@@ -1,7 +1,7 @@
 import re
 import textwrap
 
-from arc.command import Command, ParsingMethod
+from arc.command import Command
 from arc.command.argument import Argument
 from arc.command.command_doc import CommandDoc
 from arc.color import fg, effects, colorize
@@ -10,6 +10,9 @@ from arc.run import find_command_chain
 from arc import errors
 
 __all__ = ["display_help", "generate_help"]
+
+
+# TODO: strip out use of ParsingMethod
 
 
 def display_help(root: Command, command: Command, namespace: list[str]):
@@ -75,7 +78,7 @@ def format_usage_arg(arg: Argument, command: Command):
     ):
         formatted += " <...>"
 
-    if arg.is_optional():
+    if arg.is_option():
         formatted = f"[{formatted}]"
 
     return formatted

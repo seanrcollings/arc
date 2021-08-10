@@ -2,7 +2,7 @@ from unittest import TestCase, mock
 from pathlib import Path
 import pytest
 
-from arc import CLI, namespace, ParsingMethod
+from arc import CLI, namespace
 from arc.errors import CommandError
 from arc.builtin.debug import debug
 
@@ -69,11 +69,3 @@ def test_keybab(cli: CLI):
 
     assert cli("two_words first_name=sean")
     assert cli("two-words first-name=sean")
-
-
-def test_positional(cli: CLI):
-    @cli.subcommand(parsing_method=ParsingMethod.POSITIONAL)
-    def pos(val: int):
-        return True
-
-    assert cli("pos 2")

@@ -3,10 +3,12 @@ from typing import Union
 from pathlib import Path
 from arc import types
 from arc.config import config
-from arc.command import Command, helpers, ParsingMethod
+from arc.command import Command, helpers
 
 COMPLETE = "complete -c"
 SEEN_SUBCOMMAND = "__fish_seen_subcommand_from"
+
+# TODO: stip out use of ParsingMethod
 
 
 class FishCompletion:
@@ -121,12 +123,6 @@ def command_completions(
 
 def argument_completions(completions: FishCompletion, command: Command, cmd_name: str):
     parse_type = type(command.parser)
-
-    if not command.parser.args or parse_type in (
-        ParsingMethod.POSITIONAL,
-        ParsingMethod.RAW,
-    ):
-        return
 
     completions.comment(f"{cmd_name} Arguments")
     for arg in command.parser.args.values():
