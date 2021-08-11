@@ -1,14 +1,15 @@
 from __future__ import annotations
 import inspect
-from typing import TYPE_CHECKING, get_type_hints
+from typing import TYPE_CHECKING, get_type_hints, Callable
 
-from arc import errors, utils
+from arc import errors
 from arc import types
 from arc.command.argument import EMPTY, Argument
 from arc.command.context import Context
 
 if TYPE_CHECKING:
     from .command import Command
+    from .executable import WrappedExectuable
 
 
 HIDDEN_ARG_TYPES = {Context}
@@ -24,13 +25,14 @@ class ParamProxy:
 
 
 class ArgBuilder:
-    def __init__(self, function, short_args=None):
-        self.__annotations = get_type_hints(function)
-        self.__sig = inspect.signature(function)
+    def __init__(self, executable: Callable, short_args=None):
+        self.__annotations = get_type_hints(executable)
+        self.__sig = inspect.signature(executable)
         self.__length = len(self.__sig.parameters.values())
         self.__args: dict[str, Argument] = {}
         self.__short_args: dict[str, str] = short_args or {}
         self.__validate_short_args()
+        self.build()
 
     def __enter__(self):
         return self
@@ -42,14 +44,16 @@ class ArgBuilder:
         return self.__length
 
     def __iter__(self):
-        for param in self.__sig.parameters.values():
-            proxy = ParamProxy(param, self.__annotations.get(param.name, str))
-            yield proxy
-            self.add_arg(proxy)
+        yield from self.__sig.parameters.values()
 
     @property
     def args(self):
         return self.__args
+
+    def build(self):
+        for param in self.__sig.parameters.values():
+            proxy = ParamProxy(param, self.__annotations.get(param.name, str))
+            self.add_arg(proxy)
 
     def add_arg(self, param: ParamProxy):
         arg = None

@@ -1,4 +1,5 @@
-from typing import Callable, Any, Optional, Union, TypedDict, Type
+from __future__ import annotations
+from typing import Callable, Any, Optional, Union, TypedDict, Type, TYPE_CHECKING
 from inspect import Parameter
 import re
 
@@ -6,9 +7,10 @@ from arc import errors
 from arc.config import config
 from arc.color import fg, effects
 from arc.utils import IDENT, levenshtein
-from arc.command.arg_builder import ArgBuilder
 from arc.command.argument import Argument, NO_DEFAULT
-from arc.command.context import Context
+
+if TYPE_CHECKING:
+    from arc.command.executable import Executable
 
 
 class ArgumentParser:
@@ -23,9 +25,9 @@ class ArgumentParser:
     of it's own.
     """
 
-    def __init__(self, function: Callable, arg_aliases=None):
-        self.args: dict[str, Argument] = {}
-        self.build_args(function, arg_aliases)
+    def __init__(self, executable: Executable):
+        self.executable = executable
+        self.args = executable.args
 
     def get_matchers(self):
         all_matchers = {}
@@ -37,7 +39,7 @@ class ArgumentParser:
 
     ### Argument Parsing ###
 
-    def parse(self, cli_args: list[str], context: dict[str, Any]) -> dict[str, Any]:
+    def parse(self, cli_args: list[str]) -> dict[str, Any]:
         """Parses the provided command-line arguments into
         a dictionary of arguments to be passed to a python
         function
@@ -52,7 +54,7 @@ class ArgumentParser:
                         matched_args[key] = value
                     break
 
-        return self.fill_unmatched(matched_args, context)
+        return matched_args
 
     def handle_match(self, match: re.Match, name: str) -> tuple[str, Any]:
         groups: Union[dict[str, str], str] = self.get_match_values(match)
@@ -72,33 +74,8 @@ class ArgumentParser:
                 )
             raise
 
-    def fill_unmatched(
-        self, matched_args: dict[str, Any], context: dict[str, Any]
-    ) -> dict[str, Any]:
-
-        unfilled = {}
-        for key, arg in self.args.items():
-            if key not in matched_args:
-                try:
-                    if issubclass(arg.annotation, Context):
-                        unfilled[key] = arg.annotation(context)
-                    else:
-                        unfilled[key] = arg.default
-                except TypeError:
-                    unfilled[key] = arg.default
-
-        return matched_args | unfilled
-
-    ### Argument Schema Building ###
-
-    def build_args(self, function: Callable, arg_aliases=None):
-        with ArgBuilder(function, arg_aliases) as builder:
-            for idx, param in enumerate(builder):
-                self.arg_hook(param, builder.get_meta(index=idx))
-
-            self.args = builder.args
-
-    def arg_hook(self, param, meta):
+    @classmethod
+    def arg_hook(cls, param, meta):
         """Callback to assert that the param being processed
         is valid for this given parser. Default implementation
         doesn't do anything
@@ -126,7 +103,7 @@ class ArgumentParser:
 
     def find_argument_suggestions(self, missing: str) -> Optional[Argument]:
 
-        if config.suggest_on_missing_argument:
+        if config.suggest_on_missing_argument and len(self.args) > 0:
             distance, arg = min(
                 ((levenshtein(arg.name, missing), arg) for arg in self.args.values()),
                 key=lambda tup: tup[0],
@@ -207,11 +184,12 @@ class StandardParser(FlagParser):
     def get_arg(self, name):
         return self.get_or_raise(name, f"Option {config.flag_denoter}{name} not found.")
 
-    def arg_hook(self, param, meta):
+    @classmethod
+    def arg_hook(cls, param, meta):
         if param.kind is param.VAR_POSITIONAL:
             raise errors.CommandError("Standard Commands do not accept *args")
         if param.kind is param.VAR_KEYWORD:
-            self.__pass_kwargs = True
+            cls.__pass_kwargs = True
 
 
 # pylint: disable=inherit-non-class
@@ -230,7 +208,17 @@ class KeywordParser(FlagParser):
 
     matchers = {"keyword_argument": KEY_ARGUMENT}
 
-    def handle_keyword_argument(self, argument: KeyArg) -> tuple[str, Any]:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.var_kwargs = {}
+
+    def parse(self, *args):
+        parsed = super().parse(*args)
+        if self.__pass_kwargs:
+            parsed["_kwargs"] = self.var_kwargs
+        return parsed
+
+    def handle_keyword_argument(self, argument: KeyArg):
         name = argument["name"].replace("-", "_")
         try:
             arg = self.get_or_raise(
@@ -243,12 +231,15 @@ class KeywordParser(FlagParser):
         except errors.ParserError:
             if self.__pass_kwargs:
                 value = argument["value"]
+                self.var_kwargs[name] = value
+                return None, None
             else:
                 raise
 
         return name, value
 
-    def arg_hook(self, param: Parameter, meta):
+    @classmethod
+    def arg_hook(cls, param: Parameter, meta):
         idx = meta["index"]
 
         if param.kind is param.VAR_POSITIONAL:
@@ -266,7 +257,7 @@ class KeywordParser(FlagParser):
                     "must be the last argument of the command",
                 )
 
-            self.__pass_kwargs = True
+            cls.__pass_kwargs = True
 
 
 # NOTE: This currently also matches to flags
@@ -311,7 +302,8 @@ class PositionalParser(FlagParser):
         self.current_pos += 1
         return name, argument.convert(value)
 
-    def arg_hook(self, param, meta):
+    @classmethod
+    def arg_hook(cls, param, meta):
         idx = meta["index"]
 
         if param.kind is param.VAR_KEYWORD:
@@ -329,14 +321,15 @@ class PositionalParser(FlagParser):
                     "must be the last argument of the command",
                 )
 
-            self.__pass_args = True
+            cls.__pass_args = True
 
 
 class RawParser(ArgumentParser):
-    def parse(self, cli_args, _context):
+    def parse(self, cli_args):
         return {"_args": cli_args}
 
-    def arg_hook(self, param, meta):
+    @classmethod
+    def arg_hook(cls, param, meta):
         if param.kind is not param.VAR_POSITIONAL:
             raise errors.CommandError(
                 "Raw commands must only have a single *args argument"

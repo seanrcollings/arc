@@ -8,8 +8,8 @@ logger = logging.getLogger("arc_logger")
 
 @pytest.fixture
 def cli():
-    # logger.setLevel(logging.ERROR)
     cli = CLI(parsing_method=ParsingMethod.KEYWORD, arcfile="tests/.arc")
+    logger.setLevel(logging.CRITICAL)
 
     @cli.subcommand()
     def func1(x):

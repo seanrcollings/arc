@@ -8,10 +8,10 @@ from arc.errors import CommandError
 from arc import utils
 from arc.result import Result
 
-
 from .argument_parser import ArgumentParser, ParsingMethod
 from .command_executor import CommandExecutor
 from .command_doc import CommandDoc
+from .executable import Executable, WrappedExectuable
 
 if TYPE_CHECKING:
     from arc.execution_state import ExecutionState
@@ -26,7 +26,7 @@ class Command:
     def __init__(
         self,
         name: str,
-        function: Callable,
+        executable: WrappedExectuable,
         parser: Type[ArgumentParser] = ParsingMethod.STANDARD,
         context: Optional[Dict] = None,
         short_args=None,
@@ -36,8 +36,9 @@ class Command:
         self.subcommand_aliases: dict[str, str] = {}
         self.context = context or {}
 
-        self.parser: ArgumentParser = parser(function, short_args)
-        self.executor = CommandExecutor(function)
+        self.executable = Executable(executable, parser.arg_hook, short_args)
+        self.parser: ArgumentParser = parser(self.executable)
+        self.executor = CommandExecutor(self.executable)
 
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
@@ -47,12 +48,12 @@ class Command:
 
     @property
     def function(self):
-        return self.executor.function
+        return self.executable.wrapped
 
     @function.setter
     def function(self, func: Callable):
-        self.parser.build_args(func)
-        self.executor.function = func
+        self.executable.wrapped = func
+        self.executable.build_args(self.parser.arg_hook)
 
     @property
     def doc(self) -> CommandDoc:
@@ -63,12 +64,12 @@ class Command:
 
     ### Execution ###
 
-    def run(self, exec_state: "ExecutionState"):
+    def run(self, exec_state: "ExecutionState") -> Result:
         """External interface to execute a command"""
-        parsed_args = self.parser.parse(exec_state.command_args, exec_state.context)
+        parsed_args = self.parser.parse(exec_state.command_args)
 
         logger.debug("Parsed arguments: %s", pprint.pformat(parsed_args))
-        return self.executor.execute(exec_state.command_namespace, parsed_args)
+        return self.executor.execute(parsed_args, exec_state)
 
     ### Building Subcommands ###
 
@@ -98,12 +99,15 @@ class Command:
             Command: the subcommand created
         """
 
-        @self.ensure_function
-        def decorator(function: Callable[..., Result]):
-            command_name = self.handle_command_aliases(name or function.__name__)
+        # @self.ensure_function
+        def decorator(wrapped: Union[WrappedExectuable, Command]):
+            if isinstance(wrapped, Command):
+                wrapped = wrapped.executable.wrapped
+
+            command_name = self.handle_command_aliases(name or wrapped.__name__)
             command = Command(
                 command_name,
-                function,
+                wrapped,
                 parsing_method or type(self.parser),
                 context or {},
                 short_args,

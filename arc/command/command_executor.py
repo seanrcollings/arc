@@ -3,10 +3,11 @@ from typing import Callable, Any, Generator
 import pprint
 import logging
 
+from arc.execution_state import ExecutionState
 from arc.color import fg, colorize
+from arc.command.executable import Executable
 from arc import errors, utils
-from arc.result import Ok, Err, Result
-from arc.command.argument import NO_DEFAULT
+from arc.result import Ok, Result
 from arc.callbacks.callbacks import CallbackTime
 
 logger = logging.getLogger("arc_logger")
@@ -16,8 +17,8 @@ BAR = "\u2500" * 40
 class CommandExecutor:
     """Handles the execution of a commands's function"""
 
-    def __init__(self, function: Callable[..., Result]):
-        self.function: Callable[..., Result] = function
+    def __init__(self, executable: Executable):
+        self.executable = executable
         self.callbacks: dict[CallbackTime, set[Callable]] = {
             "before": set(),
             "around": set(),
@@ -29,7 +30,7 @@ class CommandExecutor:
         self.__gens: list[Generator] = []
 
     @utils.timer("Command Execution")
-    def execute(self, _cli_namespace: list[str], arguments: dict[str, Any]):
+    def execute(self, arguments: dict[str, Any], state: ExecutionState):
         """Executes the command's functions
 
         Args:
@@ -43,7 +44,7 @@ class CommandExecutor:
 
         try:
             logger.debug(BAR)
-            result = self.call_function(arguments)
+            result = self.executable.run(arguments, state)
         finally:
             logger.debug(BAR)
             self.end_around_callbacks(result)
@@ -54,31 +55,24 @@ class CommandExecutor:
     def setup(self, arguments: dict[str, Any]):
         self.exec_callbacks("before", arguments)
         self.start_around_callbacks(arguments)
-        self.verify_args_filled(arguments)
         logger.debug("Function Arguments: %s", pprint.pformat(arguments))
 
-    def verify_args_filled(self, arguments: dict):
-        for key, value in arguments.items():
-            if value is NO_DEFAULT:
-                raise errors.ValidationError(
-                    f"No value provided for argument: {colorize(key, fg.YELLOW)}",
-                )
+    # def call_function(self, state, arguments):
+    #     return
+    #     # # The parsers always spit out a dictionary of arguements
+    #     # # and values. This doesn't allow *args to work, because you can't
+    #     # # spread *args after **kwargs. So the parser stores the *args in
+    #     # # _args and then we spread it manually. Note that this relies
+    #     # # on dictionaires being ordered
+    #     # if "_args" in arguments:
+    #     #     var_args = arguments.pop("_args")
+    #     #     result = self.function(*arguments.values(), *var_args)
+    #     # else:
+    #     #     result = self.function(**arguments)
 
-    def call_function(self, arguments):
-        # The parsers always spit out a dictionary of arguements
-        # and values. This doesn't allow *args to work, because you can't
-        # spread *args after **kwargs. So the parser stores the *args in
-        # _args and then we spread it manually. Note that this relies
-        # on dictionaires being ordered
-        if "_args" in arguments:
-            var_args = arguments.pop("_args")
-            result = self.function(*arguments.values(), *var_args)
-        else:
-            result = self.function(**arguments)
-
-        if not isinstance(result, (Ok, Err)):
-            return Ok(result)
-        return result
+    #     # if not isinstance(result, (Ok, Err)):
+    #     #     return Ok(result)
+    #     # return result
 
     def inheritable_callbacks(self):
         return {

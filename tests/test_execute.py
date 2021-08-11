@@ -1,5 +1,4 @@
 """End to end testing for Commands"""
-from unittest import mock
 from typing import Literal, Union
 from pathlib import Path
 import enum
@@ -41,6 +40,18 @@ def test_standard(cli: CLI):
         return val
 
     assert cli("sta --val 2") == 2
+
+
+def test_kwargs(cli: CLI):
+    @cli.subcommand(parsing_method=ParsingMethod.STANDARD)
+    def kwa(**kwargs):
+        return kwargs
+
+    assert cli("kwa --first 1 --second 2 --third 3") == {
+        "first": "1",
+        "second": "2",
+        "third": "3",
+    }
 
 
 def test_float(cli: CLI):
