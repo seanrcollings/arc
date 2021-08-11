@@ -1,16 +1,13 @@
 import logging
-from typing import Callable, Optional, Type
+from typing import Callable, Optional
 
-from arc import help_text, utils
+from arc import utils
 from arc.autoload import Autoload
 from arc.color import effects, fg
-from arc.command import (
-    ArgumentParser,
-    Command,
-    Context,
-)
+from arc.command import Command, Context
 from arc.config import config
 from arc.run import find_command_chain, run
+from arc.execution_state import ExecutionState
 
 
 class CLI(Command):
@@ -105,7 +102,7 @@ class CLI(Command):
             print(self.name, self.version)
         elif self.default_action:
             if self.default_action:
-                ctx.execution_state.command = self.default_action
+                ctx.execution_state.command_chain += [self.default_action]
                 return self.default_action.run(ctx.execution_state)
 
             return self("help")
@@ -132,18 +129,21 @@ class CLI(Command):
         into the CLI from the provided paths"""
         Autoload(paths, self).load()
 
-    def helper(self, command_name: str = ""):
+    def helper(self, command_name: str, ctx: Context):
         """Displays information for a given command
         By default, shows help for the top-level command.
         To see a specific command's information, provide
         a command name (some:command:name)
         """
-        namespace = command_name.split(config.namespace_sep) if command_name else []
-        help_text.display_help(
-            self,
-            find_command_chain(self, namespace)[-1],
-            namespace,
+        namespace = command_name.split(config.namespace_sep)
+        chain = find_command_chain(self, namespace)
+        state = ExecutionState(
+            user_input=[],
+            command_namespace=namespace,
+            command_args=[],
+            command_chain=chain,
         )
+        print(state.command.doc(state))
 
     def __logging_setup(self):
         root = logging.getLogger("arc_logger")

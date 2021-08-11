@@ -21,8 +21,6 @@ logger = logging.getLogger("arc_logger")
 
 
 class Command:
-    _command_doc: Optional[CommandDoc] = None
-
     def __init__(
         self,
         name: str,
@@ -54,12 +52,13 @@ class Command:
         self.executable.wrapped = func
         self.executable.build_args()
 
-    @property
-    def doc(self) -> CommandDoc:
-        if not self._command_doc:
-            self._command_doc = CommandDoc(self.function.__doc__ or "", ("usage",))
-
-        return self._command_doc
+    def doc(self, state: "ExecutionState") -> CommandDoc:
+        doc = CommandDoc(
+            self.function.__doc__ or "",
+            state,
+            ("usage",),
+        )
+        return doc
 
     ### Execution ###
 

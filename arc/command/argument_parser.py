@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Callable, Any, Optional, Union, TypedDict
+from typing import Callable, Any, Optional, Union, TypedDict, TYPE_CHECKING
 import re
 
 from arc import errors
@@ -7,7 +7,9 @@ from arc.config import config
 from arc.color import colorize, fg, effects
 from arc.utils import IDENT, levenshtein
 from arc.command.argument import Argument
-from arc.command.executable import Executable
+
+if TYPE_CHECKING:
+    from arc.command.executable import Executable
 
 
 class Parsed(TypedDict):

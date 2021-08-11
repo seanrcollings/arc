@@ -167,6 +167,11 @@ class Config(ConfigBase):
     """The max Levenshtein between input and a
     possible correction to trigger a suggestion """
 
+    default_section_name = "description"
+    """The name to use by default if the first section
+    in a command docstring is anonymous
+    """
+
     parse_argument_help = False
     """Wether or not to attempt to parse the argument
     section of help documentation to provide better documentation"""

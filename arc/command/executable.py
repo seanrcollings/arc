@@ -184,7 +184,6 @@ class FunctionExecutable(Executable):
     wrapped: Callable
 
     def call(self, args: Parsed):
-        breakpoint()
         self.wrapped(
             *args["pos_args"],
             **args["options"],
