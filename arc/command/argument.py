@@ -2,6 +2,7 @@ import inspect
 
 from arc.utils import symbol
 from arc.types import convert
+from arc.config import config
 
 
 NO_DEFAULT = symbol("NO_DEFAULT")
@@ -18,6 +19,25 @@ class Argument:
 
     def __repr__(self):
         return f"<Argument : {self.name}={self.default}>"
+
+    def __format__(self, spec: str):
+        modifiers = spec.split("|")
+        name = self.name.replace("_", "-")
+
+        if self.is_positional():
+            return f"<{name}>"
+        else:
+            if "short" in modifiers:
+                name = self.short
+
+            formatted = f"{config.flag_denoter}{name}"
+
+            if "usage" in modifiers:
+                if self.is_option():
+                    formatted += " <...>"
+                formatted = f"[{formatted}]"
+
+            return formatted
 
     def convert(self, value: str):
         """Converts the provided value to the expected value of the argument"""

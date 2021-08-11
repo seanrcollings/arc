@@ -107,9 +107,9 @@ class CommandDoc:
                     f"Argument section Parsing failed. No arg named {name}"
                 )
 
-            formatted_name = self.format_arg(argument)
+            formatted_name = format(argument)
             if argument.short:
-                formatted_name += f" ({self.format_short_arg(argument)})"
+                formatted_name += f" ({format(argument, 'short')})"
             arguments[i][0] = formatted_name
 
         name_max_len = len(max(arguments, key=lambda n: len(n[0]))[0])
@@ -159,18 +159,13 @@ class CommandDoc:
             for arg in self.state.command.executable.args.values()
             if not arg.hidden and not arg.is_positional()
         ):
-            string = self.format_arg(arg)
-            if arg.is_option():
-                string += " <...>"
-
-            string = self.optional(string)
-
+            string = format(arg, "usage")
             args.append(string)
 
-        args.append(self.optional(config.flag_denoter))
+        args.append("[" + config.flag_denoter + "]")
 
         for arg in self.state.command.executable.pos_args:
-            args.append(self.format_arg(arg))
+            args.append(format(arg))
 
         return " ".join(args)
 
@@ -211,12 +206,6 @@ class CommandDoc:
 
     ### Formatters ###
 
-    def format_arg(self, arg: Argument):
-        if arg.is_positional():
-            return f"<{arg.name}>"
-        else:
-            return f"{config.flag_denoter}{arg.name}"
-
     def format_short_arg(self, arg: Argument):
         if arg.is_positional():
             raise errors.ArcError("Can't format a positional argument as a short arg")
@@ -225,10 +214,6 @@ class CommandDoc:
             return f"{config.short_flag_denoter}{arg.short}"
 
         return None
-
-    @staticmethod
-    def optional(argument: str):
-        return f"[{argument}]"
 
     ### Helpers ###
 
