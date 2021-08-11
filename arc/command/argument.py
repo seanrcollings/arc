@@ -30,7 +30,7 @@ class Argument:
         return self.annotation is bool
 
     def is_option(self):
-        return self.default is not NO_DEFAULT
+        return self.default is not NO_DEFAULT and self.annotation is not bool
 
     def is_positional(self):
         return self.default is NO_DEFAULT

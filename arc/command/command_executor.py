@@ -6,6 +6,7 @@ import logging
 from arc.execution_state import ExecutionState
 from arc.color import fg, colorize
 from arc.command.executable import Executable
+from arc.command.argument_parser import Parsed
 from arc import errors, utils
 from arc.result import Ok, Result
 from arc.callbacks.callbacks import CallbackTime
@@ -30,11 +31,11 @@ class CommandExecutor:
         self.__gens: list[Generator] = []
 
     @utils.timer("Command Execution")
-    def execute(self, arguments: dict[str, Any], state: ExecutionState):
+    def execute(self, arguments: Parsed, state: ExecutionState):
         """Executes the command's functions
 
         Args:
-            arguments (dict[str, Any]): Arguments parsed by an `ArgumentParser`
+            arguments (Parsed): Arguments parsed by an `ArgumentParser`
 
         Returns:
             Any: What the command's function returns
@@ -52,7 +53,7 @@ class CommandExecutor:
 
         return result
 
-    def setup(self, arguments: dict[str, Any]):
+    def setup(self, arguments: Parsed):
         self.exec_callbacks("before", arguments)
         self.start_around_callbacks(arguments)
         logger.debug("Function Arguments: %s", pprint.pformat(arguments))

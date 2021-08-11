@@ -1,6 +1,17 @@
+from __future__ import annotations
 import inspect
 from types import MappingProxyType, MethodType, FunctionType
-from typing import Protocol, Union, Any, Callable, cast, get_type_hints, NewType
+from typing import (
+    Optional,
+    Protocol,
+    Union,
+    Any,
+    Callable,
+    cast,
+    get_type_hints,
+    NewType,
+    TYPE_CHECKING,
+)
 
 from arc.result import Err, Ok, Result
 from arc.execution_state import ExecutionState
@@ -9,6 +20,10 @@ from arc import errors
 from arc.color import colorize, fg
 from arc.command.argument import NO_DEFAULT, Argument
 from arc.command.context import Context
+
+
+if TYPE_CHECKING:
+    from arc.command.argument_parser import Parsed
 
 
 class WrappedClassExecutable(Protocol):
@@ -34,11 +49,7 @@ class Executable:
             wrapped = cast(type[WrappedClassExecutable], wrapped)
             return ClassExecutable(wrapped, *args, **kwargs)
 
-    def __init__(
-        self,
-        wrapped: WrappedExectuable,
-        short_args: dict[str, str],
-    ):
+    def __init__(self, wrapped: WrappedExectuable, short_args: dict[str, str]):
         self.wrapped = wrapped
         self.pass_args = False
         self.pass_kwargs = False
@@ -46,9 +57,11 @@ class Executable:
         self._pos_args: list[Argument] = []
         self._flags: list[Argument] = []
         self._options: list[Argument] = []
+        self._hidden: list[Argument] = []
 
-    def run(self, args: dict[str, Any], state: ExecutionState) -> Result:
-        args = self.fill_defaults(args, state.context)
+    def run(self, args: Parsed, state: ExecutionState) -> Result:
+        self.fill_defaults(args)
+        self.fill_hidden(args, state)
         self.verify_args_filled(args)
         result = self.call(args)
 
@@ -56,10 +69,10 @@ class Executable:
             return Ok(result)
         return result
 
-    def setup(self, args: dict[str, Any], state: ExecutionState):
+    def setup(self, args: Parsed, state: ExecutionState):
         """Perform pre-execution setup"""
 
-    def call(self, _args: dict[str, Any]) -> Result:
+    def call(self, _args: Parsed) -> Result:
         return Err("Not a valid call")
 
     ### Helpers ###
@@ -68,35 +81,64 @@ class Executable:
     def pos_args(self):
         if not self._pos_args:
             self._pos_args = [
-                arg for _name, arg in self.args.items() if arg.is_positional()
+                arg
+                for arg in self.args.values()
+                if arg.is_positional() and not arg.hidden
             ]
         return self._pos_args
 
     @property
     def optional_args(self):
         if not self._options:
-            self._options = [arg for _name, arg in self.args.items() if arg.is_option()]
+            self._options = [
+                arg for arg in self.args.values() if arg.is_option() and not arg.hidden
+            ]
         return self._options
 
     @property
     def flag_args(self):
         if not self._flags:
-            self._flags = [arg for _name, arg in self.args.items() if arg.is_flag()]
+            self._flags = [
+                arg for arg in self.args.values() if arg.is_flag() and not arg.hidden
+            ]
         return self._flags
 
-    def fill_defaults(self, args: dict[str, Any], context: dict[str, Any]):
-        unfilled = {}
-        for key, arg in self.args.items():
-            if key not in args:
-                try:
-                    if issubclass(arg.annotation, Context):
-                        unfilled[key] = arg.annotation(context)
-                    else:
-                        unfilled[key] = arg.default
-                except TypeError:
-                    unfilled[key] = arg.default
+    @property
+    def hidden_args(self):
+        if not self._hidden:
+            self._hidden = [arg for arg in self.args.values() if arg.hidden]
+        return self._hidden
 
-        return args | unfilled
+    def fill_defaults(self, args: Parsed):
+        if len(self.pos_args) > len(args["pos_args"]):
+            args["pos_args"] += [
+                arg.default
+                for arg in self.pos_args[
+                    len(self.pos_args) - len(args["pos_args"]) - 1 :
+                ]
+            ]
+
+        args["options"] = {
+            arg.name: args["options"][arg.name]
+            if arg.name in args["options"]
+            else arg.default
+            for arg in self.optional_args
+        }
+
+        args["flags"] = {
+            arg.name: args["flags"][arg.name]
+            if arg.name in args["flags"]
+            else arg.default
+            for arg in self.flag_args
+        }
+
+    def fill_hidden(self, args: Parsed, state: ExecutionState):
+        hidden = {}
+        for arg in self.hidden_args:
+            if issubclass(arg.annotation, Context):
+                hidden[arg.name] = arg.annotation(state.context)
+
+        args["options"] |= hidden
 
     def get_or_raise(self, key: str, message):
         arg = self.args.get(key)
@@ -110,9 +152,13 @@ class Executable:
         raise errors.MissingArgError(message, name=key)
 
     ### Validators ###
-    def verify_args_filled(self, arguments: dict):
-        for key, value in arguments.items():
-            if value is NO_DEFAULT:
+    def verify_args_filled(self, arguments: Parsed):
+        for key, values in arguments.items():
+            if isinstance(values, dict):
+                values = values.values()
+            values = cast(list, values)
+
+            if NO_DEFAULT in values:
                 raise errors.ValidationError(
                     f"No value provided for argument: {colorize(key, fg.YELLOW)}"
                 )
@@ -132,17 +178,12 @@ class Executable:
 class FunctionExecutable(Executable):
     wrapped: Callable
 
-    def call(self, args: dict[str, Any]):
-        # The parsers always spit out a dictionary of arguements
-        # and values. This doesn't allow *args to work, because you can't
-        # spread *args after **kwargs. So the parser stores the *args in
-        # _args and then we spread it manually. Note that this relies
-        # on dictionaires being ordered
-        if "_args" in args:
-            var_args = args.pop("_args")
-            return self.wrapped(*args.values(), *var_args)
-        else:
-            return self.wrapped(**args)
+    def call(self, args: Parsed):
+        self.wrapped(
+            *args["pos_args"],
+            **args["options"],
+            **args["flags"],
+        )
 
 
 VarPositional = NewType("VarPositional", list)
@@ -159,13 +200,44 @@ class ClassExecutable(Executable):
 
     def __init__(self, wrapped: type[WrappedClassExecutable], *args, **kwargs):
         assert hasattr(wrapped, "handle")
+
+        self.var_pos_args_name: Optional[str] = None
+        self.var_keyword_args_name: Optional[str] = None
+
         self.__build_class_params(wrapped)
         super().__init__(wrapped, *args, **kwargs)
 
-    def call(self, args: dict[str, Any]):
+    def call(self, args: Parsed):
         instance = self.wrapped()
-        for name, value in args.items():
+
+        for idx, value in enumerate(args["pos_args"][0 : len(self.pos_args)]):
+            arg = self.pos_args[idx]
+            setattr(instance, arg.name, value)
+
+        if self.var_pos_args_name:
+            setattr(
+                instance,
+                self.var_pos_args_name,
+                args["pos_args"][len(self.pos_args) :],
+            )
+
+        class_level = {
+            key: val
+            for key, val in (args["options"] | args["flags"]).items()
+            if key in self.args
+        }
+
+        for name, value in class_level.items():
             setattr(instance, name, value)
+
+        if self.var_keyword_args_name:
+            var_keyword = {
+                key: val
+                for key, val in (args["options"] | args["flags"]).items()
+                if key not in self.args
+            }
+            setattr(instance, self.var_keyword_args_name, var_keyword)
+
         return instance.handle()
 
     def __build_class_params(self, executable: type[WrappedClassExecutable]):
@@ -177,15 +249,20 @@ class ClassExecutable(Executable):
             if not name.startswith("__") and name != "handle"
         }
 
-        params = {
-            name: inspect.Parameter(
+        params: dict[str, inspect.Parameter] = {}
+        for name, annotation in annotations.items():
+            if annotation is VarPositional:
+                self.var_pos_args_name = name
+            elif annotation is VarKeyword:
+                self.var_keyword_args_name = name
+
+            params[name] = inspect.Parameter(
                 name,
                 kind_mapping.get(annotation, inspect.Parameter.KEYWORD_ONLY),
                 default=defaults.get(name, inspect.Parameter.empty),
                 annotation=annotation,
             )
-            for name, annotation in annotations.items()
-        }
+
         # pylint: disable=protected-access
         sig._parameters = MappingProxyType(params)  # type: ignore
         executable.__signature__ = sig  # type: ignore

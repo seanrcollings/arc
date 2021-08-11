@@ -11,8 +11,8 @@ from arc.command.executable import Executable
 
 
 class Parsed(TypedDict):
-    pos_args: list[str]
-    options: dict[str, str]
+    pos_args: list[Any]
+    options: dict[str, Any]
     flags: dict[str, bool]
 
 
@@ -137,6 +137,7 @@ class ArgumentParser:
                 (
                     (levenshtein(arg.name, missing), arg)
                     for arg in self.executable.args.values()
+                    if not arg.hidden
                 ),
                 key=lambda tup: tup[0],
             )
