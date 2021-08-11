@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import Callable, Any, Generator
-import pprint
 import logging
 
 from arc.execution_state import ExecutionState
@@ -12,7 +11,6 @@ from arc.result import Ok, Result
 from arc.callbacks.callbacks import CallbackTime
 
 logger = logging.getLogger("arc_logger")
-BAR = "\u2500" * 40
 
 
 class CommandExecutor:
@@ -44,10 +42,8 @@ class CommandExecutor:
         self.setup(arguments)
 
         try:
-            logger.debug(BAR)
             result = self.executable.run(arguments, state)
         finally:
-            logger.debug(BAR)
             self.end_around_callbacks(result)
             self.exec_callbacks("after", result)
 
@@ -56,7 +52,6 @@ class CommandExecutor:
     def setup(self, arguments: Parsed):
         self.exec_callbacks("before", arguments)
         self.start_around_callbacks(arguments)
-        logger.debug("Function Arguments: %s", pprint.pformat(arguments))
 
     # def call_function(self, state, arguments):
     #     return

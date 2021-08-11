@@ -63,7 +63,6 @@ class ArgumentParser:
                 )
             raise
 
-    # TODO: get **kwargs working in an expected fashion
     def handle_option(self, option: str):
         if self.pos_only:
             raise errors.ParserError(
@@ -71,29 +70,54 @@ class ArgumentParser:
                 f"{colorize(config.flag_denoter, fg.YELLOW)} if it is present"
             )
 
-        arg = self.executable.get_or_raise(
-            option, f"Option {colorize('--' + option, fg.YELLOW)} not found."
-        )
-        if arg.is_flag():
-            self.parsed["flags"][option] = not arg.default
-        elif self.peek():
-            value = self.consume()
-            self.parsed["options"][option] = arg.convert(value)
-        else:
-            raise errors.ParserError(f"Option --{option} requires a value")
+        try:
+            arg = self.executable.get_or_raise(
+                option, f"Option {colorize('--' + option, fg.YELLOW)} not found."
+            )
+            if arg.is_flag():
+                self.parsed["flags"][option] = not arg.default
+            elif self.peek():
+                value = self.consume()
+                self.parsed["options"][option] = arg.convert(value)
+            else:
+                raise errors.ParserError(
+                    f"Option {colorize('--' + option, fg.YELLOW)} requires a value"
+                )
+        except errors.MissingArgError as e:
+            if not self.executable.pass_kwargs:
+                raise
+
+            if self.peek():
+                value = self.consume()
+                self.parsed["options"][option] = value
+            else:
+                raise errors.ParserError(
+                    f"Option {colorize('--' + option, fg.YELLOW)} requires a value"
+                ) from e
 
     def handle_short_option(self, short_option):
         for char in short_option:
-            arg = self.executable.get_or_raise(
-                char,
-                f"Option {colorize('-' + short_option, fg.YELLOW)} not found.",
-            )
-            if len(short_option) > 1 and not arg.is_flag():
-                raise errors.ParserError(
-                    f"Option {colorize('-' + char, fg.YELLOW)} requires a value"
+            try:
+                arg = self.executable.get_or_raise(
+                    char, f"Option {colorize('-' + short_option, fg.YELLOW)} not found."
                 )
+                if len(short_option) > 1 and not arg.is_flag():
+                    raise errors.ParserError(
+                        f"Option {colorize('-' + char, fg.YELLOW)} requires a value"
+                    )
 
-            self.handle_option(arg.name)
+                self.handle_option(arg.name)
+            except errors.MissingArgError as e:
+                if not self.executable.pass_kwargs:
+                    raise
+
+                if self.peek():
+                    value = self.consume()
+                    self.parsed["options"][short_option] = value
+                else:
+                    raise errors.ParserError(
+                        f"Option {colorize('-' + char, fg.YELLOW)} requires a value"
+                    ) from e
 
     def handle_pos_only(self, _):
         self.pos_only = True

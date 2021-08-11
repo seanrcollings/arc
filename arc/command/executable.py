@@ -12,6 +12,8 @@ from typing import (
     NewType,
     TYPE_CHECKING,
 )
+import pprint
+import logging
 
 from arc.result import Err, Ok, Result
 from arc.execution_state import ExecutionState
@@ -24,6 +26,9 @@ from arc.command.context import Context
 
 if TYPE_CHECKING:
     from arc.command.argument_parser import Parsed
+
+logger = logging.getLogger("arc_logger")
+BAR = "\u2500" * 40
 
 
 class WrappedClassExecutable(Protocol):
@@ -63,7 +68,10 @@ class Executable:
         self.fill_defaults(args)
         self.fill_hidden(args, state)
         self.verify_args_filled(args)
+        logger.debug("Function Arguments: %s", pprint.pformat(args))
+        logger.debug(BAR)
         result = self.call(args)
+        logger.debug(BAR)
 
         if not isinstance(result, (Ok, Err)):
             return Ok(result)
@@ -119,11 +127,8 @@ class Executable:
             ]
 
         args["options"] = {
-            arg.name: args["options"][arg.name]
-            if arg.name in args["options"]
-            else arg.default
-            for arg in self.optional_args
-        }
+            key: arg.default for key, arg in self.args.items() if arg.is_option()
+        } | args["options"]
 
         args["flags"] = {
             arg.name: args["flags"][arg.name]
@@ -179,6 +184,7 @@ class FunctionExecutable(Executable):
     wrapped: Callable
 
     def call(self, args: Parsed):
+        breakpoint()
         self.wrapped(
             *args["pos_args"],
             **args["options"],
