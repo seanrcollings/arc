@@ -1,4 +1,4 @@
-from unittest import TestCase, mock
+from unittest import mock
 from pathlib import Path
 import pytest
 
@@ -9,10 +9,10 @@ from arc.builtin.debug import debug
 
 def test_base(cli: CLI):
     @cli.default()
-    def base(val: int):
+    def base(val: int = 1):
         return val
 
-    assert cli("val=2") == 2
+    assert cli("--val 2") == 2
 
 
 def test_install_group(cli: CLI):
@@ -26,8 +26,8 @@ def test_install_group(cli: CLI):
 
 
 def test_execute(cli: CLI):
-    cli("func1 x=2")
-    cli("func2 x=2")
+    cli("func1 2")
+    cli("func2 2")
 
 
 def test_nonexistant_command(cli: CLI):
@@ -62,10 +62,10 @@ def test_command_alias(cli: CLI):
     assert cli("name2")
 
 
-def test_keybab(cli: CLI):
+def test_kebab(cli: CLI):
     @cli.subcommand()
-    def two_words(first_name):
-        return True
+    def two_words(first_name: str = ""):
+        return first_name
 
-    assert cli("two_words first_name=sean")
-    assert cli("two-words first-name=sean")
+    assert cli("two_words --first_name sean")
+    assert cli("two-words --first-name sean")

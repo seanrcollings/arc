@@ -89,8 +89,7 @@ class CLI(Command):
 
     # pylint: disable=redefined-builtin
     def missing_command(self, help: bool, version: bool, ctx: Context, **_kwargs):
-        """Handles default arguments
-        View specific help with "help <command-name>"
+        """View specific help with "help <command-name>"
 
         # Arguments
             help: shows this help
@@ -101,11 +100,10 @@ class CLI(Command):
         elif version:
             print(self.name, self.version)
         elif self.default_action:
-            if self.default_action:
-                ctx.execution_state.command_chain += [self.default_action]
-                return self.default_action.run(ctx.execution_state)
+            ctx.execution_state.command_chain += [self.default_action]
+            return self.default_action.run(ctx.execution_state)
 
-            return self("help")
+        return self("help")
 
     def autocomplete(self, completions_for: str = None):
         """Enables autocompletion support for this CLI

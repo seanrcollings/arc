@@ -96,10 +96,10 @@ class Executable:
         return self._pos_args
 
     @property
-    def optional_args(self):
+    def keyword_args(self):
         if not self._options:
             self._options = [
-                arg for arg in self.args.values() if arg.is_option() and not arg.hidden
+                arg for arg in self.args.values() if arg.is_keyword() and not arg.hidden
             ]
         return self._options
 
@@ -127,7 +127,7 @@ class Executable:
             ]
 
         args["options"] = {
-            key: arg.default for key, arg in self.args.items() if arg.is_option()
+            key: arg.default for key, arg in self.args.items() if arg.is_keyword()
         } | args["options"]
 
         args["flags"] = {
@@ -146,6 +146,7 @@ class Executable:
         args["options"] |= hidden
 
     def get_or_raise(self, key: str, message):
+        key = key.replace("-", "_")
         arg = self.args.get(key)
         if arg and not arg.hidden:
             return arg
@@ -158,15 +159,22 @@ class Executable:
 
     ### Validators ###
     def verify_args_filled(self, arguments: Parsed):
-        for key, values in arguments.items():
+        for _, values in arguments.items():
             if isinstance(values, dict):
-                values = values.values()
-            values = cast(list, values)
+                for argname, argvalue in values.items():
+                    if argvalue is NO_DEFAULT:
+                        raise errors.ValidationError(
+                            f"No value provided for argument: {colorize(argname, fg.YELLOW)}"
+                        )
 
-            if NO_DEFAULT in values:
-                raise errors.ValidationError(
-                    f"No value provided for argument: {colorize(key, fg.YELLOW)}"
-                )
+            else:
+                values = cast(list, values)
+                for idx, argvalue in enumerate(values):
+                    if argvalue is NO_DEFAULT:
+                        arg = self.pos_args[idx]
+                        raise errors.ValidationError(
+                            f"No value provided for argument: {colorize(arg.name, fg.YELLOW)}"
+                        )
 
     ### Setup ###
     def build_args(self, short_args=None):
@@ -184,7 +192,7 @@ class FunctionExecutable(Executable):
     wrapped: Callable
 
     def call(self, args: Parsed):
-        self.wrapped(
+        return self.wrapped(
             *args["pos_args"],
             **args["options"],
             **args["flags"],

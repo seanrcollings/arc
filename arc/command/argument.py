@@ -29,11 +29,14 @@ class Argument:
         else:
             if "short" in modifiers:
                 name = self.short
+                denoter = config.short_flag_denoter
+            else:
+                denoter = config.flag_denoter
 
-            formatted = f"{config.flag_denoter}{name}"
+            formatted = f"{denoter}{name}"
 
             if "usage" in modifiers:
-                if self.is_option():
+                if self.is_keyword():
                     formatted += " <...>"
                 formatted = f"[{formatted}]"
 
@@ -49,7 +52,7 @@ class Argument:
     def is_flag(self):
         return self.annotation is bool
 
-    def is_option(self):
+    def is_keyword(self):
         return self.default is not NO_DEFAULT and self.annotation is not bool
 
     def is_positional(self):

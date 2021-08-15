@@ -34,7 +34,7 @@ class ArgumentParser:
         self.parsed: Parsed = {"pos_args": [], "options": {}, "flags": {}}
 
     def parse(self, to_parse: list[str]):
-        self.to_parse = to_parse
+        self.to_parse = to_parse.copy()
         while len(self.to_parse) > 0:
             curr_token = self.consume()
             for name, regex in self.matchers.items():
@@ -49,10 +49,10 @@ class ArgumentParser:
     ### Handlers ###
     def handle_match(self, match: re.Match, name: str) -> tuple[str, Any]:
         groups: Union[dict[str, str], str] = self.get_match_values(match)
-        if isinstance(groups, dict):
-            groups = {key: value.replace("-", "_") for key, value in groups.items()}
-        else:
-            groups = groups.replace("-", "_")
+        # if isinstance(groups, dict):
+        #     groups = {key: value.replace("-", "_") for key, value in groups.items()}
+        # else:
+        #     groups = groups.replace("-", "_")
 
         handler: Callable = getattr(self, f"handle_{name}")
         try:
@@ -77,10 +77,10 @@ class ArgumentParser:
                 option, f"Option {colorize('--' + option, fg.YELLOW)} not found."
             )
             if arg.is_flag():
-                self.parsed["flags"][option] = not arg.default
+                self.parsed["flags"][arg.name] = not arg.default
             elif self.peek():
                 value = self.consume()
-                self.parsed["options"][option] = arg.convert(value)
+                self.parsed["options"][arg.name] = arg.convert(value)
             else:
                 raise errors.ParserError(
                     f"Option {colorize('--' + option, fg.YELLOW)} requires a value"
