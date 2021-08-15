@@ -35,7 +35,11 @@ class ParserError(ArcError):
     """Raised when there is an error parsing the arguments"""
 
 
-class MissingArgError(ParserError):
+class ArgumentError(ArcError):
+    """Raised when an error occurs to the scope of a single argument"""
+
+
+class MissingArgError(ArgumentError):
     def __init__(self, message: str, **data):
         super().__init__(message)
         self.data = data

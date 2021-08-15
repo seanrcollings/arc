@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Callable, Any, Optional, Union, TypedDict, TYPE_CHECKING
+from typing import Callable, Any, Optional, Union, TypedDict, TYPE_CHECKING, Iterator
 import re
 
 from arc import errors
@@ -26,15 +26,17 @@ class ArgumentParser:
         "value": re.compile("^(.+)$"),
     }
 
+    pos_args: Iterator[Argument]
+    to_parse: list[str]
+
     def __init__(self, executable: Executable):
         self.executable = executable
-        self.to_parse: list[str] = []
         self.pos_only = False
-        self.pos_args = iter(self.executable.pos_args)
         self.parsed: Parsed = {"pos_args": [], "options": {}, "flags": {}}
 
     def parse(self, to_parse: list[str]):
         self.to_parse = to_parse.copy()
+        self.pos_args = iter(self.executable.pos_args)
         while len(self.to_parse) > 0:
             curr_token = self.consume()
             for name, regex in self.matchers.items():
@@ -44,7 +46,9 @@ class ArgumentParser:
             else:
                 raise errors.ParserError(f"Could not parse {curr_token}")
 
-        return self.parsed
+        parsed = self.parsed
+        self.parsed = {"pos_args": [], "options": {}, "flags": {}}
+        return parsed
 
     ### Handlers ###
     def handle_match(self, match: re.Match, name: str) -> tuple[str, Any]:

@@ -24,15 +24,15 @@ class TestRunFunction:
     def test_success(self, runcli: CLI):
         run(runcli, "ok") == Ok()
         run(runcli, "err") == Err()
-        run(runcli, "func1 x=hi") == Ok("hi")
-        run(runcli, "func2 x=2") == Ok(2)
+        run(runcli, "func1 hi") == Ok("hi")
+        run(runcli, "func2 2") == Ok(2)
 
     def test_failure(self, runcli: CLI):
         with pytest.raises(errors.ValidationError):
             run(runcli, "func1")
 
         with pytest.raises(errors.CommandError):
-            run(runcli, "func2 x=string")
+            run(runcli, "func2 string")
 
     def test_handle_exception(self, runcli: CLI):
         config.mode = "production"
@@ -40,11 +40,11 @@ class TestRunFunction:
             run(runcli, "func1", handle_exception=True)
 
         with pytest.raises(SystemExit):
-            run(runcli, "func2 x=string", handle_exception=True)
+            run(runcli, "func2 string", handle_exception=True)
 
     def test_check_result(self, runcli: CLI):
-        run(runcli, "func1 x=hi", check_result=True) == "hi"
-        run(runcli, "func2 x=2", check_result=True) == 2
+        run(runcli, "func1 hi", check_result=True) == "hi"
+        run(runcli, "func2 2", check_result=True) == 2
 
         config.mode = "production"
         with pytest.raises(errors.ExecutionError):

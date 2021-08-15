@@ -60,12 +60,3 @@ def test_command_alias(cli: CLI):
         return True
 
     assert cli("name2")
-
-
-def test_kebab(cli: CLI):
-    @cli.subcommand()
-    def two_words(first_name: str = ""):
-        return first_name
-
-    assert cli("two_words --first_name sean")
-    assert cli("two-words --first-name sean")

@@ -35,3 +35,12 @@ class ExecutionState:
             self.__ctx = ctx
 
         return self.__ctx
+
+    @classmethod
+    def empty(cls):
+        return ExecutionState(
+            user_input=[],
+            command_namespace=[],
+            command_args=[],
+            command_chain=[],
+        )
