@@ -1,3 +1,4 @@
+from typing_extensions import TypedDict
 import pytest
 from arc import run, CLI, namespace, errors
 from arc.command import Context

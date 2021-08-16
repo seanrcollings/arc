@@ -53,23 +53,6 @@ class CommandExecutor:
         self.exec_callbacks("before", arguments)
         self.start_around_callbacks(arguments)
 
-    # def call_function(self, state, arguments):
-    #     return
-    #     # # The parsers always spit out a dictionary of arguements
-    #     # # and values. This doesn't allow *args to work, because you can't
-    #     # # spread *args after **kwargs. So the parser stores the *args in
-    #     # # _args and then we spread it manually. Note that this relies
-    #     # # on dictionaires being ordered
-    #     # if "_args" in arguments:
-    #     #     var_args = arguments.pop("_args")
-    #     #     result = self.function(*arguments.values(), *var_args)
-    #     # else:
-    #     #     result = self.function(**arguments)
-
-    #     # if not isinstance(result, (Ok, Err)):
-    #     #     return Ok(result)
-    #     # return result
-
     def inheritable_callbacks(self):
         return {
             key: {
