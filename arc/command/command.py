@@ -9,7 +9,6 @@ from arc import utils
 from arc.result import Result
 
 from .argument_parser import ArgumentParser
-from .command_executor import CommandExecutor
 from .command_doc import CommandDoc
 from .executable import Executable, WrappedExectuable
 
@@ -35,7 +34,7 @@ class Command:
 
         self.executable = Executable(executable, short_args)
         self.parser = ArgumentParser(self.executable)
-        self.executor = CommandExecutor(self.executable)
+        # self.executor = CommandExecutor(self.executable)
 
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
@@ -67,7 +66,7 @@ class Command:
         parsed_args = self.parser.parse(exec_state.command_args)
 
         logger.debug("Parsed arguments: %s", pprint.pformat(parsed_args))
-        return self.executor.execute(parsed_args, exec_state)
+        return self.executable.run(parsed_args, exec_state)
 
     ### Building Subcommands ###
 
@@ -116,7 +115,9 @@ class Command:
         """Installs a command object as a subcommand
         of the current object"""
         self.subcommands[command.name] = command
-        command.executor.register_callbacks(**self.executor.inheritable_callbacks())
+        command.executable.callback_store.register_callbacks(
+            **self.executable.callback_store.inheritable_callbacks()
+        )
 
         logger.debug(
             "Registered %s%s%s command to %s%s%s",

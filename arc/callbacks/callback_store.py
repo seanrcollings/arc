@@ -1,23 +1,21 @@
 from __future__ import annotations
-from typing import Callable, Any, Generator
+from typing import Callable, Generator
 import logging
 
-from arc.execution_state import ExecutionState
 from arc.color import fg, colorize
-from arc.command.executable import Executable
+
 from arc.command.argument_parser import Parsed
-from arc import errors, utils
-from arc.result import Ok, Result
+from arc import errors
+from arc.result import Result
 from arc.callbacks.callbacks import CallbackTime
 
 logger = logging.getLogger("arc_logger")
 
 
-class CommandExecutor:
-    """Handles the execution of a commands's function"""
+class CallbackStore:
+    """Stores and handles the execution of callback functions"""
 
-    def __init__(self, executable: Executable):
-        self.executable = executable
+    def __init__(self):
         self.callbacks: dict[CallbackTime, set[Callable]] = {
             "before": set(),
             "around": set(),
@@ -28,30 +26,13 @@ class CommandExecutor:
 
         self.__gens: list[Generator] = []
 
-    @utils.timer("Command Execution")
-    def execute(self, arguments: Parsed, state: ExecutionState):
-        """Executes the command's functions
-
-        Args:
-            arguments (Parsed): Arguments parsed by an `ArgumentParser`
-
-        Returns:
-            Any: What the command's function returns
-        """
-        result: Result[Any, Any] = Ok()
-        self.setup(arguments)
-
-        try:
-            result = self.executable.run(arguments, state)
-        finally:
-            self.end_around_callbacks(result)
-            self.exec_callbacks("after", result)
-
-        return result
-
-    def setup(self, arguments: Parsed):
+    def pre_execution(self, arguments: Parsed):
         self.exec_callbacks("before", arguments)
         self.start_around_callbacks(arguments)
+
+    def post_execution(self, result: Result):
+        self.end_around_callbacks(result)
+        self.exec_callbacks("after", result)
 
     def inheritable_callbacks(self):
         return {

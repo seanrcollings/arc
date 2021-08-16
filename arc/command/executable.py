@@ -18,10 +18,11 @@ import logging
 from arc.result import Err, Ok, Result
 from arc.execution_state import ExecutionState
 from arc.command.arg_builder import ArgBuilder
-from arc import errors
+from arc import errors, utils
 from arc.color import colorize, fg
 from arc.command.argument import NO_DEFAULT, Argument
 from arc.command.context import Context
+from arc.callbacks.callback_store import CallbackStore
 
 
 if TYPE_CHECKING:
@@ -58,21 +59,27 @@ class Executable:
         self.wrapped = wrapped
         self.pass_args = False
         self.pass_kwargs = False
-        self.build_args(short_args)
+        self.callback_store = CallbackStore()
         self._pos_args: list[Argument] = []
         self._flags: list[Argument] = []
         self._options: list[Argument] = []
         self._visible: list[Argument] = []
         self._hidden: list[Argument] = []
+        self.build_args(short_args)
 
+    @utils.timer("Command Execution ")
     def run(self, args: Parsed, state: ExecutionState) -> Result:
         self.fill_defaults(args)
         self.fill_hidden(args, state)
         self.verify_args_filled(args)
         logger.debug("Function Arguments: %s", pprint.pformat(args))
         logger.debug(BAR)
-        result = self.call(args)
-        logger.debug(BAR)
+        self.callback_store.pre_execution(args)
+        try:
+            result = self.call(args)
+        finally:
+            logger.debug(BAR)
+            self.callback_store.post_execution(result)
 
         if not isinstance(result, (Ok, Err)):
             return Ok(result)
@@ -83,8 +90,6 @@ class Executable:
 
     def call(self, _args: Parsed) -> Result:
         return Err("Not a valid call")
-
-    ### Helpers ###
 
     @property
     def pos_args(self):
@@ -124,6 +129,7 @@ class Executable:
             self._visible = [arg for arg in self.args.values() if not arg.hidden]
         return self._visible
 
+    ### Pre-Execution Processing ###
     def fill_defaults(self, args: Parsed):
         if len(self.pos_args) > len(args["pos_args"]):
             args["pos_args"] += [
@@ -151,18 +157,6 @@ class Executable:
                 hidden[arg.name] = arg.annotation(state.context)
 
         args["options"] |= hidden
-
-    def get_or_raise(self, key: str, message):
-        key = key.replace("-", "_")
-        arg = self.args.get(key)
-        if arg and not arg.hidden:
-            return arg
-
-        for arg in self.args.values():
-            if key == arg.short and not arg.hidden:
-                return arg
-
-        raise errors.MissingArgError(message, name=key)
 
     ### Validators ###
     def verify_args_filled(self, arguments: Parsed):
@@ -194,6 +188,20 @@ class Executable:
 
             self.args = builder.args
 
+    ### Helpesr ###
+
+    def get_or_raise(self, key: str, message):
+        key = key.replace("-", "_")
+        arg = self.args.get(key)
+        if arg and not arg.hidden:
+            return arg
+
+        for arg in self.args.values():
+            if key == arg.short and not arg.hidden:
+                return arg
+
+        raise errors.MissingArgError(message, name=key)
+
 
 class FunctionExecutable(Executable):
     wrapped: Callable
@@ -219,7 +227,9 @@ class ClassExecutable(Executable):
     wrapped: type[WrappedClassExecutable]
 
     def __init__(self, wrapped: type[WrappedClassExecutable], *args, **kwargs):
-        assert hasattr(wrapped, "handle")
+        assert hasattr(
+            wrapped, "handle"
+        ), f"Class-based commands must have a {colorize('handle()', fg.YELLOW)} method"
 
         self.var_pos_args_name: Optional[str] = None
         self.var_keyword_args_name: Optional[str] = None
