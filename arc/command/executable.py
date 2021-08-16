@@ -62,6 +62,7 @@ class Executable:
         self._pos_args: list[Argument] = []
         self._flags: list[Argument] = []
         self._options: list[Argument] = []
+        self._visible: list[Argument] = []
         self._hidden: list[Argument] = []
 
     def run(self, args: Parsed, state: ExecutionState) -> Result:
@@ -116,6 +117,12 @@ class Executable:
         if not self._hidden:
             self._hidden = [arg for arg in self.args.values() if arg.hidden]
         return self._hidden
+
+    @property
+    def visible_args(self):
+        if not self._visible:
+            self._visible = [arg for arg in self.args.values() if not arg.hidden]
+        return self._visible
 
     def fill_defaults(self, args: Parsed):
         if len(self.pos_args) > len(args["pos_args"]):

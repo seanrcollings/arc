@@ -162,12 +162,12 @@ class ArgumentParser:
         return match.groups()[0]
 
     def find_argument_suggestions(self, missing: str) -> Optional[Argument]:
-        if config.suggest_on_missing_argument and len(self.executable.args) > 0:
+
+        if config.suggest_on_missing_argument and len(self.executable.visible_args) > 0:
             distance, arg = min(
                 (
                     (levenshtein(arg.name, missing), arg)
-                    for arg in self.executable.args.values()
-                    if not arg.hidden
+                    for arg in self.executable.visible_args
                 ),
                 key=lambda tup: tup[0],
             )

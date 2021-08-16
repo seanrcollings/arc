@@ -31,7 +31,7 @@ class TestRunFunction:
         with pytest.raises(errors.ValidationError):
             run(runcli, "func1")
 
-        with pytest.raises(errors.CommandError):
+        with pytest.raises(errors.ArgumentError):
             run(runcli, "func2 string")
 
     def test_handle_exception(self, runcli: CLI):

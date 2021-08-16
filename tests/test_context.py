@@ -18,10 +18,10 @@ def test_parent_context(ctx_cli: CLI):
     def ignore_parent_context(val: int):
         return val
 
-    val, context = ctx_cli("parent-context val=2")
+    val, context = ctx_cli("parent-context 2")
     assert val == 2
     assert context.test == 1
-    assert ctx_cli("ignore-parent-context val=2") == 2
+    assert ctx_cli("ignore-parent-context 2") == 2
 
 
 def test_my_context(ctx_cli: CLI):
