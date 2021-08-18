@@ -12,7 +12,7 @@ CallbackTime = Literal["before", "around", "after"]
 
 def register_wrapper(when: CallbackTime, func, **kwargs):
     def register(command: Command):
-        command.executor.register_callback(when, func, **kwargs)
+        command.executable.callback_store.register_callback(when, func, **kwargs)
         return command
 
     return register
@@ -86,7 +86,7 @@ def skip(*skip_callbacks):
     def wrapper(command: Command):
         unwrapped = {c.__wrapped__ for c in skip_callbacks}
         callbacks: set
-        for callbacks in command.executor.callbacks.values():
+        for callbacks in command.executable.callback_store.callbacks.values():
             intersect = callbacks.intersection(unwrapped)
             for to_skip in intersect:
                 callbacks.remove(to_skip)

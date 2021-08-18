@@ -1,4 +1,4 @@
-from typing import Dict, Callable, Optional, Any, Type, Union, TYPE_CHECKING
+from typing import Dict, Callable, Optional, Any, Union, TYPE_CHECKING
 import functools
 import pprint
 import logging
@@ -8,8 +8,7 @@ from arc.errors import CommandError
 from arc import utils
 from arc.result import Result
 
-from .argument_parser import ArgumentParser, ParsingMethod
-from .command_executor import CommandExecutor
+from .argument_parser import ArgumentParser
 from .command_doc import CommandDoc
 from .executable import Executable, WrappedExectuable
 
@@ -21,13 +20,10 @@ logger = logging.getLogger("arc_logger")
 
 
 class Command:
-    _command_doc: Optional[CommandDoc] = None
-
     def __init__(
         self,
         name: str,
         executable: WrappedExectuable,
-        parser: Type[ArgumentParser] = ParsingMethod.STANDARD,
         context: Optional[Dict] = None,
         short_args=None,
     ):
@@ -36,9 +32,9 @@ class Command:
         self.subcommand_aliases: dict[str, str] = {}
         self.context = context or {}
 
-        self.executable = Executable(executable, parser.arg_hook, short_args)
-        self.parser: ArgumentParser = parser(self.executable)
-        self.executor = CommandExecutor(self.executable)
+        self.executable = Executable(executable, short_args)
+        self.parser = ArgumentParser(self.executable)
+        # self.executor = CommandExecutor(self.executable)
 
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
@@ -53,14 +49,15 @@ class Command:
     @function.setter
     def function(self, func: Callable):
         self.executable.wrapped = func
-        self.executable.build_args(self.parser.arg_hook)
+        self.executable.build_args()
 
-    @property
-    def doc(self) -> CommandDoc:
-        if not self._command_doc:
-            self._command_doc = CommandDoc(self.function.__doc__ or "", ("usage",))
-
-        return self._command_doc
+    def doc(self, state: "ExecutionState") -> CommandDoc:
+        doc = CommandDoc(
+            self.function.__doc__ or "",
+            state,
+            ("usage",),
+        )
+        return doc
 
     ### Execution ###
 
@@ -69,14 +66,13 @@ class Command:
         parsed_args = self.parser.parse(exec_state.command_args)
 
         logger.debug("Parsed arguments: %s", pprint.pformat(parsed_args))
-        return self.executor.execute(parsed_args, exec_state)
+        return self.executable.run(parsed_args, exec_state)
 
     ### Building Subcommands ###
 
     def subcommand(
         self,
         name: Union[str, list[str], tuple[str, ...]] = None,
-        parsing_method: type[ArgumentParser] = None,
         context: dict[str, Any] = None,
         short_args: dict[str, str] = None,
     ):
@@ -87,9 +83,6 @@ class Command:
                 this subcommand by. Can optionally be a `list` of names. In this case,
                 the first in the list will be treated as the "true" name, and the others
                 will be treated as aliases. If no value is provided, `function.__name__` is used
-            parsing_method (type[ArgumentParser], optional): The way to parse this command's
-                arguments. `ParsingMethod` contains constants to reference for each method.
-                Defaults to the parsing method of `self`.
             context (dict[str, Any], optional): Special data that will be
                 passed to this command (and any subcommands) at runtime. Defaults to None.
             short_args (dict[str, Union[Iterable[str], str]], optional): Secondary names
@@ -108,7 +101,6 @@ class Command:
             command = Command(
                 command_name,
                 wrapped,
-                parsing_method or type(self.parser),
                 context or {},
                 short_args,
             )
@@ -123,7 +115,9 @@ class Command:
         """Installs a command object as a subcommand
         of the current object"""
         self.subcommands[command.name] = command
-        command.executor.register_callbacks(**self.executor.inheritable_callbacks())
+        command.executable.callback_store.register_callbacks(
+            **self.executable.callback_store.inheritable_callbacks()
+        )
 
         logger.debug(
             "Registered %s%s%s command to %s%s%s",

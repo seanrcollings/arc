@@ -1,24 +1,21 @@
 from __future__ import annotations
-from typing import Callable, Any, Generator
-import pprint
+from typing import Callable, Generator
 import logging
 
-from arc.execution_state import ExecutionState
 from arc.color import fg, colorize
-from arc.command.executable import Executable
-from arc import errors, utils
-from arc.result import Ok, Result
+
+from arc.command.argument_parser import Parsed
+from arc import errors
+from arc.result import Result
 from arc.callbacks.callbacks import CallbackTime
 
 logger = logging.getLogger("arc_logger")
-BAR = "\u2500" * 40
 
 
-class CommandExecutor:
-    """Handles the execution of a commands's function"""
+class CallbackStore:
+    """Stores and handles the execution of callback functions"""
 
-    def __init__(self, executable: Executable):
-        self.executable = executable
+    def __init__(self):
         self.callbacks: dict[CallbackTime, set[Callable]] = {
             "before": set(),
             "around": set(),
@@ -29,50 +26,13 @@ class CommandExecutor:
 
         self.__gens: list[Generator] = []
 
-    @utils.timer("Command Execution")
-    def execute(self, arguments: dict[str, Any], state: ExecutionState):
-        """Executes the command's functions
-
-        Args:
-            arguments (dict[str, Any]): Arguments parsed by an `ArgumentParser`
-
-        Returns:
-            Any: What the command's function returns
-        """
-        result: Result[Any, Any] = Ok()
-        self.setup(arguments)
-
-        try:
-            logger.debug(BAR)
-            result = self.executable.run(arguments, state)
-        finally:
-            logger.debug(BAR)
-            self.end_around_callbacks(result)
-            self.exec_callbacks("after", result)
-
-        return result
-
-    def setup(self, arguments: dict[str, Any]):
+    def pre_execution(self, arguments: Parsed):
         self.exec_callbacks("before", arguments)
         self.start_around_callbacks(arguments)
-        logger.debug("Function Arguments: %s", pprint.pformat(arguments))
 
-    # def call_function(self, state, arguments):
-    #     return
-    #     # # The parsers always spit out a dictionary of arguements
-    #     # # and values. This doesn't allow *args to work, because you can't
-    #     # # spread *args after **kwargs. So the parser stores the *args in
-    #     # # _args and then we spread it manually. Note that this relies
-    #     # # on dictionaires being ordered
-    #     # if "_args" in arguments:
-    #     #     var_args = arguments.pop("_args")
-    #     #     result = self.function(*arguments.values(), *var_args)
-    #     # else:
-    #     #     result = self.function(**arguments)
-
-    #     # if not isinstance(result, (Ok, Err)):
-    #     #     return Ok(result)
-    #     # return result
+    def post_execution(self, result: Result):
+        self.end_around_callbacks(result)
+        self.exec_callbacks("after", result)
 
     def inheritable_callbacks(self):
         return {

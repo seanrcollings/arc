@@ -73,7 +73,6 @@ def run(
             command_namespace=command_namespace,
             command_args=command_args,
             command_chain=command_chain,
-            command=command,
         )
 
         logger.debug(

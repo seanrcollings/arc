@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import enum
 
-from arc import command, Context, ParsingMethod as pm
+from arc import command, Context
 from arc.autocomplete import fish
 
 if TYPE_CHECKING:
@@ -18,7 +18,7 @@ class Shell(enum.Enum):
     FISH = "fish"
 
 
-@command(parsing_method=pm.POSITIONAL)
+@command()
 def autocomplete(shell: Shell, ctx: AutocompleteContext):
     """Provided shell autocompletion support"""
     exec_name = ctx.init["completions_for"]

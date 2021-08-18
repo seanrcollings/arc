@@ -1,18 +1,13 @@
 import logging
-from typing import Callable, Optional, Type
+from typing import Callable, Optional
 
-from arc import help_text, utils
+from arc import utils
 from arc.autoload import Autoload
 from arc.color import effects, fg
-from arc.command import (
-    ArgumentParser,
-    Command,
-    ParsingMethod,
-    PositionalParser,
-    Context,
-)
+from arc.command import Command, Context
 from arc.config import config
-from arc.run import find_command_chain, run
+from arc.run import find_command_chain, get_command_namespace, run
+from arc.execution_state import ExecutionState
 
 
 class CLI(Command):
@@ -22,7 +17,6 @@ class CLI(Command):
         self,
         name: str = "cli",
         function: Callable = None,
-        parsing_method: Type[ArgumentParser] = ParsingMethod.STANDARD,
         arcfile: str = ".arc",
         context: dict = None,
         version: str = "¯\\_(ツ)_/¯",
@@ -40,7 +34,6 @@ class CLI(Command):
         super().__init__(
             name,
             self.missing_command,
-            parsing_method,
             context,
             short_args={"help": "h", "version": "v"},
         )
@@ -48,7 +41,7 @@ class CLI(Command):
         self.__logging_setup()
         utils.header("INIT")
         self.version = version
-        self.install_command(Command("help", self.helper, parser=PositionalParser))
+        self.install_command(Command("help", self.helper))
         self.default_action: Optional[Command] = (
             self.default()(function) if function else None
         )
@@ -96,8 +89,7 @@ class CLI(Command):
 
     # pylint: disable=redefined-builtin
     def missing_command(self, help: bool, version: bool, ctx: Context, **_kwargs):
-        """Handles default arguments
-        View specific help with "help <command-name>"
+        """View specific help with "help <command-name>"
 
         # Arguments
             help: shows this help
@@ -108,11 +100,10 @@ class CLI(Command):
         elif version:
             print(self.name, self.version)
         elif self.default_action:
-            if self.default_action:
-                ctx.execution_state.command = self.default_action
-                return self.default_action.run(ctx.execution_state)
+            ctx.execution_state.command_chain += [self.default_action]
+            return self.default_action.run(ctx.execution_state)
 
-            return self("help")
+        return self("help")
 
     def autocomplete(self, completions_for: str = None):
         """Enables autocompletion support for this CLI
@@ -136,18 +127,22 @@ class CLI(Command):
         into the CLI from the provided paths"""
         Autoload(paths, self).load()
 
-    def helper(self, command_name: str = ""):
+    def helper(self, command_name: str):
         """Displays information for a given command
         By default, shows help for the top-level command.
         To see a specific command's information, provide
         a command name (some:command:name)
         """
-        namespace = command_name.split(config.namespace_sep) if command_name else []
-        help_text.display_help(
-            self,
-            find_command_chain(self, namespace)[-1],
-            namespace,
+
+        namespace, _args = get_command_namespace([command_name])
+        chain = find_command_chain(self, namespace)
+        state = ExecutionState(
+            user_input=[],
+            command_namespace=namespace,
+            command_args=[],
+            command_chain=chain,
         )
+        print(state.command.doc(state))
 
     def __logging_setup(self):
         root = logging.getLogger("arc_logger")

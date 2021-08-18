@@ -8,5 +8,5 @@ class TestCustomConverter(TestCase):
     @patch("sys.stdout", new_callable=StringIO)
     def test_command(self, mock_out):
         circle = Circle(4)
-        cli("circle --new-circle 4")
+        cli("circle 4")
         assert mock_out.getvalue().strip() == str(circle)

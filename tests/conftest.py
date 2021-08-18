@@ -1,14 +1,14 @@
 import logging
 import pytest
 
-from arc import CLI, ParsingMethod
+from arc import CLI
 
 logger = logging.getLogger("arc_logger")
 
 
 @pytest.fixture
 def cli():
-    cli = CLI(parsing_method=ParsingMethod.KEYWORD, arcfile="tests/.arc")
+    cli = CLI(arcfile="tests/.arc")
     logger.setLevel(logging.CRITICAL)
 
     @cli.subcommand()

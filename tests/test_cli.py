@@ -1,18 +1,18 @@
-from unittest import TestCase, mock
+from unittest import mock
 from pathlib import Path
 import pytest
 
-from arc import CLI, namespace, ParsingMethod
+from arc import CLI, namespace
 from arc.errors import CommandError
 from arc.builtin.debug import debug
 
 
 def test_base(cli: CLI):
     @cli.default()
-    def base(val: int):
+    def base(val: int = 1):
         return val
 
-    assert cli("val=2") == 2
+    assert cli("--val 2") == 2
 
 
 def test_install_group(cli: CLI):
@@ -26,8 +26,8 @@ def test_install_group(cli: CLI):
 
 
 def test_execute(cli: CLI):
-    cli("func1 x=2")
-    cli("func2 x=2")
+    cli("func1 2")
+    cli("func2 2")
 
 
 def test_nonexistant_command(cli: CLI):
@@ -60,20 +60,3 @@ def test_command_alias(cli: CLI):
         return True
 
     assert cli("name2")
-
-
-def test_keybab(cli: CLI):
-    @cli.subcommand()
-    def two_words(first_name):
-        return True
-
-    assert cli("two_words first_name=sean")
-    assert cli("two-words first-name=sean")
-
-
-def test_positional(cli: CLI):
-    @cli.subcommand(parsing_method=ParsingMethod.POSITIONAL)
-    def pos(val: int):
-        return True
-
-    assert cli("pos 2")

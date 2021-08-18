@@ -5,7 +5,7 @@ import subprocess
 import re
 from pathlib import Path
 
-from arc import CLI, ParsingMethod, color, __version__
+from arc import CLI, color, __version__
 
 from .templates import templates
 
@@ -25,7 +25,7 @@ open_map = {
 }
 
 
-@cli.command(("open", "o"), parsing_method=ParsingMethod.POSITIONAL)
+@cli.command(("open", "o"))
 def open_link(name: OpenEnum):
     """Opens an arc related link"""
     webbrowser.open(open_map[name])
@@ -40,7 +40,7 @@ def classify(string: str):
     return "".join(word.title() for word in string.split("_"))
 
 
-@cli.command(("init", "i"), parsing_method=ParsingMethod.POSITIONAL)
+@cli.command(("init", "i"))
 def init_command(name: str, method: InitEnum):
     """Initalize a new arc-based Python project"""
     project = Path(os.getcwd() + f"/{name}")
@@ -70,7 +70,7 @@ if os.getenv("ARC_DEVELOPMENT") == "true":
     def color_print(message: str):
         print(f"{color.fg.ARC_BLUE}{message}{color.effects.CLEAR}")
 
-    @cli.command(("deploy", "d"), parsing_method=ParsingMethod.POSITIONAL)
+    @cli.command(("deploy", "d"))
     def deploy(version: str):
         """Handle the details of deploying a new version of arc"""
         color_print("Running Tests...")
