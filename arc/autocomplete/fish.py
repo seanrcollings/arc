@@ -4,6 +4,7 @@ from pathlib import Path
 from arc import types
 from arc.config import config
 from arc.command import Command, helpers
+from arc.execution_state import ExecutionState
 
 COMPLETE = "complete -c"
 SEEN_SUBCOMMAND = "__fish_seen_subcommand_from"
@@ -112,35 +113,32 @@ def generate(name: str, root: Command) -> str:
 def command_completions(
     completions: FishCompletion, commands: list[tuple[Command, str]]
 ):
+
     for command, cmd_name in commands:
+        state = ExecutionState.empty()
+        state.command_chain = [command]
         (
             completions.not_seen_subcommand("$commands")
             .arguments(cmd_name)
-            .description(command.doc.short_description)
+            .description(command.doc(state).short_description)
             .flush()
         )
 
 
 def argument_completions(completions: FishCompletion, command: Command, cmd_name: str):
-    parse_type = type(command.parser)
-
     completions.comment(f"{cmd_name} Arguments")
-    for arg in command.parser.args.values():
+    for arg in command.executable.args.values():
 
-        if arg.hidden:
+        if arg.hidden or arg.is_positional():
             continue
 
         if arg.is_flag():
             completions.seen_subcommand(cmd_name).short(arg.name[0]).long(arg.name)
 
-        elif parse_type is ParsingMethod.STANDARD:
-            completions.seen_subcommand(cmd_name).required().long(arg.name)
+        elif arg.is_keyword():
+            completions.seen_subcommand(cmd_name).long(arg.name)
             if arg.short:
                 completions.short(arg.short)
-        elif parse_type is ParsingMethod.KEYWORD:
-            completions.seen_subcommand(cmd_name).arguments(
-                f"{arg.name}{config.arg_assignment}"
-            )
 
         completions.description(f"{types.type_store.get_display_name(arg.annotation)}")
         if types.safe_issubclass(arg.annotation, Path):

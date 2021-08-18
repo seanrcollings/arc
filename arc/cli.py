@@ -6,7 +6,7 @@ from arc.autoload import Autoload
 from arc.color import effects, fg
 from arc.command import Command, Context
 from arc.config import config
-from arc.run import find_command_chain, run
+from arc.run import find_command_chain, get_command_namespace, run
 from arc.execution_state import ExecutionState
 
 
@@ -127,13 +127,14 @@ class CLI(Command):
         into the CLI from the provided paths"""
         Autoload(paths, self).load()
 
-    def helper(self, command_name: str, ctx: Context):
+    def helper(self, command_name: str):
         """Displays information for a given command
         By default, shows help for the top-level command.
         To see a specific command's information, provide
         a command name (some:command:name)
         """
-        namespace = command_name.split(config.namespace_sep)
+
+        namespace, _args = get_command_namespace([command_name])
         chain = find_command_chain(self, namespace)
         state = ExecutionState(
             user_input=[],

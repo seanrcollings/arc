@@ -62,7 +62,7 @@ class Executable:
         self.callback_store = CallbackStore()
         self._pos_args: list[Argument] = []
         self._flags: list[Argument] = []
-        self._options: list[Argument] = []
+        self._keyword_args: list[Argument] = []
         self._visible: list[Argument] = []
         self._hidden: list[Argument] = []
         self.build_args(short_args)
@@ -77,6 +77,9 @@ class Executable:
         self.callback_store.pre_execution(args)
         try:
             result = self.call(args)
+        except Exception:
+            result = Err("Execution failed")
+            raise
         finally:
             logger.debug(BAR)
             self.callback_store.post_execution(result)
@@ -103,11 +106,11 @@ class Executable:
 
     @property
     def keyword_args(self):
-        if not self._options:
-            self._options = [
+        if not self._keyword_args:
+            self._keyword_args = [
                 arg for arg in self.args.values() if arg.is_keyword() and not arg.hidden
             ]
-        return self._options
+        return self._keyword_args
 
     @property
     def flag_args(self):
