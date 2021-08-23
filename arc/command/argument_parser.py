@@ -1,12 +1,11 @@
 from __future__ import annotations
-from typing import Callable, Any, Optional, Union, TypedDict, TYPE_CHECKING, Iterator
+from typing import Callable, Any, Optional, Union, TypedDict, TYPE_CHECKING
 import re
 
 from arc import errors
 from arc.config import config
 from arc.color import colorize, fg, effects
 from arc.utils import IDENT, levenshtein
-from arc.command.argument import Argument
 from arc.command.param import Param
 
 if TYPE_CHECKING:
@@ -27,7 +26,6 @@ class ArgumentParser:
         "value": re.compile(r"^(.+)$"),
     }
 
-    pos_args: Iterator[Argument]
     to_parse: list[str]
 
     def __init__(self, executable: Executable):

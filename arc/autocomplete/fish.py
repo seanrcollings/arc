@@ -127,16 +127,13 @@ def command_completions(
 
 def argument_completions(completions: FishCompletion, command: Command, cmd_name: str):
     completions.comment(f"{cmd_name} Arguments")
-    for arg in command.executable.args.values():
+    for arg in command.executable.params.values():
 
-        if arg.hidden or arg.is_positional():
+        if arg.hidden or arg.is_positional:
             continue
 
-        if arg.is_flag():
-            completions.seen_subcommand(cmd_name).short(arg.name[0]).long(arg.name)
-
-        elif arg.is_keyword():
-            completions.seen_subcommand(cmd_name).long(arg.name)
+        else:
+            completions.seen_subcommand(cmd_name).long(arg.arg_alias)
             if arg.short:
                 completions.short(arg.short)
 

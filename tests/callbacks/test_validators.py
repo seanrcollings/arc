@@ -10,12 +10,12 @@ def test_in_range(cli: CLI):
     def test(val: int):
         return val
 
-    assert cli("test val=2") == 2
-    assert cli("test val=1") == 1
-    assert cli("test val=10") == 10
+    assert cli("test 2") == 2
+    assert cli("test 1") == 1
+    assert cli("test 10") == 10
 
     with pytest.raises(errors.ValidationError):
-        cli("test val=99")
+        cli("test 99")
 
 
 def test_valid_path_str(cli: CLI):
@@ -24,10 +24,10 @@ def test_valid_path_str(cli: CLI):
     def test(path: str):
         return path
 
-    assert cli("test path=arc") == "arc"
+    assert cli("test arc") == "arc"
 
     with pytest.raises(errors.ValidationError):
-        cli("test path=ainfea")
+        cli("test ainfea")
 
 
 def test_valid_path(cli: CLI):
@@ -36,7 +36,7 @@ def test_valid_path(cli: CLI):
     def test(path: Path):
         return path
 
-    assert cli("test path=arc") == Path("arc")
+    assert cli("test arc") == Path("arc")
 
     with pytest.raises(errors.ValidationError):
-        cli("test path=ainfea")
+        cli("test ainfea")

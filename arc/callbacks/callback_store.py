@@ -1,10 +1,9 @@
 from __future__ import annotations
-from typing import Callable, Generator
+from typing import Any, Callable, Generator
 import logging
 
 from arc.color import fg, colorize
 
-from arc.command.argument_parser import Parsed
 from arc import errors
 from arc.result import Result
 from arc.callbacks.callbacks import CallbackTime
@@ -26,7 +25,10 @@ class CallbackStore:
 
         self.__gens: list[Generator] = []
 
-    def pre_execution(self, arguments: Parsed):
+    def __getitem__(self, key: CallbackTime):
+        return self.callbacks[key]
+
+    def pre_execution(self, arguments: dict[str, Any]):
         self.exec_callbacks("before", arguments)
         self.start_around_callbacks(arguments)
 

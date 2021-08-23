@@ -8,15 +8,17 @@ from arc import errors
 from arc.config import config
 from arc.result import Err, Ok
 from arc.color import colorize, fg
-from arc.command.argument import NO_DEFAULT
 from arc.command.argument_parser import Parsed
 from arc.command.context import Context
-from arc.command.param import Meta, Param, VarKeyword, VarPositional
+from arc.command.param import Meta, Param, VarKeyword, VarPositional, NO_DEFAULT
 from arc.execution_state import ExecutionState
 from arc.types import convert
 from arc.types.helpers import is_annotated, safe_issubclass
+from arc.callbacks.callback_store import CallbackStore
 
 logger = logging.getLogger("arc_logger")
+
+BAR = "―" * 40
 
 
 class Executable(abc.ABC):
@@ -33,6 +35,7 @@ class Executable(abc.ABC):
 
     def __init__(self, wrapped: Callable):
         self.wrapped = wrapped
+        self.callback_store = CallbackStore()
         self.params: dict[str, Param] = self.build_params(wrapped)
 
     def __call__(self, parsed: Parsed, state: ExecutionState):
@@ -43,16 +46,20 @@ class Executable(abc.ABC):
         arguments |= self.handle_flags(parsed["flags"])
         arguments |= self.handle_hidden()
 
+        self.callback_store.pre_execution(arguments)
+        logger.debug(BAR)
+
         try:
             result = self.run(arguments)
+            if not isinstance(result, (Ok, Err)):
+                result = Ok(result)
         except Exception:
             result = Err("Execution failed")
             raise
         finally:
-            ...
+            logger.debug(BAR)
+            self.callback_store.post_execution(result)
 
-        if not isinstance(result, (Ok, Err)):
-            result = Ok(result)
         return result
 
     @abc.abstractmethod

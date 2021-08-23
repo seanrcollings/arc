@@ -48,7 +48,7 @@ def test_around(cli: CLI):
     def thing(val: int):
         return val + 2
 
-    assert cli("thing val=2") == 4
+    assert cli("thing 2") == 4
 
 
 def test_inheritance(cli: CLI):
@@ -66,8 +66,8 @@ def test_inheritance(cli: CLI):
     def thing():
         ...
 
-    assert no_inherit.__wrapped__ not in thing.executor.callbacks["before"]  # type: ignore
-    assert before.__wrapped__ in thing.executor.callbacks["before"]  # type: ignore
+    assert no_inherit.__wrapped__ not in thing.executable.callback_store["before"]  # type: ignore
+    assert before.__wrapped__ in thing.executable.callback_store["before"]  # type: ignore
 
 
 def test_skip(cli: CLI):
@@ -81,8 +81,8 @@ def test_skip(cli: CLI):
     def sub():
         ...
 
-    assert before.__wrapped__ in top.executor.callbacks["before"]  # type: ignore
-    assert before.__wrapped__ not in sub.executor.callbacks["before"]  # type: ignore
+    assert before.__wrapped__ in top.executable.callback_store["before"]  # type: ignore
+    assert before.__wrapped__ not in sub.executable.callback_store["before"]  # type: ignore
 
 
 def test_callback_args(cli: CLI):
@@ -100,4 +100,4 @@ def test_callback_args(cli: CLI):
     def func(val: int):
         return val
 
-    assert cli("func val=2") == 2
+    assert cli("func 2") == 2

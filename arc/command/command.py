@@ -118,9 +118,9 @@ class Command:
         """Installs a command object as a subcommand
         of the current object"""
         self.subcommands[command.name] = command
-        # command.executable.callback_store.register_callbacks(
-        #     **self.executable.callback_store.inheritable_callbacks()
-        # )
+        command.executable.callback_store.register_callbacks(
+            **self.executable.callback_store.inheritable_callbacks()
+        )
 
         logger.debug(
             "Registered %s%s%s command to %s%s%s",

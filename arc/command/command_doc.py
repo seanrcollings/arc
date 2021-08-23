@@ -4,7 +4,6 @@ from typing import Union
 
 from arc import errors
 from arc.color import colorize, fg, effects
-from arc.command.argument import Argument
 from arc.execution_state import ExecutionState
 from arc.config import config
 
@@ -203,17 +202,6 @@ class CommandDoc:
         if aliases:
             aliases.append(self.state.command.name)
             self.add_section("names", "\n".join(aliases))
-
-    ### Formatters ###
-
-    def format_short_arg(self, arg: Argument):
-        if arg.is_positional():
-            raise errors.ArcError("Can't format a positional argument as a short arg")
-
-        if arg.short:
-            return f"{config.short_flag_denoter}{arg.short}"
-
-        return None
 
     ### Helpers ###
 
