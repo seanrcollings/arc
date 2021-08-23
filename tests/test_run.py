@@ -28,7 +28,7 @@ class TestRunFunction:
         run(runcli, "func2 2") == Ok(2)
 
     def test_failure(self, runcli: CLI):
-        with pytest.raises(errors.ValidationError):
+        with pytest.raises(errors.ArgumentError):
             run(runcli, "func1")
 
         with pytest.raises(errors.ArgumentError):

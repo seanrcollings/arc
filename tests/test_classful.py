@@ -1,5 +1,6 @@
+from typing import Annotated
 import pytest
-from arc import CLI, errors
+from arc import CLI, errors, Meta
 
 
 def test_basic(cli: CLI):
@@ -12,7 +13,7 @@ def test_basic(cli: CLI):
 
     assert cli("Test 2") == 2
 
-    with pytest.raises(errors.ValidationError):
+    with pytest.raises(errors.ArgumentError):
         cli("Test")
 
 
@@ -29,12 +30,12 @@ def test_default(cli: CLI):
 
 
 def test_short_args(cli: CLI):
-    @cli.subcommand(short_args={"val": "v"})
+    @cli.subcommand()
     class Test:
-        val: int = 2
+        val: Annotated[int, Meta(short="v")] = 2
 
         def handle(self):
             return self.val
 
-    assert cli("Test --val 2") == 2
-    assert cli("Test -v 2") == 2
+    assert cli("Test --val 3") == 3
+    assert cli("Test -v 3") == 3

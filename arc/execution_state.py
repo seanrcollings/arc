@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Optional, TYPE_CHECKING, Any
 from dataclasses import dataclass
-
+from arc.config import config
 
 if TYPE_CHECKING:
     from arc.command import Command
@@ -24,6 +24,10 @@ class ExecutionState:
     @property
     def command(self):
         return self.command_chain[-1]
+
+    @property
+    def command_name(self):
+        return config.namespace_sep.join(self.command_namespace)
 
     @property
     def context(self):

@@ -7,6 +7,7 @@ from arc.config import config
 from arc.color import colorize, fg, effects
 from arc.utils import IDENT, levenshtein
 from arc.command.argument import Argument
+from arc.command.param import Param
 
 if TYPE_CHECKING:
     from arc.command.executable import Executable
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 class Parsed(TypedDict):
     pos_args: list[Any]
     options: dict[str, Any]
-    flags: dict[str, bool]
+    flags: list[str]
 
 
 class ArgumentParser:
@@ -23,7 +24,7 @@ class ArgumentParser:
         "option": re.compile(fr"^{config.flag_denoter}({IDENT})$"),
         "short_option": re.compile(fr"^{config.short_flag_denoter}([a-zA-Z]+)$"),
         "pos_only": re.compile(fr"^({config.flag_denoter})$"),
-        "value": re.compile("^(.+)$"),
+        "value": re.compile(r"^(.+)$"),
     }
 
     pos_args: Iterator[Argument]
@@ -32,11 +33,14 @@ class ArgumentParser:
     def __init__(self, executable: Executable):
         self.executable = executable
         self.pos_only = False
-        self.parsed: Parsed = {"pos_args": [], "options": {}, "flags": {}}
+        self.parsed: Parsed = {
+            "pos_args": [],
+            "options": {},
+            "flags": [],
+        }
 
     def parse(self, to_parse: list[str]):
         self.to_parse = to_parse.copy()
-        self.pos_args = iter(self.executable.pos_args)
         while len(self.to_parse) > 0:
             curr_token = self.consume()
             for name, regex in self.matchers.items():
@@ -47,7 +51,7 @@ class ArgumentParser:
                 raise errors.ParserError(f"Could not parse {curr_token}")
 
         parsed = self.parsed
-        self.parsed = {"pos_args": [], "options": {}, "flags": {}}
+        self.parsed = {"pos_args": [], "options": {}, "flags": []}
         return parsed
 
     ### Handlers ###
@@ -65,7 +69,7 @@ class ArgumentParser:
             arg = self.find_argument_suggestions(e.data["name"])
             if arg:
                 e.message += (
-                    f"\n\tPerhaps you meant {fg.YELLOW}{arg.name}{effects.CLEAR}?"
+                    f"\n\tPerhaps you meant {fg.YELLOW}{arg.arg_alias}{effects.CLEAR}?"
                 )
             raise
 
@@ -80,19 +84,16 @@ class ArgumentParser:
             arg = self.executable.get_or_raise(
                 option, f"Option {colorize('--' + option, fg.YELLOW)} not found."
             )
-            if arg.is_flag():
-                self.parsed["flags"][arg.name] = not arg.default
+            if arg.is_flag:
+                self.parsed["flags"].append(arg.arg_name)
             elif self.peek():
                 value = self.consume()
-                self.parsed["options"][arg.name] = arg.convert(value)
+                self.parsed["options"][arg.arg_name] = value
             else:
                 raise errors.ParserError(
                     f"Option {colorize('--' + option, fg.YELLOW)} requires a value"
                 )
         except errors.MissingArgError as e:
-            if not self.executable.pass_kwargs:
-                raise
-
             if self.peek():
                 value = self.consume()
                 self.parsed["options"][option] = value
@@ -103,27 +104,24 @@ class ArgumentParser:
 
     def handle_short_option(self, short_option):
         for char in short_option:
-            try:
-                arg = self.executable.get_or_raise(
-                    char, f"Option {colorize('-' + short_option, fg.YELLOW)} not found."
+            # try:
+            arg = self.executable.get_or_raise(
+                char, f"Option {colorize('-' + short_option, fg.YELLOW)} not found."
+            )
+            if len(short_option) > 1 and not arg.is_flag:
+                raise errors.ParserError(
+                    f"Option {colorize('-' + char, fg.YELLOW)} requires a value"
                 )
-                if len(short_option) > 1 and not arg.is_flag():
-                    raise errors.ParserError(
-                        f"Option {colorize('-' + char, fg.YELLOW)} requires a value"
-                    )
 
-                self.handle_option(arg.name)
-            except errors.MissingArgError as e:
-                if not self.executable.pass_kwargs:
-                    raise
-
-                if self.peek():
-                    value = self.consume()
-                    self.parsed["options"][short_option] = value
-                else:
-                    raise errors.ParserError(
-                        f"Option {colorize('-' + char, fg.YELLOW)} requires a value"
-                    ) from e
+            self.handle_option(arg.arg_alias)
+            # except errors.MissingArgError as e:
+            #     if self.peek():
+            #         value = self.consume()
+            #         self.parsed["options"][short_option] = value
+            #     else:
+            #         raise errors.ParserError(
+            #             f"Option {colorize('-' + char, fg.YELLOW)} requires a value"
+            #         ) from e
 
     def handle_pos_only(self, _):
         self.pos_only = True
@@ -134,14 +132,7 @@ class ArgumentParser:
             )
 
     def handle_value(self, value):
-        try:
-            arg = next(self.pos_args)
-            self.parsed["pos_args"].append(arg.convert(value))
-        except StopIteration as e:
-            if self.executable.pass_args:
-                self.parsed["pos_args"].append(value)
-            else:
-                raise errors.ParserError("Too many positional arguments") from e
+        self.parsed["pos_args"].append(value)
 
     ### Helpers ###
 
@@ -161,13 +152,15 @@ class ArgumentParser:
 
         return match.groups()[0]
 
-    def find_argument_suggestions(self, missing: str) -> Optional[Argument]:
-
-        if config.suggest_on_missing_argument and len(self.executable.visible_args) > 0:
+    def find_argument_suggestions(self, missing: str) -> Optional[Param]:
+        visible_args = [
+            param for param in self.executable.params.values() if not param.hidden
+        ]
+        if config.suggest_on_missing_argument and len(visible_args) > 0:
             distance, arg = min(
                 (
-                    (levenshtein(arg.name, missing), arg)
-                    for arg in self.executable.visible_args
+                    (levenshtein(param.arg_alias, missing), param)
+                    for param in visible_args
                 ),
                 key=lambda tup: tup[0],
             )

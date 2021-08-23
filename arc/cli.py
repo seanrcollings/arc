@@ -1,3 +1,4 @@
+from arc.command.param import VarKeyword
 import logging
 from typing import Callable, Optional
 
@@ -68,7 +69,7 @@ class CLI(Command):
         """
         return self.subcommand(*args, **kwargs)
 
-    def default(self, name=None, parse_method=None, **kwargs):
+    def default(self, name=None, **kwargs):
         """Define The CLI's default behavior
         when not given a specific command. Has the same interface
         as `Command.subcommand`
@@ -79,7 +80,6 @@ class CLI(Command):
             self.default_action = Command(
                 name or function.__name__,
                 function,
-                parse_method or type(self.parser),
                 **kwargs,
             )
 
@@ -88,7 +88,9 @@ class CLI(Command):
         return decorator
 
     # pylint: disable=redefined-builtin
-    def missing_command(self, help: bool, version: bool, ctx: Context, **_kwargs):
+    def missing_command(
+        self, help: bool, version: bool, ctx: Context, _kwargs: VarKeyword
+    ):
         """View specific help with "help <command-name>"
 
         # Arguments

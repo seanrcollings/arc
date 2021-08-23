@@ -1,4 +1,5 @@
-from typing import Generic, TypeVar, Type
+import functools
+from typing import Generic, TypeVar, Type, Callable, Any
 from abc import ABC, abstractmethod
 
 T = TypeVar("T")

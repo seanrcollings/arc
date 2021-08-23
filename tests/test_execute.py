@@ -1,7 +1,9 @@
 """End to end testing for Commands"""
+from arc.command.param import Meta
 from typing import Literal, Union
 from pathlib import Path
 import enum
+from typing_extensions import Annotated
 import pytest
 
 from arc.errors import ArgumentError, ConversionError, CommandError
@@ -13,8 +15,8 @@ def test_kebab(cli: CLI):
     def two_words(first_name: str = ""):
         return first_name
 
-    assert cli("two_words --first_name sean")
-    assert cli("two-words --first-name sean")
+    assert cli("two_words --first_name sean") == "sean"
+    assert cli("two-words --first-name sean") == "sean"
 
 
 def test_float(cli: CLI):
@@ -154,24 +156,30 @@ def test_nested_union(cli: CLI):
 
 
 def test_short_args(cli: CLI):
-    @cli.subcommand(short_args={"name": "n", "flag": "f"})
-    def ar(name: str, flag: bool):
+    @cli.subcommand()
+    def ar(name: str, flag: Annotated[bool, Meta(short="f")]):
         assert name == "sean"
         assert flag
 
     cli("ar sean --flag")
     cli("ar sean -f")
 
-    with pytest.raises(CommandError):
+    with pytest.raises(ArgumentError):
 
-        @cli.subcommand(short_args={"arg1": "a", "arg2": "a"})
-        def un(arg1: str, arg2: str):
+        @cli.subcommand()
+        def un(
+            arg1: Annotated[bool, Meta(short="a")],
+            arg2: Annotated[bool, Meta(short="a")],
+        ):
             ...
 
-    with pytest.raises(CommandError):
+    with pytest.raises(ArgumentError):
 
-        @cli.subcommand(short_args={"arg1": "a", "arg2": "a2"})
-        def un(arg1: str, arg2: str):
+        @cli.subcommand()
+        def un(
+            arg1: Annotated[bool, Meta(short="a")],
+            arg2: Annotated[bool, Meta(short="a2")],
+        ):
             ...
 
 

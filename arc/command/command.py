@@ -10,7 +10,11 @@ from arc.result import Result
 
 from .argument_parser import ArgumentParser
 from .command_doc import CommandDoc
-from .executable import Executable, WrappedExectuable
+from .executable import (
+    Executable,
+    FunctionExecutable,
+    ClassExecutable,
+)
 
 if TYPE_CHECKING:
     from arc.execution_state import ExecutionState
@@ -23,7 +27,7 @@ class Command:
     def __init__(
         self,
         name: str,
-        executable: WrappedExectuable,
+        executable: Callable,
         context: Optional[Dict] = None,
         short_args=None,
     ):
@@ -32,7 +36,11 @@ class Command:
         self.subcommand_aliases: dict[str, str] = {}
         self.context = context or {}
 
-        self.executable = Executable(executable, short_args)
+        self.executable: Executable = (
+            ClassExecutable(executable)
+            if isinstance(executable, type)
+            else FunctionExecutable(executable)
+        )
         self.parser = ArgumentParser(self.executable)
         # self.executor = CommandExecutor(self.executable)
 
@@ -45,11 +53,6 @@ class Command:
     @property
     def function(self):
         return self.executable.wrapped
-
-    @function.setter
-    def function(self, func: Callable):
-        self.executable.wrapped = func
-        self.executable.build_args()
 
     def doc(self, state: "ExecutionState") -> CommandDoc:
         doc = CommandDoc(
@@ -66,7 +69,7 @@ class Command:
         parsed_args = self.parser.parse(exec_state.command_args)
 
         logger.debug("Parsed arguments: %s", pprint.pformat(parsed_args))
-        return self.executable.run(parsed_args, exec_state)
+        return self.executable(parsed_args, exec_state)
 
     ### Building Subcommands ###
 
@@ -93,7 +96,7 @@ class Command:
         """
 
         # @self.ensure_function
-        def decorator(wrapped: Union[WrappedExectuable, Command]):
+        def decorator(wrapped: Union[Callable, Command]):
             if isinstance(wrapped, Command):
                 wrapped = wrapped.executable.wrapped
 
@@ -115,9 +118,9 @@ class Command:
         """Installs a command object as a subcommand
         of the current object"""
         self.subcommands[command.name] = command
-        command.executable.callback_store.register_callbacks(
-            **self.executable.callback_store.inheritable_callbacks()
-        )
+        # command.executable.callback_store.register_callbacks(
+        #     **self.executable.callback_store.inheritable_callbacks()
+        # )
 
         logger.debug(
             "Registered %s%s%s command to %s%s%s",
