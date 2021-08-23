@@ -12,11 +12,16 @@ from arc import CLI
 
 def test_kebab(cli: CLI):
     @cli.subcommand()
-    def two_words(first_name: str = ""):
+    def two_words(
+        first_name: str = "", other_arg: Annotated[str, Meta(name="other_arg")] = ""
+    ):
         return first_name
 
     assert cli("two_words --first_name sean") == "sean"
     assert cli("two-words --first-name sean") == "sean"
+
+    assert cli("two_words --first_name sean --other_arg hi") == "sean"
+    assert cli("two-words --first-name sean --other-arg hi") == "sean"
 
 
 def test_float(cli: CLI):

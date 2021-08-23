@@ -98,40 +98,41 @@ class Executable(abc.ABC):
             pos_args[self.var_pos_param.arg_name] = []
 
     def handle_keyword(self, vals: dict[str, str]) -> dict[str, Any]:
+        vals = vals.copy()
         keyword_args: dict[str, Any] = {}
 
+        if not self.var_key_param and not all(val in self.key_params for val in vals):
+            raise self.missing_key_args(vals)
+
         for key, param in self.key_params.items():
-            value = vals.get(key, None) or vals.get(param.short, None) or param.default
+
+            if value := vals.get(key):
+                vals.pop(key)
+            elif value := vals.get(param.short):
+                vals.pop(param.short)
+            else:
+                value = param.default
+
             if value is NO_DEFAULT:
                 raise errors.ArgumentError(f"No value for required argument {key}")
+
             if value is not param.default:
                 value = convert(value, param.annotation, key)
 
             keyword_args[param.arg_name] = value
 
-        self.handle_var_keyword(keyword_args, vals)
+        if self.var_key_param:
+            self.handle_var_keyword(keyword_args, vals)
 
         return keyword_args
 
     def handle_var_keyword(self, keyword_args: dict[str, Any], vals: dict[str, str]):
+        assert self.var_key_param
         if len(vals) > len(self.key_params):
-            if not self.var_key_param:
-                missing_args = [key for key in vals if key not in self.key_params]
-                if len(missing_args) == 1:
-                    styled = colorize(config.flag_denoter + missing_args[0], fg.YELLOW)
-                    message = f"Option {styled} not recognized"
-                else:
-                    styled = " ".join(
-                        colorize(config.flag_denoter + arg, fg.YELLOW)
-                        for arg in missing_args
-                    )
-                    message = f"Options {styled} not recognized"
-
-                raise errors.MissingArgError(message)
             keyword_args[self.var_key_param.arg_name] = {
                 key: val for key, val in vals.items() if key not in self.key_params
             }
-        elif self.var_key_param:
+        else:
             keyword_args[self.var_key_param.arg_name] = {}
 
     def handle_flags(self, vals: list[str]) -> dict[str, bool]:
@@ -234,7 +235,7 @@ class Executable(abc.ABC):
             else:
                 meta = Meta()
 
-            argument._annotation = annotation  # type: ignore
+            argument._annotation = annotation  # type: ignore # pylint: disable=protected-access
 
             param = Param(argument, meta)
 
@@ -266,6 +267,19 @@ class Executable(abc.ABC):
                 return arg
 
         raise errors.MissingArgError(message, name=key)
+
+    def missing_key_args(self, vals: dict[str, str]):
+        missing_args = [key for key in vals if key not in self.key_params]
+        if len(missing_args) == 1:
+            styled = colorize(config.flag_denoter + missing_args[0], fg.YELLOW)
+            message = f"Option {styled} not recognized"
+        else:
+            styled = " ".join(
+                colorize(config.flag_denoter + arg, fg.YELLOW) for arg in missing_args
+            )
+            message = f"Options {styled} not recognized"
+
+        return errors.MissingArgError(message)
 
 
 class FunctionExecutable(Executable):
