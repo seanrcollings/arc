@@ -79,14 +79,14 @@ class ArgumentParser:
             )
 
         try:
-            arg = self.executable.get_or_raise(
+            param = self.executable.get_or_raise(
                 option, f"Option {colorize('--' + option, fg.YELLOW)} not found."
             )
-            if arg.is_flag:
-                self.parsed["flags"].append(arg.arg_alias)
+            if param.is_flag:
+                self.parsed["flags"].append(param.arg_alias)
             elif self.peek():
                 value = self.consume()
-                self.parsed["options"][arg.arg_alias] = value
+                self.parsed["options"][param.arg_alias] = value
             else:
                 raise errors.ParserError(
                     f"Option {colorize('--' + option, fg.YELLOW)} requires a value"
@@ -103,15 +103,15 @@ class ArgumentParser:
     def handle_short_option(self, short_option):
         for char in short_option:
             # try:
-            arg = self.executable.get_or_raise(
+            param = self.executable.get_or_raise(
                 char, f"Option {colorize('-' + short_option, fg.YELLOW)} not found."
             )
-            if len(short_option) > 1 and not arg.is_flag:
+            if len(short_option) > 1 and not param.is_flag:
                 raise errors.ParserError(
                     f"Option {colorize('-' + char, fg.YELLOW)} requires a value"
                 )
 
-            self.handle_option(arg.arg_alias)
+            self.handle_option(param.arg_alias)
             # except errors.MissingArgError as e:
             #     if self.peek():
             #         value = self.consume()

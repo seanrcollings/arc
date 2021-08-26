@@ -145,7 +145,9 @@ class Executable(abc.ABC):
                 if param.default is not NO_DEFAULT:
                     value = param.default
                 else:
-                    raise errors.ArgumentError("Too few positional arguments")
+                    raise errors.ArgumentError(
+                        f"No value provided for required positional argument: {param.arg_alias}"
+                    )
             else:
                 value = convert(vals[idx], param.annotation, param.arg_alias)
 

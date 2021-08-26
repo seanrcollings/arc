@@ -163,7 +163,7 @@ class CommandDoc:
 
         args.append("[" + config.flag_denoter + "]")
 
-        for arg in self.state.command.executable.pos_params:
+        for arg in self.state.command.executable.pos_params.values():
             args.append(format(arg))
 
         return " ".join(args)

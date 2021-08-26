@@ -113,7 +113,7 @@ class Param:
         name = self.arg_alias
 
         if self.is_positional:
-            return f"<{name}>"
+            formatted = f"<{name}>"
         else:
             if "short" in modifiers:
                 assert self.short
@@ -127,9 +127,11 @@ class Param:
             if "usage" in modifiers:
                 if self.is_keyword:
                     formatted += " <...>"
-                formatted = f"[{formatted}]"
 
-            return formatted
+        if self.optional:
+            formatted = f"[{formatted}]"
+
+        return formatted
 
     @property
     def optional(self):
