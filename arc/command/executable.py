@@ -140,13 +140,15 @@ class Executable(abc.ABC):
     def handle_postional(self, vals: list[str]) -> dict[str, Any]:
         pos_args: dict[str, Any] = {}
 
-        # TODO: This doesn't take into account
-        # that postional arguments can have default values
-        if len(vals) < len(self.pos_params):
-            raise errors.ArgumentError("Too few positional arguments")
-
         for idx, param in enumerate(self.pos_params.values()):
-            value = convert(vals[idx], param.annotation, param.arg_alias)
+            if idx > len(vals) - 1:
+                if param.default is not NO_DEFAULT:
+                    value = param.default
+                else:
+                    raise errors.ArgumentError("Too few positional arguments")
+            else:
+                value = convert(vals[idx], param.annotation, param.arg_alias)
+
             pos_args[param.arg_name] = value
 
         self.handle_var_positional(pos_args, vals)
