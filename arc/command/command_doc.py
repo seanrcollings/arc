@@ -100,7 +100,7 @@ class CommandDoc:
         # Format the names first so we can calculate the proper
         # alignment for all the descriptions
         for i, (name, _) in enumerate(arguments):
-            argument = self.state.command.executable.args.get(name)
+            argument = self.state.command.executable.params.get(name)
             if not argument:
                 raise errors.ParserError(
                     f"Argument section Parsing failed. No arg named {name}"
@@ -155,15 +155,15 @@ class CommandDoc:
         args = []
         for arg in (
             arg
-            for arg in self.state.command.executable.args.values()
-            if not arg.hidden and not arg.is_positional()
+            for arg in self.state.command.executable.params.values()
+            if not arg.hidden and not arg.is_positional
         ):
             string = format(arg, "usage")
             args.append(string)
 
         args.append("[" + config.flag_denoter + "]")
 
-        for arg in self.state.command.executable.pos_args:
+        for arg in self.state.command.executable.pos_params:
             args.append(format(arg))
 
         return " ".join(args)

@@ -89,8 +89,8 @@ class CLI(Command):
     # pylint: disable=redefined-builtin
     def missing_command(
         self,
-        _help: Annotated[bool, Meta(name="help")],
-        version: bool,
+        _help: Annotated[bool, Meta(name="help", short="h")],
+        version: Annotated[bool, Meta(short="v")],
         ctx: Context,
         _kwargs: VarKeyword,
     ):
@@ -104,6 +104,7 @@ class CLI(Command):
             return self("help")
         elif version:
             print(self.name, self.version)
+            return
         elif self.default_action:
             ctx.execution_state.command_chain += [self.default_action]
             return self.default_action.run(ctx.execution_state)
@@ -132,13 +133,12 @@ class CLI(Command):
         into the CLI from the provided paths"""
         Autoload(paths, self).load()
 
-    def helper(self, command_name: str):
+    def helper(self, command_name: Annotated[str, Meta(default="")]):
         """Displays information for a given command
         By default, shows help for the top-level command.
         To see a specific command's information, provide
         a command name (some:command:name)
         """
-
         namespace, _args = get_command_namespace([command_name])
         chain = find_command_chain(self, namespace)
         state = ExecutionState(

@@ -96,7 +96,7 @@ class Param:
             elif parameter.kind is parameter.KEYWORD_ONLY:
                 self.type = ParamType.KEY
             elif parameter.kind is parameter.POSITIONAL_OR_KEYWORD:
-                if self.default is NO_DEFAULT:
+                if parameter.default is parameter.empty:
                     self.type = ParamType.POS
                 else:
                     self.type = ParamType.KEY
@@ -107,6 +107,29 @@ class Param:
             type_name = self.annotation
 
         return f"<Param {self.arg_name}({self.type}): {type_name} = {self.default}>"
+
+    def __format__(self, spec: str):
+        modifiers = spec.split("|")
+        name = self.arg_alias
+
+        if self.is_positional:
+            return f"<{name}>"
+        else:
+            if "short" in modifiers:
+                assert self.short
+                name = self.short
+                denoter = config.short_flag_denoter
+            else:
+                denoter = config.flag_denoter
+
+            formatted = f"{denoter}{name}"
+
+            if "usage" in modifiers:
+                if self.is_keyword:
+                    formatted += " <...>"
+                formatted = f"[{formatted}]"
+
+            return formatted
 
     @property
     def optional(self):
