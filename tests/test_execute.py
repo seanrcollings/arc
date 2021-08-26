@@ -178,6 +178,8 @@ def test_short_args(cli: CLI):
         ):
             ...
 
+        cli("un -a")
+
     with pytest.raises(ArgumentError):
 
         @cli.subcommand()
@@ -186,6 +188,8 @@ def test_short_args(cli: CLI):
             arg2: Annotated[bool, Meta(short="a2")],
         ):
             ...
+
+        cli("un -a")
 
 
 def test_literal(cli: CLI):

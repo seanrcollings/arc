@@ -10,11 +10,7 @@ from arc.result import Result
 
 from .argument_parser import ArgumentParser
 from .command_doc import CommandDoc
-from .executable import (
-    Executable,
-    FunctionExecutable,
-    ClassExecutable,
-)
+from .executable import Executable, FunctionExecutable, ClassExecutable
 
 if TYPE_CHECKING:
     from arc.execution_state import ExecutionState
@@ -29,7 +25,6 @@ class Command:
         name: str,
         executable: Callable,
         context: Optional[Dict] = None,
-        short_args=None,
     ):
         self.name = name
         self.subcommands: Dict[str, Command] = {}
@@ -42,7 +37,6 @@ class Command:
             else FunctionExecutable(executable)
         )
         self.parser = ArgumentParser(self.executable)
-        # self.executor = CommandExecutor(self.executable)
 
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
@@ -77,7 +71,6 @@ class Command:
         self,
         name: Union[str, list[str], tuple[str, ...]] = None,
         context: dict[str, Any] = None,
-        short_args: dict[str, str] = None,
     ):
         """Create and install a subcommands
 
@@ -88,8 +81,6 @@ class Command:
                 will be treated as aliases. If no value is provided, `function.__name__` is used
             context (dict[str, Any], optional): Special data that will be
                 passed to this command (and any subcommands) at runtime. Defaults to None.
-            short_args (dict[str, Union[Iterable[str], str]], optional): Secondary names
-                that arguments can be referred to by. Defaults to None.
 
         Returns:
             Command: the subcommand created
@@ -105,7 +96,6 @@ class Command:
                 command_name,
                 wrapped,
                 context or {},
-                short_args,
             )
             return self.install_command(command)
 

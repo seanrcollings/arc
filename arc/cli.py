@@ -4,7 +4,7 @@ from typing import Callable, Optional
 
 from arc import utils
 from arc.autoload import Autoload
-from arc.color import effects, fg
+from arc.color import bg, colorize, effects, fg
 from arc.command import Command, Context
 from arc.config import config
 from arc.run import find_command_chain, get_command_namespace, run
@@ -36,7 +36,6 @@ class CLI(Command):
             name,
             self.missing_command,
             context,
-            short_args={"help": "h", "version": "v"},
         )
         config.from_file(arcfile)
         self.__logging_setup()
@@ -159,9 +158,9 @@ class CLI(Command):
 
 class ArcFormatter(logging.Formatter):
     prefixes = {
-        logging.INFO: f"{fg.BLUE}🛈{effects.CLEAR} ",
-        logging.WARNING: f"{fg.YELLOW}{effects.BOLD}WARNING{effects.CLEAR}: ",
-        logging.ERROR: f"{fg.RED}{effects.BOLD}ERROR{effects.CLEAR}: ",
+        logging.INFO: colorize("🛈 ", fg.BLUE),
+        logging.WARNING: colorize("WARNING", fg.YELLOW, effects.BOLD) + ": ",
+        logging.ERROR: colorize("ERROR", fg.RED, effects.BOLD) + ": ",
     }
 
     def format(self, record: logging.LogRecord):

@@ -23,6 +23,9 @@ BAR = "―" * 40
 
 class Executable(abc.ABC):
     state: ExecutionState
+    # Params aren't constructed until
+    # a command is actually executed
+    _params: dict[str, Param] = {}
     _pos_params: dict[str, Param] = {}
     _key_params: dict[str, Param] = {}
     _flag_params: dict[str, Param] = {}
@@ -36,7 +39,6 @@ class Executable(abc.ABC):
     def __init__(self, wrapped: Callable):
         self.wrapped = wrapped
         self.callback_store = CallbackStore()
-        self.params: dict[str, Param] = self.build_params(wrapped)
 
     def __call__(self, parsed: Parsed, state: ExecutionState):
         self.state = state
@@ -61,6 +63,71 @@ class Executable(abc.ABC):
             self.callback_store.post_execution(result)
 
         return result
+
+    @property
+    def params(self):
+        if not self._params:
+            self._params = self.build_params()
+
+        return self._params
+
+    @property
+    def pos_params(self):
+        if not self._pos_params:
+            self._pos_params = {
+                key: param
+                for key, param in self.params.items()
+                if param.is_positional and not param.hidden
+            }
+        return self._pos_params
+
+    @property
+    def key_params(self):
+        if not self._key_params:
+            self._key_params = {
+                key: param
+                for key, param in self.params.items()
+                if param.is_keyword and not param.hidden
+            }
+        return self._key_params
+
+    @property
+    def flag_params(self):
+        if not self._flag_params:
+            self._flag_params = {
+                key: param
+                for key, param in self.params.items()
+                if param.is_flag and not param.hidden
+            }
+        return self._flag_params
+
+    @property
+    def optional_params(self):
+        if not self._optional_params:
+            self._optional_params = {
+                key: param
+                for key, param in self.params.items()
+                if param.optional and not param.hidden
+            }
+        return self._optional_params
+
+    @property
+    def required_params(self):
+        if not self._required_params:
+            self._required_params = {
+                key: param
+                for key, param in self.params.items()
+                if not param.optional and not param.hidden
+            }
+        return self._required_params
+
+    @property
+    def hidden_params(self):
+        if not self._hidden_params:
+            self._hidden_params = {
+                key: param for key, param in self.params.items() if param.hidden
+            }
+        return self._hidden_params
 
     @abc.abstractmethod
     def run(self, args: dict[str, Any]) -> Any:
@@ -163,67 +230,9 @@ class Executable(abc.ABC):
 
         return hidden_args
 
-    @property
-    def pos_params(self):
-        if not self._pos_params:
-            self._pos_params = {
-                key: param
-                for key, param in self.params.items()
-                if param.is_positional and not param.hidden
-            }
-        return self._pos_params
-
-    @property
-    def key_params(self):
-        if not self._key_params:
-            self._key_params = {
-                key: param
-                for key, param in self.params.items()
-                if param.is_keyword and not param.hidden
-            }
-        return self._key_params
-
-    @property
-    def flag_params(self):
-        if not self._flag_params:
-            self._flag_params = {
-                key: param
-                for key, param in self.params.items()
-                if param.is_flag and not param.hidden
-            }
-        return self._flag_params
-
-    @property
-    def optional_params(self):
-        if not self._optional_params:
-            self._optional_params = {
-                key: param
-                for key, param in self.params.items()
-                if param.optional and not param.hidden
-            }
-        return self._optional_params
-
-    @property
-    def required_params(self):
-        if not self._required_params:
-            self._required_params = {
-                key: param
-                for key, param in self.params.items()
-                if not param.optional and not param.hidden
-            }
-        return self._required_params
-
-    @property
-    def hidden_params(self):
-        if not self._hidden_params:
-            self._hidden_params = {
-                key: param for key, param in self.params.items() if param.hidden
-            }
-        return self._hidden_params
-
-    def build_params(self, func: Callable):
-        sig = inspect.signature(func)
-        annotations = get_type_hints(func, include_extras=True)
+    def build_params(self):
+        sig = inspect.signature(self.wrapped)
+        annotations = get_type_hints(self.wrapped, include_extras=True)
         params = {}
 
         for argument in sig.parameters.values():
