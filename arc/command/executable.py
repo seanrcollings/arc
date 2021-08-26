@@ -1,3 +1,4 @@
+import pprint
 from typing import Any, Callable, Optional, Protocol, get_args, get_type_hints
 from types import MappingProxyType
 import inspect
@@ -26,6 +27,7 @@ class Executable(abc.ABC):
     # Params aren't constructed until
     # a command is actually executed
     _params: dict[str, Param] = {}
+
     _pos_params: dict[str, Param] = {}
     _key_params: dict[str, Param] = {}
     _flag_params: dict[str, Param] = {}
@@ -47,6 +49,8 @@ class Executable(abc.ABC):
         arguments |= self.handle_keyword(parsed["options"])
         arguments |= self.handle_flags(parsed["flags"])
         arguments |= self.handle_hidden()
+
+        logger.debug("Function Arguments: %s", pprint.pformat(arguments))
 
         self.callback_store.pre_execution(arguments)
         logger.debug(BAR)
@@ -217,6 +221,7 @@ class Executable(abc.ABC):
                 flag_args[param.arg_name] = param.default
 
         if len(vals) > 0:
+            # TODO: improve error
             raise errors.ArgumentError(f"Flag(s) {vals} not recognized")
 
         return flag_args
@@ -236,10 +241,12 @@ class Executable(abc.ABC):
         params = {}
 
         for argument in sig.parameters.values():
+            # TODO: provide a more helpful error here than an assertion error
             assert argument.kind not in (argument.VAR_KEYWORD, argument.VAR_POSITIONAL)
 
             annotation = annotations.get(argument.name, str)
             if is_annotated(annotation):
+                # TODO : Make sure meta is of type Meta()
                 annotation, meta = get_args(argument.annotation)
             else:
                 meta = Meta()
@@ -248,6 +255,7 @@ class Executable(abc.ABC):
 
             param = Param(argument, meta)
 
+            # Type checks
             if annotation is VarPositional:
                 self.var_pos_param = param
             elif annotation is VarKeyword:
@@ -266,7 +274,6 @@ class Executable(abc.ABC):
         return params
 
     def get_or_raise(self, key: str, message):
-        key = key.replace("-", "_")
         arg = self.params.get(key)
         if arg and not arg.hidden:
             return arg

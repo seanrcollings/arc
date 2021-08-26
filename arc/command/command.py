@@ -7,6 +7,7 @@ from arc.color import effects, fg
 from arc.errors import CommandError
 from arc import utils
 from arc.result import Result
+from arc.config import config
 
 from .argument_parser import ArgumentParser
 from .command_doc import CommandDoc
@@ -62,7 +63,7 @@ class Command:
         """External interface to execute a command"""
         parsed_args = self.parser.parse(exec_state.command_args)
 
-        logger.debug("Parsed arguments: %s", pprint.pformat(parsed_args))
+        logger.debug("Parser Result: %s", pprint.pformat(parsed_args))
         return self.executable(parsed_args, exec_state)
 
     ### Building Subcommands ###
@@ -91,7 +92,11 @@ class Command:
             if isinstance(wrapped, Command):
                 wrapped = wrapped.executable.wrapped
 
-            command_name = self.handle_command_aliases(name or wrapped.__name__)
+            wrapped_name = wrapped.__name__
+            if config.tranform_snake_case:
+                wrapped_name = wrapped_name.replace("_", "-")
+
+            command_name = self.handle_command_aliases(name or wrapped_name)
             command = Command(
                 command_name,
                 wrapped,

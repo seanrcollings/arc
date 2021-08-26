@@ -1,10 +1,10 @@
-from arc.command.param import VarKeyword
 import logging
-from typing import Callable, Optional
+from typing import Annotated, Callable, Optional
 
 from arc import utils
 from arc.autoload import Autoload
-from arc.color import bg, colorize, effects, fg
+from arc.color import colorize, effects, fg
+from arc.command.param import Meta, VarKeyword
 from arc.command import Command, Context
 from arc.config import config
 from arc.run import find_command_chain, get_command_namespace, run
@@ -88,7 +88,11 @@ class CLI(Command):
 
     # pylint: disable=redefined-builtin
     def missing_command(
-        self, help: bool, version: bool, ctx: Context, _kwargs: VarKeyword
+        self,
+        _help: Annotated[bool, Meta(name="help")],
+        version: bool,
+        ctx: Context,
+        _kwargs: VarKeyword,
     ):
         """View specific help with "help <command-name>"
 
@@ -96,7 +100,7 @@ class CLI(Command):
             help: shows this help
             version: displays the version
         """
-        if help:
+        if _help:
             return self("help")
         elif version:
             print(self.name, self.version)

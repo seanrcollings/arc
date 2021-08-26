@@ -83,10 +83,10 @@ class ArgumentParser:
                 option, f"Option {colorize('--' + option, fg.YELLOW)} not found."
             )
             if arg.is_flag:
-                self.parsed["flags"].append(arg.arg_name)
+                self.parsed["flags"].append(arg.arg_alias)
             elif self.peek():
                 value = self.consume()
-                self.parsed["options"][arg.arg_name] = value
+                self.parsed["options"][arg.arg_alias] = value
             else:
                 raise errors.ParserError(
                     f"Option {colorize('--' + option, fg.YELLOW)} requires a value"

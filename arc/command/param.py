@@ -5,8 +5,8 @@ from typing import Any, NewType, Optional
 
 from arc import errors
 from arc.utils import symbol
+from arc.config import config
 
-# TODO: handle Context as a hidden arg
 
 NO_DEFAULT = symbol("NO_DEFAULT")
 VarPositional = NewType("VarPositional", list)
@@ -30,17 +30,50 @@ class Meta:
 
 
 class Param:
+    """Represetns a single function arguments
+
+    Instance Variables:
+        paramater (inspect.Paramater): The Paramater object generated
+            for the associated function argument. Usually not needed as
+            the other values should provide all context needed. But we
+            store it off just in case.
+        arg_name (str): The actual name of the argument of the function.
+            can be used to pass some value to said function
+        arg_alias (str): The name to be used to pass a value to
+            the argument from the command line. Will default to the
+            `arg_name` if no other value is provided
+        annotation (type): The type of the argument
+        default (Any): Default value for the argument
+        hidden (bool): Whether or not the value is visible to the
+            command  line. Usually used to hide `Context` arguments
+        short (str): the single-character shortened name for the
+            argument on the command line
+    """
+
     def __init__(self, parameter: inspect.Parameter, meta: Meta):
         self.paramater: inspect.Parameter = parameter
         self.arg_name: str = parameter.name
-        self.arg_alias: str = meta.name or parameter.name
         self.annotation: type = parameter.annotation
         self.default: Any = parameter.default
-        self.hidden = meta.hidden
-        self.short = meta.short
+        self.hidden: bool = meta.hidden
+        self.short: Optional[str] = meta.short
+
         if self.short and len(self.short) > 1:
             raise errors.ArgumentError(
                 f"Argument {self.arg_name}'s shortened name is longer than 1 character"
+            )
+
+        # By default, snake_case args are transformed to kebab-case
+        # for the command line. However, this can be ignored
+        # by declaring an explicit name in the Meta()
+        # or by setting the config value to false
+        if meta.name:
+            self.arg_alias: str = meta.name
+        else:
+            self.arg_alias = (
+                parameter.name.replace("_", "-")
+                if config.tranform_snake_case
+                else parameter.name
             )
 
         if self.annotation in (VarPositional, VarKeyword):
