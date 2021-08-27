@@ -1,3 +1,4 @@
+from arc.utils.other import levenshtein
 import pprint
 from typing import Any, Callable, Optional, Protocol, get_args, get_type_hints
 from types import MappingProxyType
@@ -14,7 +15,7 @@ from arc.command.context import Context
 from arc.command.param import Meta, Param, VarKeyword, VarPositional, NO_DEFAULT
 from arc.execution_state import ExecutionState
 from arc.types import convert
-from arc.types.helpers import is_annotated, safe_issubclass
+from arc.types.helpers import is_annotated, join_and, safe_issubclass
 from arc.callbacks.callback_store import CallbackStore
 
 logger = logging.getLogger("arc_logger")
@@ -146,7 +147,8 @@ class Executable(abc.ABC):
                     value = param.default
                 else:
                     raise errors.ArgumentError(
-                        f"No value provided for required positional argument: {param.arg_alias}"
+                        "No value provided for required positional argument: "
+                        + colorize(param.arg_alias, fg.YELLOW)
                     )
             else:
                 value = convert(vals[idx], param.annotation, param.arg_alias)
@@ -177,7 +179,7 @@ class Executable(abc.ABC):
         keyword_args: dict[str, Any] = {}
 
         if not self.var_key_param and not all(val in self.key_params for val in vals):
-            raise self.missing_key_args(vals)
+            raise self.non_existant_args(vals)
 
         for key, param in self.key_params.items():
 
@@ -189,7 +191,10 @@ class Executable(abc.ABC):
                 value = param.default
 
             if value is NO_DEFAULT:
-                raise errors.ArgumentError(f"No value for required argument {key}")
+                raise errors.ArgumentError(
+                    "No value provided for required option: "
+                    + colorize(config.flag_denoter + key, fg.YELLOW)
+                )
 
             if value is not param.default:
                 value = convert(value, param.annotation, key)
@@ -288,18 +293,43 @@ class Executable(abc.ABC):
 
         raise errors.MissingArgError(message, name=key)
 
-    def missing_key_args(self, vals: dict[str, str]):
+    def non_existant_args(self, vals: dict[str, str]):
         missing_args = [key for key in vals if key not in self.key_params]
         if len(missing_args) == 1:
             styled = colorize(config.flag_denoter + missing_args[0], fg.YELLOW)
-            message = f"Option {styled} not recognized"
+            message = f"Option {styled} does not exist"
         else:
             styled = " ".join(
                 colorize(config.flag_denoter + arg, fg.YELLOW) for arg in missing_args
             )
-            message = f"Options {styled} not recognized"
+            message = f"Options {styled} do not exist"
+
+        suggest_args = set(
+            param.arg_alias
+            for name in missing_args
+            if (param := self.find_argument_suggestions(name)) is not None
+        )
+
+        if len(suggest_args) > 0:
+            message += f"\n\tPerhaps you meant {colorize(join_and(list(suggest_args)), fg.YELLOW)}?"
 
         return errors.MissingArgError(message)
+
+    def find_argument_suggestions(self, missing: str) -> Optional[Param]:
+        visible_args = [param for param in self.params.values() if not param.hidden]
+        if config.suggest_on_missing_argument and len(visible_args) > 0:
+            distance, arg = min(
+                (
+                    (levenshtein(param.arg_alias, missing), param)
+                    for param in visible_args
+                ),
+                key=lambda tup: tup[0],
+            )
+
+            if distance <= config.suggest_levenshtein_distance:
+                return arg
+
+        return None
 
 
 class FunctionExecutable(Executable):

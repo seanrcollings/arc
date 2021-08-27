@@ -1,12 +1,12 @@
 from __future__ import annotations
-from typing import Callable, Any, Optional, Union, TypedDict, TYPE_CHECKING
+from typing import Callable, Any, Union, TypedDict, TYPE_CHECKING
 import re
 
 from arc import errors
 from arc.config import config
-from arc.color import colorize, fg, effects
-from arc.utils import IDENT, levenshtein
-from arc.command.param import Param
+from arc.color import colorize, fg
+from arc.utils import IDENT
+
 
 if TYPE_CHECKING:
     from arc.command.executable import Executable
@@ -55,21 +55,8 @@ class ArgumentParser:
     ### Handlers ###
     def handle_match(self, match: re.Match, name: str) -> tuple[str, Any]:
         groups: Union[dict[str, str], str] = self.get_match_values(match)
-        # if isinstance(groups, dict):
-        #     groups = {key: value.replace("-", "_") for key, value in groups.items()}
-        # else:
-        #     groups = groups.replace("-", "_")
-
         handler: Callable = getattr(self, f"handle_{name}")
-        try:
-            return handler(groups)
-        except errors.MissingArgError as e:
-            arg = self.find_argument_suggestions(e.data["name"])
-            if arg:
-                e.message += (
-                    f"\n\tPerhaps you meant {fg.YELLOW}{arg.arg_alias}{effects.CLEAR}?"
-                )
-            raise
+        return handler(groups)
 
     def handle_option(self, option: str):
         if self.pos_only:
@@ -102,7 +89,6 @@ class ArgumentParser:
 
     def handle_short_option(self, short_option):
         for char in short_option:
-            # try:
             param = self.executable.get_or_raise(
                 char, f"Option {colorize('-' + short_option, fg.YELLOW)} not found."
             )
@@ -112,14 +98,6 @@ class ArgumentParser:
                 )
 
             self.handle_option(param.arg_alias)
-            # except errors.MissingArgError as e:
-            #     if self.peek():
-            #         value = self.consume()
-            #         self.parsed["options"][short_option] = value
-            #     else:
-            #         raise errors.ParserError(
-            #             f"Option {colorize('-' + char, fg.YELLOW)} requires a value"
-            #         ) from e
 
     def handle_pos_only(self, _):
         self.pos_only = True
@@ -149,21 +127,3 @@ class ArgumentParser:
             return groups
 
         return match.groups()[0]
-
-    def find_argument_suggestions(self, missing: str) -> Optional[Param]:
-        visible_args = [
-            param for param in self.executable.params.values() if not param.hidden
-        ]
-        if config.suggest_on_missing_argument and len(visible_args) > 0:
-            distance, arg = min(
-                (
-                    (levenshtein(param.arg_alias, missing), param)
-                    for param in visible_args
-                ),
-                key=lambda tup: tup[0],
-            )
-
-            if distance <= config.suggest_levenshtein_distance:
-                return arg
-
-        return None

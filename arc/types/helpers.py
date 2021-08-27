@@ -54,7 +54,7 @@ def joiner(values: Sequence, join_str: str = ", ", last_str: str = ", "):
 
 
 def join_or(values: Sequence) -> str:
-    """Joins a sequence of items with commas
+    """Joins a Sequence of items with commas
     and an or at the end
 
     [1, 2, 3, 4] -> "1, 2, 3 or 4"
@@ -69,7 +69,7 @@ def join_or(values: Sequence) -> str:
 
 
 def join_and(values: Sequence) -> str:
-    """Joins a sequence of items with commas
+    """Joins a Sequence of items with commas
     and an "and" at the end
 
     Args:
