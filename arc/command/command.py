@@ -7,10 +7,11 @@ from arc.color import effects, fg
 from arc.errors import CommandError
 from arc import utils
 from arc.result import Result
+from arc.config import config
 
 from .argument_parser import ArgumentParser
 from .command_doc import CommandDoc
-from .executable import Executable, WrappedExectuable
+from .executable import Executable, FunctionExecutable, ClassExecutable
 
 if TYPE_CHECKING:
     from arc.execution_state import ExecutionState
@@ -23,18 +24,20 @@ class Command:
     def __init__(
         self,
         name: str,
-        executable: WrappedExectuable,
+        executable: Callable,
         context: Optional[Dict] = None,
-        short_args=None,
     ):
         self.name = name
         self.subcommands: Dict[str, Command] = {}
         self.subcommand_aliases: dict[str, str] = {}
         self.context = context or {}
 
-        self.executable = Executable(executable, short_args)
+        self.executable: Executable = (
+            ClassExecutable(executable)
+            if isinstance(executable, type)
+            else FunctionExecutable(executable)
+        )
         self.parser = ArgumentParser(self.executable)
-        # self.executor = CommandExecutor(self.executable)
 
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
@@ -45,11 +48,6 @@ class Command:
     @property
     def function(self):
         return self.executable.wrapped
-
-    @function.setter
-    def function(self, func: Callable):
-        self.executable.wrapped = func
-        self.executable.build_args()
 
     def doc(self, state: "ExecutionState") -> CommandDoc:
         doc = CommandDoc(
@@ -65,8 +63,8 @@ class Command:
         """External interface to execute a command"""
         parsed_args = self.parser.parse(exec_state.command_args)
 
-        logger.debug("Parsed arguments: %s", pprint.pformat(parsed_args))
-        return self.executable.run(parsed_args, exec_state)
+        logger.debug("Parser Result: %s", pprint.pformat(parsed_args))
+        return self.executable(parsed_args, exec_state)
 
     ### Building Subcommands ###
 
@@ -74,7 +72,6 @@ class Command:
         self,
         name: Union[str, list[str], tuple[str, ...]] = None,
         context: dict[str, Any] = None,
-        short_args: dict[str, str] = None,
     ):
         """Create and install a subcommands
 
@@ -85,24 +82,25 @@ class Command:
                 will be treated as aliases. If no value is provided, `function.__name__` is used
             context (dict[str, Any], optional): Special data that will be
                 passed to this command (and any subcommands) at runtime. Defaults to None.
-            short_args (dict[str, Union[Iterable[str], str]], optional): Secondary names
-                that arguments can be referred to by. Defaults to None.
 
         Returns:
             Command: the subcommand created
         """
 
         # @self.ensure_function
-        def decorator(wrapped: Union[WrappedExectuable, Command]):
+        def decorator(wrapped: Union[Callable, Command]):
             if isinstance(wrapped, Command):
                 wrapped = wrapped.executable.wrapped
 
-            command_name = self.handle_command_aliases(name or wrapped.__name__)
+            wrapped_name = wrapped.__name__
+            if config.tranform_snake_case:
+                wrapped_name = wrapped_name.replace("_", "-")
+
+            command_name = self.handle_command_aliases(name or wrapped_name)
             command = Command(
                 command_name,
                 wrapped,
                 context or {},
-                short_args,
             )
             return self.install_command(command)
 

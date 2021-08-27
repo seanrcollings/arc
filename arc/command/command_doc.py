@@ -4,7 +4,6 @@ from typing import Union
 
 from arc import errors
 from arc.color import colorize, fg, effects
-from arc.command.argument import Argument
 from arc.execution_state import ExecutionState
 from arc.config import config
 
@@ -101,7 +100,7 @@ class CommandDoc:
         # Format the names first so we can calculate the proper
         # alignment for all the descriptions
         for i, (name, _) in enumerate(arguments):
-            argument = self.state.command.executable.args.get(name)
+            argument = self.state.command.executable.params.get(name)
             if not argument:
                 raise errors.ParserError(
                     f"Argument section Parsing failed. No arg named {name}"
@@ -156,15 +155,15 @@ class CommandDoc:
         args = []
         for arg in (
             arg
-            for arg in self.state.command.executable.args.values()
-            if not arg.hidden and not arg.is_positional()
+            for arg in self.state.command.executable.params.values()
+            if not arg.hidden and not arg.is_positional
         ):
             string = format(arg, "usage")
             args.append(string)
 
         args.append("[" + config.flag_denoter + "]")
 
-        for arg in self.state.command.executable.pos_args:
+        for arg in self.state.command.executable.pos_params.values():
             args.append(format(arg))
 
         return " ".join(args)
@@ -203,17 +202,6 @@ class CommandDoc:
         if aliases:
             aliases.append(self.state.command.name)
             self.add_section("names", "\n".join(aliases))
-
-    ### Formatters ###
-
-    def format_short_arg(self, arg: Argument):
-        if arg.is_positional():
-            raise errors.ArcError("Can't format a positional argument as a short arg")
-
-        if arg.short:
-            return f"{config.short_flag_denoter}{arg.short}"
-
-        return None
 
     ### Helpers ###
 

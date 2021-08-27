@@ -1,9 +1,10 @@
 import logging
-from typing import Callable, Optional
+from typing import Annotated, Callable, Optional
 
 from arc import utils
 from arc.autoload import Autoload
-from arc.color import effects, fg
+from arc.color import colorize, effects, fg
+from arc.command.param import Meta, VarKeyword
 from arc.command import Command, Context
 from arc.config import config
 from arc.run import find_command_chain, get_command_namespace, run
@@ -35,7 +36,6 @@ class CLI(Command):
             name,
             self.missing_command,
             context,
-            short_args={"help": "h", "version": "v"},
         )
         config.from_file(arcfile)
         self.__logging_setup()
@@ -68,7 +68,7 @@ class CLI(Command):
         """
         return self.subcommand(*args, **kwargs)
 
-    def default(self, name=None, parse_method=None, **kwargs):
+    def default(self, name=None, **kwargs):
         """Define The CLI's default behavior
         when not given a specific command. Has the same interface
         as `Command.subcommand`
@@ -79,7 +79,6 @@ class CLI(Command):
             self.default_action = Command(
                 name or function.__name__,
                 function,
-                parse_method or type(self.parser),
                 **kwargs,
             )
 
@@ -88,17 +87,24 @@ class CLI(Command):
         return decorator
 
     # pylint: disable=redefined-builtin
-    def missing_command(self, help: bool, version: bool, ctx: Context, **_kwargs):
+    def missing_command(
+        self,
+        _help: Annotated[bool, Meta(name="help", short="h")],
+        version: Annotated[bool, Meta(short="v")],
+        ctx: Context,
+        _kwargs: VarKeyword,
+    ):
         """View specific help with "help <command-name>"
 
         # Arguments
             help: shows this help
             version: displays the version
         """
-        if help:
+        if _help:
             return self("help")
         elif version:
             print(self.name, self.version)
+            return
         elif self.default_action:
             ctx.execution_state.command_chain += [self.default_action]
             return self.default_action.run(ctx.execution_state)
@@ -127,13 +133,12 @@ class CLI(Command):
         into the CLI from the provided paths"""
         Autoload(paths, self).load()
 
-    def helper(self, command_name: str):
+    def helper(self, command_name: Annotated[str, Meta(default="")]):
         """Displays information for a given command
         By default, shows help for the top-level command.
         To see a specific command's information, provide
         a command name (some:command:name)
         """
-
         namespace, _args = get_command_namespace([command_name])
         chain = find_command_chain(self, namespace)
         state = ExecutionState(
@@ -157,9 +162,9 @@ class CLI(Command):
 
 class ArcFormatter(logging.Formatter):
     prefixes = {
-        logging.INFO: f"{fg.BLUE}🛈{effects.CLEAR} ",
-        logging.WARNING: f"{fg.YELLOW}{effects.BOLD}WARNING{effects.CLEAR}: ",
-        logging.ERROR: f"{fg.RED}{effects.BOLD}ERROR{effects.CLEAR}: ",
+        logging.INFO: colorize("🛈 ", fg.BLUE),
+        logging.WARNING: colorize("WARNING", fg.YELLOW, effects.BOLD) + ": ",
+        logging.ERROR: colorize("ERROR", fg.RED, effects.BOLD) + ": ",
     }
 
     def format(self, record: logging.LogRecord):

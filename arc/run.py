@@ -68,7 +68,7 @@ def run(
         command_namespace, command_args = get_command_namespace(user_input)
         command_chain = find_command_chain(root, command_namespace)
         command = command_chain[-1]
-        exec_state = ExecutionState(
+        state = ExecutionState(
             user_input=user_input,
             command_namespace=command_namespace,
             command_args=command_args,
@@ -88,7 +88,7 @@ def run(
             ),
         )
 
-        result = command.run(exec_state)
+        result = command.run(state)
 
         if check_result:
             return handle_result(result, command_namespace)
@@ -118,7 +118,6 @@ def get_command_namespace(
     if len(user_input) > 0:
         namespace = user_input[0]
         if namespace_seperated.match(namespace):
-            namespace = namespace.replace("-", "_")
             return namespace.split(config.namespace_sep), user_input[1:]
 
     return [], user_input

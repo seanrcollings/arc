@@ -1,4 +1,8 @@
-from typing import Union, GenericAlias, Sequence  # type: ignore
+from typing import Union, GenericAlias, Sequence, _AnnotatedAlias  # type: ignore
+
+
+def is_annotated(annotation) -> bool:
+    return isinstance(annotation, _AnnotatedAlias)
 
 
 def unwrap(annotation) -> type:
