@@ -1,12 +1,11 @@
-from arc.utils.other import levenshtein
 import pprint
 from typing import Any, Callable, Optional, Protocol, get_args, get_type_hints
-from types import MappingProxyType
 import inspect
 import logging
 import abc
 
 from arc import errors
+from arc.utils import levenshtein
 from arc.config import config
 from arc.result import Err, Ok
 from arc.color import colorize, fg
@@ -17,6 +16,7 @@ from arc.execution_state import ExecutionState
 from arc.types import convert
 from arc.types.helpers import is_annotated, join_and, safe_issubclass
 from arc.callbacks.callback_store import CallbackStore
+from arc.command.param_builder import ClassParamBuilder, ParamBuilder
 
 logger = logging.getLogger("arc_logger")
 
@@ -24,10 +24,11 @@ BAR = "―" * 40
 
 
 class Executable(abc.ABC):
+    buidler = ParamBuilder
     state: ExecutionState
     # Params aren't constructed until
     # a command is actually executed
-    _params: dict[str, Param] = {}
+    _params: Optional[dict[str, Param]] = None
 
     _pos_params: dict[str, Param] = {}
     _key_params: dict[str, Param] = {}
@@ -71,8 +72,8 @@ class Executable(abc.ABC):
 
     @property
     def params(self):
-        if not self._params:
-            self._params = self.build_params()
+        if self._params is None:
+            self._params = self.buidler(self).build()
 
         return self._params
 
@@ -346,6 +347,7 @@ class WrappedClassExecutable(Protocol):
 
 
 class ClassExecutable(Executable):
+    builder = ClassParamBuilder
     wrapped: type[WrappedClassExecutable]
 
     def __init__(self, wrapped: type[WrappedClassExecutable]):
@@ -353,7 +355,6 @@ class ClassExecutable(Executable):
             wrapped, "handle"
         ), f"Class-based commands must have a {colorize('handle()', fg.YELLOW)} method"
 
-        self.__build_class_params(wrapped)
         super().__init__(wrapped)
 
     def run(self, args: dict[str, Any]):
@@ -362,26 +363,3 @@ class ClassExecutable(Executable):
             setattr(instance, key, val)
 
         return instance.handle()
-
-    def __build_class_params(self, executable: type[WrappedClassExecutable]):
-        sig = inspect.signature(executable)
-        annotations = get_type_hints(executable, include_extras=True)
-        defaults = {
-            name: val
-            for name, val in vars(executable).items()
-            if not name.startswith("__") and name != "handle"
-        }
-
-        params = {
-            name: inspect.Parameter(
-                name,
-                inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                default=defaults.get(name, inspect.Parameter.empty),
-                annotation=annotation,
-            )
-            for name, annotation in annotations.items()
-        }
-
-        # pylint: disable=protected-access
-        sig._parameters = MappingProxyType(params)  # type: ignore
-        executable.__signature__ = sig  # type: ignore

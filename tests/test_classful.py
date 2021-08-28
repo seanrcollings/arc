@@ -1,6 +1,6 @@
 from typing import Annotated
 import pytest
-from arc import CLI, errors, Meta
+from arc import CLI, errors, Meta, ParamType
 
 
 def test_basic(cli: CLI):
@@ -32,7 +32,7 @@ def test_default(cli: CLI):
 def test_short_args(cli: CLI):
     @cli.subcommand()
     class Test:
-        val: Annotated[int, Meta(short="v")] = 2
+        val: Annotated[int, Meta(type=ParamType.KEY, short="v")] = 2
 
         def handle(self):
             return self.val
