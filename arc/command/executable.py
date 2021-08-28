@@ -250,8 +250,11 @@ class Executable(abc.ABC):
         params = {}
 
         for argument in sig.parameters.values():
-            # TODO: provide a more helpful error here than an assertion error
-            assert argument.kind not in (argument.VAR_KEYWORD, argument.VAR_POSITIONAL)
+            if argument.kind in (argument.VAR_KEYWORD, argument.VAR_POSITIONAL):
+                raise errors.ArgumentError(
+                    "Arc does not support *args and **kwargs. "
+                    "Please use their typed counterparts VarPositional and KeyPositional"
+                )
 
             annotation = annotations.get(argument.name, str)
             if is_annotated(annotation):
