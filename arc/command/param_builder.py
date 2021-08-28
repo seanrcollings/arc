@@ -4,7 +4,14 @@ from typing import get_type_hints, get_args, TYPE_CHECKING
 import inspect
 
 from arc import errors
-from arc.command.param import Param, Meta, VarKeyword, VarPositional
+from arc.command.param import (
+    NO_DEFAULT,
+    Param,
+    Meta,
+    ParamType,
+    VarKeyword,
+    VarPositional,
+)
 from arc.command.context import Context
 from arc.types import is_annotated, safe_issubclass
 
@@ -21,30 +28,14 @@ class ParamBuilder:
     def build(self):
         params = {}
         for argument in self.sig.parameters.values():
-            if argument.kind in (argument.VAR_KEYWORD, argument.VAR_POSITIONAL):
-                raise errors.ArgumentError(
-                    "Arc does not support *args and **kwargs. "
-                    "Please use their typed counterparts VarPositional and KeyPositional"
-                )
-
-            annotation = self.annotations.get(argument.name, str)
-            if is_annotated(annotation):
-                # TODO : Make sure meta is of type Meta()
-                annotation, meta = get_args(argument.annotation)
-            else:
-                meta = Meta()
-
+            self.argument_hook(argument)
+            annotation, meta = self.unwrap_type(
+                self.annotations.get(argument.name, str)
+            )
             argument._annotation = annotation  # type: ignore # pylint: disable=protected-access
 
             param = Param(argument, meta)
-
-            # Type checks
-            if annotation is VarPositional:
-                self.__executable.var_pos_param = param
-            elif annotation is VarKeyword:
-                self.__executable.var_key_param = param
-            elif safe_issubclass(annotation, Context):
-                param.hidden = True
+            self.param_hook(param)
 
             params[param.arg_alias] = param
 
@@ -55,6 +46,38 @@ class ParamBuilder:
             )
 
         return params
+
+    def argument_hook(self, _arg: inspect.Parameter):
+        ...
+
+    def param_hook(self, param: Param):
+        if param.annotation is VarPositional:
+            self.__executable.var_pos_param = param
+        elif param.annotation is VarKeyword:
+            self.__executable.var_key_param = param
+        elif safe_issubclass(param.annotation, Context):
+            param.hidden = True
+
+    def unwrap_type(self, kind: type):
+        if is_annotated(kind):
+            # TODO : Make sure meta is of type Meta()
+            args = get_args(kind)
+            assert len(args) == 2
+            assert isinstance(args[1], Meta)
+            kind, meta = args
+        else:
+            meta = Meta()
+
+        return kind, meta
+
+
+class FunctionParamBuilder(ParamBuilder):
+    def argument_hook(self, arg: inspect.Parameter):
+        if arg.kind in (arg.VAR_KEYWORD, arg.VAR_POSITIONAL):
+            raise errors.ArgumentError(
+                "Arc does not support *args and **kwargs. "
+                "Please use their typed counterparts VarPositional and KeyPositional"
+            )
 
 
 class ClassParamBuilder(ParamBuilder):
@@ -69,16 +92,23 @@ class ClassParamBuilder(ParamBuilder):
             name: val for name, val in vars(executable).items() if name in annotations
         }
 
-        params = {
-            name: inspect.Parameter(
-                name,
-                inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                default=defaults.get(name, inspect.Parameter.empty),
-                annotation=annotation,
-            )
-            for name, annotation in annotations.items()
-        }
+        sig._parameters = MappingProxyType(  # type: ignore # pylint: disable=protected-access
+            {
+                name: inspect.Parameter(
+                    name=name,
+                    kind=inspect.Parameter.KEYWORD_ONLY
+                    if (default := defaults.get(name, inspect.Parameter.empty))
+                    is not inspect.Parameter.empty
+                    else inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    default=default,
+                    annotation=annotation,
+                )
+                for name, annotation in annotations.items()
+            }
+        )
 
-        # pylint: disable=protected-access
-        sig._parameters = MappingProxyType(params)  # type: ignore
+        # inspect.signature() checks for a cached signature object
+        # at __signature__. So we can cache it there
+        # to generate the correct signature object for
+        # self.build()
         executable.__signature__ = sig  # type: ignore

@@ -16,7 +16,11 @@ from arc.execution_state import ExecutionState
 from arc.types import convert
 from arc.types.helpers import is_annotated, join_and, safe_issubclass
 from arc.callbacks.callback_store import CallbackStore
-from arc.command.param_builder import ClassParamBuilder, ParamBuilder
+from arc.command.param_builder import (
+    ClassParamBuilder,
+    FunctionParamBuilder,
+    ParamBuilder,
+)
 
 logger = logging.getLogger("arc_logger")
 
@@ -24,7 +28,7 @@ BAR = "―" * 40
 
 
 class Executable(abc.ABC):
-    buidler = ParamBuilder
+    builder: type[ParamBuilder]
     state: ExecutionState
     # Params aren't constructed until
     # a command is actually executed
@@ -73,7 +77,7 @@ class Executable(abc.ABC):
     @property
     def params(self):
         if self._params is None:
-            self._params = self.buidler(self).build()
+            self._params = self.builder(self).build()
 
         return self._params
 
@@ -337,6 +341,8 @@ class Executable(abc.ABC):
 
 
 class FunctionExecutable(Executable):
+    builder = FunctionParamBuilder
+
     def run(self, args: dict[str, Any]):
         return self.wrapped(**args)
 

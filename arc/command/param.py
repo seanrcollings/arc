@@ -103,10 +103,6 @@ class Param:
                 self.type = ParamType.KEY
             elif parameter.kind is parameter.POSITIONAL_OR_KEYWORD:
                 self.type = ParamType.POS
-                # if parameter.default is parameter.empty:
-                #     self.type = ParamType.POS
-                # else:
-                #     self.type = ParamType.KEY
 
     def __repr__(self):
         type_name = getattr(self.annotation, "__name__", self.annotation)
