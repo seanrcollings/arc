@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any, NewType, Optional
 
 from arc import errors
+from arc.color import fg, colorize
 from arc.utils import symbol
 from arc.config import config
 
@@ -92,19 +93,23 @@ class Param:
                 if self.default is NO_DEFAULT:
                     self.default = False
             elif parameter.kind is parameter.POSITIONAL_ONLY:
-                self.type = ParamType.POS
+                raise errors.ArgumentError(
+                    "Positional onyl arguments are not allowed as arc "
+                    "passes all arguments by keyword internally"
+                    f"please remove the {colorize('/', fg.YELLOW)} from",
+                    "your function definition",
+                )
             elif parameter.kind is parameter.KEYWORD_ONLY:
                 self.type = ParamType.KEY
             elif parameter.kind is parameter.POSITIONAL_OR_KEYWORD:
-                if parameter.default is parameter.empty:
-                    self.type = ParamType.POS
-                else:
-                    self.type = ParamType.KEY
+                self.type = ParamType.POS
+                # if parameter.default is parameter.empty:
+                #     self.type = ParamType.POS
+                # else:
+                #     self.type = ParamType.KEY
 
     def __repr__(self):
-        type_name = getattr(self.annotation, "__name__", None)
-        if not type_name:
-            type_name = self.annotation
+        type_name = getattr(self.annotation, "__name__", self.annotation)
 
         return f"<Param {self.arg_name}({self.type}): {type_name} = {self.default}>"
 

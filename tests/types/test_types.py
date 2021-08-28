@@ -111,7 +111,7 @@ class TestTypes:
 
     def test_union(self, cli: CLI):
         @cli.subcommand()
-        def un(val: Union[int, str] = 2):
+        def un(*, val: Union[int, str] = 2):
             return val
 
         assert cli("un --val 2") == 2
@@ -138,10 +138,10 @@ class TestTypes:
         def li(mode: Literal["small", "big", "medium"] = "medium"):
             return mode
 
-        assert cli("li --mode small") == "small"
-        assert cli("li --mode big") == "big"
-        assert cli("li --mode medium") == "medium"
+        assert cli("li small") == "small"
+        assert cli("li big") == "big"
+        assert cli("li medium") == "medium"
         assert cli("li") == "medium"
 
         with pytest.raises(ArgumentError):
-            cli("li --mode other")
+            cli("li other")

@@ -9,7 +9,7 @@ from arc.builtin.debug import debug
 
 def test_base(cli: CLI):
     @cli.default()
-    def base(val: int = 1):
+    def base(*, val: int = 1):
         return val
 
     assert cli("--val 2") == 2

@@ -10,7 +10,7 @@ from arc import CLI, config
 class TestKebab:
     def test_transform(self, cli: CLI):
         @cli.subcommand()
-        def two_words(first_name: str = "", other_arg: str = ""):
+        def two_words(*, first_name: str = "", other_arg: str = ""):
             return first_name
 
         assert cli("two-words --first-name sean") == "sean"
@@ -26,7 +26,7 @@ class TestKebab:
         config.tranform_snake_case = False
 
         @cli.subcommand()
-        def two_words(first_name: str = "", other_arg: str = ""):
+        def two_words(*, first_name: str = "", other_arg: str = ""):
             return first_name
 
         assert cli("two_words --first_name sean") == "sean"
@@ -43,7 +43,9 @@ class TestKebab:
     def test_explicit_name(self, cli: CLI):
         @cli.subcommand()
         def two_words(
-            first_name: str = "", other_arg: Annotated[str, Meta(name="other_arg")] = ""
+            *,
+            first_name: str = "",
+            other_arg: Annotated[str, Meta(name="other_arg")] = ""
         ):
             return other_arg
 

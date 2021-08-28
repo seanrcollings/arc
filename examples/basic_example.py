@@ -6,7 +6,7 @@ cli = CLI()  # Create an instance of the Arc CLI
 
 # Specifies the command's name (if not specified, will use the function's name)
 @cli.command()
-def greet(name="Joseph Joestar"):
+def greet(*, name="Joseph Joestar"):
     # any options specified above will be passed
     # to the function with the same name.
     # Since it's given a default value, it's optional
