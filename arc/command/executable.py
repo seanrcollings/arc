@@ -249,47 +249,6 @@ class Executable(abc.ABC):
 
         return hidden_args
 
-    def build_params(self):
-        sig = inspect.signature(self.wrapped)
-        annotations = get_type_hints(self.wrapped, include_extras=True)
-        params = {}
-
-        for argument in sig.parameters.values():
-            if argument.kind in (argument.VAR_KEYWORD, argument.VAR_POSITIONAL):
-                raise errors.ArgumentError(
-                    "Arc does not support *args and **kwargs. "
-                    "Please use their typed counterparts VarPositional and KeyPositional"
-                )
-
-            annotation = annotations.get(argument.name, str)
-            if is_annotated(annotation):
-                # TODO : Make sure meta is of type Meta()
-                annotation, meta = get_args(argument.annotation)
-            else:
-                meta = Meta()
-
-            argument._annotation = annotation  # type: ignore # pylint: disable=protected-access
-
-            param = Param(argument, meta)
-
-            # Type checks
-            if annotation is VarPositional:
-                self.var_pos_param = param
-            elif annotation is VarKeyword:
-                self.var_key_param = param
-            elif safe_issubclass(annotation, Context):
-                param.hidden = True
-
-            params[param.arg_alias] = param
-
-        shorts = [param.short for param in params.values() if param.short]
-        if len(shorts) != len(set(shorts)):
-            raise errors.ArgumentError(
-                "A Command's short argument names must be unique"
-            )
-
-        return params
-
     def get_or_raise(self, key: str, message):
         arg = self.params.get(key)
         if arg and not arg.hidden:

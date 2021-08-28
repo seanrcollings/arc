@@ -5,10 +5,8 @@ import inspect
 
 from arc import errors
 from arc.command.param import (
-    NO_DEFAULT,
     Param,
     Meta,
-    ParamType,
     VarKeyword,
     VarPositional,
 )
@@ -60,7 +58,6 @@ class ParamBuilder:
 
     def unwrap_type(self, kind: type):
         if is_annotated(kind):
-            # TODO : Make sure meta is of type Meta()
             args = get_args(kind)
             assert len(args) == 2
             assert isinstance(args[1], Meta)
