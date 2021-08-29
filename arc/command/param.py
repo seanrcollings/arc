@@ -1,38 +1,16 @@
 from __future__ import annotations
-from arc.types.helpers import unwrap
-import enum
 import inspect
-from typing import Any, Callable, Optional, TYPE_CHECKING, Sequence, TypeVar
+from typing import Any, Callable, Optional, TYPE_CHECKING, Sequence
 
 from arc import errors
 from arc.color import fg, colorize
-from arc.utils import symbol
 from arc.config import config
 from arc.execution_state import ExecutionState
+from arc.types.helpers import unwrap
+from arc.types.params import NO_DEFAULT, VarKeyword, VarPositional, ParamType
 
 if TYPE_CHECKING:
     from arc.types.meta import Meta
-
-NO_DEFAULT = symbol("NO_DEFAULT")
-
-
-T = TypeVar("T")
-V = TypeVar("V")
-
-
-class VarPositional(list[T]):
-    ...
-
-
-class VarKeyword(dict[str, V]):
-    ...
-
-
-class ParamType(enum.Enum):
-    POS = "positional"
-    KEY = "keyword"
-    FLAG = "flag"
-    SPECIAL = "special"
 
 
 class Param:

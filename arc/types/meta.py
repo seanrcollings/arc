@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Annotated, Optional, Any, Sequence, Callable
 from dataclasses import dataclass, field
-from arc.command.param import ParamType, NO_DEFAULT
+from arc.types.params import NO_DEFAULT, ParamType
 from arc.execution_state import ExecutionState
 
 
@@ -33,12 +33,17 @@ def meta(**kwargs):
     meta-data
 
     ```py
-    @meta(hidden=True, short="s")
+    @meta(short="s")
     class Shoe:
         ...
 
+    # Both of these commands will have the short-name of "s"
     @cli.subcommand()
     def command(shoe: Shoe):
+        ...
+
+    @cli.subcommand()
+    def other_command(shoe: Shoe):
         ...
     ```
     """
