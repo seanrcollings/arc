@@ -107,8 +107,8 @@ class CLI(Command):
             print(self.name, self.version)
             return
         elif self.default_action:
-            ctx.execution_state.command_chain += [self.default_action]
-            return self.default_action.run(ctx.execution_state)
+            ctx.state.command_chain += [self.default_action]
+            return self.default_action.run(ctx.state)
 
         return self("help")
 

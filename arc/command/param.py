@@ -1,7 +1,8 @@
 from __future__ import annotations
+from arc.execution_state import ExecutionState
 import enum
 import inspect
-from typing import Any, NewType, Optional, TYPE_CHECKING
+from typing import Any, Callable, NewType, Optional, TYPE_CHECKING, Sequence
 
 from arc import errors
 from arc.color import fg, colorize
@@ -51,6 +52,7 @@ class Param:
         self.default: Any = parameter.default
         self.hidden: bool = meta.hidden
         self.short: Optional[str] = meta.short
+        self.hooks: Sequence[Callable] = meta.hooks
 
         if self.short and len(self.short) > 1:
             raise errors.ArgumentError(
@@ -96,6 +98,11 @@ class Param:
                 self.type = ParamType.KEY
             elif parameter.kind is parameter.POSITIONAL_OR_KEYWORD:
                 self.type = ParamType.POS
+
+    def run_hooks(self, val: Any, state: ExecutionState):
+        for hook in self.hooks:
+            val = hook(val, state)
+        return val
 
     def __repr__(self):
         type_name = getattr(self.annotation, "__name__", self.annotation)

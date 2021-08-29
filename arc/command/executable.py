@@ -10,10 +10,10 @@ from arc.result import Err, Ok
 from arc.color import colorize, fg
 from arc.command.argument_parser import Parsed
 from arc.command.context import Context
-from arc.command.param import Param, NO_DEFAULT
+from arc.command.param import Param, NO_DEFAULT, VarKeyword, VarPositional
 from arc.execution_state import ExecutionState
 from arc.types import convert
-from arc.types.helpers import join_and, safe_issubclass
+from arc.types.helpers import join_and
 from arc.callbacks.callback_store import CallbackStore
 from arc.command.param_builder import (
     ClassParamBuilder,
@@ -134,7 +134,9 @@ class Executable(abc.ABC):
     def hidden_params(self):
         if not self._hidden_params:
             self._hidden_params = {
-                key: param for key, param in self.params.items() if param.hidden
+                key: param
+                for key, param in self.params.items()
+                if param.hidden and param.annotation not in (VarPositional, VarKeyword)
             }
         return self._hidden_params
 
@@ -157,6 +159,7 @@ class Executable(abc.ABC):
             else:
                 value = convert(vals[idx], param.annotation, param.arg_alias)
 
+            value = param.run_hooks(value, self.state)
             pos_args[param.arg_name] = value
 
         self.handle_var_positional(pos_args, vals)
@@ -164,19 +167,17 @@ class Executable(abc.ABC):
         return pos_args
 
     def handle_var_positional(self, pos_args: dict[str, Any], vals: list[str]):
-
         # TODO provide type conversion to all values here
-        if len(vals) > len(self.pos_params):
-            if not self.var_pos_param:
-                raise errors.ArgumentError(
-                    f"{colorize(self.state.command_name, fg.ARC_BLUE)} "
-                    f"expects {len(self.pos_params)} positional arguments, "
-                    f"but recieved {len(vals)}"
-                )
-
-            pos_args[self.var_pos_param.arg_name] = vals[len(self.pos_params) :]
-        elif self.var_pos_param:
-            pos_args[self.var_pos_param.arg_name] = []
+        values = vals[len(self.pos_params) :]
+        if self.var_pos_param:
+            values = self.var_pos_param.run_hooks(values, self.state)
+            pos_args[self.var_pos_param.arg_name] = values
+        elif len(values) > 0:
+            raise errors.ArgumentError(
+                f"{colorize(self.state.command_name, fg.ARC_BLUE)} "
+                f"expects {len(self.pos_params)} positional arguments, "
+                f"but recieved {len(vals)}"
+            )
 
     def handle_keyword(self, vals: dict[str, str]) -> dict[str, Any]:
         vals = vals.copy()
@@ -203,21 +204,20 @@ class Executable(abc.ABC):
             if value is not param.default:
                 value = convert(value, param.annotation, key)
 
+            value = param.run_hooks(value, self.state)
             keyword_args[param.arg_name] = value
 
-        if self.var_key_param:
-            self.handle_var_keyword(keyword_args, vals)
+        self.handle_var_keyword(keyword_args, vals)
 
         return keyword_args
 
     def handle_var_keyword(self, keyword_args: dict[str, Any], vals: dict[str, str]):
-        assert self.var_key_param
-        if len(vals) > len(self.key_params):
-            keyword_args[self.var_key_param.arg_name] = {
-                key: val for key, val in vals.items() if key not in self.key_params
-            }
-        else:
-            keyword_args[self.var_key_param.arg_name] = {}
+        values = {key: val for key, val in vals.items() if key not in self.key_params}
+        if self.var_key_param:
+            self.var_key_param.run_hooks(values, self.state)
+            keyword_args[self.var_key_param.arg_name] = values
+        elif len(values) > 0:
+            raise errors.ArgumentError(f"Unrecognized options: {values}")
 
     def handle_flags(self, vals: list[str]) -> dict[str, bool]:
         vals = vals.copy()
@@ -226,12 +226,15 @@ class Executable(abc.ABC):
         for key, param in self.flag_params.items():
             if key in vals:
                 vals.remove(key)
-                flag_args[param.arg_name] = not param.default
+                value = not param.default
             elif param.short in vals:
                 vals.remove(param.short)
-                flag_args[param.arg_name] = not param.default
+                value = not param.default
             else:
-                flag_args[param.arg_name] = param.default
+                value = param.default
+
+            value = param.run_hooks(value, self.state)
+            flag_args[param.arg_name] = value
 
         if len(vals) > 0:
             # TODO: improve error
@@ -241,9 +244,11 @@ class Executable(abc.ABC):
 
     def handle_hidden(self):
         hidden_args: dict[str, Any] = {}
+
         for name, param in self.hidden_params.items():
-            if safe_issubclass(param.annotation, get_args(Context)[0]):
-                hidden_args[name] = param.annotation(self.state.context)
+            value = param.default
+            value = param.run_hooks(value, self.state)
+            hidden_args[name] = value
 
         return hidden_args
 

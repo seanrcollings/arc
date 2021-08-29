@@ -15,7 +15,6 @@ class ExecutionState:
     command_namespace: list[str]
     command_args: list[str]
     command_chain: list[Command]
-    __ctx: Optional[dict[str, Any]] = None
 
     @property
     def root(self):
@@ -28,17 +27,6 @@ class ExecutionState:
     @property
     def command_name(self):
         return config.namespace_sep.join(self.command_namespace)
-
-    @property
-    def context(self):
-        if self.__ctx is None:
-            ctx: dict = {}
-            for command in self.command_chain:
-                ctx = command.context | ctx
-            ctx["execution_state"] = self
-            self.__ctx = ctx
-
-        return self.__ctx
 
     @classmethod
     def empty(cls):
