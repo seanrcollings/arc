@@ -124,6 +124,16 @@ class TestAdvancedSyntax:
 
             cli("un -a")
 
+    def test_basic_hook(self, cli: CLI):
+        increment = lambda val, _state: val + 1
+
+        @cli.subcommand()
+        def command(val: Annotated[int, Meta(hooks=[increment])] = 1):
+            return val
+
+        assert cli("command") == 2
+        assert cli("command 2") == 3
+
 
 class TestKebab:
     def test_transform(self, cli: CLI):

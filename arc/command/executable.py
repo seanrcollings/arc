@@ -216,8 +216,6 @@ class Executable(abc.ABC):
         if self.var_key_param:
             self.var_key_param.run_hooks(values, self.state)
             keyword_args[self.var_key_param.arg_name] = values
-        elif len(values) > 0:
-            raise errors.ArgumentError(f"Unrecognized options: {values}")
 
     def handle_flags(self, vals: list[str]) -> dict[str, bool]:
         vals = vals.copy()

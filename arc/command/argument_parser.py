@@ -78,14 +78,12 @@ class ArgumentParser:
                 raise errors.ParserError(
                     f"Option {colorize('--' + option, fg.YELLOW)} requires a value"
                 )
-        except errors.MissingArgError as e:
+        except errors.MissingArgError:
             if self.peek():
                 value = self.consume()
                 self.parsed["options"][option] = value
             else:
-                raise errors.ParserError(
-                    f"Option {colorize('--' + option, fg.YELLOW)} requires a value"
-                ) from e
+                self.parsed["flags"].append(option)
 
     def handle_short_option(self, short_option):
         for char in short_option:
