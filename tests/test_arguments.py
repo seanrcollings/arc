@@ -1,3 +1,4 @@
+from arc.command.param import ParamType
 from typing import Annotated
 import pytest
 from arc import CLI, VarPositional, VarKeyword, errors, config
@@ -93,6 +94,16 @@ class TestSimpleSyntax:
 
 
 class TestAdvancedSyntax:
+    def test_name(self, cli: CLI):
+        @cli.subcommand()
+        def na(name: Annotated[str, Meta(type=ParamType.KEY, name="long_name")]):
+            return name
+
+        assert cli("na --long_name sean") == "sean"
+
+        with pytest.raises(errors.ArgumentError):
+            cli("na --name sean")
+
     def test_short_args(self, cli: CLI):
         @cli.subcommand()
         def ar(name: str, flag: Annotated[bool, Meta(short="f")]):
