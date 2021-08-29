@@ -1,6 +1,6 @@
+import pytest
 from arc.command.param import ParamType
 from typing import Annotated
-import pytest
 from arc import CLI, VarPositional, VarKeyword, errors, config
 from arc.types import Meta
 
@@ -29,13 +29,23 @@ class TestSimpleSyntax:
 
     def test_var_pos(self, cli: CLI):
         @cli.subcommand()
-        def pos(vals: VarPositional[int]):
+        def pos(vals: VarPositional):
             return vals
 
-        assert cli("pos 2") == [2]
-        assert cli("pos 1 2") == [1, 2]
-        assert cli("pos 1 2 3") == [1, 2, 3]
+        assert cli("pos 2") == ["2"]
+        assert cli("pos 1 2") == ["1", "2"]
+        assert cli("pos 1 2 3") == ["1", "2", "3"]
         assert cli("pos") == []
+
+    def test_var_pos_typed(self, cli: CLI):
+        @cli.subcommand()
+        def post(vals: VarPositional[int]):
+            return vals
+
+        assert cli("post 2") == [2]
+        assert cli("post 1 2") == [1, 2]
+        assert cli("post 1 2 3") == [1, 2, 3]
+        assert cli("post") == []
 
     def test_star_args(self, cli: CLI):
         @cli.subcommand()
@@ -69,6 +79,14 @@ class TestSimpleSyntax:
         assert cli("key --val 2") == 2
 
     def test_var_keyword(self, cli: CLI):
+        @cli.subcommand()
+        def key(kwargs: VarKeyword):
+            return kwargs
+
+        assert cli("key") == {}
+        assert cli("key --val 2 --val2 10") == {"val": "2", "val2": "10"}
+
+    def test_var_keyword_typed(self, cli: CLI):
         @cli.subcommand()
         def key(kwargs: VarKeyword[int]):
             return kwargs
