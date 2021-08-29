@@ -13,7 +13,7 @@ from arc.command.context import Context
 from arc.command.param import Param, NO_DEFAULT, VarKeyword, VarPositional
 from arc.execution_state import ExecutionState
 from arc.types import convert
-from arc.types.helpers import join_and
+from arc.types.helpers import join_and, unwrap
 from arc.callbacks.callback_store import CallbackStore
 from arc.command.param_builder import (
     ClassParamBuilder,
@@ -136,7 +136,8 @@ class Executable(abc.ABC):
             self._hidden_params = {
                 key: param
                 for key, param in self.params.items()
-                if param.hidden and param.annotation not in (VarPositional, VarKeyword)
+                if param.hidden
+                and unwrap(param.annotation) not in (VarPositional, VarKeyword)
             }
         return self._hidden_params
 
@@ -168,8 +169,14 @@ class Executable(abc.ABC):
 
     def handle_var_positional(self, pos_args: dict[str, Any], vals: list[str]):
         # TODO provide type conversion to all values here
+
         values = vals[len(self.pos_params) :]
         if self.var_pos_param:
+            if args := get_args(self.var_pos_param.annotation):
+                values = [
+                    convert(value, args[0], self.var_pos_param.arg_alias)
+                    for value in values
+                ]
             values = self.var_pos_param.run_hooks(values, self.state)
             pos_args[self.var_pos_param.arg_name] = values
         elif len(values) > 0:

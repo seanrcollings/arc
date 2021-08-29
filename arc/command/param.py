@@ -1,20 +1,31 @@
 from __future__ import annotations
-from arc.execution_state import ExecutionState
+from arc.types.helpers import unwrap
 import enum
 import inspect
-from typing import Any, Callable, NewType, Optional, TYPE_CHECKING, Sequence
+from typing import Any, Callable, Optional, TYPE_CHECKING, Sequence, TypeVar
 
 from arc import errors
 from arc.color import fg, colorize
 from arc.utils import symbol
 from arc.config import config
+from arc.execution_state import ExecutionState
 
 if TYPE_CHECKING:
     from arc.types.meta import Meta
 
 NO_DEFAULT = symbol("NO_DEFAULT")
-VarPositional = NewType("VarPositional", list)
-VarKeyword = NewType("VarKeyword", dict)
+
+
+T = TypeVar("T")
+V = TypeVar("V")
+
+
+class VarPositional(list[T]):
+    ...
+
+
+class VarKeyword(dict[str, V]):
+    ...
 
 
 class ParamType(enum.Enum):
@@ -72,14 +83,12 @@ class Param:
                 else parameter.name
             )
 
-        if self.annotation in (VarPositional, VarKeyword):
-            self.hidden = True
-
         if meta.default is not NO_DEFAULT or self.default is parameter.empty:
             self.default = meta.default
 
-        if self.annotation in (VarPositional, VarKeyword):
+        if unwrap(self.annotation) in (VarPositional, VarKeyword):
             self.type: ParamType = ParamType.SPECIAL
+            self.hidden = True
         elif meta.type:
             self.type = meta.type
         else:

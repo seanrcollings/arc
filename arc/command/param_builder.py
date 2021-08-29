@@ -1,4 +1,5 @@
 from __future__ import annotations
+from arc.types.helpers import unwrap
 from types import MappingProxyType
 from typing import get_type_hints, get_args, TYPE_CHECKING
 import inspect
@@ -47,9 +48,9 @@ class ParamBuilder:
         ...
 
     def param_hook(self, param: Param):
-        if param.annotation is VarPositional:
+        if unwrap(param.annotation) is VarPositional:
             self.__executable.var_pos_param = param
-        elif param.annotation is VarKeyword:
+        elif unwrap(param.annotation) is VarKeyword:
             self.__executable.var_key_param = param
         # elif safe_issubclass(param.annotation, Context):
         #     param.hidden = True
