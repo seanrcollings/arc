@@ -1,6 +1,5 @@
 import pprint
-from typing import Any, Callable, Optional, Protocol, get_args, get_type_hints
-import inspect
+from typing import Any, Callable, Optional, Protocol, get_args
 import logging
 import abc
 
@@ -11,10 +10,10 @@ from arc.result import Err, Ok
 from arc.color import colorize, fg
 from arc.command.argument_parser import Parsed
 from arc.command.context import Context
-from arc.command.param import Meta, Param, VarKeyword, VarPositional, NO_DEFAULT
+from arc.command.param import Param, NO_DEFAULT
 from arc.execution_state import ExecutionState
 from arc.types import convert
-from arc.types.helpers import is_annotated, join_and, safe_issubclass
+from arc.types.helpers import join_and, safe_issubclass
 from arc.callbacks.callback_store import CallbackStore
 from arc.command.param_builder import (
     ClassParamBuilder,
@@ -242,9 +241,8 @@ class Executable(abc.ABC):
 
     def handle_hidden(self):
         hidden_args: dict[str, Any] = {}
-
         for name, param in self.hidden_params.items():
-            if safe_issubclass(param.annotation, Context):
+            if safe_issubclass(param.annotation, get_args(Context)[0]):
                 hidden_args[name] = param.annotation(self.state.context)
 
         return hidden_args
@@ -283,7 +281,7 @@ class Executable(abc.ABC):
         return errors.MissingArgError(message)
 
     def find_argument_suggestions(self, missing: str) -> Optional[Param]:
-        visible_args = [param for param in self.params.values() if not param.hidden]
+        visible_args = (self.key_params | self.flag_params).values()
         if config.suggest_on_missing_argument and len(visible_args) > 0:
             distance, arg = min(
                 (
@@ -316,9 +314,10 @@ class ClassExecutable(Executable):
     wrapped: type[WrappedClassExecutable]
 
     def __init__(self, wrapped: type[WrappedClassExecutable]):
-        assert hasattr(
-            wrapped, "handle"
-        ), f"Class-based commands must have a {colorize('handle()', fg.YELLOW)} method"
+        if not hasattr(wrapped, "handle"):
+            raise errors.CommandError(
+                f"Class-based commands must have a {colorize('handle()', fg.YELLOW)} method"
+            )
 
         super().__init__(wrapped)
 

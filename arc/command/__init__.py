@@ -4,7 +4,7 @@ from arc import utils
 from .command import Command
 from .context import Context
 from .argument_parser import ArgumentParser
-from .param import VarKeyword, VarPositional, Meta, ParamType
+from .param import VarKeyword, VarPositional, ParamType
 
 
 def namespace(name: str, **kwargs) -> Command:

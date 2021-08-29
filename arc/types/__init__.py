@@ -7,6 +7,7 @@ from arc.color import fg, effects as ef
 from .converters import *
 from .helpers import *
 from .type_store import register, type_store
+from .meta import Meta, meta
 
 
 def convert(value, kind, name: str = ""):

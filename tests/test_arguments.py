@@ -1,7 +1,7 @@
-from arc.command.param import Meta
 from typing import Annotated
 import pytest
 from arc import CLI, VarPositional, VarKeyword, errors, config
+from arc.types import Meta
 
 
 class TestSimpleSyntax:

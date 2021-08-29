@@ -1,13 +1,15 @@
+from __future__ import annotations
 import enum
 import inspect
-from dataclasses import dataclass
-from typing import Any, NewType, Optional
+from typing import Any, NewType, Optional, TYPE_CHECKING
 
 from arc import errors
 from arc.color import fg, colorize
 from arc.utils import symbol
 from arc.config import config
 
+if TYPE_CHECKING:
+    from arc.types.meta import Meta
 
 NO_DEFAULT = symbol("NO_DEFAULT")
 VarPositional = NewType("VarPositional", list)
@@ -19,15 +21,6 @@ class ParamType(enum.Enum):
     KEY = "keyword"
     FLAG = "flag"
     SPECIAL = "special"
-
-
-@dataclass
-class Meta:
-    name: Optional[str] = None
-    type: Optional[ParamType] = None
-    short: Optional[str] = None
-    hidden: bool = False
-    default: Any = NO_DEFAULT
 
 
 class Param:

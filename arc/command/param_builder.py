@@ -3,15 +3,13 @@ from types import MappingProxyType
 from typing import get_type_hints, get_args, TYPE_CHECKING
 import inspect
 
+from arc.types import is_annotated, Meta
 from arc import errors
 from arc.command.param import (
     Param,
-    Meta,
     VarKeyword,
     VarPositional,
 )
-from arc.command.context import Context
-from arc.types import is_annotated, safe_issubclass
 
 if TYPE_CHECKING:
     from arc.command.executable import Executable
@@ -53,8 +51,8 @@ class ParamBuilder:
             self.__executable.var_pos_param = param
         elif param.annotation is VarKeyword:
             self.__executable.var_key_param = param
-        elif safe_issubclass(param.annotation, Context):
-            param.hidden = True
+        # elif safe_issubclass(param.annotation, Context):
+        #     param.hidden = True
 
     def unwrap_type(self, kind: type):
         if is_annotated(kind):

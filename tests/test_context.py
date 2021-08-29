@@ -1,7 +1,6 @@
-from typing_extensions import TypedDict
+from typing_extensions import TypedDict, get_args
 import pytest
-from arc import run, CLI, namespace, errors
-from arc.command import Context
+from arc import run, CLI, namespace, errors, Context
 
 
 @pytest.fixture
@@ -66,7 +65,7 @@ def test_custom_context(ctx_cli: CLI):
         return ctx
 
     ctx = ctx_cli("custom")
-    assert isinstance(ctx, CustomContext)
+    assert isinstance(ctx, get_args(CustomContext)[0])
     assert ctx.test == 1
 
 

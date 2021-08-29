@@ -39,3 +39,11 @@ def test_short_args(cli: CLI):
 
     assert cli("Test --val 3") == 3
     assert cli("Test -v 3") == 3
+
+
+def test_no_handle(cli: CLI):
+    with pytest.raises(errors.CommandError):
+
+        @cli.subcommand()
+        class Test:
+            ...
