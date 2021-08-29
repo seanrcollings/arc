@@ -219,8 +219,14 @@ class Executable(abc.ABC):
         return keyword_args
 
     def handle_var_keyword(self, keyword_args: dict[str, Any], vals: dict[str, str]):
-        values = {key: val for key, val in vals.items() if key not in self.key_params}
         if self.var_key_param:
+            values = {
+                key: val for key, val in vals.items() if key not in self.key_params
+            }
+            if args := get_args(self.var_key_param.annotation):
+                values = {
+                    key: convert(val, args[0], key) for key, val in values.items()
+                }
             self.var_key_param.run_hooks(values, self.state)
             keyword_args[self.var_key_param.arg_name] = values
 

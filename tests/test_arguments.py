@@ -29,12 +29,12 @@ class TestSimpleSyntax:
 
     def test_var_pos(self, cli: CLI):
         @cli.subcommand()
-        def pos(vals: VarPositional):
+        def pos(vals: VarPositional[int]):
             return vals
 
-        assert cli("pos 2") == ["2"]
-        assert cli("pos 1 2") == ["1", "2"]
-        assert cli("pos 1 2 3") == ["1", "2", "3"]
+        assert cli("pos 2") == [2]
+        assert cli("pos 1 2") == [1, 2]
+        assert cli("pos 1 2 3") == [1, 2, 3]
         assert cli("pos") == []
 
     def test_star_args(self, cli: CLI):
@@ -70,11 +70,11 @@ class TestSimpleSyntax:
 
     def test_var_keyword(self, cli: CLI):
         @cli.subcommand()
-        def key(kwargs: VarKeyword):
+        def key(kwargs: VarKeyword[int]):
             return kwargs
 
         assert cli("key") == {}
-        assert cli("key --val 2 --val2 10") == {"val": "2", "val2": "10"}
+        assert cli("key --val 2 --val2 10") == {"val": 2, "val2": 10}
 
     def test_star_kwargs(self, cli: CLI):
         @cli.subcommand()
