@@ -8,11 +8,8 @@ from arc.utils import levenshtein
 from arc.config import config
 from arc.result import Err, Ok
 from arc.color import colorize, fg
-from arc.command.argument_parser import Parsed
-
-from arc.command.context import Context
-from arc.command.param import Param, VarKeyword, VarPositional
-from arc.types.params import MISSING
+from arc.command.param import Param
+from arc.types.params import MISSING, VarKeyword, VarPositional
 from arc.execution_state import ExecutionState
 from arc.types import convert
 from arc.types.helpers import join_and, unwrap
@@ -28,9 +25,8 @@ logger = logging.getLogger("arc_logger")
 BAR = "―" * 40
 
 
-class Executable(abc.ABC):
+class ParamMixin:
     builder: type[ParamBuilder]
-    state: ExecutionState
     # Params aren't constructed until
     # a command is actually executed
     _params: Optional[dict[str, Param]] = None
@@ -41,39 +37,8 @@ class Executable(abc.ABC):
     _optional_params: dict[str, Param] = {}
     _required_params: dict[str, Param] = {}
     _hidden_params: dict[str, Param] = {}
-
-    var_pos_param: Optional[Param] = None
-    var_key_param: Optional[Param] = None
-
-    def __init__(self, wrapped: Callable):
-        self.wrapped = wrapped
-        self.callback_store = CallbackStore()
-
-    def __call__(self, parsed: Parsed, state: ExecutionState):
-        self.state = state
-        arguments: dict[str, Any] = {}
-        arguments |= self.handle_postional(parsed["pos_args"])
-        arguments |= self.handle_keyword(parsed["options"])
-        arguments |= self.handle_flags(parsed["flags"])
-        arguments |= self.handle_hidden()
-
-        logger.debug("Function Arguments: %s", pprint.pformat(arguments))
-
-        self.callback_store.pre_execution(arguments)
-        logger.debug(BAR)
-
-        try:
-            result = self.run(arguments)
-            if not isinstance(result, (Ok, Err)):
-                result = Ok(result)
-        except Exception:
-            result = Err("Execution failed")
-            raise
-        finally:
-            logger.debug(BAR)
-            self.callback_store.post_execution(result)
-
-        return result
+    _var_pos_param: Optional[Param] = MISSING  # type: ignore
+    _var_key_param: Optional[Param] = MISSING  # type: ignore
 
     @property
     def params(self):
@@ -142,6 +107,70 @@ class Executable(abc.ABC):
                 and unwrap(param.annotation) not in (VarPositional, VarKeyword)
             }
         return self._hidden_params
+
+    @property
+    def var_pos_param(self) -> Optional[Param]:
+        if self._var_pos_param is MISSING:
+            self._var_pos_param = None
+            for param in self.params.values():
+                if VarPositional.is_origin(param.annotation):
+                    self._var_pos_param = param
+                    break
+
+        return self._var_pos_param
+
+    @property
+    def var_key_param(self) -> Optional[Param]:
+        if self._var_key_param is MISSING:
+            self._var_key_param = None
+            for param in self.params.values():
+                if VarKeyword.is_origin(param.annotation):
+                    self._var_key_param = param
+                    break
+
+        return self._var_key_param
+
+
+class Executable(abc.ABC, ParamMixin):
+    builder: type[ParamBuilder]
+    state: ExecutionState
+
+    def __init__(self, wrapped: Callable):
+        self.wrapped = wrapped
+        self.callback_store = CallbackStore()
+
+    def __call__(self, state: ExecutionState):
+        # Setup
+        self.state = state
+        self.state.executable = self
+        parsed = self.state.parsed
+        assert parsed is not None
+
+        # Construct the arguments dict, the final product of which
+        # will be passed to the wrapped function or class
+        arguments: dict[str, Any] = {}
+        arguments |= self.handle_postional(parsed["pos_args"])
+        arguments |= self.handle_keyword(parsed["options"])
+        arguments |= self.handle_flags(parsed["flags"])
+        arguments |= self.handle_hidden()
+
+        logger.debug("Function Arguments: %s", pprint.pformat(arguments))
+
+        self.callback_store.pre_execution(arguments)
+        logger.debug(BAR)
+
+        try:
+            result = self.run(arguments)
+            if not isinstance(result, (Ok, Err)):
+                result = Ok(result)
+        except Exception:
+            result = Err("Execution failed")
+            raise
+        finally:
+            logger.debug(BAR)
+            self.callback_store.post_execution(result)
+
+        return result
 
     @abc.abstractmethod
     def run(self, args: dict[str, Any]) -> Any:

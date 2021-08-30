@@ -6,8 +6,7 @@ from arc import errors
 from arc.color import fg, colorize
 from arc.config import config
 from arc.execution_state import ExecutionState
-from arc.types.helpers import unwrap
-from arc.types.params import MISSING, VarKeyword, VarPositional, ParamType
+from arc.types.params import MISSING, ParamType
 
 if TYPE_CHECKING:
     from arc.types import Meta
@@ -64,9 +63,6 @@ class Param:
         if meta.default is not MISSING or self.default is parameter.empty:
             self.default = meta.default
 
-        # if unwrap(self.annotation) in (VarPositional, VarKeyword):
-        #     self.type: ParamType = ParamType.SPECIAL
-        #     self.hidden = True
         if meta.type:
             self.type = meta.type
         else:

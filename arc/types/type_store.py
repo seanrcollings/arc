@@ -9,7 +9,7 @@ from arc import errors, types
 from .converters.base_converter import BaseConverter
 
 
-TypeKey = Union[type, SpecialForm]
+TypeKey = Union[type, SpecialForm, object]
 DisplayName = Union[str, Callable[[type], str]]
 
 

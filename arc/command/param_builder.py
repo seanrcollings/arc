@@ -4,13 +4,8 @@ from typing import get_type_hints, get_args, TYPE_CHECKING
 import inspect
 
 from arc.types import is_annotated, Meta
-from arc.types.helpers import unwrap
 from arc import errors
-from arc.command.param import (
-    Param,
-    VarKeyword,
-    VarPositional,
-)
+from arc.command.param import Param
 
 if TYPE_CHECKING:
     from arc.command.executable import Executable
@@ -18,7 +13,6 @@ if TYPE_CHECKING:
 
 class ParamBuilder:
     def __init__(self, executable: Executable):
-        self.__executable: Executable = executable
         self.sig = inspect.signature(executable.wrapped)
         self.annotations = get_type_hints(executable.wrapped, include_extras=True)
 
@@ -47,13 +41,8 @@ class ParamBuilder:
     def argument_hook(self, _arg: inspect.Parameter):
         ...
 
-    def param_hook(self, param: Param):
-        if VarPositional.is_origin(param.annotation):
-            self.__executable.var_pos_param = param
-        elif VarKeyword.is_origin(param.annotation):
-            self.__executable.var_key_param = param
-        # elif safe_issubclass(param.annotation, Context):
-        #     param.hidden = True
+    def param_hook(self, _param: Param):
+        ...
 
     def unwrap_type(self, kind: type):
         if is_annotated(kind):

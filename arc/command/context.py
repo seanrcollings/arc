@@ -17,10 +17,15 @@ if TYPE_CHECKING:
 # properly
 class ContextMeta(type):
     def __new__(cls, *args, **kwargs):
-        obj = super().__new__(cls, *args, **kwargs)
+        obj: Context = super().__new__(cls, *args, **kwargs)
         if not is_annotated(obj):
             annotated = Annotated[
-                obj, Meta(hidden=True, type=ParamType.SPECIAL, hooks=[obj.from_state])
+                obj,
+                Meta(
+                    hidden=True,
+                    type=ParamType.SPECIAL,
+                    hooks=[lambda _, state: obj.from_state(state)],
+                ),
             ]
             return annotated
         return obj
@@ -32,16 +37,17 @@ class Context(dict, metaclass=ContextMeta):
     state: ExecutionState
 
     def __repr__(self):
-        return (
-            f"<{self.__class__.__name__}"
-            f" : {' '.join(key + '=' + str(value) for key, value in self.items())}>"
-        )
+        values = [f"{key}={value}" for key, value in self.items() if key != "state"]
+        return f"<{self.__class__.__name__}" f" : {' '.join(values)}>"
 
     def __getattr__(self, attr):
         return self[attr]
 
+    def __setattr__(self, name: str, value):
+        return self.__setitem__(name, value)
+
     @classmethod
-    def from_state(cls, _value, state: ExecutionState):
+    def from_state(cls, state: ExecutionState):
         ctx: dict = {}
         for command in state.command_chain:
             ctx = command.context | ctx
