@@ -84,7 +84,7 @@ class Param:
 
     def run_hooks(self, val: Any, state: ExecutionState):
         for hook in self.hooks:
-            val = hook(val, state)
+            val = hook(val, self, state)
         return val
 
     def __repr__(self):

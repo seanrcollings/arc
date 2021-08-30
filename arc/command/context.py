@@ -24,7 +24,7 @@ class ContextMeta(type):
                 Meta(
                     hidden=True,
                     type=ParamType.SPECIAL,
-                    hooks=[lambda _, state: obj.from_state(state)],
+                    hooks=[lambda _v, _p, state: obj.from_state(state)],
                 ),
             ]
             return annotated

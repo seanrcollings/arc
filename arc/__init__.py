@@ -5,11 +5,11 @@ from typing import Annotated
 from arc import callbacks
 from arc.cli import CLI, run
 from arc.command import Context, command, namespace
-from arc.types import (
+from arc.types.params import (
     Meta,
     ParamType,
-    WrappedVarPositional as VarPositional,
-    WrappedVarKeyword as VarKeyword,
+    VarPositional,
+    VarKeyword,
 )
 
 

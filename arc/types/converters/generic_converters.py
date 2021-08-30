@@ -10,7 +10,7 @@ from typing import (  # type: ignore
 
 from arc import errors
 from arc.types.type_store import register, type_store
-from .. import helpers
+from arc.types import helpers
 from .base_converter import BaseConverter
 
 

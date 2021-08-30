@@ -4,7 +4,7 @@ from typing import Annotated, Callable, Optional
 from arc import utils
 from arc.autoload import Autoload
 from arc.color import colorize, effects, fg
-from arc.types import Meta, WrappedVarKeyword
+from arc.types.params import Meta, VarKeyword
 from arc.command import Command, Context
 from arc.config import config
 from arc.run import find_command_chain, get_command_namespace, run
@@ -92,7 +92,7 @@ class CLI(Command):
         _help: Annotated[bool, Meta(name="help", short="h")],
         version: Annotated[bool, Meta(short="v")],
         ctx: Context,
-        _kwargs: WrappedVarKeyword,
+        kwargs: VarKeyword,
     ):
         """View specific help with "help <command-name>"
 

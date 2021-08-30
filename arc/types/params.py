@@ -1,16 +1,30 @@
 from __future__ import annotations
-from typing import Annotated, Optional, Any, Sequence, Callable, TypeVar
+from typing import (
+    Annotated,
+    Optional,
+    Any,
+    Sequence,
+    Callable,
+    TypeVar,
+    get_args,
+    TYPE_CHECKING,
+)
 import enum
 from dataclasses import dataclass, field
 from arc.execution_state import ExecutionState
 
 from arc.utils import symbol
-from arc.types.helpers import UnwrapHelper
+
+from . import types
+
+if TYPE_CHECKING:
+    from arc.command.param import Param
 
 # Represents a missing value
 # Used to represent an arguments
 # with no default value
 MISSING = symbol("MISSING")
+T = TypeVar("T")
 
 
 @dataclass
@@ -25,6 +39,14 @@ class Meta:
         on the command line
     hidden (bool): whether or not this paramater is exposed to the command line
     default (Any): Value to pass if no value is given on the command line
+
+    Usage:
+
+    ```py
+    @cli.subcommand()
+    def command(val: Annotated[int, Meta(short='v')]):
+        ...
+    ```
     """
 
     name: Optional[str] = None
@@ -69,21 +91,46 @@ class ParamType(enum.Enum):
     SPECIAL = "special"
 
 
-T = TypeVar("T")
-V = TypeVar("V")
+def _positional_args(default: list, param: Param, state: ExecutionState):
+    from . import convert
+
+    assert state.parsed
+    assert state.executable
+    vals = state.parsed["pos_args"]
+    exe = state.executable
+
+    values = vals[len(exe.pos_params) :]
+
+    state.parsed["pos_args"] = []
+    if (args := get_args(param.annotation)) and not isinstance(args[0], TypeVar):
+        values = [convert(value, args[0], param.arg_alias) for value in values]
+
+    return values
 
 
-class VarPositional(list[T], UnwrapHelper):
-    ...
+def _keyword_args(default: dict, param: Param, state: ExecutionState):
+    from . import convert
+
+    assert state.parsed
+    assert state.executable
+    vals = state.parsed["options"]
+    exe = state.executable
+
+    values = {key: val for key, val in vals.items() if key not in exe.key_params}
+    state.parsed["options"] = {}
+    if (args := get_args(param.annotation)) and not isinstance(args[0], TypeVar):
+        values = {key: convert(val, args[0], key) for key, val in values.items()}
+
+    return values
 
 
-WrappedVarPositional = Annotated[
-    VarPositional[T], Meta(hidden=True, type=ParamType.SPECIAL)
+VarPositional = Annotated[
+    types.VarPositional[T],
+    Meta(hidden=True, type=ParamType.SPECIAL, default=[], hooks=[_positional_args]),
 ]
 
 
-class VarKeyword(dict[str, V], UnwrapHelper):
-    ...
-
-
-WrappedVarKeyword = Annotated[VarKeyword[V], Meta(hidden=True, type=ParamType.SPECIAL)]
+VarKeyword = Annotated[
+    types.VarKeyword[T],
+    Meta(hidden=True, type=ParamType.SPECIAL, default={}, hooks=[_keyword_args]),
+]

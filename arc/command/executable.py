@@ -1,5 +1,5 @@
 import pprint
-from typing import Any, Callable, Optional, Protocol, TypeVar, get_args
+from typing import Any, Callable, Optional, Protocol
 import logging
 import abc
 
@@ -9,10 +9,11 @@ from arc.config import config
 from arc.result import Err, Ok
 from arc.color import colorize, fg
 from arc.command.param import Param
-from arc.types.params import MISSING, VarKeyword, VarPositional
+from arc.types.params import MISSING
 from arc.execution_state import ExecutionState
+from arc.command.argument_parser import Parsed
 from arc.types import convert
-from arc.types.helpers import join_and, unwrap
+from arc.types.helpers import join_and
 from arc.callbacks.callback_store import CallbackStore
 from arc.command.param_builder import (
     ClassParamBuilder,
@@ -101,34 +102,9 @@ class ParamMixin:
     def hidden_params(self):
         if not self._hidden_params:
             self._hidden_params = {
-                key: param
-                for key, param in self.params.items()
-                if param.hidden
-                and unwrap(param.annotation) not in (VarPositional, VarKeyword)
+                key: param for key, param in self.params.items() if param.hidden
             }
         return self._hidden_params
-
-    @property
-    def var_pos_param(self) -> Optional[Param]:
-        if self._var_pos_param is MISSING:
-            self._var_pos_param = None
-            for param in self.params.values():
-                if VarPositional.is_origin(param.annotation):
-                    self._var_pos_param = param
-                    break
-
-        return self._var_pos_param
-
-    @property
-    def var_key_param(self) -> Optional[Param]:
-        if self._var_key_param is MISSING:
-            self._var_key_param = None
-            for param in self.params.values():
-                if VarKeyword.is_origin(param.annotation):
-                    self._var_key_param = param
-                    break
-
-        return self._var_key_param
 
 
 class Executable(abc.ABC, ParamMixin):
@@ -153,6 +129,7 @@ class Executable(abc.ABC, ParamMixin):
         arguments |= self.handle_keyword(parsed["options"])
         arguments |= self.handle_flags(parsed["flags"])
         arguments |= self.handle_hidden()
+        self.handle_extra(parsed)
 
         logger.debug("Function Arguments: %s", pprint.pformat(arguments))
 
@@ -179,7 +156,7 @@ class Executable(abc.ABC, ParamMixin):
     def handle_postional(self, vals: list[str]) -> dict[str, Any]:
         pos_args: dict[str, Any] = {}
 
-        for idx, param in enumerate(self.pos_params.values()):
+        for idx, param in reversed(list(enumerate(self.pos_params.values()))):
             if idx > len(vals) - 1:
                 if param.default is not MISSING:
                     value = param.default
@@ -189,44 +166,18 @@ class Executable(abc.ABC, ParamMixin):
                         + colorize(param.arg_alias, fg.YELLOW)
                     )
             else:
-                value = convert(vals[idx], param.annotation, param.arg_alias)
+                value = vals.pop(idx)
+                value = convert(value, param.annotation, param.arg_alias)
 
             value = param.run_hooks(value, self.state)
             pos_args[param.arg_name] = value
 
-        self.handle_var_positional(pos_args, vals)
-
         return pos_args
 
-    def handle_var_positional(self, pos_args: dict[str, Any], vals: list[str]):
-        values = vals[len(self.pos_params) :]
-        if self.var_pos_param:
-            if (args := get_args(self.var_pos_param.annotation)) and not isinstance(
-                args[0], TypeVar
-            ):
-
-                values = [
-                    convert(value, args[0], self.var_pos_param.arg_alias)
-                    for value in values
-                ]
-            values = self.var_pos_param.run_hooks(values, self.state)
-            pos_args[self.var_pos_param.arg_name] = values
-        elif len(values) > 0:
-            raise errors.ArgumentError(
-                f"{colorize(self.state.command_name, fg.ARC_BLUE)} "
-                f"expects {len(self.pos_params)} positional arguments, "
-                f"but recieved {len(vals)}"
-            )
-
     def handle_keyword(self, vals: dict[str, str]) -> dict[str, Any]:
-        vals = vals.copy()
         keyword_args: dict[str, Any] = {}
 
-        if not self.var_key_param and not all(val in self.key_params for val in vals):
-            raise self.non_existant_args(vals)
-
         for key, param in self.key_params.items():
-
             if value := vals.get(key):
                 vals.pop(key)
             elif value := vals.get(param.short):
@@ -246,28 +197,14 @@ class Executable(abc.ABC, ParamMixin):
             value = param.run_hooks(value, self.state)
             keyword_args[param.arg_name] = value
 
-        self.handle_var_keyword(keyword_args, vals)
-
         return keyword_args
 
-    def handle_var_keyword(self, keyword_args: dict[str, Any], vals: dict[str, str]):
-        if self.var_key_param:
-            values = {
-                key: val for key, val in vals.items() if key not in self.key_params
-            }
-            if (args := get_args(self.var_key_param.annotation)) and not isinstance(
-                args[0], TypeVar
-            ):
-                values = {
-                    key: convert(val, args[0], key) for key, val in values.items()
-                }
-            self.var_key_param.run_hooks(values, self.state)
-            keyword_args[self.var_key_param.arg_name] = values
-
     def handle_flags(self, vals: list[str]) -> dict[str, bool]:
-        vals = vals.copy()
         flag_args: dict[str, bool] = {}
 
+        # TODO : This is a O(n^2) algorithm
+        # improve to O(n) by turning parsed['flags']
+        # into a set
         for key, param in self.flag_params.items():
             if key in vals:
                 vals.remove(key)
@@ -281,10 +218,6 @@ class Executable(abc.ABC, ParamMixin):
             value = param.run_hooks(value, self.state)
             flag_args[param.arg_name] = value
 
-        if len(vals) > 0:
-            # TODO: improve error
-            raise errors.ArgumentError(f"Flag(s) {vals} not recognized")
-
         return flag_args
 
     def handle_hidden(self):
@@ -296,6 +229,16 @@ class Executable(abc.ABC, ParamMixin):
             hidden_args[name] = value
 
         return hidden_args
+
+    def handle_extra(self, parsed: Parsed):
+        if parsed["pos_args"]:
+            raise errors.ArgumentError("Too many positional arguments")
+
+        if parsed["options"]:
+            raise self.non_existant_args(parsed["options"])
+
+        if parsed["flags"]:
+            raise errors.ArgumentError("Too many flags!")
 
     def get_or_raise(self, key: str, message):
         arg = self.params.get(key)
