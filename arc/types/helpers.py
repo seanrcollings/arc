@@ -79,3 +79,10 @@ def join_and(values: Sequence) -> str:
         str: joined values
     """
     return joiner(values, last_str=" and ")
+
+
+class UnwrapHelper:
+    @classmethod
+    def is_origin(cls, other: type):
+        other = unwrap(other)
+        return cls is other

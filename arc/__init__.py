@@ -7,12 +7,14 @@ from arc.cli import CLI, run
 from arc.command import (
     Context,
     ParamType,
-    VarKeyword,
-    VarPositional,
     command,
     namespace,
 )
 from arc.types import Meta
+from arc.types import (
+    WrappedVarPositional as VarPositional,
+    WrappedVarKeyword as VarKeyword,
+)
 
 from arc.config import config
 from arc.errors import ExecutionError, ValidationError

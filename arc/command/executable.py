@@ -1,5 +1,5 @@
 import pprint
-from typing import Any, Callable, Optional, Protocol, get_args
+from typing import Any, Callable, Optional, Protocol, TypeVar, get_args
 import logging
 import abc
 
@@ -12,7 +12,7 @@ from arc.command.argument_parser import Parsed
 
 from arc.command.context import Context
 from arc.command.param import Param, VarKeyword, VarPositional
-from arc.types.params import NO_DEFAULT
+from arc.types.params import MISSING
 from arc.execution_state import ExecutionState
 from arc.types import convert
 from arc.types.helpers import join_and, unwrap
@@ -152,7 +152,7 @@ class Executable(abc.ABC):
 
         for idx, param in enumerate(self.pos_params.values()):
             if idx > len(vals) - 1:
-                if param.default is not NO_DEFAULT:
+                if param.default is not MISSING:
                     value = param.default
                 else:
                     raise errors.ArgumentError(
@@ -170,11 +170,12 @@ class Executable(abc.ABC):
         return pos_args
 
     def handle_var_positional(self, pos_args: dict[str, Any], vals: list[str]):
-        # TODO provide type conversion to all values here
-
         values = vals[len(self.pos_params) :]
         if self.var_pos_param:
-            if args := get_args(self.var_pos_param.annotation):
+            if (args := get_args(self.var_pos_param.annotation)) and not isinstance(
+                args[0], TypeVar
+            ):
+
                 values = [
                     convert(value, args[0], self.var_pos_param.arg_alias)
                     for value in values
@@ -204,7 +205,7 @@ class Executable(abc.ABC):
             else:
                 value = param.default
 
-            if value is NO_DEFAULT:
+            if value is MISSING:
                 raise errors.ArgumentError(
                     "No value provided for required option: "
                     + colorize(config.flag_denoter + key, fg.YELLOW)
@@ -225,7 +226,9 @@ class Executable(abc.ABC):
             values = {
                 key: val for key, val in vals.items() if key not in self.key_params
             }
-            if args := get_args(self.var_key_param.annotation):
+            if (args := get_args(self.var_key_param.annotation)) and not isinstance(
+                args[0], TypeVar
+            ):
                 values = {
                     key: convert(val, args[0], key) for key, val in values.items()
                 }
