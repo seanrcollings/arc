@@ -55,7 +55,9 @@ class Meta:
     short: Optional[str] = None
     hidden: bool = False
     default: Any = MISSING
-    hooks: Sequence[Callable[[Any, ExecutionState], Any]] = field(default_factory=list)
+    hooks: Sequence[Callable[[Any, Param, ExecutionState], Any]] = field(
+        default_factory=list
+    )
 
 
 def meta(**kwargs):

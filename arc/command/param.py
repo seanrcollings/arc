@@ -40,7 +40,7 @@ class Param:
         self.default: Any = parameter.default
         self.hidden: bool = meta.hidden
         self.short: Optional[str] = meta.short
-        self.hooks: Sequence[Callable] = meta.hooks
+        self.hooks: Sequence[Callable[[Any, Param, ExecutionState], Any]] = meta.hooks
 
         if self.short and len(self.short) > 1:
             raise errors.ArgumentError(
