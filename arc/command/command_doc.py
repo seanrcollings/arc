@@ -1,11 +1,12 @@
+from __future__ import annotations
 import re
 import textwrap
 from typing import Union
 
 from arc import errors
 from arc.color import colorize, fg, effects
-from arc.execution_state import ExecutionState
 from arc.config import config
+from arc.execution_state import ExecutionState
 
 
 class CommandDoc:

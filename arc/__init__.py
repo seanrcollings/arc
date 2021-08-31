@@ -4,15 +4,13 @@
 from typing import Annotated
 from arc import callbacks
 from arc.cli import CLI, run
-from arc.command import (
-    Context,
+from arc.command import Context, command, namespace
+from arc.types.params import (
+    Meta,
     ParamType,
-    VarKeyword,
     VarPositional,
-    command,
-    namespace,
+    VarKeyword,
 )
-from arc.types import Meta
 
 from arc.config import config
 from arc.errors import ExecutionError, ValidationError

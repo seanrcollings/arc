@@ -5,11 +5,12 @@ from typing import (
     Callable,
 )
 from arc import errors, types
+from arc.color import fg, colorize
 
 from .converters.base_converter import BaseConverter
 
 
-TypeKey = Union[type, SpecialForm]
+TypeKey = Union[type, SpecialForm, object]
 DisplayName = Union[str, Callable[[type], str]]
 
 
@@ -106,6 +107,28 @@ def register(
         return type_store.register(kinds, cls, display_name)
 
     return wrapper
+
+
+def convert(value, kind, name: str = ""):
+    """Converts the provided string to the provided type
+    Args:
+        value: value to convert
+        kind: type to attempt the convertion to
+        name: optional descriptive name of the argument
+    """
+
+    converter_cls = type_store.get_converter(kind)
+    converter = converter_cls(kind)
+
+    try:
+        value = converter.convert(value)
+    except errors.ConversionError as e:
+        raise errors.ArgumentError(
+            f"Argument {colorize(name, fg.BLUE)} expected {e.expected}, but was "
+            f"{colorize(value, fg.YELLOW)}. {e.helper_text}"
+        ) from e
+
+    return value
 
 
 type_store = TypeStore()

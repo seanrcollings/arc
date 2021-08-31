@@ -1,8 +1,6 @@
 from typing import (  # type: ignore
     GenericAlias,
     Union,
-    cast,
-    Optional,
     Literal,
     Any,
     get_args,
@@ -12,20 +10,15 @@ from typing import (  # type: ignore
 
 from arc import errors
 from arc.types.type_store import register, type_store
-from .. import helpers
+from arc.types import helpers
 from .base_converter import BaseConverter
 
 
-class GenericConverter(BaseConverter[GenericAlias]):
+class GenericConverter(BaseConverter):
     def __init__(self, annotation: GenericAlias = None):
         super().__init__(annotation)
-        if helpers.is_alias(annotation):
-            annotation = cast(GenericAlias, annotation)
-            self.args: tuple[type, ...] = annotation.__args__
-            self.origin: Optional[type] = annotation.__origin__
-        else:
-            self.args = tuple()
-            self.origin = annotation
+        self.args = get_args(annotation)
+        self.origin = get_origin(annotation)
 
 
 def format_union(union: type[Union[Any]]) -> str:
@@ -52,8 +45,6 @@ class UnionConverter(GenericConverter):
 
 @register(Literal, lambda l: helpers.join_or(get_args(l)))
 class LiteralConverter(GenericConverter):
-    args: tuple[str, ...]  # type: ignore
-
     def convert(self, value: str) -> str:
         if value in self.args:
             return value

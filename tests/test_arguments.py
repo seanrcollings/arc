@@ -1,8 +1,7 @@
 import pytest
-from arc.command.param import ParamType
 from typing import Annotated
-from arc import CLI, VarPositional, VarKeyword, errors, config
-from arc.types import Meta
+from arc import CLI, errors, config
+from arc.types import Meta, ParamType, VarPositional, VarKeyword
 
 
 class TestSimpleSyntax:
@@ -154,7 +153,7 @@ class TestAdvancedSyntax:
             cli("un -a")
 
     def test_basic_hook(self, cli: CLI):
-        increment = lambda val, _state: val + 1
+        increment = lambda val, _param, _state: val + 1
 
         @cli.subcommand()
         def command(val: Annotated[int, Meta(hooks=[increment])] = 1):

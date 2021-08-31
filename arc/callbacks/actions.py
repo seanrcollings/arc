@@ -4,7 +4,7 @@ import os
 import sys
 from arc.color import fg, effects
 from arc import errors
-from arc.types.params import NO_DEFAULT
+from arc.types.params import MISSING
 
 from .callbacks import around, before
 
@@ -43,7 +43,7 @@ def _input_stream(
     stream: TextIO, arguments: dict, argument: str, take_precedence: bool
 ):
     arg_value = arguments[argument]
-    arg_exists = arg_value and arg_value is not NO_DEFAULT
+    arg_exists = arg_value and arg_value is not MISSING
     if not arg_exists or take_precedence:
         arguments[argument] = stream.read()
 

@@ -1,4 +1,4 @@
-from typing import Dict, Callable, Optional, Any, Union, TYPE_CHECKING
+from typing import Dict, Callable, Optional, Any, Union
 import functools
 import pprint
 import logging
@@ -8,13 +8,11 @@ from arc.errors import CommandError
 from arc import utils
 from arc.result import Result
 from arc.config import config
+from arc.execution_state import ExecutionState
 
 from .argument_parser import ArgumentParser
 from .command_doc import CommandDoc
 from .executable import Executable, FunctionExecutable, ClassExecutable
-
-if TYPE_CHECKING:
-    from arc.execution_state import ExecutionState
 
 
 logger = logging.getLogger("arc_logger")
@@ -49,7 +47,7 @@ class Command:
     def function(self):
         return self.executable.wrapped
 
-    def doc(self, state: "ExecutionState") -> CommandDoc:
+    def doc(self, state: ExecutionState) -> CommandDoc:
         doc = CommandDoc(
             self.function.__doc__ or "",
             state,
@@ -59,12 +57,13 @@ class Command:
 
     ### Execution ###
 
-    def run(self, exec_state: "ExecutionState") -> Result:
+    def run(self, state: ExecutionState) -> Result:
         """External interface to execute a command"""
-        parsed_args = self.parser.parse(exec_state.command_args)
+        parsed_args = self.parser.parse(state.command_args)
 
         logger.debug("Parser Result: %s", pprint.pformat(parsed_args))
-        return self.executable(parsed_args, exec_state)
+        state.parsed = parsed_args
+        return self.executable(state)
 
     ### Building Subcommands ###
 

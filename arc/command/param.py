@@ -6,11 +6,10 @@ from arc import errors
 from arc.color import fg, colorize
 from arc.config import config
 from arc.execution_state import ExecutionState
-from arc.types.helpers import unwrap
-from arc.types.params import NO_DEFAULT, VarKeyword, VarPositional, ParamType
+from arc.types.params import MISSING, ParamType
 
 if TYPE_CHECKING:
-    from arc.types.meta import Meta
+    from arc.types import Meta
 
 
 class Param:
@@ -41,7 +40,7 @@ class Param:
         self.default: Any = parameter.default
         self.hidden: bool = meta.hidden
         self.short: Optional[str] = meta.short
-        self.hooks: Sequence[Callable] = meta.hooks
+        self.hooks: Sequence[Callable[[Any, Param, ExecutionState], Any]] = meta.hooks
 
         if self.short and len(self.short) > 1:
             raise errors.ArgumentError(
@@ -61,18 +60,15 @@ class Param:
                 else parameter.name
             )
 
-        if meta.default is not NO_DEFAULT or self.default is parameter.empty:
+        if meta.default is not MISSING or self.default is parameter.empty:
             self.default = meta.default
 
-        if unwrap(self.annotation) in (VarPositional, VarKeyword):
-            self.type: ParamType = ParamType.SPECIAL
-            self.hidden = True
-        elif meta.type:
+        if meta.type:
             self.type = meta.type
         else:
             if parameter.annotation is bool:
                 self.type = ParamType.FLAG
-                if self.default is NO_DEFAULT:
+                if self.default is MISSING:
                     self.default = False
             elif parameter.kind is parameter.POSITIONAL_ONLY:
                 raise errors.ArgumentError(
@@ -88,7 +84,7 @@ class Param:
 
     def run_hooks(self, val: Any, state: ExecutionState):
         for hook in self.hooks:
-            val = hook(val, state)
+            val = hook(val, self, state)
         return val
 
     def __repr__(self):
@@ -123,7 +119,7 @@ class Param:
 
     @property
     def optional(self):
-        return self.default is not NO_DEFAULT
+        return self.default is not MISSING
 
     @property
     def is_keyword(self):
