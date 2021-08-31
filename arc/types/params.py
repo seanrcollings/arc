@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from arc.execution_state import ExecutionState
 
 from arc.utils import symbol
+from arc.types.type_store import convert
 
 if TYPE_CHECKING:
     from arc.command.param import Param
@@ -94,9 +95,6 @@ class ParamType(enum.Enum):
 class _VarPositional(list[T]):
     @staticmethod
     def positional_hook(_default: list, param: Param, state: ExecutionState):
-        from . import convert
-
-        # Consume everything left in pos_args
         assert state.parsed
         values = state.parsed["pos_args"]
         state.parsed["pos_args"] = []
@@ -110,12 +108,10 @@ class _VarPositional(list[T]):
 class _VarKeyword(dict[str, T]):
     @staticmethod
     def keyword_hook(_default: dict, param: Param, state: ExecutionState):
-        from . import convert
-
         assert state.parsed
-
         values = state.parsed["options"]
         state.parsed["options"] = {}
+
         if (args := get_args(param.annotation)) and not isinstance(args[0], TypeVar):
             values = {key: convert(val, args[0], key) for key, val in values.items()}
 
