@@ -1,8 +1,7 @@
 import pytest
-from arc.command.param import ParamType
 from typing import Annotated
-from arc import CLI, VarPositional, VarKeyword, errors, config
-from arc.types import Meta
+from arc import CLI, errors, config
+from arc.types import Meta, ParamType, VarPositional, VarKeyword
 
 
 class TestSimpleSyntax:
