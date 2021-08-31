@@ -3,7 +3,7 @@
 """
 
 from arc import errors
-from arc.color import fg, effects as ef
+from arc.color import fg, effects as ef, colorize
 from .converters import *
 from .helpers import *
 from .type_store import register, type_store
@@ -31,8 +31,8 @@ def convert(value, kind, name: str = ""):
         value = converter.convert(value)
     except errors.ConversionError as e:
         raise errors.ArgumentError(
-            f"Argument {fg.BLUE}{name}{ef.CLEAR} expected {e.expected}, but was "
-            f"{fg.YELLOW}{value}{ef.CLEAR}. {e.helper_text}"
+            f"Argument {colorize(name, fg.BLUE)} expected {e.expected}, but was "
+            f"{colorize(value, fg.YELLOW)}. {e.helper_text}"
         ) from e
 
     return value

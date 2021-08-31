@@ -1,6 +1,6 @@
 from typing import Annotated
 import pytest
-from arc import CLI, errors, Meta, ParamType
+from arc import CLI, errors, Meta, ParamType, VarPositional
 
 
 def test_basic(cli: CLI):
@@ -47,3 +47,15 @@ def test_no_handle(cli: CLI):
         @cli.subcommand()
         class Test:
             ...
+
+
+def test_var_pos(cli: CLI):
+    @cli.subcommand()
+    class Test:
+        arg1: int
+        args: VarPositional[int]
+
+        def handle(self):
+            return self.args
+
+    assert cli("Test 11 11 11") == [11, 11]

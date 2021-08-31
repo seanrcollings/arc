@@ -1,3 +1,4 @@
+"""Defines types relevant to Param Definition / Creation"""
 from __future__ import annotations
 from typing import (
     Annotated,
@@ -14,8 +15,6 @@ from dataclasses import dataclass, field
 from arc.execution_state import ExecutionState
 
 from arc.utils import symbol
-
-from . import types
 
 if TYPE_CHECKING:
     from arc.command.param import Param
@@ -39,6 +38,7 @@ class Meta:
         on the command line
     hidden (bool): whether or not this paramater is exposed to the command line
     default (Any): Value to pass if no value is given on the command line
+    hooks (Callable): sequence of callable objects
 
     Usage:
 
@@ -91,46 +91,54 @@ class ParamType(enum.Enum):
     SPECIAL = "special"
 
 
-def _positional_args(default: list, param: Param, state: ExecutionState):
-    from . import convert
+class _VarPositional(list[T]):
+    @staticmethod
+    def positional_hook(_default: list, param: Param, state: ExecutionState):
+        from . import convert
 
-    assert state.parsed
-    assert state.executable
-    vals = state.parsed["pos_args"]
-    exe = state.executable
+        # Consume everything left in pos_args
+        assert state.parsed
+        values = state.parsed["pos_args"]
+        state.parsed["pos_args"] = []
 
-    values = vals[len(exe.pos_params) :]
+        if (args := get_args(param.annotation)) and not isinstance(args[0], TypeVar):
+            values = [convert(value, args[0], param.arg_alias) for value in values]
 
-    state.parsed["pos_args"] = []
-    if (args := get_args(param.annotation)) and not isinstance(args[0], TypeVar):
-        values = [convert(value, args[0], param.arg_alias) for value in values]
-
-    return values
+        return values
 
 
-def _keyword_args(default: dict, param: Param, state: ExecutionState):
-    from . import convert
+class _VarKeyword(dict[str, T]):
+    @staticmethod
+    def keyword_hook(_default: dict, param: Param, state: ExecutionState):
+        from . import convert
 
-    assert state.parsed
-    assert state.executable
-    vals = state.parsed["options"]
-    exe = state.executable
+        assert state.parsed
 
-    values = {key: val for key, val in vals.items() if key not in exe.key_params}
-    state.parsed["options"] = {}
-    if (args := get_args(param.annotation)) and not isinstance(args[0], TypeVar):
-        values = {key: convert(val, args[0], key) for key, val in values.items()}
+        values = state.parsed["options"]
+        state.parsed["options"] = {}
+        if (args := get_args(param.annotation)) and not isinstance(args[0], TypeVar):
+            values = {key: convert(val, args[0], key) for key, val in values.items()}
 
-    return values
+        return values
 
 
 VarPositional = Annotated[
-    types.VarPositional[T],
-    Meta(hidden=True, type=ParamType.SPECIAL, default=[], hooks=[_positional_args]),
+    _VarPositional[T],
+    Meta(
+        hidden=True,
+        type=ParamType.SPECIAL,
+        default=[],
+        hooks=[_VarPositional.positional_hook],
+    ),
 ]
 
 
 VarKeyword = Annotated[
-    types.VarKeyword[T],
-    Meta(hidden=True, type=ParamType.SPECIAL, default={}, hooks=[_keyword_args]),
+    _VarKeyword[T],
+    Meta(
+        hidden=True,
+        type=ParamType.SPECIAL,
+        default={},
+        hooks=[_VarKeyword.keyword_hook],
+    ),
 ]
