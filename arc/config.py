@@ -7,7 +7,6 @@ from arc import errors
 
 class ConfigBase:
     ENV_PREFIX: str = ""
-    last_loaded: str = ""
 
     def from_file(self, filename: str, required: bool = False) -> bool:
         """Load configuration attributes from a file
@@ -26,10 +25,6 @@ class ConfigBase:
                 return False
             raise errors.ArcError(f"File '{filename}' does not exist / is not a file")
 
-        if str(config_file) == self.last_loaded:
-            return True
-
-        self.last_loaded = str(config_file)
         file = config_file.open()
         lines = [
             stripped
