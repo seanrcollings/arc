@@ -32,14 +32,14 @@ class Meta:
     """Represents meta-data about an argument
 
     Args:
-    name (str): The name that will be used on the command line for this argument
-    type (ParamType): The type of the argument. `ParamType.POS` or `ParamType.KEY`
-        are the most common
-    short (str): The single-character short name to refer to this argument
-        on the command line
-    hidden (bool): whether or not this paramater is exposed to the command line
-    default (Any): Value to pass if no value is given on the command line
-    hooks (Callable): sequence of callable objects
+        name (str): The name that will be used on the command line for this argument
+        type (ParamType): The type of the argument. `ParamType.POS` or `ParamType.KEY`
+            are the most common
+        short (str): The single-character short name to refer to this argument
+            on the command line
+        hidden (bool): whether or not this paramater is exposed to the command line
+        default (Any): Value to pass if no value is given on the command line
+        hooks (Callable): sequence of callable objects
 
     Usage:
 
@@ -61,7 +61,7 @@ class Meta:
 
 
 def meta(**kwargs):
-    """Wraps a given type with Meta data. Any
+    """Wraps a given type with meta-data. Any
     refernce to that type will carry the same
     meta-data
 
@@ -70,7 +70,7 @@ def meta(**kwargs):
     class Shoe:
         ...
 
-    # Both of these commands will have the short-name of "s"
+    # Both of these command's 'shoe' argument will have the short-name of "s"
     @cli.subcommand()
     def command(shoe: Shoe):
         ...
@@ -88,6 +88,16 @@ def meta(**kwargs):
 
 
 class ParamType(enum.Enum):
+    """All the types that a Paramater can be
+
+    - `POS` is given to regular arguments to a function
+    - `KEY` is given to keyword-only arguments of a function
+    - `FLAG` is given to arguments with a `bool` annotation
+    - `SPECIAL` isn't given to any arguments by default, but
+        can be used to explicitly mark a a special type. Internally,
+        arc uses this to mark `Context`, `VarPositional `, and `VarKeyword`
+    """
+
     POS = "positional"
     KEY = "keyword"
     FLAG = "flag"

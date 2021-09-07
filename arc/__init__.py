@@ -7,6 +7,7 @@ from arc.cli import CLI, run
 from arc.command import Context, command, namespace
 from arc.types.params import (
     Meta,
+    meta,
     ParamType,
     VarPositional,
     VarKeyword,

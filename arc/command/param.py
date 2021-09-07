@@ -132,3 +132,7 @@ class Param:
     @property
     def is_flag(self):
         return self.type is ParamType.FLAG
+
+    @property
+    def is_special(self):
+        return self.type is ParamType.SPECIAL

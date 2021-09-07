@@ -50,4 +50,3 @@ Tests are written with `pytest`
 ```
 $ pytest
 ```
-

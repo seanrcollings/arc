@@ -38,6 +38,7 @@ class ParamMixin:
     _optional_params: dict[str, Param] = {}
     _required_params: dict[str, Param] = {}
     _hidden_params: dict[str, Param] = {}
+    _special_params: dict[str, Param] = {}
     _var_pos_param: Optional[Param] = MISSING  # type: ignore
     _var_key_param: Optional[Param] = MISSING  # type: ignore
 
@@ -77,6 +78,14 @@ class ParamMixin:
                 if param.is_flag and not param.hidden
             }
         return self._flag_params
+
+    @property
+    def special_params(self):
+        if not self._special_params:
+            self._special_params = {
+                key: param for key, param in self.params.items() if param.is_special
+            }
+        return self._special_params
 
     @property
     def optional_params(self):
@@ -128,7 +137,7 @@ class Executable(abc.ABC, ParamMixin):
         arguments |= self.handle_postional(parsed["pos_args"])
         arguments |= self.handle_keyword(parsed["options"])
         arguments |= self.handle_flags(parsed["flags"])
-        arguments |= self.handle_hidden()
+        arguments |= self.handle_special()
         self.handle_extra(parsed)
 
         logger.debug("Function Arguments: %s", pprint.pformat(arguments))
@@ -140,7 +149,8 @@ class Executable(abc.ABC, ParamMixin):
             result = self.run(arguments)
             if not isinstance(result, (Ok, Err)):
                 result = Ok(result)
-        except Exception:
+        except BaseException:
+            # TODO: add more descriptive error message here
             result = Err("Execution failed")
             raise
         finally:
@@ -220,15 +230,15 @@ class Executable(abc.ABC, ParamMixin):
 
         return flag_args
 
-    def handle_hidden(self):
-        hidden_args: dict[str, Any] = {}
+    def handle_special(self):
+        special_args: dict[str, Any] = {}
 
-        for name, param in self.hidden_params.items():
+        for name, param in self.special_params.items():
             value = param.default
             value = param.run_hooks(value, self.state)
-            hidden_args[name] = value
+            special_args[name] = value
 
-        return hidden_args
+        return special_args
 
     def handle_extra(self, parsed: Parsed):
         if parsed["pos_args"]:
