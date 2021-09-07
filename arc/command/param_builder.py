@@ -2,10 +2,15 @@ from __future__ import annotations
 from types import MappingProxyType
 from typing import get_type_hints, get_args, TYPE_CHECKING
 import inspect
+import dataclasses
+import copy
 
 from arc.types import is_annotated, Meta
 from arc import errors
+from arc.config import config
+from arc.color import colorize, fg
 from arc.command.param import Param
+from arc.types.params import MISSING, ParamType
 
 if TYPE_CHECKING:
     from arc.command.executable import Executable
@@ -25,7 +30,15 @@ class ParamBuilder:
             )
             argument._annotation = annotation  # type: ignore # pylint: disable=protected-access
 
-            param = Param(argument, meta)
+            meta = self.build_meta(argument, meta)
+            meta_dict = dataclasses.asdict(meta)
+            meta_dict["arg_alias"] = meta_dict.pop("name")
+
+            param = Param(
+                arg_name=argument.name,
+                annotation=annotation,
+                **meta_dict,
+            )
             self.param_hook(param)
 
             params[param.arg_alias] = param
@@ -37,6 +50,43 @@ class ParamBuilder:
             )
 
         return params
+
+    def build_meta(self, arg: inspect.Parameter, user_meta: Meta):
+        # Make a copy of user_meta rather than editing user_meta directly
+        # because user_meta may be attached to a type definition
+        # (i.e: Context, VarPositional) which will cause subsequent
+        # usages of a type to behave differently
+        meta = copy.copy(user_meta)
+        # By default, snake_case args are transformed to kebab-case
+        # for the command line. However, this can be ignored
+        # by declaring an explicit name in the Meta()
+        # or by setting the config value to false
+        if not meta.name:
+            meta.name = (
+                arg.name.replace("_", "-") if config.tranform_snake_case else arg.name
+            )
+
+        if meta.default is MISSING and arg.default is not arg.empty:
+            meta.default = arg.default
+
+        if not meta.type:
+            if arg.annotation is bool:
+                meta.type = ParamType.FLAG
+                if meta.default is MISSING:
+                    meta.default = False
+            elif arg.kind is arg.POSITIONAL_ONLY:
+                raise errors.ArgumentError(
+                    "Positional only arguments are not allowed as arc "
+                    "passes all arguments by keyword internally"
+                    f"please remove the {colorize('/', fg.YELLOW)} from",
+                    "your function definition",
+                )
+            elif arg.kind is arg.KEYWORD_ONLY:
+                meta.type = ParamType.KEY
+            elif arg.kind is arg.POSITIONAL_OR_KEYWORD:
+                meta.type = ParamType.POS
+
+        return meta
 
     def argument_hook(self, _arg: inspect.Parameter):
         ...
@@ -61,7 +111,8 @@ class FunctionParamBuilder(ParamBuilder):
         if arg.kind in (arg.VAR_KEYWORD, arg.VAR_POSITIONAL):
             raise errors.ArgumentError(
                 "Arc does not support *args and **kwargs. "
-                "Please use their typed counterparts VarPositional and KeyPositional"
+                f"Please use their typed counterparts {colorize('arc.VarPositional', fg.ARC_BLUE)} "
+                f"and {colorize('arc.VarKeyword', fg.ARC_BLUE)}"
             )
 
 

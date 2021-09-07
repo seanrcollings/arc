@@ -41,6 +41,7 @@ def timer(name):
     return wrapper
 
 
+# TODO: get rid of this
 class symbol:
     __symbols__: dict[str, "symbol"] = {}
 
@@ -66,6 +67,12 @@ class symbol:
 
     def __eq__(self, other):
         return self is other
+
+    def __copy__(self):
+        return self
+
+    def __deepcopy__(self, memo):
+        return self
 
     @property
     def name(self):

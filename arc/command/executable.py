@@ -28,19 +28,20 @@ BAR = "―" * 40
 
 class ParamMixin:
     builder: type[ParamBuilder]
-    # Params aren't constructed until
-    # a command is actually executed
-    _params: Optional[dict[str, Param]] = None
 
-    _pos_params: dict[str, Param] = {}
-    _key_params: dict[str, Param] = {}
-    _flag_params: dict[str, Param] = {}
-    _optional_params: dict[str, Param] = {}
-    _required_params: dict[str, Param] = {}
-    _hidden_params: dict[str, Param] = {}
-    _special_params: dict[str, Param] = {}
-    _var_pos_param: Optional[Param] = MISSING  # type: ignore
-    _var_key_param: Optional[Param] = MISSING  # type: ignore
+    def __init__(self):
+        # Params aren't constructed until
+        # a command is actually executed
+        self._params: Optional[dict[str, Param]] = None
+        self._pos_params: dict[str, Param] = {}
+        self._key_params: dict[str, Param] = {}
+        self._flag_params: dict[str, Param] = {}
+        self._optional_params: dict[str, Param] = {}
+        self._required_params: dict[str, Param] = {}
+        self._hidden_params: dict[str, Param] = {}
+        self._special_params: dict[str, Param] = {}
+        self._var_pos_param: Optional[Param] = MISSING  # type: ignore
+        self._var_key_param: Optional[Param] = MISSING  # type: ignore
 
     @property
     def params(self):
@@ -121,6 +122,7 @@ class Executable(abc.ABC, ParamMixin):
     state: ExecutionState
 
     def __init__(self, wrapped: Callable):
+        super().__init__()
         self.wrapped = wrapped
         self.callback_store = CallbackStore()
 
