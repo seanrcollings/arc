@@ -69,6 +69,9 @@ class TestSimpleSyntax:
 
         assert cli("key --val 2") == 2
 
+        with pytest.raises(errors.ArgumentError):
+            cli("key")
+
     def test_keyword_default(self, cli: CLI):
         @cli.subcommand()
         def key(*, val: int = 1):
