@@ -14,77 +14,6 @@ if TYPE_CHECKING:
 Hooks = Sequence[Callable[[Any, "Param", ExecutionState], Any]]
 
 
-class BuiltinHooks:
-    @staticmethod
-    def pre_run(default: Any, param: Param, state: ExecutionState):
-        if param.type is ParamType.SPECIAL:
-            return default
-
-        if param.type is ParamType.POS:
-            value = BuiltinHooks.handle_postional(default, param, state)
-        elif param.type is ParamType.KEY:
-            value = BuiltinHooks.handle_keyword(default, param, state)
-        elif param.type is ParamType.FLAG:
-            value = BuiltinHooks.handle_flag(default, param, state)
-
-        if isinstance(value, str):
-            value = BuiltinHooks.convert_value(value, param, state)
-
-        return value
-
-    @staticmethod
-    def handle_postional(default: Any, _param: Param, state: ExecutionState):
-        assert state.parsed
-        pos_args = state.parsed["pos_args"]
-        return default if len(pos_args) == 0 else pos_args.pop(0)
-
-    @staticmethod
-    def handle_keyword(default: Any, param: Param, state: ExecutionState):
-        assert state.parsed
-
-        options = state.parsed["options"]
-        if value := options.get(param.arg_alias):
-            options.pop(param.arg_alias)
-        elif value := options.get(param.short):  # type: ignore
-            options.pop(param.short)  # type: ignore
-        else:
-            value = default
-
-        return value
-
-    @staticmethod
-    def handle_flag(default: bool, param: Param, state: ExecutionState):
-        assert state.parsed
-
-        flags = state.parsed["flags"]
-        if param.arg_alias in flags:
-            flags.remove(param.arg_alias)
-            return not default
-        elif param.short in flags:
-            flags.remove(param.short)
-            return not default
-        else:
-            return default
-
-    @staticmethod
-    def convert_value(value: str, param: Param, _state: ExecutionState):
-        return convert(value, param.annotation, param.arg_alias)
-
-    @staticmethod
-    def post_run(value: Any, param: Param, state: ExecutionState):
-        value = BuiltinHooks.missing_check(value, param, state)
-        return value
-
-    @staticmethod
-    def missing_check(value: Any, param: Param, _state: ExecutionState):
-        if value is MISSING:
-            raise errors.ArgumentError(
-                "No value provided for required positional argument: "
-                + colorize(param.arg_alias, fg.YELLOW)
-            )
-        return value
-
-
 class Param:
     """Represents a single command-line parameter.
 
@@ -186,3 +115,86 @@ class Param:
     @property
     def is_special(self):
         return self.type is ParamType.SPECIAL
+
+
+class BuiltinHooks:
+    @staticmethod
+    def pre_run(default: Any, param: Param, state: ExecutionState):
+        # Special params are expected to be handled on
+        # a type-by-type basis, so the other handers
+        # don't apply. These would generally be user-defined
+        if param.is_special:
+            return default
+
+        if param.is_positional:
+            value = BuiltinHooks.positional_hook(default, param, state)
+        elif param.is_keyword:
+            value = BuiltinHooks.keyword_hook(default, param, state)
+        elif param.is_flag:
+            value = BuiltinHooks.flag_hook(default, param, state)
+
+        if isinstance(value, str):
+            value = BuiltinHooks.convert_hook(value, param, state)
+
+        return value
+
+    @staticmethod
+    def positional_hook(default: Any, _param: Param, state: ExecutionState):
+        assert state.parsed
+        pos_args = state.parsed["pos_args"]
+        return default if len(pos_args) == 0 else pos_args.pop(0)
+
+    @staticmethod
+    def keyword_hook(default: Any, param: Param, state: ExecutionState):
+        assert state.parsed
+
+        options = state.parsed["options"]
+        if value := options.get(param.arg_alias):
+            options.pop(param.arg_alias)
+        elif value := options.get(param.short):  # type: ignore
+            options.pop(param.short)  # type: ignore
+        else:
+            value = default
+
+        return value
+
+    @staticmethod
+    def flag_hook(default: bool, param: Param, state: ExecutionState):
+        assert state.parsed
+
+        flags = state.parsed["flags"]
+        if param.arg_alias in flags:
+            flags.remove(param.arg_alias)
+            return not default
+        elif param.short in flags:
+            flags.remove(param.short)
+            return not default
+        else:
+            return default
+
+    @staticmethod
+    def convert_hook(value: str, param: Param, _state: ExecutionState):
+        return convert(value, param.annotation, param.arg_alias)
+
+    @staticmethod
+    def post_run(value: Any, param: Param, state: ExecutionState):
+        value = BuiltinHooks.missing_hook(value, param, state)
+        return value
+
+    @staticmethod
+    def missing_hook(value: Any, param: Param, _state: ExecutionState):
+        if value is MISSING:
+            if param.is_positional:
+                message = (
+                    "No value provided for required positional argument: "
+                    + colorize(param.arg_alias, fg.YELLOW)
+                )
+
+            else:
+                message = "No value provided for required option " + colorize(
+                    config.flag_denoter + param.arg_alias, fg.YELLOW
+                )
+
+            raise errors.ArgumentError(message)
+
+        return value

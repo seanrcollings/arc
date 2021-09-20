@@ -9,10 +9,8 @@ from arc.config import config
 from arc.result import Err, Ok
 from arc.color import colorize, fg
 from arc.command.param import Param
-from arc.types.params import MISSING
 from arc.execution_state import ExecutionState
 from arc.command.argument_parser import Parsed
-from arc.types import convert
 from arc.types.helpers import join_and
 from arc.callbacks.callback_store import CallbackStore
 from arc.command.param_mixin import ParamMixin
@@ -75,83 +73,6 @@ class Executable(abc.ABC, ParamMixin):
     @abc.abstractmethod
     def run(self, args: dict[str, Any]) -> Any:
         ...
-
-    def handle_postional(self, vals: list[str]) -> dict[str, Any]:
-        pos_args: dict[str, Any] = {}
-
-        for idx, param in reversed(list(enumerate(self.pos_params.values()))):
-            if idx > len(vals) - 1:
-                if param.default is not MISSING:
-                    value = param.default
-                else:
-                    raise errors.ArgumentError(
-                        "No value provided for required positional argument: "
-                        + colorize(param.arg_alias, fg.YELLOW)
-                    )
-            else:
-                value = vals.pop(idx)
-                value = convert(value, param.annotation, param.arg_alias)
-
-            value = param.run_hooks(value, self.state)
-            pos_args[param.arg_name] = value
-
-        return pos_args
-
-    def handle_keyword(self, vals: dict[str, str]) -> dict[str, Any]:
-        keyword_args: dict[str, Any] = {}
-
-        for key, param in self.key_params.items():
-            if value := vals.get(key):
-                vals.pop(key)
-            elif value := vals.get(param.short):
-                vals.pop(param.short)
-            else:
-                value = param.default
-
-            if value is MISSING:
-                raise errors.ArgumentError(
-                    "No value provided for required option: "
-                    + colorize(config.flag_denoter + key, fg.YELLOW)
-                )
-
-            if value is not param.default:
-                value = convert(value, param.annotation, key)
-
-            value = param.run_hooks(value, self.state)
-            keyword_args[param.arg_name] = value
-
-        return keyword_args
-
-    def handle_flags(self, vals: list[str]) -> dict[str, bool]:
-        flag_args: dict[str, bool] = {}
-
-        # TODO : This is a O(n^2) algorithm
-        # improve to O(n) by turning parsed['flags']
-        # into a set
-        for key, param in self.flag_params.items():
-            if key in vals:
-                vals.remove(key)
-                value = not param.default
-            elif param.short in vals:
-                vals.remove(param.short)
-                value = not param.default
-            else:
-                value = param.default
-
-            value = param.run_hooks(value, self.state)
-            flag_args[param.arg_name] = value
-
-        return flag_args
-
-    def handle_special(self):
-        special_args: dict[str, Any] = {}
-
-        for name, param in self.special_params.items():
-            value = param.default
-            value = param.run_hooks(value, self.state)
-            special_args[name] = value
-
-        return special_args
 
     def exhastive_check(self, parsed: Parsed):
         """Ensures that all arguments from the parser are handled"""
