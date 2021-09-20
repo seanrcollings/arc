@@ -74,11 +74,13 @@ class CLI(Command):
         as `Command.subcommand`
         """
 
-        @self.ensure_function
-        def decorator(function):
+        def decorator(wrapped):
+            if isinstance(wrapped, Command):
+                wrapped = wrapped.executable.wrapped
+
             self.default_action = Command(
-                name or function.__name__,
-                function,
+                name or wrapped.__name__,
+                wrapped,
                 **kwargs,
             )
 

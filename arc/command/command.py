@@ -1,10 +1,8 @@
 from typing import Dict, Callable, Optional, Any, Union
-import functools
 import pprint
 import logging
 
 from arc.color import effects, fg
-from arc.errors import CommandError
 from arc import utils
 from arc.result import Result
 from arc.config import config
@@ -86,7 +84,6 @@ class Command:
             Command: the subcommand created
         """
 
-        # @self.ensure_function
         def decorator(wrapped: Union[Callable, Command]):
             if isinstance(wrapped, Command):
                 wrapped = wrapped.executable.wrapped
@@ -143,27 +140,6 @@ class Command:
             self.subcommand_aliases[alias] = name
 
         return name
-
-    @staticmethod
-    def ensure_function(wrapped):
-        """Decorator to insure that multiple commands
-        can be created for the same function.
-        """
-
-        @functools.wraps(wrapped)
-        def decorator(maybe_function):
-            if isinstance(maybe_function, Command):
-                # pylint: disable=protected-access
-                return wrapped(maybe_function.function)
-            if callable(maybe_function):
-                return wrapped(maybe_function)
-
-            raise CommandError(
-                f"{wrapped.__name__} expected a function or "
-                f"Command but recieved a {type(maybe_function)}"
-            )
-
-        return decorator
 
     def is_namespace(self):
         return self.function is utils.no_op

@@ -1,4 +1,5 @@
 import pprint
+from types import FunctionType
 from typing import Any, Callable, Optional, Protocol
 import logging
 import abc
@@ -77,13 +78,19 @@ class Executable(abc.ABC, ParamMixin):
     def exhastive_check(self, parsed: Parsed):
         """Ensures that all arguments from the parser are handled"""
         if parsed["pos_args"]:
-            raise errors.ArgumentError("Too many positional arguments")
+
+            pos_params_len = len(self.pos_params)
+            raise errors.ArgumentError(
+                f"{self.state.command_name} expects {pos_params_len} "
+                f"positional argument{'s' if pos_params_len > 1 else ''}, "
+                f"but recieved {pos_params_len + len(parsed['pos_args'])}"
+            )
 
         if parsed["options"]:
-            raise self.non_existant_args(parsed["options"])
+            raise self.non_existant_args(list(parsed["options"].keys()))
 
         if parsed["flags"]:
-            raise errors.ArgumentError("Too many flags!")
+            raise self.non_existant_args(parsed["flags"])
 
     def get_or_raise(self, key: str, message):
         arg = self.params.get(key)
@@ -96,20 +103,19 @@ class Executable(abc.ABC, ParamMixin):
 
         raise errors.MissingArgError(message, name=key)
 
-    def non_existant_args(self, vals: dict[str, str]):
-        missing_args = [key for key in vals if key not in self.key_params]
-        if len(missing_args) == 1:
-            styled = colorize(config.flag_denoter + missing_args[0], fg.YELLOW)
-            message = f"Option {styled} does not exist"
+    def non_existant_args(self, vals: list[str]):
+        if len(vals) == 1:
+            styled = colorize(config.flag_denoter + vals[0], fg.YELLOW)
+            message = f"Option {styled} not recognized"
         else:
             styled = " ".join(
-                colorize(config.flag_denoter + arg, fg.YELLOW) for arg in missing_args
+                colorize(config.flag_denoter + arg, fg.YELLOW) for arg in vals
             )
-            message = f"Options {styled} do not exist"
+            message = f"Options {styled} not recognized"
 
         suggest_args = set(
             param.arg_alias
-            for name in missing_args
+            for name in vals
             if (param := self.find_argument_suggestions(name)) is not None
         )
 
@@ -137,6 +143,7 @@ class Executable(abc.ABC, ParamMixin):
 
 class FunctionExecutable(Executable):
     builder = FunctionParamBuilder
+    wrapped: FunctionType
 
     def run(self, args: dict[str, Any]):
         return self.wrapped(**args)

@@ -79,7 +79,7 @@ class ArgumentParser:
                     f"Option {colorize('--' + option, fg.YELLOW)} requires a value"
                 )
         except errors.MissingArgError:
-            if self.peek():
+            if self.peek() and not self.peek().startswith(config.flag_denoter):
                 value = self.consume()
                 self.parsed["options"][option] = value
             else:
