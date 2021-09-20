@@ -1,25 +1,79 @@
 from __future__ import annotations
-import inspect
 from typing import Any, Callable, Optional, TYPE_CHECKING, Sequence
 
 from arc import errors
-from arc.color import fg, colorize
 from arc.config import config
 from arc.execution_state import ExecutionState
 from arc.types.params import MISSING, ParamType
+from arc.types import convert
 
 if TYPE_CHECKING:
     from arc.types import Meta
+
+Hooks = Sequence[Callable[[Any, "Param", ExecutionState], Any]]
+
+
+class BuiltinHooks:
+    @staticmethod
+    def run(default: Any, param: Param, state: ExecutionState):
+        if param.type is ParamType.SPECIAL:
+            return default
+
+        if param.type is ParamType.POS:
+            value = BuiltinHooks.handle_postional(default, param, state)
+        elif param.type is ParamType.KEY:
+            value = BuiltinHooks.handle_keyword(default, param, state)
+        elif param.type is ParamType.FLAG:
+            value = BuiltinHooks.handle_flag(default, param, state)
+
+        if isinstance(value, str):
+            value = BuiltinHooks.convert_value(value, param, state)
+
+        return value
+
+    @staticmethod
+    def handle_postional(default: Any, _param: Param, state: ExecutionState):
+        assert state.parsed
+        pos_args = state.parsed["pos_args"]
+        return default if len(pos_args) == 0 else pos_args.pop()
+
+    @staticmethod
+    def handle_keyword(default: Any, param: Param, state: ExecutionState):
+        assert state.parsed
+
+        options = state.parsed["options"]
+        if value := options.get(param.arg_alias):
+            options.pop(param.arg_alias)
+        elif value := options.get(param.short):  # type: ignore
+            options.pop(param.short)  # type: ignore
+        else:
+            value = default
+
+        return value
+
+    @staticmethod
+    def handle_flag(default: bool, param: Param, state: ExecutionState):
+        assert state.parsed
+
+        flags = state.parsed["flags"]
+        if param.arg_alias in flags:
+            flags.remove(param.arg_alias)
+            return not default
+        elif param.short in flags:
+            flags.remove(param.short)
+            return not default
+        else:
+            return default
+
+    @staticmethod
+    def convert_value(value: str, param: Param, _state: ExecutionState):
+        return convert(value, param.annotation, param.arg_alias)
 
 
 class Param:
     """Represents a single command-line parameter.
 
     Instance Variables:
-        paramater (inspect.Paramater): The Paramater object generated
-            for the associated function argument. Usually not needed as
-            the other values should provide all context needed. But we
-            store it off just in case.
         arg_name (str): The actual name of the argument of the function.
             can be used to pass some value to said function
         arg_alias (str): The name to be used to pass a value to
@@ -31,6 +85,8 @@ class Param:
             command  line. Usually used to hide `Context` arguments
         short (str): the single-character shortened name for the
             argument on the command line
+        hooks (list[Callable]): list of callables that will recieve the
+            provided data-type at runtime and return a modified value
     """
 
     def __init__(
@@ -42,7 +98,7 @@ class Param:
         short: str = None,
         hidden: bool = False,
         default: Any = MISSING,
-        hooks: Sequence[Callable[[Any, Param, ExecutionState], Any]] = None,
+        hooks: Hooks = None,
     ):
         self.annotation = annotation
         self.arg_name: str = arg_name
@@ -51,7 +107,9 @@ class Param:
         self.short: Optional[str] = short
         self.hidden: bool = hidden
         self.default: Any = default
-        self.hooks = hooks if hooks else []
+        self.hooks: Hooks = [BuiltinHooks.run]
+        if hooks:
+            self.hooks.extend(hooks)
 
         if self.short and len(self.short) > 1:
             raise errors.ArgumentError(

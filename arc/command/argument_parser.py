@@ -13,8 +13,8 @@ if TYPE_CHECKING:
 
 
 class Parsed(TypedDict):
-    pos_args: list[Any]
-    options: dict[str, Any]
+    pos_args: list[str]
+    options: dict[str, str]
     flags: list[str]
 
 
