@@ -46,16 +46,12 @@ class Executable(abc.ABC, ParamMixin):
         # Construct the arguments dict, the final product of which
         # will be passed to the wrapped function or class
         arguments: dict[str, Any] = {}
-        # arguments |= self.handle_postional(parsed["pos_args"])
-        # arguments |= self.handle_keyword(parsed["options"])
-        # arguments |= self.handle_flags(parsed["flags"])
-        # arguments |= self.handle_special()
         for param in self.params.values():
             value = param.default
             value = param.run_hooks(value, self.state)
             arguments[param.arg_name] = value
 
-        self.handle_extra(parsed)
+        self.exhastive_check(parsed)
 
         logger.debug("Function Arguments: %s", pprint.pformat(arguments))
 
@@ -157,7 +153,8 @@ class Executable(abc.ABC, ParamMixin):
 
         return special_args
 
-    def handle_extra(self, parsed: Parsed):
+    def exhastive_check(self, parsed: Parsed):
+        """Ensures that all arguments from the parser are handled"""
         if parsed["pos_args"]:
             raise errors.ArgumentError("Too many positional arguments")
 

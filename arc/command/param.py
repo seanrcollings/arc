@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Any, Callable, Optional, TYPE_CHECKING, Sequence
 
 from arc import errors
+from arc.color import colorize, fg
 from arc.config import config
 from arc.execution_state import ExecutionState
 from arc.types.params import MISSING, ParamType
@@ -15,7 +16,7 @@ Hooks = Sequence[Callable[[Any, "Param", ExecutionState], Any]]
 
 class BuiltinHooks:
     @staticmethod
-    def run(default: Any, param: Param, state: ExecutionState):
+    def pre_run(default: Any, param: Param, state: ExecutionState):
         if param.type is ParamType.SPECIAL:
             return default
 
@@ -35,7 +36,7 @@ class BuiltinHooks:
     def handle_postional(default: Any, _param: Param, state: ExecutionState):
         assert state.parsed
         pos_args = state.parsed["pos_args"]
-        return default if len(pos_args) == 0 else pos_args.pop()
+        return default if len(pos_args) == 0 else pos_args.pop(0)
 
     @staticmethod
     def handle_keyword(default: Any, param: Param, state: ExecutionState):
@@ -68,6 +69,20 @@ class BuiltinHooks:
     @staticmethod
     def convert_value(value: str, param: Param, _state: ExecutionState):
         return convert(value, param.annotation, param.arg_alias)
+
+    @staticmethod
+    def post_run(value: Any, param: Param, state: ExecutionState):
+        value = BuiltinHooks.missing_check(value, param, state)
+        return value
+
+    @staticmethod
+    def missing_check(value: Any, param: Param, _state: ExecutionState):
+        if value is MISSING:
+            raise errors.ArgumentError(
+                "No value provided for required positional argument: "
+                + colorize(param.arg_alias, fg.YELLOW)
+            )
+        return value
 
 
 class Param:
@@ -107,9 +122,10 @@ class Param:
         self.short: Optional[str] = short
         self.hidden: bool = hidden
         self.default: Any = default
-        self.hooks: Hooks = [BuiltinHooks.run]
+        self.hooks: Hooks = [BuiltinHooks.pre_run]
         if hooks:
             self.hooks.extend(hooks)
+        self.hooks.append(BuiltinHooks.post_run)
 
         if self.short and len(self.short) > 1:
             raise errors.ArgumentError(
@@ -146,8 +162,8 @@ class Param:
                 if self.is_keyword:
                     formatted += " <...>"
 
-        if self.optional:
-            formatted = f"[{formatted}]"
+                if self.optional:
+                    formatted = f"[{formatted}]"
 
         return formatted
 
