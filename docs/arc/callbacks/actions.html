@@ -65,7 +65,7 @@
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">fg</span><span class="p">,</span> <span class="n">effects</span>
 <span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">errors</span>
-<span class="kn">from</span> <span class="nn">arc.command.argument</span> <span class="kn">import</span> <span class="n">NO_DEFAULT</span>
+<span class="kn">from</span> <span class="nn">arc.types.params</span> <span class="kn">import</span> <span class="n">MISSING</span>
 
 <span class="kn">from</span> <span class="nn">.callbacks</span> <span class="kn">import</span> <span class="n">around</span><span class="p">,</span> <span class="n">before</span>
 
@@ -104,7 +104,7 @@
     <span class="n">stream</span><span class="p">:</span> <span class="n">TextIO</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">argument</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">take_precedence</span><span class="p">:</span> <span class="nb">bool</span>
 <span class="p">):</span>
     <span class="n">arg_value</span> <span class="o">=</span> <span class="n">arguments</span><span class="p">[</span><span class="n">argument</span><span class="p">]</span>
-    <span class="n">arg_exists</span> <span class="o">=</span> <span class="n">arg_value</span> <span class="ow">and</span> <span class="n">arg_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">NO_DEFAULT</span>
+    <span class="n">arg_exists</span> <span class="o">=</span> <span class="n">arg_value</span> <span class="ow">and</span> <span class="n">arg_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">MISSING</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">arg_exists</span> <span class="ow">or</span> <span class="n">take_precedence</span><span class="p">:</span>
         <span class="n">arguments</span><span class="p">[</span><span class="n">argument</span><span class="p">]</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 

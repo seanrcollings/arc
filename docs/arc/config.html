@@ -40,9 +40,6 @@
                                 <a class="variable" href="#ConfigBase.ENV_PREFIX">ENV_PREFIX</a>
                         </li>
                         <li>
-                                <a class="variable" href="#ConfigBase.last_loaded">last_loaded</a>
-                        </li>
-                        <li>
                                 <a class="function" href="#ConfigBase.from_file">from_file</a>
                         </li>
                         <li>
@@ -94,7 +91,13 @@
                                 <a class="variable" href="#Config.suggest_levenshtein_distance">suggest_levenshtein_distance</a>
                         </li>
                         <li>
+                                <a class="variable" href="#Config.default_section_name">default_section_name</a>
+                        </li>
+                        <li>
                                 <a class="variable" href="#Config.parse_argument_help">parse_argument_help</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Config.tranform_snake_case">tranform_snake_case</a>
                         </li>
                         <li>
                                 <a class="variable" href="#Config.mode_map">mode_map</a>
@@ -132,7 +135,6 @@
 
 <span class="k">class</span> <span class="nc">ConfigBase</span><span class="p">:</span>
     <span class="n">ENV_PREFIX</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-    <span class="n">last_loaded</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Load configuration attributes from a file</span>
@@ -151,10 +153,6 @@
                 <span class="k">return</span> <span class="kc">False</span>
             <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ArcError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File &#39;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&#39; does not exist / is not a file&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_loaded</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">True</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">last_loaded</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
         <span class="n">file</span> <span class="o">=</span> <span class="n">config_file</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">stripped</span>
@@ -289,12 +287,20 @@
 <span class="sd">    when a command is not found&quot;&quot;&quot;</span>
 
     <span class="n">suggest_levenshtein_distance</span> <span class="o">=</span> <span class="mi">2</span>
-    <span class="sd">&quot;&quot;&quot;The max Levenshtein between input and a</span>
+    <span class="sd">&quot;&quot;&quot;The max Levenshtein distance between input and a</span>
 <span class="sd">    possible correction to trigger a suggestion &quot;&quot;&quot;</span>
+
+    <span class="n">default_section_name</span> <span class="o">=</span> <span class="s2">&quot;description&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The name to use by default if the first section</span>
+<span class="sd">    in a command docstring is anonymous</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">parse_argument_help</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="sd">&quot;&quot;&quot;Wether or not to attempt to parse the argument</span>
 <span class="sd">    section of help documentation to provide better documentation&quot;&quot;&quot;</span>
+
+    <span class="n">tranform_snake_case</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="sd">&quot;&quot;&quot;Transforms snake_case argument names to kebab-case. Defaults to True&quot;&quot;&quot;</span>
 
     <span class="n">mode_map</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;development&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
@@ -322,7 +328,6 @@
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">ConfigBase</span><span class="p">:</span>
     <span class="n">ENV_PREFIX</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-    <span class="n">last_loaded</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Load configuration attributes from a file</span>
@@ -341,10 +346,6 @@
                 <span class="k">return</span> <span class="kc">False</span>
             <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ArcError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File &#39;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&#39; does not exist / is not a file&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_loaded</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">True</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">last_loaded</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
         <span class="n">file</span> <span class="o">=</span> <span class="n">config_file</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">stripped</span>
@@ -473,15 +474,6 @@
     
 
                             </div>
-                            <div id="ConfigBase.last_loaded" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#ConfigBase.last_loaded">#&nbsp;&nbsp</a>
-
-        <span class="name">last_loaded</span><span class="annotation">: str</span><span class="default_value"> = &#39;&#39;</span>
-    </div>
-
-    
-
-                            </div>
                             <div id="ConfigBase.from_file" class="classattr">
                                         <div class="attr function"><a class="headerlink" href="#ConfigBase.from_file">#&nbsp;&nbsp</a>
 
@@ -509,10 +501,6 @@
                 <span class="k">return</span> <span class="kc">False</span>
             <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ArcError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File &#39;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&#39; does not exist / is not a file&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_loaded</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">True</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">last_loaded</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
         <span class="n">file</span> <span class="o">=</span> <span class="n">config_file</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">stripped</span>
@@ -771,12 +759,20 @@ for post-load setup</p>
 <span class="sd">    when a command is not found&quot;&quot;&quot;</span>
 
     <span class="n">suggest_levenshtein_distance</span> <span class="o">=</span> <span class="mi">2</span>
-    <span class="sd">&quot;&quot;&quot;The max Levenshtein between input and a</span>
+    <span class="sd">&quot;&quot;&quot;The max Levenshtein distance between input and a</span>
 <span class="sd">    possible correction to trigger a suggestion &quot;&quot;&quot;</span>
+
+    <span class="n">default_section_name</span> <span class="o">=</span> <span class="s2">&quot;description&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The name to use by default if the first section</span>
+<span class="sd">    in a command docstring is anonymous</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">parse_argument_help</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="sd">&quot;&quot;&quot;Wether or not to attempt to parse the argument</span>
 <span class="sd">    section of help documentation to provide better documentation&quot;&quot;&quot;</span>
+
+    <span class="n">tranform_snake_case</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="sd">&quot;&quot;&quot;Transforms snake_case argument names to kebab-case. Defaults to True&quot;&quot;&quot;</span>
 
     <span class="n">mode_map</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;development&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
@@ -910,8 +906,20 @@ when a command is not found</p>
         <span class="name">suggest_levenshtein_distance</span><span class="default_value"> = 2</span>
     </div>
 
-            <div class="docstring"><p>The max Levenshtein between input and a
+            <div class="docstring"><p>The max Levenshtein distance between input and a
 possible correction to trigger a suggestion</p>
+</div>
+
+
+                            </div>
+                            <div id="Config.default_section_name" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#Config.default_section_name">#&nbsp;&nbsp</a>
+
+        <span class="name">default_section_name</span><span class="default_value"> = &#39;description&#39;</span>
+    </div>
+
+            <div class="docstring"><p>The name to use by default if the first section
+in a command docstring is anonymous</p>
 </div>
 
 
@@ -924,6 +932,17 @@ possible correction to trigger a suggestion</p>
 
             <div class="docstring"><p>Wether or not to attempt to parse the argument
 section of help documentation to provide better documentation</p>
+</div>
+
+
+                            </div>
+                            <div id="Config.tranform_snake_case" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#Config.tranform_snake_case">#&nbsp;&nbsp</a>
+
+        <span class="name">tranform_snake_case</span><span class="default_value"> = True</span>
+    </div>
+
+            <div class="docstring"><p>Transforms snake_case argument names to kebab-case. Defaults to True</p>
 </div>
 
 
@@ -941,8 +960,7 @@ section of help documentation to provide better documentation</p>
                                 <h5>Inherited Members</h5>
                                 <dl>
                                     <div><dt><a href="#ConfigBase">ConfigBase</a></dt>
-                                <dd id="Config.last_loaded" class="variable"><a href="#ConfigBase.last_loaded">last_loaded</a></dd>
-                <dd id="Config.from_file" class="function"><a href="#ConfigBase.from_file">from_file</a></dd>
+                                <dd id="Config.from_file" class="function"><a href="#ConfigBase.from_file">from_file</a></dd>
                 <dd id="Config.from_env" class="function"><a href="#ConfigBase.from_env">from_env</a></dd>
                 <dd id="Config.parse" class="function"><a href="#ConfigBase.parse">parse</a></dd>
                 <dd id="Config.set_values" class="function"><a href="#ConfigBase.set_values">set_values</a></dd>

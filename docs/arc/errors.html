@@ -79,6 +79,12 @@
 
             </li>
             <li>
+                    <a class="class" href="#ArgumentError">ArgumentError</a>
+                            <ul class="memberlist">
+                </ul>
+
+            </li>
+            <li>
                     <a class="class" href="#MissingArgError">MissingArgError</a>
                             <ul class="memberlist">
                         <li>
@@ -151,7 +157,11 @@
     <span class="sd">&quot;&quot;&quot;Raised when there is an error parsing the arguments&quot;&quot;&quot;</span>
 
 
-<span class="k">class</span> <span class="nc">MissingArgError</span><span class="p">(</span><span class="n">ParserError</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">ArgumentError</span><span class="p">(</span><span class="n">ArcError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised when an error occurs to the scope of a single argument&quot;&quot;&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">MissingArgError</span><span class="p">(</span><span class="n">ArgumentError</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
@@ -467,18 +477,54 @@
                                 </dl>
                             </div>
                 </section>
+                <section id="ArgumentError">
+                                <div class="attr class">
+        <a class="headerlink" href="#ArgumentError">#&nbsp;&nbsp</a>
+
+        
+        <span class="def">class</span>
+        <span class="name">ArgumentError</span><wbr>(<span class="base"><a href="#ArcError">ArcError</a></span>):
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">ArgumentError</span><span class="p">(</span><span class="n">ArcError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised when an error occurs to the scope of a single argument&quot;&quot;&quot;</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Raised when an error occurs to the scope of a single argument</p>
+</div>
+
+
+                            <div class="inherited">
+                                <h5>Inherited Members</h5>
+                                <dl>
+                                    <div><dt><a href="#ArcError">ArcError</a></dt>
+                                <dd id="ArgumentError.__init__" class="function"><a href="#ArcError.__init__">ArcError</a></dd>
+
+            </div>
+            <div><dt>builtins.BaseException</dt>
+                                <dd id="ArgumentError.with_traceback" class="function">with_traceback</dd>
+                <dd id="ArgumentError.args" class="variable">args</dd>
+
+            </div>
+                                </dl>
+                            </div>
+                </section>
                 <section id="MissingArgError">
                                 <div class="attr class">
         <a class="headerlink" href="#MissingArgError">#&nbsp;&nbsp</a>
 
         
         <span class="def">class</span>
-        <span class="name">MissingArgError</span><wbr>(<span class="base"><a href="#ParserError">ParserError</a></span>):
+        <span class="name">MissingArgError</span><wbr>(<span class="base"><a href="#ArgumentError">ArgumentError</a></span>):
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">MissingArgError</span><span class="p">(</span><span class="n">ParserError</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">MissingArgError</span><span class="p">(</span><span class="n">ArgumentError</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
@@ -486,7 +532,7 @@
 
         </details>
 
-            <div class="docstring"><p>Raised when there is an error parsing the arguments</p>
+            <div class="docstring"><p>Raised when an error occurs to the scope of a single argument</p>
 </div>
 
 

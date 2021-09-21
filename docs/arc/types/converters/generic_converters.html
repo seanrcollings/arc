@@ -52,9 +52,6 @@
                     <a class="class" href="#LiteralConverter">LiteralConverter</a>
                             <ul class="memberlist">
                         <li>
-                                <a class="variable" href="#LiteralConverter.args">args</a>
-                        </li>
-                        <li>
                                 <a class="function" href="#LiteralConverter.convert">convert</a>
                         </li>
                 </ul>
@@ -144,8 +141,6 @@
             <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>  <span class="c1"># type: ignore</span>
     <span class="n">GenericAlias</span><span class="p">,</span>
     <span class="n">Union</span><span class="p">,</span>
-    <span class="n">cast</span><span class="p">,</span>
-    <span class="n">Optional</span><span class="p">,</span>
     <span class="n">Literal</span><span class="p">,</span>
     <span class="n">Any</span><span class="p">,</span>
     <span class="n">get_args</span><span class="p">,</span>
@@ -155,20 +150,15 @@
 
 <span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">errors</span>
 <span class="kn">from</span> <span class="nn">arc.types.type_store</span> <span class="kn">import</span> <span class="n">register</span><span class="p">,</span> <span class="n">type_store</span>
-<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">helpers</span>
+<span class="kn">from</span> <span class="nn">arc.types</span> <span class="kn">import</span> <span class="n">helpers</span>
 <span class="kn">from</span> <span class="nn">.base_converter</span> <span class="kn">import</span> <span class="n">BaseConverter</span>
 
 
-<span class="k">class</span> <span class="nc">GenericConverter</span><span class="p">(</span><span class="n">BaseConverter</span><span class="p">[</span><span class="n">GenericAlias</span><span class="p">]):</span>
+<span class="k">class</span> <span class="nc">GenericConverter</span><span class="p">(</span><span class="n">BaseConverter</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">annotation</span><span class="p">:</span> <span class="n">GenericAlias</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">helpers</span><span class="o">.</span><span class="n">is_alias</span><span class="p">(</span><span class="n">annotation</span><span class="p">):</span>
-            <span class="n">annotation</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">GenericAlias</span><span class="p">,</span> <span class="n">annotation</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">annotation</span><span class="o">.</span><span class="n">__args__</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="o">=</span> <span class="n">annotation</span><span class="o">.</span><span class="n">__origin__</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">origin</span> <span class="o">=</span> <span class="n">annotation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">get_args</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">origin</span> <span class="o">=</span> <span class="n">get_origin</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">format_union</span><span class="p">(</span><span class="n">union</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -195,8 +185,6 @@
 
 <span class="nd">@register</span><span class="p">(</span><span class="n">Literal</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">l</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">join_or</span><span class="p">(</span><span class="n">get_args</span><span class="p">(</span><span class="n">l</span><span class="p">)))</span>
 <span class="k">class</span> <span class="nc">LiteralConverter</span><span class="p">(</span><span class="n">GenericConverter</span><span class="p">):</span>
-    <span class="n">args</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
-
     <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">value</span>
@@ -295,21 +283,16 @@
 
         
         <span class="def">class</span>
-        <span class="name">GenericConverter</span><wbr>(<span class="base"><a href="base_converter.html#BaseConverter">arc.types.converters.base_converter.BaseConverter[types.GenericAlias]</a></span>):
+        <span class="name">GenericConverter</span><wbr>(<span class="base">typing.Generic[~T]</span>, <span class="base">abc.ABC</span>):
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">GenericConverter</span><span class="p">(</span><span class="n">BaseConverter</span><span class="p">[</span><span class="n">GenericAlias</span><span class="p">]):</span>
+            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">GenericConverter</span><span class="p">(</span><span class="n">BaseConverter</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">annotation</span><span class="p">:</span> <span class="n">GenericAlias</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">helpers</span><span class="o">.</span><span class="n">is_alias</span><span class="p">(</span><span class="n">annotation</span><span class="p">):</span>
-            <span class="n">annotation</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">GenericAlias</span><span class="p">,</span> <span class="n">annotation</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">annotation</span><span class="o">.</span><span class="n">__args__</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="o">=</span> <span class="n">annotation</span><span class="o">.</span><span class="n">__origin__</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">origin</span> <span class="o">=</span> <span class="n">annotation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">get_args</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">origin</span> <span class="o">=</span> <span class="n">get_origin</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -357,7 +340,7 @@
                 <div class="decorator">@register(Union, format_union)</div>
 
         <span class="def">class</span>
-        <span class="name">UnionConverter</span><wbr>(<span class="base"><a href="base_converter.html#BaseConverter">arc.types.converters.base_converter.BaseConverter[types.GenericAlias]</a></span>):
+        <span class="name">UnionConverter</span><wbr>(<span class="base">typing.Generic[~T]</span>, <span class="base">abc.ABC</span>):
     </div>
 
                 <details>
@@ -436,15 +419,13 @@
                 <div class="decorator">@register(Literal, lambda l: helpers.join_or(get_args(l)))</div>
 
         <span class="def">class</span>
-        <span class="name">LiteralConverter</span><wbr>(<span class="base"><a href="base_converter.html#BaseConverter">arc.types.converters.base_converter.BaseConverter[types.GenericAlias]</a></span>):
+        <span class="name">LiteralConverter</span><wbr>(<span class="base">typing.Generic[~T]</span>, <span class="base">abc.ABC</span>):
     </div>
 
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="nd">@register</span><span class="p">(</span><span class="n">Literal</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">l</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">join_or</span><span class="p">(</span><span class="n">get_args</span><span class="p">(</span><span class="n">l</span><span class="p">)))</span>
 <span class="k">class</span> <span class="nc">LiteralConverter</span><span class="p">(</span><span class="n">GenericConverter</span><span class="p">):</span>
-    <span class="n">args</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
-
     <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">value</span>
@@ -459,15 +440,6 @@
 </div>
 
 
-                            <div id="LiteralConverter.args" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#LiteralConverter.args">#&nbsp;&nbsp</a>
-
-        <span class="name">args</span><span class="annotation">: tuple[str, ...]</span>
-    </div>
-
-    
-
-                            </div>
                             <div id="LiteralConverter.convert" class="classattr">
                                         <div class="attr function"><a class="headerlink" href="#LiteralConverter.convert">#&nbsp;&nbsp</a>
 
@@ -513,7 +485,7 @@
 
         
         <span class="def">class</span>
-        <span class="name">CollectionConverter</span><wbr>(<span class="base"><a href="base_converter.html#BaseConverter">arc.types.converters.base_converter.BaseConverter[types.GenericAlias]</a></span>):
+        <span class="name">CollectionConverter</span><wbr>(<span class="base">typing.Generic[~T]</span>, <span class="base">abc.ABC</span>):
     </div>
 
                 <details>
@@ -631,7 +603,7 @@
 
         
         <span class="def">class</span>
-        <span class="name">MutableCollectionConverter</span><wbr>(<span class="base"><a href="base_converter.html#BaseConverter">arc.types.converters.base_converter.BaseConverter[types.GenericAlias]</a></span>):
+        <span class="name">MutableCollectionConverter</span><wbr>(<span class="base">typing.Generic[~T]</span>, <span class="base">abc.ABC</span>):
     </div>
 
                 <details>
@@ -724,7 +696,7 @@
                 <div class="decorator">@register(list, format_collection)</div>
 
         <span class="def">class</span>
-        <span class="name">ListConverter</span><wbr>(<span class="base"><a href="base_converter.html#BaseConverter">arc.types.converters.base_converter.BaseConverter[types.GenericAlias]</a></span>):
+        <span class="name">ListConverter</span><wbr>(<span class="base">typing.Generic[~T]</span>, <span class="base">abc.ABC</span>):
     </div>
 
                 <details>
@@ -808,7 +780,7 @@ The argument must be an iterable if specified.</p>
                 <div class="decorator">@register(set, format_collection)</div>
 
         <span class="def">class</span>
-        <span class="name">SetConverter</span><wbr>(<span class="base"><a href="base_converter.html#BaseConverter">arc.types.converters.base_converter.BaseConverter[types.GenericAlias]</a></span>):
+        <span class="name">SetConverter</span><wbr>(<span class="base">typing.Generic[~T]</span>, <span class="base">abc.ABC</span>):
     </div>
 
                 <details>
@@ -925,7 +897,7 @@ set(iterable) -> new set object</p>
                 <div class="decorator">@register(tuple, format_tuple)</div>
 
         <span class="def">class</span>
-        <span class="name">TupleConverter</span><wbr>(<span class="base"><a href="base_converter.html#BaseConverter">arc.types.converters.base_converter.BaseConverter[types.GenericAlias]</a></span>):
+        <span class="name">TupleConverter</span><wbr>(<span class="base">typing.Generic[~T]</span>, <span class="base">abc.ABC</span>):
     </div>
 
                 <details>

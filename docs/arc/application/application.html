@@ -85,7 +85,7 @@
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">CLI</span><span class="p">,</span> <span class="n">ParsingMethod</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">__version__</span>
+<span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">CLI</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">__version__</span>
 
 <span class="kn">from</span> <span class="nn">.templates</span> <span class="kn">import</span> <span class="n">templates</span>
 
@@ -105,7 +105,7 @@
 <span class="p">}</span>
 
 
-<span class="nd">@cli</span><span class="o">.</span><span class="n">command</span><span class="p">((</span><span class="s2">&quot;open&quot;</span><span class="p">,</span> <span class="s2">&quot;o&quot;</span><span class="p">),</span> <span class="n">parsing_method</span><span class="o">=</span><span class="n">ParsingMethod</span><span class="o">.</span><span class="n">POSITIONAL</span><span class="p">)</span>
+<span class="nd">@cli</span><span class="o">.</span><span class="n">command</span><span class="p">((</span><span class="s2">&quot;open&quot;</span><span class="p">,</span> <span class="s2">&quot;o&quot;</span><span class="p">))</span>
 <span class="k">def</span> <span class="nf">open_link</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="n">OpenEnum</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Opens an arc related link&quot;&quot;&quot;</span>
     <span class="n">webbrowser</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">open_map</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
@@ -120,7 +120,7 @@
     <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">word</span><span class="o">.</span><span class="n">title</span><span class="p">()</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">))</span>
 
 
-<span class="nd">@cli</span><span class="o">.</span><span class="n">command</span><span class="p">((</span><span class="s2">&quot;init&quot;</span><span class="p">,</span> <span class="s2">&quot;i&quot;</span><span class="p">),</span> <span class="n">parsing_method</span><span class="o">=</span><span class="n">ParsingMethod</span><span class="o">.</span><span class="n">POSITIONAL</span><span class="p">)</span>
+<span class="nd">@cli</span><span class="o">.</span><span class="n">command</span><span class="p">((</span><span class="s2">&quot;init&quot;</span><span class="p">,</span> <span class="s2">&quot;i&quot;</span><span class="p">))</span>
 <span class="k">def</span> <span class="nf">init_command</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="n">InitEnum</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Initalize a new arc-based Python project&quot;&quot;&quot;</span>
     <span class="n">project</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -150,7 +150,7 @@
     <span class="k">def</span> <span class="nf">color_print</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">color</span><span class="o">.</span><span class="n">fg</span><span class="o">.</span><span class="n">ARC_BLUE</span><span class="si">}{</span><span class="n">message</span><span class="si">}{</span><span class="n">color</span><span class="o">.</span><span class="n">effects</span><span class="o">.</span><span class="n">CLEAR</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="nd">@cli</span><span class="o">.</span><span class="n">command</span><span class="p">((</span><span class="s2">&quot;deploy&quot;</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">),</span> <span class="n">parsing_method</span><span class="o">=</span><span class="n">ParsingMethod</span><span class="o">.</span><span class="n">POSITIONAL</span><span class="p">)</span>
+    <span class="nd">@cli</span><span class="o">.</span><span class="n">command</span><span class="p">((</span><span class="s2">&quot;deploy&quot;</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">))</span>
     <span class="k">def</span> <span class="nf">deploy</span><span class="p">(</span><span class="n">version</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Handle the details of deploying a new version of arc&quot;&quot;&quot;</span>
         <span class="n">color_print</span><span class="p">(</span><span class="s2">&quot;Running Tests...&quot;</span><span class="p">)</span>

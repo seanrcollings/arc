@@ -112,7 +112,7 @@ placed in <code>generic_convertrs.py</code></p>
 <span class="sd">because those converters also handle their generic form (`list[int]`) and are</span>
 <span class="sd">placed in `generic_convertrs.py`</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TextIO</span><span class="p">,</span> <span class="n">IO</span><span class="p">,</span> <span class="n">BinaryIO</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TextIO</span><span class="p">,</span> <span class="n">IO</span><span class="p">,</span> <span class="n">BinaryIO</span><span class="p">,</span> <span class="n">Any</span>
 
 <span class="kn">from</span> <span class="nn">arc.errors</span> <span class="kn">import</span> <span class="n">ConversionError</span>
 <span class="kn">from</span> <span class="nn">arc.types.type_store</span> <span class="kn">import</span> <span class="n">register</span>
@@ -120,6 +120,7 @@ placed in <code>generic_convertrs.py</code></p>
 
 
 <span class="nd">@register</span><span class="p">((</span><span class="n">TextIO</span><span class="p">,</span> <span class="n">IO</span><span class="p">,</span> <span class="n">BinaryIO</span><span class="p">),</span> <span class="s2">&quot;filepath&quot;</span><span class="p">)</span>
+<span class="nd">@register</span><span class="p">(</span><span class="n">Any</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">EmptyConverter</span><span class="p">(</span><span class="n">BaseConverter</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">value</span>
@@ -182,6 +183,7 @@ placed in <code>generic_convertrs.py</code></p>
         <a class="headerlink" href="#EmptyConverter">#&nbsp;&nbsp</a>
 
                 <div class="decorator">@register((TextIO, IO, BinaryIO), &#39;filepath&#39;)</div>
+        <div class="decorator">@register(Any)</div>
 
         <span class="def">class</span>
         <span class="name">EmptyConverter</span><wbr>(<span class="base">typing.Generic[~T]</span>, <span class="base">abc.ABC</span>):
@@ -190,6 +192,7 @@ placed in <code>generic_convertrs.py</code></p>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="nd">@register</span><span class="p">((</span><span class="n">TextIO</span><span class="p">,</span> <span class="n">IO</span><span class="p">,</span> <span class="n">BinaryIO</span><span class="p">),</span> <span class="s2">&quot;filepath&quot;</span><span class="p">)</span>
+<span class="nd">@register</span><span class="p">(</span><span class="n">Any</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">EmptyConverter</span><span class="p">(</span><span class="n">BaseConverter</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">value</span>

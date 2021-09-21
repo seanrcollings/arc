@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "arc-cli"
-version = "4.0.0"
+version = "5.0.0b1"
 description = "A Regular CLI"
 authors = ["Sean Collings <seanrcollings@gmail.com>"]
 license = "MIT"

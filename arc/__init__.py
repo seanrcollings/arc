@@ -18,4 +18,4 @@ from arc.errors import ExecutionError, ValidationError
 from arc.result import Err, Ok, Result
 
 
-__version__ = "4.0.0"
+__version__ = "5.0.0b1"       

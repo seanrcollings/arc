@@ -43,13 +43,13 @@
                                 <a class="variable" href="#Command.subcommand_aliases">subcommand_aliases</a>
                         </li>
                         <li>
-                                <a class="variable" href="#Command.parser">parser</a>
+                                <a class="variable" href="#Command.executable">executable</a>
                         </li>
                         <li>
                                 <a class="variable" href="#Command.function">function</a>
                         </li>
                         <li>
-                                <a class="variable" href="#Command.doc">doc</a>
+                                <a class="function" href="#Command.doc">doc</a>
                         </li>
                         <li>
                                 <a class="function" href="#Command.run">run</a>
@@ -65,9 +65,6 @@
                         </li>
                         <li>
                                 <a class="function" href="#Command.handle_command_aliases">handle_command_aliases</a>
-                        </li>
-                        <li>
-                                <a class="function" href="#Command.ensure_function">ensure_function</a>
                         </li>
                         <li>
                                 <a class="function" href="#Command.is_namespace">is_namespace</a>
@@ -93,42 +90,42 @@
                 
                         <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span>
-<span class="kn">import</span> <span class="nn">functools</span>
+            <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">import</span> <span class="nn">pprint</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">effects</span><span class="p">,</span> <span class="n">fg</span>
-<span class="kn">from</span> <span class="nn">arc.errors</span> <span class="kn">import</span> <span class="n">CommandError</span>
 <span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">utils</span>
 <span class="kn">from</span> <span class="nn">arc.result</span> <span class="kn">import</span> <span class="n">Result</span>
+<span class="kn">from</span> <span class="nn">arc.config</span> <span class="kn">import</span> <span class="n">config</span>
+<span class="kn">from</span> <span class="nn">arc.execution_state</span> <span class="kn">import</span> <span class="n">ExecutionState</span>
 
-<span class="kn">from</span> <span class="nn">.argument_parser</span> <span class="kn">import</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">ParsingMethod</span>
-<span class="kn">from</span> <span class="nn">.command_executor</span> <span class="kn">import</span> <span class="n">CommandExecutor</span>
+<span class="kn">from</span> <span class="nn">.argument_parser</span> <span class="kn">import</span> <span class="n">ArgumentParser</span>
 <span class="kn">from</span> <span class="nn">.command_doc</span> <span class="kn">import</span> <span class="n">CommandDoc</span>
+<span class="kn">from</span> <span class="nn">.executable</span> <span class="kn">import</span> <span class="n">Executable</span><span class="p">,</span> <span class="n">FunctionExecutable</span><span class="p">,</span> <span class="n">ClassExecutable</span>
 
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;arc_logger&quot;</span><span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">Command</span><span class="p">:</span>
-    <span class="n">_command_doc</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CommandDoc</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-        <span class="n">parser</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="n">ParsingMethod</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">,</span>
+        <span class="n">executable</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">short_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommands</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Command</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommand_aliases</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span> <span class="ow">or</span> <span class="p">{}</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="p">:</span> <span class="n">ArgumentParser</span> <span class="o">=</span> <span class="n">parser</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">short_args</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">executor</span> <span class="o">=</span> <span class="n">CommandExecutor</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">executable</span><span class="p">:</span> <span class="n">Executable</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">ClassExecutable</span><span class="p">(</span><span class="n">executable</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">executable</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">FunctionExecutable</span><span class="p">(</span><span class="n">executable</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">executable</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
@@ -138,40 +135,32 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">function</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executable</span><span class="o">.</span><span class="n">wrapped</span>
 
-    <span class="nd">@function</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">build_args</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">function</span> <span class="o">=</span> <span class="n">func</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">doc</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CommandDoc</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_command_doc</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_command_doc</span> <span class="o">=</span> <span class="n">CommandDoc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="vm">__doc__</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;usage&quot;</span><span class="p">,))</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_command_doc</span>
+    <span class="k">def</span> <span class="nf">doc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CommandDoc</span><span class="p">:</span>
+        <span class="n">doc</span> <span class="o">=</span> <span class="n">CommandDoc</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="vm">__doc__</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="n">state</span><span class="p">,</span>
+            <span class="p">(</span><span class="s2">&quot;usage&quot;</span><span class="p">,),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">doc</span>
 
     <span class="c1">### Execution ###</span>
 
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">cli_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">cli_args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
-    <span class="p">):</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;External interface to execute a command&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span>
-        <span class="n">parsed_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">cli_args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">)</span>
+        <span class="n">parsed_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">command_args</span><span class="p">)</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Parsed arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">parsed_args</span><span class="p">))</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">cli_namespace</span><span class="p">,</span> <span class="n">parsed_args</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Parser Result: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">parsed_args</span><span class="p">))</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">parsed</span> <span class="o">=</span> <span class="n">parsed_args</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executable</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 
     <span class="c1">### Building Subcommands ###</span>
 
     <span class="k">def</span> <span class="nf">subcommand</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">parsing_method</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">short_args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create and install a subcommands</span>
 
@@ -180,27 +169,26 @@
 <span class="sd">                this subcommand by. Can optionally be a `list` of names. In this case,</span>
 <span class="sd">                the first in the list will be treated as the &quot;true&quot; name, and the others</span>
 <span class="sd">                will be treated as aliases. If no value is provided, `function.__name__` is used</span>
-<span class="sd">            parsing_method (type[ArgumentParser], optional): The way to parse this command&#39;s</span>
-<span class="sd">                arguments. `ParsingMethod` contains constants to reference for each method.</span>
-<span class="sd">                Defaults to the parsing method of `self`.</span>
 <span class="sd">            context (dict[str, Any], optional): Special data that will be</span>
 <span class="sd">                passed to this command (and any subcommands) at runtime. Defaults to None.</span>
-<span class="sd">            short_args (dict[str, Union[Iterable[str], str]], optional): Secondary names</span>
-<span class="sd">                that arguments can be referred to by. Defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Command: the subcommand created</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="nd">@self</span><span class="o">.</span><span class="n">ensure_function</span>
-        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Result</span><span class="p">]):</span>
-            <span class="n">command_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_command_aliases</span><span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">wrapped</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="n">Command</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">Command</span><span class="p">):</span>
+                <span class="n">wrapped</span> <span class="o">=</span> <span class="n">wrapped</span><span class="o">.</span><span class="n">executable</span><span class="o">.</span><span class="n">wrapped</span>
+
+            <span class="n">wrapped_name</span> <span class="o">=</span> <span class="n">wrapped</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">tranform_snake_case</span><span class="p">:</span>
+                <span class="n">wrapped_name</span> <span class="o">=</span> <span class="n">wrapped_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span>
+
+            <span class="n">command_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_command_aliases</span><span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="n">wrapped_name</span><span class="p">)</span>
             <span class="n">command</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span>
                 <span class="n">command_name</span><span class="p">,</span>
-                <span class="n">function</span><span class="p">,</span>
-                <span class="n">parsing_method</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="p">),</span>
+                <span class="n">wrapped</span><span class="p">,</span>
                 <span class="n">context</span> <span class="ow">or</span> <span class="p">{},</span>
-                <span class="n">short_args</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">install_command</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
 
@@ -213,7 +201,9 @@
         <span class="sd">&quot;&quot;&quot;Installs a command object as a subcommand</span>
 <span class="sd">        of the current object&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommands</span><span class="p">[</span><span class="n">command</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">command</span>
-        <span class="n">command</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">register_callbacks</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">inheritable_callbacks</span><span class="p">())</span>
+        <span class="n">command</span><span class="o">.</span><span class="n">executable</span><span class="o">.</span><span class="n">callback_store</span><span class="o">.</span><span class="n">register_callbacks</span><span class="p">(</span>
+            <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">executable</span><span class="o">.</span><span class="n">callback_store</span><span class="o">.</span><span class="n">inheritable_callbacks</span><span class="p">()</span>
+        <span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="s2">&quot;Registered </span><span class="si">%s%s%s</span><span class="s2"> command to </span><span class="si">%s%s%s</span><span class="s2">&quot;</span><span class="p">,</span>
@@ -242,27 +232,6 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">subcommand_aliases</span><span class="p">[</span><span class="n">alias</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
 
         <span class="k">return</span> <span class="n">name</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">ensure_function</span><span class="p">(</span><span class="n">wrapped</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Decorator to insure that multiple commands</span>
-<span class="sd">        can be created for the same function.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">wrapped</span><span class="p">)</span>
-        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">maybe_function</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">maybe_function</span><span class="p">,</span> <span class="n">Command</span><span class="p">):</span>
-                <span class="c1"># pylint: disable=protected-access</span>
-                <span class="k">return</span> <span class="n">wrapped</span><span class="p">(</span><span class="n">maybe_function</span><span class="o">.</span><span class="n">function</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">maybe_function</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">wrapped</span><span class="p">(</span><span class="n">maybe_function</span><span class="p">)</span>
-
-            <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">wrapped</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> expected a function or &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Command but recieved a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">maybe_function</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">decorator</span>
 
     <span class="k">def</span> <span class="nf">is_namespace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span> <span class="ow">is</span> <span class="n">utils</span><span class="o">.</span><span class="n">no_op</span>
@@ -283,23 +252,23 @@
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">Command</span><span class="p">:</span>
-    <span class="n">_command_doc</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CommandDoc</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-        <span class="n">parser</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="n">ParsingMethod</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">,</span>
+        <span class="n">executable</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">short_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommands</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Command</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommand_aliases</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span> <span class="ow">or</span> <span class="p">{}</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="p">:</span> <span class="n">ArgumentParser</span> <span class="o">=</span> <span class="n">parser</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">short_args</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">executor</span> <span class="o">=</span> <span class="n">CommandExecutor</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">executable</span><span class="p">:</span> <span class="n">Executable</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">ClassExecutable</span><span class="p">(</span><span class="n">executable</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">executable</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">FunctionExecutable</span><span class="p">(</span><span class="n">executable</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">executable</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
@@ -309,40 +278,32 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">function</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executable</span><span class="o">.</span><span class="n">wrapped</span>
 
-    <span class="nd">@function</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">build_args</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">function</span> <span class="o">=</span> <span class="n">func</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">doc</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CommandDoc</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_command_doc</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_command_doc</span> <span class="o">=</span> <span class="n">CommandDoc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="vm">__doc__</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;usage&quot;</span><span class="p">,))</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_command_doc</span>
+    <span class="k">def</span> <span class="nf">doc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CommandDoc</span><span class="p">:</span>
+        <span class="n">doc</span> <span class="o">=</span> <span class="n">CommandDoc</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="vm">__doc__</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="n">state</span><span class="p">,</span>
+            <span class="p">(</span><span class="s2">&quot;usage&quot;</span><span class="p">,),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">doc</span>
 
     <span class="c1">### Execution ###</span>
 
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">cli_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">cli_args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
-    <span class="p">):</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;External interface to execute a command&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span>
-        <span class="n">parsed_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">cli_args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">)</span>
+        <span class="n">parsed_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">command_args</span><span class="p">)</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Parsed arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">parsed_args</span><span class="p">))</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">cli_namespace</span><span class="p">,</span> <span class="n">parsed_args</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Parser Result: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">parsed_args</span><span class="p">))</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">parsed</span> <span class="o">=</span> <span class="n">parsed_args</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executable</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 
     <span class="c1">### Building Subcommands ###</span>
 
     <span class="k">def</span> <span class="nf">subcommand</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">parsing_method</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">short_args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create and install a subcommands</span>
 
@@ -351,27 +312,26 @@
 <span class="sd">                this subcommand by. Can optionally be a `list` of names. In this case,</span>
 <span class="sd">                the first in the list will be treated as the &quot;true&quot; name, and the others</span>
 <span class="sd">                will be treated as aliases. If no value is provided, `function.__name__` is used</span>
-<span class="sd">            parsing_method (type[ArgumentParser], optional): The way to parse this command&#39;s</span>
-<span class="sd">                arguments. `ParsingMethod` contains constants to reference for each method.</span>
-<span class="sd">                Defaults to the parsing method of `self`.</span>
 <span class="sd">            context (dict[str, Any], optional): Special data that will be</span>
 <span class="sd">                passed to this command (and any subcommands) at runtime. Defaults to None.</span>
-<span class="sd">            short_args (dict[str, Union[Iterable[str], str]], optional): Secondary names</span>
-<span class="sd">                that arguments can be referred to by. Defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Command: the subcommand created</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="nd">@self</span><span class="o">.</span><span class="n">ensure_function</span>
-        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Result</span><span class="p">]):</span>
-            <span class="n">command_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_command_aliases</span><span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">wrapped</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="n">Command</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">Command</span><span class="p">):</span>
+                <span class="n">wrapped</span> <span class="o">=</span> <span class="n">wrapped</span><span class="o">.</span><span class="n">executable</span><span class="o">.</span><span class="n">wrapped</span>
+
+            <span class="n">wrapped_name</span> <span class="o">=</span> <span class="n">wrapped</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">tranform_snake_case</span><span class="p">:</span>
+                <span class="n">wrapped_name</span> <span class="o">=</span> <span class="n">wrapped_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span>
+
+            <span class="n">command_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_command_aliases</span><span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="n">wrapped_name</span><span class="p">)</span>
             <span class="n">command</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span>
                 <span class="n">command_name</span><span class="p">,</span>
-                <span class="n">function</span><span class="p">,</span>
-                <span class="n">parsing_method</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="p">),</span>
+                <span class="n">wrapped</span><span class="p">,</span>
                 <span class="n">context</span> <span class="ow">or</span> <span class="p">{},</span>
-                <span class="n">short_args</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">install_command</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
 
@@ -384,7 +344,9 @@
         <span class="sd">&quot;&quot;&quot;Installs a command object as a subcommand</span>
 <span class="sd">        of the current object&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommands</span><span class="p">[</span><span class="n">command</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">command</span>
-        <span class="n">command</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">register_callbacks</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">inheritable_callbacks</span><span class="p">())</span>
+        <span class="n">command</span><span class="o">.</span><span class="n">executable</span><span class="o">.</span><span class="n">callback_store</span><span class="o">.</span><span class="n">register_callbacks</span><span class="p">(</span>
+            <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">executable</span><span class="o">.</span><span class="n">callback_store</span><span class="o">.</span><span class="n">inheritable_callbacks</span><span class="p">()</span>
+        <span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="s2">&quot;Registered </span><span class="si">%s%s%s</span><span class="s2"> command to </span><span class="si">%s%s%s</span><span class="s2">&quot;</span><span class="p">,</span>
@@ -414,27 +376,6 @@
 
         <span class="k">return</span> <span class="n">name</span>
 
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">ensure_function</span><span class="p">(</span><span class="n">wrapped</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Decorator to insure that multiple commands</span>
-<span class="sd">        can be created for the same function.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">wrapped</span><span class="p">)</span>
-        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">maybe_function</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">maybe_function</span><span class="p">,</span> <span class="n">Command</span><span class="p">):</span>
-                <span class="c1"># pylint: disable=protected-access</span>
-                <span class="k">return</span> <span class="n">wrapped</span><span class="p">(</span><span class="n">maybe_function</span><span class="o">.</span><span class="n">function</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">maybe_function</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">wrapped</span><span class="p">(</span><span class="n">maybe_function</span><span class="p">)</span>
-
-            <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">wrapped</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> expected a function or &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Command but recieved a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">maybe_function</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">decorator</span>
-
     <span class="k">def</span> <span class="nf">is_namespace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span> <span class="ow">is</span> <span class="n">utils</span><span class="o">.</span><span class="n">no_op</span>
 </pre></div>
@@ -447,13 +388,7 @@
                                         <div class="attr function"><a class="headerlink" href="#Command.__init__">#&nbsp;&nbsp</a>
 
         
-            <span class="name">Command</span><span class="signature">(
-    name: str,
-    function: Callable,
-    parser: Type[<a href="argument_parser.html#ArgumentParser">arc.command.argument_parser.ArgumentParser</a>] = &lt;class &#39;<a href="argument_parser.html#StandardParser">arc.command.argument_parser.StandardParser</a>&#39;&gt;,
-    context: Optional[Dict] = None,
-    short_args=None
-)</span>
+            <span class="name">Command</span><span class="signature">(name: str, executable: Callable, context: Optional[Dict] = None)</span>
     </div>
 
                 <details>
@@ -461,18 +396,20 @@
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-        <span class="n">parser</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="n">ParsingMethod</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">,</span>
+        <span class="n">executable</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">short_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommands</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Command</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommand_aliases</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span> <span class="ow">or</span> <span class="p">{}</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="p">:</span> <span class="n">ArgumentParser</span> <span class="o">=</span> <span class="n">parser</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">short_args</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">executor</span> <span class="o">=</span> <span class="n">CommandExecutor</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">executable</span><span class="p">:</span> <span class="n">Executable</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">ClassExecutable</span><span class="p">(</span><span class="n">executable</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">executable</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">FunctionExecutable</span><span class="p">(</span><span class="n">executable</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">executable</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -498,10 +435,10 @@
     
 
                             </div>
-                            <div id="Command.parser" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#Command.parser">#&nbsp;&nbsp</a>
+                            <div id="Command.executable" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#Command.executable">#&nbsp;&nbsp</a>
 
-        <span class="name">parser</span><span class="annotation">: <a href="argument_parser.html#ArgumentParser">arc.command.argument_parser.ArgumentParser</a></span>
+        <span class="name">executable</span><span class="annotation">: <a href="executable.html#Executable">arc.command.executable.Executable</a></span>
     </div>
 
     
@@ -517,10 +454,28 @@
 
                             </div>
                             <div id="Command.doc" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#Command.doc">#&nbsp;&nbsp</a>
+                                        <div class="attr function"><a class="headerlink" href="#Command.doc">#&nbsp;&nbsp</a>
 
-        <span class="name">doc</span><span class="annotation">: <a href="command_doc.html#CommandDoc">arc.command.command_doc.CommandDoc</a></span>
+        
+            <span class="def">def</span>
+            <span class="name">doc</span><span class="signature">(
+    self,
+    state: <a href="../execution_state.html#ExecutionState">arc.execution_state.ExecutionState</a>
+) -&gt; <a href="command_doc.html#CommandDoc">arc.command.command_doc.CommandDoc</a></span>:
     </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">doc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CommandDoc</span><span class="p">:</span>
+        <span class="n">doc</span> <span class="o">=</span> <span class="n">CommandDoc</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="vm">__doc__</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="n">state</span><span class="p">,</span>
+            <span class="p">(</span><span class="s2">&quot;usage&quot;</span><span class="p">,),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">doc</span>
+</pre></div>
+
+        </details>
 
     
 
@@ -530,20 +485,21 @@
 
         
             <span class="def">def</span>
-            <span class="name">run</span><span class="signature">(self, cli_namespace: list, cli_args: list, context: dict)</span>:
+            <span class="name">run</span><span class="signature">(
+    self,
+    state: <a href="../execution_state.html#ExecutionState">arc.execution_state.ExecutionState</a>
+) -&gt; Union[<a href="../result.html#Ok">arc.result.Ok</a>[~O], <a href="../result.html#Err">arc.result.Err</a>[~E]]</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">cli_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">cli_args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
-    <span class="p">):</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;External interface to execute a command&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="o">=</span> <span class="n">context</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span>
-        <span class="n">parsed_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">cli_args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">)</span>
+        <span class="n">parsed_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">command_args</span><span class="p">)</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Parsed arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">parsed_args</span><span class="p">))</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">cli_namespace</span><span class="p">,</span> <span class="n">parsed_args</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Parser Result: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">parsed_args</span><span class="p">))</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">parsed</span> <span class="o">=</span> <span class="n">parsed_args</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">executable</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -561,9 +517,7 @@
             <span class="name">subcommand</span><span class="signature">(
     self,
     name: Union[str, list[str], tuple[str, ...]] = None,
-    parsing_method: type = None,
-    context: dict = None,
-    short_args: dict = None
+    context: dict = None
 )</span>:
     </div>
 
@@ -572,9 +526,7 @@
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">subcommand</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">parsing_method</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ArgumentParser</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">short_args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create and install a subcommands</span>
 
@@ -583,27 +535,26 @@
 <span class="sd">                this subcommand by. Can optionally be a `list` of names. In this case,</span>
 <span class="sd">                the first in the list will be treated as the &quot;true&quot; name, and the others</span>
 <span class="sd">                will be treated as aliases. If no value is provided, `function.__name__` is used</span>
-<span class="sd">            parsing_method (type[ArgumentParser], optional): The way to parse this command&#39;s</span>
-<span class="sd">                arguments. `ParsingMethod` contains constants to reference for each method.</span>
-<span class="sd">                Defaults to the parsing method of `self`.</span>
 <span class="sd">            context (dict[str, Any], optional): Special data that will be</span>
 <span class="sd">                passed to this command (and any subcommands) at runtime. Defaults to None.</span>
-<span class="sd">            short_args (dict[str, Union[Iterable[str], str]], optional): Secondary names</span>
-<span class="sd">                that arguments can be referred to by. Defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Command: the subcommand created</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="nd">@self</span><span class="o">.</span><span class="n">ensure_function</span>
-        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Result</span><span class="p">]):</span>
-            <span class="n">command_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_command_aliases</span><span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">wrapped</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="n">Command</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">Command</span><span class="p">):</span>
+                <span class="n">wrapped</span> <span class="o">=</span> <span class="n">wrapped</span><span class="o">.</span><span class="n">executable</span><span class="o">.</span><span class="n">wrapped</span>
+
+            <span class="n">wrapped_name</span> <span class="o">=</span> <span class="n">wrapped</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">tranform_snake_case</span><span class="p">:</span>
+                <span class="n">wrapped_name</span> <span class="o">=</span> <span class="n">wrapped_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span>
+
+            <span class="n">command_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_command_aliases</span><span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="n">wrapped_name</span><span class="p">)</span>
             <span class="n">command</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span>
                 <span class="n">command_name</span><span class="p">,</span>
-                <span class="n">function</span><span class="p">,</span>
-                <span class="n">parsing_method</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="p">),</span>
+                <span class="n">wrapped</span><span class="p">,</span>
                 <span class="n">context</span> <span class="ow">or</span> <span class="p">{},</span>
-                <span class="n">short_args</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">install_command</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
 
@@ -621,13 +572,8 @@
 this subcommand by. Can optionally be a <code>list</code> of names. In this case,
 the first in the list will be treated as the "true" name, and the others
 will be treated as aliases. If no value is provided, <code>function.__name__</code> is used</li>
-<li><strong>parsing_method (type[ArgumentParser], optional):</strong>  The way to parse this command's
-arguments. <code>ParsingMethod</code> contains constants to reference for each method.
-Defaults to the parsing method of <code>self</code>.</li>
 <li><strong>context (dict[str, Any], optional):</strong>  Special data that will be
 passed to this command (and any subcommands) at runtime. Defaults to None.</li>
-<li><strong>short_args (dict[str, Union[Iterable[str], str]], optional):</strong>  Secondary names
-that arguments can be referred to by. Defaults to None.</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -672,7 +618,9 @@ that arguments can be referred to by. Defaults to None.</li>
         <span class="sd">&quot;&quot;&quot;Installs a command object as a subcommand</span>
 <span class="sd">        of the current object&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommands</span><span class="p">[</span><span class="n">command</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">command</span>
-        <span class="n">command</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">register_callbacks</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">inheritable_callbacks</span><span class="p">())</span>
+        <span class="n">command</span><span class="o">.</span><span class="n">executable</span><span class="o">.</span><span class="n">callback_store</span><span class="o">.</span><span class="n">register_callbacks</span><span class="p">(</span>
+            <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">executable</span><span class="o">.</span><span class="n">callback_store</span><span class="o">.</span><span class="n">inheritable_callbacks</span><span class="p">()</span>
+        <span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="s2">&quot;Registered </span><span class="si">%s%s%s</span><span class="s2"> command to </span><span class="si">%s%s%s</span><span class="s2">&quot;</span><span class="p">,</span>
@@ -723,47 +671,6 @@ of the current object</p>
         </details>
 
     
-
-                            </div>
-                            <div id="Command.ensure_function" class="classattr">
-                                        <div class="attr function"><a class="headerlink" href="#Command.ensure_function">#&nbsp;&nbsp</a>
-
-                <div class="decorator">@staticmethod</div>
-
-            <span class="def">def</span>
-            <span class="name">ensure_function</span><span class="signature">(wrapped)</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">ensure_function</span><span class="p">(</span><span class="n">wrapped</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Decorator to insure that multiple commands</span>
-<span class="sd">        can be created for the same function.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">wrapped</span><span class="p">)</span>
-        <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">maybe_function</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">maybe_function</span><span class="p">,</span> <span class="n">Command</span><span class="p">):</span>
-                <span class="c1"># pylint: disable=protected-access</span>
-                <span class="k">return</span> <span class="n">wrapped</span><span class="p">(</span><span class="n">maybe_function</span><span class="o">.</span><span class="n">function</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">maybe_function</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">wrapped</span><span class="p">(</span><span class="n">maybe_function</span><span class="p">)</span>
-
-            <span class="k">raise</span> <span class="n">CommandError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">wrapped</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> expected a function or &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Command but recieved a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">maybe_function</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">decorator</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Decorator to insure that multiple commands
-can be created for the same function.</p>
-</div>
-
 
                             </div>
                             <div id="Command.is_namespace" class="classattr">

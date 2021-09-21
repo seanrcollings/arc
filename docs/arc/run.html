@@ -43,7 +43,7 @@
                     <a class="function" href="#get_command_namespace">get_command_namespace</a>
             </li>
             <li>
-                    <a class="function" href="#find_command">find_command</a>
+                    <a class="function" href="#find_command_chain">find_command_chain</a>
             </li>
             <li>
                     <a class="function" href="#handle_result">handle_result</a>
@@ -66,7 +66,7 @@
                 
                         <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+            <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">shlex</span>
@@ -78,6 +78,7 @@
 <span class="kn">from</span> <span class="nn">arc.command</span> <span class="kn">import</span> <span class="n">Command</span><span class="p">,</span> <span class="n">helpers</span>
 <span class="kn">from</span> <span class="nn">arc.config</span> <span class="kn">import</span> <span class="n">config</span>
 <span class="kn">from</span> <span class="nn">arc.result</span> <span class="kn">import</span> <span class="n">Result</span>
+<span class="kn">from</span> <span class="nn">arc.execution_state</span> <span class="kn">import</span> <span class="n">ExecutionState</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;arc_logger&quot;</span><span class="p">)</span>
 
@@ -133,7 +134,14 @@
 
         <span class="n">user_input</span> <span class="o">=</span> <span class="n">get_input</span><span class="p">(</span><span class="n">execute</span><span class="p">)</span>
         <span class="n">command_namespace</span><span class="p">,</span> <span class="n">command_args</span> <span class="o">=</span> <span class="n">get_command_namespace</span><span class="p">(</span><span class="n">user_input</span><span class="p">)</span>
-        <span class="n">command</span><span class="p">,</span> <span class="n">command_ctx</span> <span class="o">=</span> <span class="n">find_command</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">command_namespace</span><span class="p">)</span>
+        <span class="n">command_chain</span> <span class="o">=</span> <span class="n">find_command_chain</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">command_namespace</span><span class="p">)</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="n">command_chain</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">ExecutionState</span><span class="p">(</span>
+            <span class="n">user_input</span><span class="o">=</span><span class="n">user_input</span><span class="p">,</span>
+            <span class="n">command_namespace</span><span class="o">=</span><span class="n">command_namespace</span><span class="p">,</span>
+            <span class="n">command_args</span><span class="o">=</span><span class="n">command_args</span><span class="p">,</span>
+            <span class="n">command_chain</span><span class="o">=</span><span class="n">command_chain</span><span class="p">,</span>
+        <span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="nb">str</span><span class="p">(</span>
@@ -148,17 +156,10 @@
             <span class="p">),</span>
         <span class="p">)</span>
 
-        <span class="n">result</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="n">command_namespace</span><span class="p">,</span>
-            <span class="n">command_args</span><span class="p">,</span>
-            <span class="n">command_ctx</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">check_result</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">handle_result</span><span class="p">(</span>
-                <span class="n">result</span><span class="p">,</span>
-                <span class="n">command_namespace</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">handle_result</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">command_namespace</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">result</span>
 
@@ -185,15 +186,12 @@
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">user_input</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">namespace</span> <span class="o">=</span> <span class="n">user_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">namespace_seperated</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">namespace</span><span class="p">):</span>
-            <span class="n">namespace</span> <span class="o">=</span> <span class="n">namespace</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">namespace</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">namespace_sep</span><span class="p">),</span> <span class="n">user_input</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
 
     <span class="k">return</span> <span class="p">[],</span> <span class="n">user_input</span>
 
 
-<span class="k">def</span> <span class="nf">find_command</span><span class="p">(</span>
-    <span class="n">command</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">command_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Command</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="k">def</span> <span class="nf">find_command_chain</span><span class="p">(</span><span class="n">command</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">command_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Command</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Walks down the subcommand tree using the proveded list of `command_namespace`.</span>
 <span class="sd">    As it traverses the tree, it merges each levels context together, which will result</span>
 <span class="sd">    in the final context to pass to the command in the end.</span>
@@ -202,12 +200,15 @@
 <span class="sd">    (so long as none of them were invalid namespaces) it has found the called command</span>
 <span class="sd">    and will return it.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">command_ctx</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">context</span>
+    <span class="n">command_chain</span> <span class="o">=</span> <span class="p">[</span><span class="n">command</span><span class="p">]</span>
+
     <span class="k">for</span> <span class="n">subcommand_name</span> <span class="ow">in</span> <span class="n">command_namespace</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">subcommand_name</span> <span class="ow">in</span> <span class="n">command</span><span class="o">.</span><span class="n">subcommands</span><span class="p">:</span>
             <span class="n">command</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">subcommands</span><span class="p">[</span><span class="n">subcommand_name</span><span class="p">]</span>
+            <span class="n">command_chain</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">subcommand_name</span> <span class="ow">in</span> <span class="n">command</span><span class="o">.</span><span class="n">subcommand_aliases</span><span class="p">:</span>
             <span class="n">command</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">subcommands</span><span class="p">[</span><span class="n">command</span><span class="o">.</span><span class="n">subcommand_aliases</span><span class="p">[</span><span class="n">subcommand_name</span><span class="p">]]</span>
+            <span class="n">command_chain</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">message</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;The command </span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -221,8 +222,7 @@
 
             <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">CommandError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
 
-        <span class="n">command_ctx</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">context</span> <span class="o">|</span> <span class="n">command_ctx</span>
-    <span class="k">return</span> <span class="n">command</span><span class="p">,</span> <span class="n">command_ctx</span>
+    <span class="k">return</span> <span class="n">command_chain</span>
 
 
 <span class="k">def</span> <span class="nf">handle_result</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">Result</span><span class="p">,</span> <span class="n">command_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
@@ -326,7 +326,14 @@ and a system exit will be triggered.</p>
 
         <span class="n">user_input</span> <span class="o">=</span> <span class="n">get_input</span><span class="p">(</span><span class="n">execute</span><span class="p">)</span>
         <span class="n">command_namespace</span><span class="p">,</span> <span class="n">command_args</span> <span class="o">=</span> <span class="n">get_command_namespace</span><span class="p">(</span><span class="n">user_input</span><span class="p">)</span>
-        <span class="n">command</span><span class="p">,</span> <span class="n">command_ctx</span> <span class="o">=</span> <span class="n">find_command</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">command_namespace</span><span class="p">)</span>
+        <span class="n">command_chain</span> <span class="o">=</span> <span class="n">find_command_chain</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">command_namespace</span><span class="p">)</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="n">command_chain</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">ExecutionState</span><span class="p">(</span>
+            <span class="n">user_input</span><span class="o">=</span><span class="n">user_input</span><span class="p">,</span>
+            <span class="n">command_namespace</span><span class="o">=</span><span class="n">command_namespace</span><span class="p">,</span>
+            <span class="n">command_args</span><span class="o">=</span><span class="n">command_args</span><span class="p">,</span>
+            <span class="n">command_chain</span><span class="o">=</span><span class="n">command_chain</span><span class="p">,</span>
+        <span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="nb">str</span><span class="p">(</span>
@@ -341,17 +348,10 @@ and a system exit will be triggered.</p>
             <span class="p">),</span>
         <span class="p">)</span>
 
-        <span class="n">result</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="n">command_namespace</span><span class="p">,</span>
-            <span class="n">command_args</span><span class="p">,</span>
-            <span class="n">command_ctx</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">check_result</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">handle_result</span><span class="p">(</span>
-                <span class="n">result</span><span class="p">,</span>
-                <span class="n">command_namespace</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">handle_result</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">command_namespace</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">result</span>
 </pre></div>
@@ -430,7 +430,6 @@ If it is absent, <code>sys.argv</code> is returned</p>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">user_input</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">namespace</span> <span class="o">=</span> <span class="n">user_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">namespace_seperated</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">namespace</span><span class="p">):</span>
-            <span class="n">namespace</span> <span class="o">=</span> <span class="n">namespace</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">namespace</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">namespace_sep</span><span class="p">),</span> <span class="n">user_input</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
 
     <span class="k">return</span> <span class="p">[],</span> <span class="n">user_input</span>
@@ -445,22 +444,20 @@ cli.missing_command will be executed.</p>
 
 
                 </section>
-                <section id="find_command">
-                            <div class="attr function"><a class="headerlink" href="#find_command">#&nbsp;&nbsp</a>
+                <section id="find_command_chain">
+                            <div class="attr function"><a class="headerlink" href="#find_command_chain">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">find_command</span><span class="signature">(
+            <span class="name">find_command_chain</span><span class="signature">(
     command: <a href="command/command.html#Command">arc.command.command.Command</a>,
     command_namespace: list
-) -&gt; tuple[<a href="command/command.html#Command">arc.command.command.Command</a>, dict[str, typing.Any]]</span>:
+) -&gt; list[<a href="command/command.html#Command">arc.command.command.Command</a>]</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">find_command</span><span class="p">(</span>
-    <span class="n">command</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">command_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Command</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">find_command_chain</span><span class="p">(</span><span class="n">command</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">command_namespace</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Command</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Walks down the subcommand tree using the proveded list of `command_namespace`.</span>
 <span class="sd">    As it traverses the tree, it merges each levels context together, which will result</span>
 <span class="sd">    in the final context to pass to the command in the end.</span>
@@ -469,12 +466,15 @@ cli.missing_command will be executed.</p>
 <span class="sd">    (so long as none of them were invalid namespaces) it has found the called command</span>
 <span class="sd">    and will return it.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">command_ctx</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">context</span>
+    <span class="n">command_chain</span> <span class="o">=</span> <span class="p">[</span><span class="n">command</span><span class="p">]</span>
+
     <span class="k">for</span> <span class="n">subcommand_name</span> <span class="ow">in</span> <span class="n">command_namespace</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">subcommand_name</span> <span class="ow">in</span> <span class="n">command</span><span class="o">.</span><span class="n">subcommands</span><span class="p">:</span>
             <span class="n">command</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">subcommands</span><span class="p">[</span><span class="n">subcommand_name</span><span class="p">]</span>
+            <span class="n">command_chain</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">subcommand_name</span> <span class="ow">in</span> <span class="n">command</span><span class="o">.</span><span class="n">subcommand_aliases</span><span class="p">:</span>
             <span class="n">command</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">subcommands</span><span class="p">[</span><span class="n">command</span><span class="o">.</span><span class="n">subcommand_aliases</span><span class="p">[</span><span class="n">subcommand_name</span><span class="p">]]</span>
+            <span class="n">command_chain</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">message</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;The command </span><span class="si">{</span><span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -488,8 +488,7 @@ cli.missing_command will be executed.</p>
 
             <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">CommandError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
 
-        <span class="n">command_ctx</span> <span class="o">=</span> <span class="n">command</span><span class="o">.</span><span class="n">context</span> <span class="o">|</span> <span class="n">command_ctx</span>
-    <span class="k">return</span> <span class="n">command</span><span class="p">,</span> <span class="n">command_ctx</span>
+    <span class="k">return</span> <span class="n">command_chain</span>
 </pre></div>
 
         </details>

@@ -29,14 +29,15 @@
 
                     <h2>Submodules</h2>
                     <ul>
-                            <li><a href="command/arg_builder.html">arc.command.arg_builder</a></li>
-                            <li><a href="command/argument.html">arc.command.argument</a></li>
                             <li><a href="command/argument_parser.html">arc.command.argument_parser</a></li>
                             <li><a href="command/command.html">arc.command.command</a></li>
                             <li><a href="command/command_doc.html">arc.command.command_doc</a></li>
-                            <li><a href="command/command_executor.html">arc.command.command_executor</a></li>
                             <li><a href="command/context.html">arc.command.context</a></li>
+                            <li><a href="command/executable.html">arc.command.executable</a></li>
                             <li><a href="command/helpers.html">arc.command.helpers</a></li>
+                            <li><a href="command/param.html">arc.command.param</a></li>
+                            <li><a href="command/param_builder.html">arc.command.param_builder</a></li>
+                            <li><a href="command/param_mixin.html">arc.command.param_mixin</a></li>
                     </ul>
 
                     <h2>API Documentation</h2>
@@ -65,21 +66,21 @@
                 
                         <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">utils</span>
+            <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">utils</span>
 
 <span class="kn">from</span> <span class="nn">.command</span> <span class="kn">import</span> <span class="n">Command</span>
 <span class="kn">from</span> <span class="nn">.context</span> <span class="kn">import</span> <span class="n">Context</span>
-<span class="kn">from</span> <span class="nn">.argument_parser</span> <span class="kn">import</span> <span class="n">ParsingMethod</span><span class="p">,</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">PositionalParser</span>
+<span class="kn">from</span> <span class="nn">.argument_parser</span> <span class="kn">import</span> <span class="n">ArgumentParser</span>
 
 
-<span class="k">def</span> <span class="nf">namespace</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parsing_method</span><span class="o">=</span><span class="n">ParsingMethod</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Command</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">namespace</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Command</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Creates a non-executable Command namespace.</span>
 
 <span class="sd">    Namespaces are autoloadable with `cli.autoload()`</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        name: name of the namespace / command</span>
-<span class="sd">        command_type: Type of the command, defaults to KEYWORD</span>
 <span class="sd">        context: dict of context values to be used in this namespace and below</span>
 
 <span class="sd">    Usage:</span>
@@ -95,18 +96,18 @@
 <span class="sd">    When installed into a CLI, the function could be executed with `ns:hello`</span>
 <span class="sd">    and `ns` would not be a valid command</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">c</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">utils</span><span class="o">.</span><span class="n">no_op</span><span class="p">,</span> <span class="n">parsing_method</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">utils</span><span class="o">.</span><span class="n">no_op</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="n">c</span><span class="o">.</span><span class="n">__autoload__</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># type: ignore</span>
     <span class="k">return</span> <span class="n">c</span>
 
 
-<span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">parsing_method</span><span class="o">=</span><span class="n">ParsingMethod</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Callable</span><span class="p">],</span> <span class="n">Command</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Creates an executable Command namespace.</span>
 
 <span class="sd">    Autoloadable with `cli.autoload()`</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">       name: name of the namespace / command</span>
-<span class="sd">       command_type: Type of the command, defaults to KEYWORD</span>
 <span class="sd">       context: dict of context values to be used in this namespace and below</span>
 
 <span class="sd">    Usage:</span>
@@ -120,9 +121,9 @@
 <span class="sd">    When installed into a CLI, the function could be executed with `hello`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
         <span class="n">cmd_name</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span>
-        <span class="n">c</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span><span class="n">cmd_name</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">parsing_method</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span><span class="n">cmd_name</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">c</span><span class="o">.</span><span class="n">__autoload__</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># type: ignore</span>
         <span class="k">return</span> <span class="n">c</span>
 
@@ -137,23 +138,18 @@
 
         
             <span class="def">def</span>
-            <span class="name">namespace</span><span class="signature">(
-    name: str,
-    parsing_method=&lt;class &#39;<a href="command/argument_parser.html#StandardParser">arc.command.argument_parser.StandardParser</a>&#39;&gt;,
-    **kwargs
-) -&gt; <a href="command/command.html#Command">arc.command.command.Command</a></span>:
+            <span class="name">namespace</span><span class="signature">(name: str, **kwargs) -&gt; <a href="command/command.html#Command">arc.command.command.Command</a></span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">namespace</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parsing_method</span><span class="o">=</span><span class="n">ParsingMethod</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Command</span><span class="p">:</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">namespace</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Command</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Creates a non-executable Command namespace.</span>
 
 <span class="sd">    Namespaces are autoloadable with `cli.autoload()`</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        name: name of the namespace / command</span>
-<span class="sd">        command_type: Type of the command, defaults to KEYWORD</span>
 <span class="sd">        context: dict of context values to be used in this namespace and below</span>
 
 <span class="sd">    Usage:</span>
@@ -169,7 +165,7 @@
 <span class="sd">    When installed into a CLI, the function could be executed with `ns:hello`</span>
 <span class="sd">    and `ns` would not be a valid command</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">c</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">utils</span><span class="o">.</span><span class="n">no_op</span><span class="p">,</span> <span class="n">parsing_method</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">utils</span><span class="o">.</span><span class="n">no_op</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="n">c</span><span class="o">.</span><span class="n">__autoload__</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># type: ignore</span>
     <span class="k">return</span> <span class="n">c</span>
 </pre></div>
@@ -184,7 +180,6 @@
 
 <ul>
 <li><strong>name:</strong>  name of the namespace / command</li>
-<li><strong>command_type:</strong>  Type of the command, defaults to KEYWORD</li>
 <li><strong>context:</strong>  dict of context values to be used in this namespace and below</li>
 </ul>
 
@@ -212,20 +207,19 @@ and <code>ns</code> would not be a valid command</p>
             <span class="def">def</span>
             <span class="name">command</span><span class="signature">(
     name: str = None,
-    parsing_method=&lt;class &#39;<a href="command/argument_parser.html#StandardParser">arc.command.argument_parser.StandardParser</a>&#39;&gt;,
     **kwargs
-)</span>:
+) -&gt; Callable[[Callable], <a href="command/command.html#Command">arc.command.command.Command</a>]</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">parsing_method</span><span class="o">=</span><span class="n">ParsingMethod</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Callable</span><span class="p">],</span> <span class="n">Command</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Creates an executable Command namespace.</span>
 
 <span class="sd">    Autoloadable with `cli.autoload()`</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">       name: name of the namespace / command</span>
-<span class="sd">       command_type: Type of the command, defaults to KEYWORD</span>
 <span class="sd">       context: dict of context values to be used in this namespace and below</span>
 
 <span class="sd">    Usage:</span>
@@ -239,9 +233,9 @@ and <code>ns</code> would not be a valid command</p>
 <span class="sd">    When installed into a CLI, the function could be executed with `hello`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
         <span class="n">cmd_name</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span>
-        <span class="n">c</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span><span class="n">cmd_name</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">parsing_method</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span><span class="n">cmd_name</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">c</span><span class="o">.</span><span class="n">__autoload__</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># type: ignore</span>
         <span class="k">return</span> <span class="n">c</span>
 
@@ -258,7 +252,6 @@ and <code>ns</code> would not be a valid command</p>
 
 <ul>
 <li><strong>name:</strong>  name of the namespace / command</li>
-<li><strong>command_type:</strong>  Type of the command, defaults to KEYWORD</li>
 <li><strong>context:</strong>  dict of context values to be used in this namespace and below</li>
 </ul>
 
