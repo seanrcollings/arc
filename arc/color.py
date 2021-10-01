@@ -20,8 +20,8 @@ class Color(str):
         return Color(self.code + 60)
 
 
-def _rgb(val: int, red: int = 0, green: int = 0, blue: int = 0):
-    return f"\033[{val};2;{red};{green};{blue}m"
+def _rgb(val: int, red: int = 0, green: int = 0, blue: int = 0) -> Color:
+    return Color(f"{val};2;{red};{green};{blue}")
 
 
 def _hex_to_rgb(hex_rep: Union[str, int]):
@@ -55,7 +55,7 @@ class fg:
     CYAN     = Color(36)
     WHITE    = Color(37)
     GREY     = BLACK.bright
-    ARC_BLUE = '\x1b[38;2;59;192;240m'
+    ARC_BLUE = Color('38;2;59;192;240')
 
     @staticmethod
     def rgb(red: int = 0, green: int = 0, blue: int = 0):
@@ -81,7 +81,7 @@ class bg:
     CYAN     = Color(46)
     WHITE    = Color(47)
     GREY     = BLACK.bright
-    ARC_BLUE = '\x1b[48;2;59;192;240m'
+    ARC_BLUE = Color('48;2;59;192;240')
 
     @staticmethod
     def rgb(red: int = 0, green: int = 0, blue: int = 0):
