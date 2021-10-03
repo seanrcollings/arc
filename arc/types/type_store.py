@@ -117,6 +117,9 @@ def convert(value, kind, name: str = ""):
         name: optional descriptive name of the argument
     """
 
+    if not isinstance(value, str):
+        return value
+
     converter_cls = type_store.get_converter(kind)
     converter = converter_cls(kind)
 

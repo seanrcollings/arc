@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Callable, Optional, TYPE_CHECKING, Sequence
+from typing import Any, Callable, Generator, Optional, TYPE_CHECKING, Sequence
 
 from arc import errors
 from arc.color import colorize, fg
@@ -11,7 +11,7 @@ from arc.types import convert
 if TYPE_CHECKING:
     from arc.types import Meta
 
-Hooks = Sequence[Callable[[Any, "Param", ExecutionState], Any]]
+HookFunction = Callable[[Any, "Param", ExecutionState], Any]
 
 
 class Param:
@@ -42,7 +42,7 @@ class Param:
         short: str = None,
         hidden: bool = False,
         default: Any = MISSING,
-        hooks: Hooks = None,
+        hooks: Sequence[HookFunction] = None,
     ):
         self.annotation = annotation
         self.arg_name: str = arg_name
@@ -51,20 +51,21 @@ class Param:
         self.short: Optional[str] = short
         self.hidden: bool = hidden
         self.default: Any = default
-        self.hooks: Hooks = [BuiltinHooks.pre_run]
-        if hooks:
-            self.hooks.extend(hooks)
-        self.hooks.append(BuiltinHooks.post_run)
+        self.hooks: Sequence[Hook] = BuiltinHooks.wrap(hooks)
 
         if self.short and len(self.short) > 1:
             raise errors.ArgumentError(
                 f"Argument {self.arg_name}'s shortened name is longer than 1 character"
             )
 
-    def run_hooks(self, val: Any, state: ExecutionState):
+    def start_hooks(self, val: Any, state: ExecutionState):
         for hook in self.hooks:
-            val = hook(val, self, state)
+            val = hook.start_hook(val, self, state)
         return val
+
+    def end_hooks(self, val: Any):
+        for hook in self.hooks:
+            hook.end_hook(val)
 
     def __repr__(self):
         type_name = getattr(self.annotation, "__name__", self.annotation)
@@ -117,9 +118,43 @@ class Param:
         return self.type is ParamType.SPECIAL
 
 
+class Hook:
+    def __init__(self, func: HookFunction):
+        self.func = func
+        self.gen: Optional[Generator] = None
+
+    def start_hook(self, value: Any, param: Param, state: ExecutionState):
+        val = self.func(value, param, state)
+        if isinstance(val, Generator):
+            self.gen = val
+            return next(self.gen)
+        else:
+            return val
+
+    def end_hook(self, value: Any):
+        if self.gen:
+            try:
+                self.gen.send(value)
+            except StopIteration:
+                ...
+
+
 class BuiltinHooks:
     @staticmethod
-    def pre_run(default: Any, param: Param, state: ExecutionState):
+    def wrap(user_hooks: Optional[Sequence[HookFunction]]):
+        """Sandwiches the user hooks in between the `pre_run` and `post_run` builtin hooks
+        and wraps each function in the `Hook` class
+        """
+        hooks: list[Hook] = [Hook(BuiltinHooks.pre_run)]
+
+        if user_hooks:
+            hooks.extend(Hook(hook) for hook in user_hooks)
+
+        hooks.append(Hook(BuiltinHooks.post_run))
+        return hooks
+
+    @staticmethod
+    def pre_run(default: Any, param: Param, state: ExecutionState) -> Any:
         # Special params are expected to be handled on
         # a type-by-type basis, so the other handers
         # don't apply. These would generally be user-defined

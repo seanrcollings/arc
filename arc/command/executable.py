@@ -42,22 +42,21 @@ class Executable(abc.ABC, ParamMixin):
         parsed = self.state.parsed
         assert parsed is not None
 
-        # Construct the arguments dict, the final product of which
-        # will be passed to the wrapped function or class
-        arguments: dict[str, Any] = {}
-        for param in self.params.values():
-            value = param.default
-            value = param.run_hooks(value, self.state)
-            arguments[param.arg_name] = value
-
-        self.exhastive_check(parsed)
-
-        logger.debug("Function Arguments: %s", pprint.pformat(arguments))
-
-        self.callback_store.pre_execution(arguments)
-        logger.debug(BAR)
-
         try:
+            # Construct the arguments dict, the final product of which
+            # will be passed to the wrapped function or class
+            arguments: dict[str, Any] = {}
+            for param in self.params.values():
+                value = param.default
+                value = param.start_hooks(value, self.state)
+                arguments[param.arg_name] = value
+
+            self.exhastive_check(parsed)
+
+            logger.debug("Function Arguments: %s", pprint.pformat(arguments))
+
+            self.callback_store.pre_execution(arguments)
+            logger.debug(BAR)
             result = self.run(arguments)
             if not isinstance(result, (Ok, Err)):
                 result = Ok(result)
@@ -66,7 +65,10 @@ class Executable(abc.ABC, ParamMixin):
             result = Err("Execution failed")
             raise
         finally:
+            breakpoint()
             logger.debug(BAR)
+            for param in self.params.values():
+                param.end_hooks(result)
             self.callback_store.post_execution(result)
 
         return result
