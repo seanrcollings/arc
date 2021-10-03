@@ -1,4 +1,5 @@
 from typing import Union
+from arc.config import config
 
 
 class Color(str):
@@ -7,13 +8,17 @@ class Color(str):
     ESCAPE = "\033["
 
     def __new__(cls, content, extra="m"):
-
-        obj = str.__new__(cls, f"{cls.ESCAPE}{content}{extra}")  # type: ignore
+        obj = str.__new__(cls, f"{cls.ESCAPE}{content}{extra}")
         return obj
 
     def __init__(self, code, *_args):
         super().__init__()
         self.code = code
+
+    def __str__(self):
+        if not config.color:
+            return ""
+        return super().__str__()
 
     @property
     def bright(self):
@@ -121,4 +126,4 @@ def colorize(string: str, *codes: str, clear: bool = True):
     Returns:
         str: The colorized string
     """
-    return f"{''.join(codes)}{string}{effects.CLEAR if clear else ''}"
+    return f"{''.join(str(code) for code in codes)}{string}{effects.CLEAR if clear else ''}"

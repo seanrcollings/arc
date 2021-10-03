@@ -124,7 +124,8 @@ def convert(value, kind, name: str = ""):
         value = converter.convert(value)
     except errors.ConversionError as e:
         raise errors.ArgumentError(
-            f"Argument {colorize(name, fg.BLUE)} expected {e.expected}, but was "
+            f"Argument {colorize(name, fg.BLUE)} expected "
+            f"{type_store.get_display_name(kind)}, but was "
             f"{colorize(value, fg.YELLOW)}. {e.helper_text}"
         ) from e
 

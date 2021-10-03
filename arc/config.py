@@ -2,6 +2,7 @@ import os
 from dataclasses import dataclass
 import logging
 from pathlib import Path
+from typing import get_type_hints
 from arc import errors
 
 
@@ -76,52 +77,39 @@ class ConfigBase:
         try:
             for line in lines:
                 key, value = line.split("=")
-                parsed[key] = value
+                parsed[key] = self.__convert_loaded_value(key, value)
         except Exception as e:
+            breakpoint()
             raise errors.ArcError(
                 "Config values must follow the form `name=value`"
             ) from e
 
         return parsed
 
-    def set_values(self, parsed: dict):
-        """Handles setting the parsed config data
+    def set_values(self, values: dict):
+        """Handles setting the config values from a dictionary
 
         Args:
-            parsed (dict): Data returned by `parse()`
+            values (dict): Data returned by `parse()`
 
         Raises:
             errors.ArcError: If an item in the dictionary doesn't exist on the config object
         """
-        for key, value in parsed.items():
+        for key, value in values.items():
             if not hasattr(self, key):
                 raise errors.ArcError(f"Cannot set `{key}`")
 
-            setattr(self, key, self.__convert_loaded_value(value))
+            setattr(self, key, value)
 
         self.post_load()
 
-    def __convert_loaded_value(self, value: str):
-        """Attempts to convert a loaded config value, if it
-        cannot, will return the original string"""
-
-        # Check if it needs to be converted
+    def __convert_loaded_value(self, name: str, value: str):
         # pylint: disable=import-outside-toplevel
-        from arc.types import converters, BaseConverter
+        from arc.types import type_store
 
-        config_converters: tuple[type[BaseConverter], ...] = (
-            converters.IntConverter,
-            converters.BoolConverter,
-            converters.FloatConverter,
-        )
-
-        for converter in config_converters:
-            try:
-                return converter().convert(value)
-            except errors.ConversionError:
-                continue
-
-        return value
+        annotation = get_type_hints(self)[name]
+        converter = type_store.get_converter(annotation)
+        return converter(annotation).convert(value)
 
     def post_load(self):
         """Executed after a loading a config from file or from env
@@ -150,29 +138,32 @@ class Config(ConfigBase):
     - development
     - test
     """
-    suggest_on_missing_argument = True
+    suggest_on_missing_argument: bool = True
     """Wether or not to provide suggestions for possible misspellings
     when an argument is not found"""
 
-    suggest_on_missing_command = True
+    suggest_on_missing_command: bool = True
     """Wether or not to provide suggestions for possible misspellings
     when a command is not found"""
 
-    suggest_levenshtein_distance = 2
+    suggest_levenshtein_distance: int = 2
     """The max Levenshtein distance between input and a
     possible correction to trigger a suggestion """
 
-    default_section_name = "description"
+    default_section_name: str = "description"
     """The name to use by default if the first section
     in a command docstring is anonymous
     """
 
-    parse_argument_help = False
+    parse_argument_help: bool = False
     """Wether or not to attempt to parse the argument
     section of help documentation to provide better documentation"""
 
-    tranform_snake_case = True
+    tranform_snake_case: bool = True
     """Transforms snake_case argument names to kebab-case. Defaults to True"""
+
+    color: bool = True
+    """Use Ansi-escape sequences. Defaults to true"""
 
     mode_map = {
         "development": logging.DEBUG,

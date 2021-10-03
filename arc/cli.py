@@ -1,12 +1,12 @@
 import logging
-from typing import Annotated, Callable, Optional
+from typing import Annotated, Callable, Optional, Any
 
 from arc import utils
 from arc.autoload import Autoload
-from arc.color import colorize, effects, fg
+
 from arc.types.params import Meta, VarKeyword
 from arc.command import Command, Context
-from arc.config import config
+from arc.config import config as config_obj
 from arc.run import find_command_chain, get_command_namespace, run
 from arc.execution_state import ExecutionState
 
@@ -18,7 +18,8 @@ class CLI(Command):
         self,
         name: str = "cli",
         function: Callable = None,
-        arcfile: str = ".arc",
+        config: dict[str, Any] = None,
+        config_file: str = None,
         context: dict = None,
         version: str = "¯\\_(ツ)_/¯",
     ):
@@ -37,7 +38,12 @@ class CLI(Command):
             self.missing_command,
             context,
         )
-        config.from_file(arcfile)
+
+        if config:
+            config_obj.set_values(config)
+        if config_file:
+            config_obj.from_file(config_file)
+
         self.__logging_setup()
         utils.header("INIT")
         self.version = version
@@ -154,7 +160,7 @@ class CLI(Command):
     def __logging_setup(self):
         root = logging.getLogger("arc_logger")
         if len(root.handlers) == 0:
-            level = config.mode_map.get(config.mode, logging.WARNING)
+            level = config_obj.mode_map.get(config_obj.mode, logging.WARNING)
             root.setLevel(level)
             handler = logging.StreamHandler()
             formatter = ArcFormatter()
@@ -163,13 +169,15 @@ class CLI(Command):
 
 
 class ArcFormatter(logging.Formatter):
-    prefixes = {
-        logging.INFO: colorize("🛈 ", fg.BLUE),
-        logging.WARNING: colorize("WARNING", fg.YELLOW, effects.BOLD) + ": ",
-        logging.ERROR: colorize("ERROR", fg.RED, effects.BOLD) + ": ",
-    }
-
     def format(self, record: logging.LogRecord):
-        prefix = self.prefixes.get(record.levelno, "")
+        from arc.color import colorize, effects, fg
+
+        prefixes = {
+            logging.INFO: colorize("🛈 ", fg.BLUE),
+            logging.WARNING: colorize("WARNING", fg.YELLOW, effects.BOLD) + ": ",
+            logging.ERROR: colorize("ERROR", fg.RED, effects.BOLD) + ": ",
+        }
+
+        prefix = prefixes.get(record.levelno, "")
         record.msg = prefix + str(record.msg)
         return super().format(record)
