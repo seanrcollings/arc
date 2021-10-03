@@ -165,6 +165,22 @@ class TestAdvancedSyntax:
         assert cli("command") == 2
         assert cli("command 2") == 3
 
+    def test_meta_merging(self, cli: CLI):
+        @cli.subcommand()
+        def command(
+            val: Annotated[
+                int,
+                Meta(name="test-val", hooks=[lambda: None]),
+                Meta(short="v", hooks=[lambda: None]),
+            ] = 1
+        ):
+            return val
+
+        assert "test-val" in command.executable.params
+        assert command.executable.params["test-val"].short == "v"
+        # Two additional hooks + the 2 builtin ones
+        assert len(command.executable.params["test-val"].hooks) == 4
+
 
 class TestKebab:
     def test_transform(self, cli: CLI):
@@ -182,22 +198,23 @@ class TestKebab:
             cli("two-words --first_name sean")
 
     def test_disable_transform(self, cli: CLI):
-        config.tranform_snake_case = False
+        try:
+            config.tranform_snake_case = False
 
-        @cli.subcommand()
-        def two_words(*, first_name: str = "", other_arg: str = ""):
-            return first_name
+            @cli.subcommand()
+            def two_words(*, first_name: str = "", other_arg: str = ""):
+                return first_name
 
-        assert cli("two_words --first_name sean") == "sean"
-        assert cli("two_words --first_name sean --other_arg hi") == "sean"
+            assert cli("two_words --first_name sean") == "sean"
+            assert cli("two_words --first_name sean --other_arg hi") == "sean"
 
-        with pytest.raises(errors.CommandError):
-            cli("two-words")
+            with pytest.raises(errors.CommandError):
+                cli("two-words")
 
-        with pytest.raises(errors.ArgumentError):
-            cli("two_words --first-name sean --other-arg hi")
-
-        config.tranform_snake_case = True
+            with pytest.raises(errors.ArgumentError):
+                cli("two_words --first-name sean --other-arg hi")
+        finally:
+            config.tranform_snake_case = True
 
     def test_explicit_name(self, cli: CLI):
         @cli.subcommand()

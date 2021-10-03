@@ -51,12 +51,7 @@ class ParamBuilder:
 
         return params
 
-    def build_meta(self, arg: inspect.Parameter, user_meta: Meta):
-        # Make a copy of user_meta rather than editing user_meta directly
-        # because user_meta may be attached to a type definition
-        # (i.e: Context, VarPositional) which will cause subsequent
-        # usages of a type to behave differently
-        meta = copy.copy(user_meta)
+    def build_meta(self, arg: inspect.Parameter, meta: Meta):
         # By default, snake_case args are transformed to kebab-case
         # for the command line. However, this can be ignored
         # by declaring an explicit name in the Meta()
@@ -97,13 +92,26 @@ class ParamBuilder:
     def unwrap_type(self, kind: type):
         if is_annotated(kind):
             args = get_args(kind)
-            assert len(args) == 2
-            assert isinstance(args[1], Meta)
-            kind, meta = args
+            assert len(args) >= 2
+            kind = args[0]
+            metas: tuple[Meta, ...] = args[1:]
         else:
-            meta = Meta()
+            metas = (Meta(),)
 
-        return kind, meta
+        # Make a copy of user_meta rather than editing user_meta directly
+        # because instances may be attached to a type definition
+        # (i.e: Context, VarPositional) which will cause subsequent
+        # usages of a type to behave differently
+        merged = copy.copy(metas[0])
+        for meta in metas[1:]:
+            data = dataclasses.asdict(meta)
+            for name, value in data.items():
+                if name == "hooks":
+                    merged.hooks.extend(value)
+                elif value != Meta.__dataclass_fields__.get(name).default:  # type: ignore # pylint: disable=no-member
+                    setattr(merged, name, value)
+
+        return kind, merged
 
 
 class FunctionParamBuilder(ParamBuilder):
