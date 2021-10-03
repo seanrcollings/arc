@@ -4,7 +4,7 @@ from typing import (
     Annotated,
     Optional,
     Any,
-    Sequence,
+    MutableSequence,
     Callable,
     TypeVar,
     get_args,
@@ -55,7 +55,7 @@ class Meta:
     short: Optional[str] = None
     hidden: bool = False
     default: Any = MISSING
-    hooks: Sequence[Callable[[Any, Param, ExecutionState], Any]] = field(
+    hooks: MutableSequence[Callable[[Any, Param, ExecutionState], Any]] = field(
         default_factory=list
     )
 
