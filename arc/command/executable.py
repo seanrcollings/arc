@@ -65,7 +65,6 @@ class Executable(abc.ABC, ParamMixin):
             result = Err("Execution failed")
             raise
         finally:
-            breakpoint()
             logger.debug(BAR)
             for param in self.params.values():
                 param.end_hooks(result)

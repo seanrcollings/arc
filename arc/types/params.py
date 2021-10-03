@@ -6,6 +6,7 @@ from typing import (
     Any,
     MutableSequence,
     Callable,
+    TextIO,
     TypeVar,
     get_args,
     TYPE_CHECKING,
@@ -150,3 +151,18 @@ VarKeyword = Annotated[
         hooks=[_VarKeyword.keyword_hook],
     ),
 ]
+
+
+def _open_file(mode: str):
+    def inner(val, _param, _state):
+        with open(val, mode) as file:
+            yield file
+
+    return inner
+
+
+class File:
+    Read = Annotated[TextIO, Meta(hooks=[_open_file("r")])]
+    Write = Annotated[TextIO, Meta(hooks=[_open_file("w")])]
+    Append = Annotated[TextIO, Meta(hooks=[_open_file("a")])]
+    ReadWrite = Annotated[TextIO, Meta(hooks=[_open_file("r+")])]

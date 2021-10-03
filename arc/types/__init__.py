@@ -5,10 +5,4 @@ from arc import errors
 from .converters import *
 from .helpers import *
 from .type_store import register, convert, type_store
-from .params import (
-    ParamType,
-    Meta,
-    meta,
-    VarPositional,
-    VarKeyword,
-)
+from .params import ParamType, Meta, meta, VarPositional, VarKeyword, File
