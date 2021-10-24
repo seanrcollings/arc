@@ -64,9 +64,6 @@
                     <a class="class" href="#ArcFormatter">ArcFormatter</a>
                             <ul class="memberlist">
                         <li>
-                                <a class="variable" href="#ArcFormatter.prefixes">prefixes</a>
-                        </li>
-                        <li>
                                 <a class="function" href="#ArcFormatter.format">format</a>
                         </li>
                 </ul>
@@ -91,14 +88,14 @@
                         <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span>
 
 <span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">utils</span>
 <span class="kn">from</span> <span class="nn">arc.autoload</span> <span class="kn">import</span> <span class="n">Autoload</span>
-<span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">colorize</span><span class="p">,</span> <span class="n">effects</span><span class="p">,</span> <span class="n">fg</span>
+
 <span class="kn">from</span> <span class="nn">arc.types.params</span> <span class="kn">import</span> <span class="n">Meta</span><span class="p">,</span> <span class="n">VarKeyword</span>
 <span class="kn">from</span> <span class="nn">arc.command</span> <span class="kn">import</span> <span class="n">Command</span><span class="p">,</span> <span class="n">Context</span>
-<span class="kn">from</span> <span class="nn">arc.config</span> <span class="kn">import</span> <span class="n">config</span>
+<span class="kn">from</span> <span class="nn">arc.config</span> <span class="kn">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">config_obj</span>
 <span class="kn">from</span> <span class="nn">arc.run</span> <span class="kn">import</span> <span class="n">find_command_chain</span><span class="p">,</span> <span class="n">get_command_namespace</span><span class="p">,</span> <span class="n">run</span>
 <span class="kn">from</span> <span class="nn">arc.execution_state</span> <span class="kn">import</span> <span class="n">ExecutionState</span>
 
@@ -110,7 +107,8 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cli&quot;</span><span class="p">,</span>
         <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">arcfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.arc&quot;</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">config_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;¯</span><span class="se">\\</span><span class="s2">_(ツ)_/¯&quot;</span><span class="p">,</span>
     <span class="p">):</span>
@@ -129,7 +127,12 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">missing_command</span><span class="p">,</span>
             <span class="n">context</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">arcfile</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">config_obj</span><span class="o">.</span><span class="n">set_values</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">config_file</span><span class="p">:</span>
+            <span class="n">config_obj</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">__logging_setup</span><span class="p">()</span>
         <span class="n">utils</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;INIT&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">version</span>
@@ -246,7 +249,7 @@
     <span class="k">def</span> <span class="nf">__logging_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">root</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;arc_logger&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">handlers</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">level</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">mode_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
+            <span class="n">level</span> <span class="o">=</span> <span class="n">config_obj</span><span class="o">.</span><span class="n">mode_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">config_obj</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
             <span class="n">root</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
             <span class="n">handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()</span>
             <span class="n">formatter</span> <span class="o">=</span> <span class="n">ArcFormatter</span><span class="p">()</span>
@@ -255,14 +258,16 @@
 
 
 <span class="k">class</span> <span class="nc">ArcFormatter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">):</span>
-    <span class="n">prefixes</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;🛈 &quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">BLUE</span><span class="p">),</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">:</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">BOLD</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span><span class="p">,</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">RED</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">BOLD</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span><span class="p">,</span>
-    <span class="p">}</span>
-
     <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">LogRecord</span><span class="p">):</span>
-        <span class="n">prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefixes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">levelno</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">colorize</span><span class="p">,</span> <span class="n">effects</span><span class="p">,</span> <span class="n">fg</span>
+
+        <span class="n">prefixes</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;🛈 &quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">BLUE</span><span class="p">),</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">:</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">BOLD</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span><span class="p">,</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">RED</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">BOLD</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">prefix</span> <span class="o">=</span> <span class="n">prefixes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">levelno</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
         <span class="n">record</span><span class="o">.</span><span class="n">msg</span> <span class="o">=</span> <span class="n">prefix</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
 </pre></div>
@@ -288,7 +293,8 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cli&quot;</span><span class="p">,</span>
         <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">arcfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.arc&quot;</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">config_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;¯</span><span class="se">\\</span><span class="s2">_(ツ)_/¯&quot;</span><span class="p">,</span>
     <span class="p">):</span>
@@ -307,7 +313,12 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">missing_command</span><span class="p">,</span>
             <span class="n">context</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">arcfile</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">config_obj</span><span class="o">.</span><span class="n">set_values</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">config_file</span><span class="p">:</span>
+            <span class="n">config_obj</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">__logging_setup</span><span class="p">()</span>
         <span class="n">utils</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;INIT&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">version</span>
@@ -424,7 +435,7 @@
     <span class="k">def</span> <span class="nf">__logging_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">root</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;arc_logger&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">handlers</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">level</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">mode_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
+            <span class="n">level</span> <span class="o">=</span> <span class="n">config_obj</span><span class="o">.</span><span class="n">mode_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">config_obj</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
             <span class="n">root</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
             <span class="n">handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()</span>
             <span class="n">formatter</span> <span class="o">=</span> <span class="n">ArcFormatter</span><span class="p">()</span>
@@ -445,7 +456,8 @@
             <span class="name">CLI</span><span class="signature">(
     name: str = &#39;cli&#39;,
     function: Callable = None,
-    arcfile: str = &#39;.arc&#39;,
+    config: dict = None,
+    config_file: str = None,
     context: dict = None,
     version: str = &#39;¯\\_(ツ)_/¯&#39;
 )</span>
@@ -457,7 +469,8 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cli&quot;</span><span class="p">,</span>
         <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">arcfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.arc&quot;</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">config_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;¯</span><span class="se">\\</span><span class="s2">_(ツ)_/¯&quot;</span><span class="p">,</span>
     <span class="p">):</span>
@@ -476,7 +489,12 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">missing_command</span><span class="p">,</span>
             <span class="n">context</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">arcfile</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">config_obj</span><span class="o">.</span><span class="n">set_values</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">config_file</span><span class="p">:</span>
+            <span class="n">config_obj</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">__logging_setup</span><span class="p">()</span>
         <span class="n">utils</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;INIT&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">version</span>
@@ -594,8 +612,8 @@ as <code>Command.subcommand</code></p>
     self,
     _help: typing.Annotated[bool, Meta(name=&#39;help&#39;, type=None, short=&#39;h&#39;, hidden=False, default=&lt;symbol : MISSING&gt;, hooks=[])],
     version: typing.Annotated[bool, Meta(name=None, type=None, short=&#39;v&#39;, hidden=False, default=&lt;symbol : MISSING&gt;, hooks=[])],
-    ctx: typing.Annotated[<a href="command/context.html#Context">arc.command.context.Context</a>, Meta(name=None, type=&lt;ParamType.SPECIAL: &#39;special&#39;&gt;, short=None, hidden=True, default=&lt;symbol : MISSING&gt;, hooks=[&lt;function ContextMeta.__new__.&lt;locals&gt;.&lt;lambda&gt; at 0x7fa775afdb80&gt;])],
-    kwargs: typing.Annotated[<a href="types/params.html#_VarKeyword">arc.types.params._VarKeyword</a>[~T], Meta(name=None, type=&lt;ParamType.SPECIAL: &#39;special&#39;&gt;, short=None, hidden=True, default={}, hooks=[&lt;function _VarKeyword.keyword_hook at 0x7fa775b47670&gt;])]
+    ctx: typing.Annotated[<a href="command/context.html#Context">arc.command.context.Context</a>, Meta(name=None, type=&lt;ParamType.SPECIAL: &#39;special&#39;&gt;, short=None, hidden=True, default=&lt;symbol : MISSING&gt;, hooks=[&lt;function ContextMeta.__new__.&lt;locals&gt;.&lt;lambda&gt; at 0x7fe9b744d550&gt;])],
+    kwargs: typing.Annotated[<a href="types/params.html#_VarKeyword">arc.types.params._VarKeyword</a>[~T], Meta(name=None, type=&lt;ParamType.SPECIAL: &#39;special&#39;&gt;, short=None, hidden=True, default={}, hooks=[&lt;function _VarKeyword.keyword_hook at 0x7fe9b748a9d0&gt;])]
 )</span>:
     </div>
 
@@ -780,14 +798,16 @@ a command name (some:command:name)</p>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">ArcFormatter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">):</span>
-    <span class="n">prefixes</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;🛈 &quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">BLUE</span><span class="p">),</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">:</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">BOLD</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span><span class="p">,</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">RED</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">BOLD</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span><span class="p">,</span>
-    <span class="p">}</span>
-
     <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">LogRecord</span><span class="p">):</span>
-        <span class="n">prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefixes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">levelno</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">colorize</span><span class="p">,</span> <span class="n">effects</span><span class="p">,</span> <span class="n">fg</span>
+
+        <span class="n">prefixes</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;🛈 &quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">BLUE</span><span class="p">),</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">:</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">BOLD</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span><span class="p">,</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">RED</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">BOLD</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">prefix</span> <span class="o">=</span> <span class="n">prefixes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">levelno</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
         <span class="n">record</span><span class="o">.</span><span class="n">msg</span> <span class="o">=</span> <span class="n">prefix</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
 </pre></div>
@@ -836,15 +856,6 @@ attributes in a LogRecord are described by:</p>
 </div>
 
 
-                            <div id="ArcFormatter.prefixes" class="classattr">
-                                            <div class="attr variable"><a class="headerlink" href="#ArcFormatter.prefixes">#&nbsp;&nbsp</a>
-
-        <span class="name">prefixes</span><span class="default_value"> = {20: &#39;\x1b[34m🛈 \x1b[0m&#39;, 30: &#39;\x1b[33m\x1b[1mWARNING\x1b[0m: &#39;, 40: &#39;\x1b[31m\x1b[1mERROR\x1b[0m: &#39;}</span>
-    </div>
-
-    
-
-                            </div>
                             <div id="ArcFormatter.format" class="classattr">
                                         <div class="attr function"><a class="headerlink" href="#ArcFormatter.format">#&nbsp;&nbsp</a>
 
@@ -856,7 +867,15 @@ attributes in a LogRecord are described by:</p>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">LogRecord</span><span class="p">):</span>
-        <span class="n">prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefixes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">levelno</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">colorize</span><span class="p">,</span> <span class="n">effects</span><span class="p">,</span> <span class="n">fg</span>
+
+        <span class="n">prefixes</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;🛈 &quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">BLUE</span><span class="p">),</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">:</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">BOLD</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span><span class="p">,</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span> <span class="n">colorize</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">fg</span><span class="o">.</span><span class="n">RED</span><span class="p">,</span> <span class="n">effects</span><span class="o">.</span><span class="n">BOLD</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">prefix</span> <span class="o">=</span> <span class="n">prefixes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">levelno</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
         <span class="n">record</span><span class="o">.</span><span class="n">msg</span> <span class="o">=</span> <span class="n">prefix</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
 </pre></div>

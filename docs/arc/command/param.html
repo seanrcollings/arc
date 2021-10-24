@@ -58,7 +58,10 @@
                                 <a class="variable" href="#Param.hooks">hooks</a>
                         </li>
                         <li>
-                                <a class="function" href="#Param.run_hooks">run_hooks</a>
+                                <a class="function" href="#Param.start_hooks">start_hooks</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Param.end_hooks">end_hooks</a>
                         </li>
                         <li>
                                 <a class="variable" href="#Param.optional">optional</a>
@@ -79,10 +82,31 @@
 
             </li>
             <li>
+                    <a class="class" href="#Hook">Hook</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#Hook.__init__">Hook</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Hook.gen">gen</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Hook.start_hook">start_hook</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#Hook.end_hook">end_hook</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
                     <a class="class" href="#BuiltinHooks">BuiltinHooks</a>
                             <ul class="memberlist">
                         <li>
                                 <a class="function" href="#BuiltinHooks.__init__">BuiltinHooks</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#BuiltinHooks.wrap">wrap</a>
                         </li>
                         <li>
                                 <a class="function" href="#BuiltinHooks.pre_run">pre_run</a>
@@ -127,7 +151,7 @@
                         <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">errors</span>
 <span class="kn">from</span> <span class="nn">arc.color</span> <span class="kn">import</span> <span class="n">colorize</span><span class="p">,</span> <span class="n">fg</span>
@@ -139,7 +163,7 @@
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">arc.types</span> <span class="kn">import</span> <span class="n">Meta</span>
 
-<span class="n">Hooks</span> <span class="o">=</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="s2">&quot;Param&quot;</span><span class="p">,</span> <span class="n">ExecutionState</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]</span>
+<span class="n">HookFunction</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="s2">&quot;Param&quot;</span><span class="p">,</span> <span class="n">ExecutionState</span><span class="p">],</span> <span class="n">Any</span><span class="p">]</span>
 
 
 <span class="k">class</span> <span class="nc">Param</span><span class="p">:</span>
@@ -170,7 +194,7 @@
         <span class="n">short</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">hidden</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">default</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">MISSING</span><span class="p">,</span>
-        <span class="n">hooks</span><span class="p">:</span> <span class="n">Hooks</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">hooks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">HookFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">annotation</span> <span class="o">=</span> <span class="n">annotation</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">arg_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">arg_name</span>
@@ -179,20 +203,21 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">short</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">short</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hidden</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">hidden</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">default</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">:</span> <span class="n">Hooks</span> <span class="o">=</span> <span class="p">[</span><span class="n">BuiltinHooks</span><span class="o">.</span><span class="n">pre_run</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">hooks</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">hooks</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">BuiltinHooks</span><span class="o">.</span><span class="n">post_run</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Hook</span><span class="p">]</span> <span class="o">=</span> <span class="n">BuiltinHooks</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">hooks</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">short</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">short</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Argument </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">arg_name</span><span class="si">}</span><span class="s2">&#39;s shortened name is longer than 1 character&quot;</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">run_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">start_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">hook</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">:</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="n">hook</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">hook</span><span class="o">.</span><span class="n">start_hook</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">val</span>
+
+    <span class="k">def</span> <span class="nf">end_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">hook</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">:</span>
+            <span class="n">hook</span><span class="o">.</span><span class="n">end_hook</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">type_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">annotation</span><span class="p">,</span> <span class="s2">&quot;__name__&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotation</span><span class="p">)</span>
@@ -245,9 +270,43 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="ow">is</span> <span class="n">ParamType</span><span class="o">.</span><span class="n">SPECIAL</span>
 
 
+<span class="k">class</span> <span class="nc">Hook</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">HookFunction</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Generator</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">start_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="n">Param</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">):</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">Generator</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gen</span> <span class="o">=</span> <span class="n">val</span>
+            <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">val</span>
+
+    <span class="k">def</span> <span class="nf">end_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="o">...</span>
+
+
 <span class="k">class</span> <span class="nc">BuiltinHooks</span><span class="p">:</span>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">pre_run</span><span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="n">Param</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="n">user_hooks</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">HookFunction</span><span class="p">]]):</span>
+        <span class="sd">&quot;&quot;&quot;Sandwiches the user hooks in between the `pre_run` and `post_run` builtin hooks</span>
+<span class="sd">        and wraps each function in the `Hook` class</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hooks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Hook</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">Hook</span><span class="p">(</span><span class="n">BuiltinHooks</span><span class="o">.</span><span class="n">pre_run</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="n">user_hooks</span><span class="p">:</span>
+            <span class="n">hooks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">Hook</span><span class="p">(</span><span class="n">hook</span><span class="p">)</span> <span class="k">for</span> <span class="n">hook</span> <span class="ow">in</span> <span class="n">user_hooks</span><span class="p">)</span>
+
+        <span class="n">hooks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Hook</span><span class="p">(</span><span class="n">BuiltinHooks</span><span class="o">.</span><span class="n">post_run</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">hooks</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">pre_run</span><span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="n">Param</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
         <span class="c1"># Special params are expected to be handled on</span>
         <span class="c1"># a type-by-type basis, so the other handers</span>
         <span class="c1"># don&#39;t apply. These would generally be user-defined</span>
@@ -370,7 +429,7 @@
         <span class="n">short</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">hidden</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">default</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">MISSING</span><span class="p">,</span>
-        <span class="n">hooks</span><span class="p">:</span> <span class="n">Hooks</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">hooks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">HookFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">annotation</span> <span class="o">=</span> <span class="n">annotation</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">arg_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">arg_name</span>
@@ -379,20 +438,21 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">short</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">short</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hidden</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">hidden</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">default</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">:</span> <span class="n">Hooks</span> <span class="o">=</span> <span class="p">[</span><span class="n">BuiltinHooks</span><span class="o">.</span><span class="n">pre_run</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">hooks</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">hooks</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">BuiltinHooks</span><span class="o">.</span><span class="n">post_run</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Hook</span><span class="p">]</span> <span class="o">=</span> <span class="n">BuiltinHooks</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">hooks</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">short</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">short</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Argument </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">arg_name</span><span class="si">}</span><span class="s2">&#39;s shortened name is longer than 1 character&quot;</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">run_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">start_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">hook</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">:</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="n">hook</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">hook</span><span class="o">.</span><span class="n">start_hook</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">val</span>
+
+    <span class="k">def</span> <span class="nf">end_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">hook</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">:</span>
+            <span class="n">hook</span><span class="o">.</span><span class="n">end_hook</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">type_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">annotation</span><span class="p">,</span> <span class="s2">&quot;__name__&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotation</span><span class="p">)</span>
@@ -493,7 +553,7 @@
         <span class="n">short</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">hidden</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">default</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">MISSING</span><span class="p">,</span>
-        <span class="n">hooks</span><span class="p">:</span> <span class="n">Hooks</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">hooks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">HookFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">annotation</span> <span class="o">=</span> <span class="n">annotation</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">arg_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">arg_name</span>
@@ -502,10 +562,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">short</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">short</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hidden</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">hidden</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">default</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">:</span> <span class="n">Hooks</span> <span class="o">=</span> <span class="p">[</span><span class="n">BuiltinHooks</span><span class="o">.</span><span class="n">pre_run</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">hooks</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">hooks</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">BuiltinHooks</span><span class="o">.</span><span class="n">post_run</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Hook</span><span class="p">]</span> <span class="o">=</span> <span class="n">BuiltinHooks</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">hooks</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">short</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">short</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span>
@@ -575,26 +632,46 @@
                             <div id="Param.hooks" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#Param.hooks">#&nbsp;&nbsp</a>
 
-        <span class="name">hooks</span><span class="annotation">: Sequence[Callable[[Any, <a href="#Param">arc.command.param.Param</a>, <a href="../execution_state.html#ExecutionState">arc.execution_state.ExecutionState</a>], Any]]</span>
+        <span class="name">hooks</span><span class="annotation">: Sequence[<a href="#Hook">arc.command.param.Hook</a>]</span>
     </div>
 
     
 
                             </div>
-                            <div id="Param.run_hooks" class="classattr">
-                                        <div class="attr function"><a class="headerlink" href="#Param.run_hooks">#&nbsp;&nbsp</a>
+                            <div id="Param.start_hooks" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Param.start_hooks">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">run_hooks</span><span class="signature">(self, val: Any, state: <a href="../execution_state.html#ExecutionState">arc.execution_state.ExecutionState</a>)</span>:
+            <span class="name">start_hooks</span><span class="signature">(self, val: Any, state: <a href="../execution_state.html#ExecutionState">arc.execution_state.ExecutionState</a>)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">run_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">start_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">hook</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">:</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="n">hook</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">hook</span><span class="o">.</span><span class="n">start_hook</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">val</span>
+</pre></div>
+
+        </details>
+
+    
+
+                            </div>
+                            <div id="Param.end_hooks" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Param.end_hooks">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">end_hooks</span><span class="signature">(self, val: Any)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">end_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">hook</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">:</span>
+            <span class="n">hook</span><span class="o">.</span><span class="n">end_hook</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -648,6 +725,125 @@
 
                             </div>
                 </section>
+                <section id="Hook">
+                                <div class="attr class">
+        <a class="headerlink" href="#Hook">#&nbsp;&nbsp</a>
+
+        
+        <span class="def">class</span>
+        <span class="name">Hook</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">Hook</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">HookFunction</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Generator</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">start_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="n">Param</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">):</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">Generator</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gen</span> <span class="o">=</span> <span class="n">val</span>
+            <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">val</span>
+
+    <span class="k">def</span> <span class="nf">end_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="o">...</span>
+</pre></div>
+
+        </details>
+
+    
+
+                            <div id="Hook.__init__" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Hook.__init__">#&nbsp;&nbsp</a>
+
+        
+            <span class="name">Hook</span><span class="signature">(
+    func: Callable[[Any, <a href="#Param">arc.command.param.Param</a>, <a href="../execution_state.html#ExecutionState">arc.execution_state.ExecutionState</a>], Any]
+)</span>
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">HookFunction</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Generator</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</pre></div>
+
+        </details>
+
+    
+
+                            </div>
+                            <div id="Hook.gen" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#Hook.gen">#&nbsp;&nbsp</a>
+
+        <span class="name">gen</span><span class="annotation">: Optional[Generator]</span>
+    </div>
+
+    
+
+                            </div>
+                            <div id="Hook.start_hook" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Hook.start_hook">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">start_hook</span><span class="signature">(
+    self,
+    value: Any,
+    param: <a href="#Param">arc.command.param.Param</a>,
+    state: <a href="../execution_state.html#ExecutionState">arc.execution_state.ExecutionState</a>
+)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">start_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="n">Param</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">):</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">Generator</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gen</span> <span class="o">=</span> <span class="n">val</span>
+            <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">val</span>
+</pre></div>
+
+        </details>
+
+    
+
+                            </div>
+                            <div id="Hook.end_hook" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#Hook.end_hook">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">end_hook</span><span class="signature">(self, value: Any)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">end_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="o">...</span>
+</pre></div>
+
+        </details>
+
+    
+
+                            </div>
+                </section>
                 <section id="BuiltinHooks">
                                 <div class="attr class">
         <a class="headerlink" href="#BuiltinHooks">#&nbsp;&nbsp</a>
@@ -661,7 +857,20 @@
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">BuiltinHooks</span><span class="p">:</span>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">pre_run</span><span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="n">Param</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="n">user_hooks</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">HookFunction</span><span class="p">]]):</span>
+        <span class="sd">&quot;&quot;&quot;Sandwiches the user hooks in between the `pre_run` and `post_run` builtin hooks</span>
+<span class="sd">        and wraps each function in the `Hook` class</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hooks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Hook</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">Hook</span><span class="p">(</span><span class="n">BuiltinHooks</span><span class="o">.</span><span class="n">pre_run</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="n">user_hooks</span><span class="p">:</span>
+            <span class="n">hooks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">Hook</span><span class="p">(</span><span class="n">hook</span><span class="p">)</span> <span class="k">for</span> <span class="n">hook</span> <span class="ow">in</span> <span class="n">user_hooks</span><span class="p">)</span>
+
+        <span class="n">hooks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Hook</span><span class="p">(</span><span class="n">BuiltinHooks</span><span class="o">.</span><span class="n">post_run</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">hooks</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">pre_run</span><span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="n">Param</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
         <span class="c1"># Special params are expected to be handled on</span>
         <span class="c1"># a type-by-type basis, so the other handers</span>
         <span class="c1"># don&#39;t apply. These would generally be user-defined</span>
@@ -757,6 +966,41 @@
     
 
                             </div>
+                            <div id="BuiltinHooks.wrap" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#BuiltinHooks.wrap">#&nbsp;&nbsp</a>
+
+                <div class="decorator">@staticmethod</div>
+
+            <span class="def">def</span>
+            <span class="name">wrap</span><span class="signature">(
+    user_hooks: Optional[Sequence[Callable[[Any, <a href="#Param">arc.command.param.Param</a>, <a href="../execution_state.html#ExecutionState">arc.execution_state.ExecutionState</a>], Any]]]
+)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="n">user_hooks</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">HookFunction</span><span class="p">]]):</span>
+        <span class="sd">&quot;&quot;&quot;Sandwiches the user hooks in between the `pre_run` and `post_run` builtin hooks</span>
+<span class="sd">        and wraps each function in the `Hook` class</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hooks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Hook</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">Hook</span><span class="p">(</span><span class="n">BuiltinHooks</span><span class="o">.</span><span class="n">pre_run</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="n">user_hooks</span><span class="p">:</span>
+            <span class="n">hooks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">Hook</span><span class="p">(</span><span class="n">hook</span><span class="p">)</span> <span class="k">for</span> <span class="n">hook</span> <span class="ow">in</span> <span class="n">user_hooks</span><span class="p">)</span>
+
+        <span class="n">hooks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Hook</span><span class="p">(</span><span class="n">BuiltinHooks</span><span class="o">.</span><span class="n">post_run</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">hooks</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Sandwiches the user hooks in between the <code><a href="#BuiltinHooks.pre_run">pre_run</a></code> and <code><a href="#BuiltinHooks.post_run">post_run</a></code> builtin hooks
+and wraps each function in the <code><a href="#Hook">Hook</a></code> class</p>
+</div>
+
+
+                            </div>
                             <div id="BuiltinHooks.pre_run" class="classattr">
                                         <div class="attr function"><a class="headerlink" href="#BuiltinHooks.pre_run">#&nbsp;&nbsp</a>
 
@@ -767,13 +1011,13 @@
     default: Any,
     param: <a href="#Param">arc.command.param.Param</a>,
     state: <a href="../execution_state.html#ExecutionState">arc.execution_state.ExecutionState</a>
-)</span>:
+) -&gt; Any</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">pre_run</span><span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="n">Param</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">pre_run</span><span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="n">Param</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ExecutionState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
         <span class="c1"># Special params are expected to be handled on</span>
         <span class="c1"># a type-by-type basis, so the other handers</span>
         <span class="c1"># don&#39;t apply. These would generally be user-defined</span>

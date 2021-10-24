@@ -100,6 +100,9 @@
                                 <a class="variable" href="#Config.tranform_snake_case">tranform_snake_case</a>
                         </li>
                         <li>
+                                <a class="variable" href="#Config.color">color</a>
+                        </li>
+                        <li>
                                 <a class="variable" href="#Config.mode_map">mode_map</a>
                         </li>
                 </ul>
@@ -130,6 +133,7 @@
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">get_type_hints</span>
 <span class="kn">from</span> <span class="nn">arc</span> <span class="kn">import</span> <span class="n">errors</span>
 
 
@@ -204,52 +208,39 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
                 <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
-                <span class="n">parsed</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="n">parsed</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__convert_loaded_value</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">breakpoint</span><span class="p">()</span>
             <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ArcError</span><span class="p">(</span>
                 <span class="s2">&quot;Config values must follow the form `name=value`&quot;</span>
             <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
 
         <span class="k">return</span> <span class="n">parsed</span>
 
-    <span class="k">def</span> <span class="nf">set_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parsed</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Handles setting the parsed config data</span>
+    <span class="k">def</span> <span class="nf">set_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Handles setting the config values from a dictionary</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            parsed (dict): Data returned by `parse()`</span>
+<span class="sd">            values (dict): Data returned by `parse()`</span>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            errors.ArcError: If an item in the dictionary doesn&#39;t exist on the config object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parsed</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ArcError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot set `</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">`&quot;</span><span class="p">)</span>
 
-            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__convert_loaded_value</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">post_load</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">__convert_loaded_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Attempts to convert a loaded config value, if it</span>
-<span class="sd">        cannot, will return the original string&quot;&quot;&quot;</span>
-
-        <span class="c1"># Check if it needs to be converted</span>
+    <span class="k">def</span> <span class="nf">__convert_loaded_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="c1"># pylint: disable=import-outside-toplevel</span>
-        <span class="kn">from</span> <span class="nn">arc.types</span> <span class="kn">import</span> <span class="n">converters</span><span class="p">,</span> <span class="n">BaseConverter</span>
+        <span class="kn">from</span> <span class="nn">arc.types</span> <span class="kn">import</span> <span class="n">type_store</span>
 
-        <span class="n">config_converters</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">BaseConverter</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">converters</span><span class="o">.</span><span class="n">IntConverter</span><span class="p">,</span>
-            <span class="n">converters</span><span class="o">.</span><span class="n">BoolConverter</span><span class="p">,</span>
-            <span class="n">converters</span><span class="o">.</span><span class="n">FloatConverter</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">converter</span> <span class="ow">in</span> <span class="n">config_converters</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">converter</span><span class="p">()</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-            <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">ConversionError</span><span class="p">:</span>
-                <span class="k">continue</span>
-
-        <span class="k">return</span> <span class="n">value</span>
+        <span class="n">annotation</span> <span class="o">=</span> <span class="n">get_type_hints</span><span class="p">(</span><span class="bp">self</span><span class="p">)[</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">converter</span> <span class="o">=</span> <span class="n">type_store</span><span class="o">.</span><span class="n">get_converter</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">converter</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">post_load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Executed after a loading a config from file or from env</span>
@@ -278,29 +269,32 @@
 <span class="sd">    - development</span>
 <span class="sd">    - test</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">suggest_on_missing_argument</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">suggest_on_missing_argument</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="sd">&quot;&quot;&quot;Wether or not to provide suggestions for possible misspellings</span>
 <span class="sd">    when an argument is not found&quot;&quot;&quot;</span>
 
-    <span class="n">suggest_on_missing_command</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">suggest_on_missing_command</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="sd">&quot;&quot;&quot;Wether or not to provide suggestions for possible misspellings</span>
 <span class="sd">    when a command is not found&quot;&quot;&quot;</span>
 
-    <span class="n">suggest_levenshtein_distance</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">suggest_levenshtein_distance</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="sd">&quot;&quot;&quot;The max Levenshtein distance between input and a</span>
 <span class="sd">    possible correction to trigger a suggestion &quot;&quot;&quot;</span>
 
-    <span class="n">default_section_name</span> <span class="o">=</span> <span class="s2">&quot;description&quot;</span>
+    <span class="n">default_section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;description&quot;</span>
     <span class="sd">&quot;&quot;&quot;The name to use by default if the first section</span>
 <span class="sd">    in a command docstring is anonymous</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">parse_argument_help</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">parse_argument_help</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="sd">&quot;&quot;&quot;Wether or not to attempt to parse the argument</span>
 <span class="sd">    section of help documentation to provide better documentation&quot;&quot;&quot;</span>
 
-    <span class="n">tranform_snake_case</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">tranform_snake_case</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="sd">&quot;&quot;&quot;Transforms snake_case argument names to kebab-case. Defaults to True&quot;&quot;&quot;</span>
+
+    <span class="n">color</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="sd">&quot;&quot;&quot;Use Ansi-escape sequences. Defaults to true&quot;&quot;&quot;</span>
 
     <span class="n">mode_map</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;development&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
@@ -397,52 +391,39 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
                 <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
-                <span class="n">parsed</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="n">parsed</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__convert_loaded_value</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">breakpoint</span><span class="p">()</span>
             <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ArcError</span><span class="p">(</span>
                 <span class="s2">&quot;Config values must follow the form `name=value`&quot;</span>
             <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
 
         <span class="k">return</span> <span class="n">parsed</span>
 
-    <span class="k">def</span> <span class="nf">set_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parsed</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Handles setting the parsed config data</span>
+    <span class="k">def</span> <span class="nf">set_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Handles setting the config values from a dictionary</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            parsed (dict): Data returned by `parse()`</span>
+<span class="sd">            values (dict): Data returned by `parse()`</span>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            errors.ArcError: If an item in the dictionary doesn&#39;t exist on the config object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parsed</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ArcError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot set `</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">`&quot;</span><span class="p">)</span>
 
-            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__convert_loaded_value</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">post_load</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">__convert_loaded_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Attempts to convert a loaded config value, if it</span>
-<span class="sd">        cannot, will return the original string&quot;&quot;&quot;</span>
-
-        <span class="c1"># Check if it needs to be converted</span>
+    <span class="k">def</span> <span class="nf">__convert_loaded_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="c1"># pylint: disable=import-outside-toplevel</span>
-        <span class="kn">from</span> <span class="nn">arc.types</span> <span class="kn">import</span> <span class="n">converters</span><span class="p">,</span> <span class="n">BaseConverter</span>
+        <span class="kn">from</span> <span class="nn">arc.types</span> <span class="kn">import</span> <span class="n">type_store</span>
 
-        <span class="n">config_converters</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">BaseConverter</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">converters</span><span class="o">.</span><span class="n">IntConverter</span><span class="p">,</span>
-            <span class="n">converters</span><span class="o">.</span><span class="n">BoolConverter</span><span class="p">,</span>
-            <span class="n">converters</span><span class="o">.</span><span class="n">FloatConverter</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">converter</span> <span class="ow">in</span> <span class="n">config_converters</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">converter</span><span class="p">()</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-            <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">ConversionError</span><span class="p">:</span>
-                <span class="k">continue</span>
-
-        <span class="k">return</span> <span class="n">value</span>
+        <span class="n">annotation</span> <span class="o">=</span> <span class="n">get_type_hints</span><span class="p">(</span><span class="bp">self</span><span class="p">)[</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">converter</span> <span class="o">=</span> <span class="n">type_store</span><span class="o">.</span><span class="n">get_converter</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">converter</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">post_load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Executed after a loading a config from file or from env</span>
@@ -611,8 +592,9 @@ to <code>True</code></li>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
                 <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
-                <span class="n">parsed</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="n">parsed</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__convert_loaded_value</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">breakpoint</span><span class="p">()</span>
             <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ArcError</span><span class="p">(</span>
                 <span class="s2">&quot;Config values must follow the form `name=value`&quot;</span>
             <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
@@ -650,37 +632,37 @@ to <code>True</code></li>
 
         
             <span class="def">def</span>
-            <span class="name">set_values</span><span class="signature">(self, parsed: dict)</span>:
+            <span class="name">set_values</span><span class="signature">(self, values: dict)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">set_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parsed</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Handles setting the parsed config data</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">set_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Handles setting the config values from a dictionary</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            parsed (dict): Data returned by `parse()`</span>
+<span class="sd">            values (dict): Data returned by `parse()`</span>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            errors.ArcError: If an item in the dictionary doesn&#39;t exist on the config object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parsed</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ArcError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot set `</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">`&quot;</span><span class="p">)</span>
 
-            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__convert_loaded_value</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">post_load</span><span class="p">()</span>
 </pre></div>
 
         </details>
 
-            <div class="docstring"><p>Handles setting the parsed config data</p>
+            <div class="docstring"><p>Handles setting the config values from a dictionary</p>
 
 <h6 id="args">Args</h6>
 
 <ul>
-<li><strong>parsed (dict):</strong>  Data returned by <code><a href="#ConfigBase.parse">parse()</a></code></li>
+<li><strong>values (dict):</strong>  Data returned by <code><a href="#ConfigBase.parse">parse()</a></code></li>
 </ul>
 
 <h6 id="raises">Raises</h6>
@@ -750,29 +732,32 @@ for post-load setup</p>
 <span class="sd">    - development</span>
 <span class="sd">    - test</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">suggest_on_missing_argument</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">suggest_on_missing_argument</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="sd">&quot;&quot;&quot;Wether or not to provide suggestions for possible misspellings</span>
 <span class="sd">    when an argument is not found&quot;&quot;&quot;</span>
 
-    <span class="n">suggest_on_missing_command</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">suggest_on_missing_command</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="sd">&quot;&quot;&quot;Wether or not to provide suggestions for possible misspellings</span>
 <span class="sd">    when a command is not found&quot;&quot;&quot;</span>
 
-    <span class="n">suggest_levenshtein_distance</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">suggest_levenshtein_distance</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="sd">&quot;&quot;&quot;The max Levenshtein distance between input and a</span>
 <span class="sd">    possible correction to trigger a suggestion &quot;&quot;&quot;</span>
 
-    <span class="n">default_section_name</span> <span class="o">=</span> <span class="s2">&quot;description&quot;</span>
+    <span class="n">default_section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;description&quot;</span>
     <span class="sd">&quot;&quot;&quot;The name to use by default if the first section</span>
 <span class="sd">    in a command docstring is anonymous</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">parse_argument_help</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">parse_argument_help</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="sd">&quot;&quot;&quot;Wether or not to attempt to parse the argument</span>
 <span class="sd">    section of help documentation to provide better documentation&quot;&quot;&quot;</span>
 
-    <span class="n">tranform_snake_case</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">tranform_snake_case</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="sd">&quot;&quot;&quot;Transforms snake_case argument names to kebab-case. Defaults to True&quot;&quot;&quot;</span>
+
+    <span class="n">color</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="sd">&quot;&quot;&quot;Use Ansi-escape sequences. Defaults to true&quot;&quot;&quot;</span>
 
     <span class="n">mode_map</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;development&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
@@ -797,7 +782,14 @@ so the configuration file is not required by default</p>
     arg_assignment: str = &#39;=&#39;,
     flag_denoter: str = &#39;--&#39;,
     short_flag_denoter: str = &#39;-&#39;,
-    mode: str = &#39;production&#39;
+    mode: str = &#39;production&#39;,
+    suggest_on_missing_argument: bool = True,
+    suggest_on_missing_command: bool = True,
+    suggest_levenshtein_distance: int = 2,
+    default_section_name: str = &#39;description&#39;,
+    parse_argument_help: bool = False,
+    tranform_snake_case: bool = True,
+    color: bool = True
 )</span>
     </div>
 
@@ -879,7 +871,7 @@ when parsing via keyword <code>name=value</code></p>
                             <div id="Config.suggest_on_missing_argument" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#Config.suggest_on_missing_argument">#&nbsp;&nbsp</a>
 
-        <span class="name">suggest_on_missing_argument</span><span class="default_value"> = True</span>
+        <span class="name">suggest_on_missing_argument</span><span class="annotation">: bool</span><span class="default_value"> = True</span>
     </div>
 
             <div class="docstring"><p>Wether or not to provide suggestions for possible misspellings
@@ -891,7 +883,7 @@ when an argument is not found</p>
                             <div id="Config.suggest_on_missing_command" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#Config.suggest_on_missing_command">#&nbsp;&nbsp</a>
 
-        <span class="name">suggest_on_missing_command</span><span class="default_value"> = True</span>
+        <span class="name">suggest_on_missing_command</span><span class="annotation">: bool</span><span class="default_value"> = True</span>
     </div>
 
             <div class="docstring"><p>Wether or not to provide suggestions for possible misspellings
@@ -903,7 +895,7 @@ when a command is not found</p>
                             <div id="Config.suggest_levenshtein_distance" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#Config.suggest_levenshtein_distance">#&nbsp;&nbsp</a>
 
-        <span class="name">suggest_levenshtein_distance</span><span class="default_value"> = 2</span>
+        <span class="name">suggest_levenshtein_distance</span><span class="annotation">: int</span><span class="default_value"> = 2</span>
     </div>
 
             <div class="docstring"><p>The max Levenshtein distance between input and a
@@ -915,7 +907,7 @@ possible correction to trigger a suggestion</p>
                             <div id="Config.default_section_name" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#Config.default_section_name">#&nbsp;&nbsp</a>
 
-        <span class="name">default_section_name</span><span class="default_value"> = &#39;description&#39;</span>
+        <span class="name">default_section_name</span><span class="annotation">: str</span><span class="default_value"> = &#39;description&#39;</span>
     </div>
 
             <div class="docstring"><p>The name to use by default if the first section
@@ -927,7 +919,7 @@ in a command docstring is anonymous</p>
                             <div id="Config.parse_argument_help" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#Config.parse_argument_help">#&nbsp;&nbsp</a>
 
-        <span class="name">parse_argument_help</span><span class="default_value"> = False</span>
+        <span class="name">parse_argument_help</span><span class="annotation">: bool</span><span class="default_value"> = False</span>
     </div>
 
             <div class="docstring"><p>Wether or not to attempt to parse the argument
@@ -939,10 +931,21 @@ section of help documentation to provide better documentation</p>
                             <div id="Config.tranform_snake_case" class="classattr">
                                             <div class="attr variable"><a class="headerlink" href="#Config.tranform_snake_case">#&nbsp;&nbsp</a>
 
-        <span class="name">tranform_snake_case</span><span class="default_value"> = True</span>
+        <span class="name">tranform_snake_case</span><span class="annotation">: bool</span><span class="default_value"> = True</span>
     </div>
 
             <div class="docstring"><p>Transforms snake_case argument names to kebab-case. Defaults to True</p>
+</div>
+
+
+                            </div>
+                            <div id="Config.color" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#Config.color">#&nbsp;&nbsp</a>
+
+        <span class="name">color</span><span class="annotation">: bool</span><span class="default_value"> = True</span>
+    </div>
+
+            <div class="docstring"><p>Use Ansi-escape sequences. Defaults to true</p>
 </div>
 
 
@@ -973,7 +976,7 @@ section of help documentation to provide better documentation</p>
                 <section id="config">
                                 <div class="attr variable"><a class="headerlink" href="#config">#&nbsp;&nbsp</a>
 
-        <span class="name">config</span><span class="default_value"> = Config(namespace_sep=&#39;:&#39;, arg_assignment=&#39;=&#39;, flag_denoter=&#39;--&#39;, short_flag_denoter=&#39;-&#39;, mode=&#39;development&#39;)</span>
+        <span class="name">config</span><span class="default_value"> = Config(namespace_sep=&#39;:&#39;, arg_assignment=&#39;=&#39;, flag_denoter=&#39;--&#39;, short_flag_denoter=&#39;-&#39;, mode=&#39;production&#39;, suggest_on_missing_argument=True, suggest_on_missing_command=True, suggest_levenshtein_distance=2, default_section_name=&#39;description&#39;, parse_argument_help=False, tranform_snake_case=True, color=True)</span>
     </div>
 
     

@@ -164,22 +164,21 @@
         <span class="n">parsed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">parsed</span>
         <span class="k">assert</span> <span class="n">parsed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
-        <span class="c1"># Construct the arguments dict, the final product of which</span>
-        <span class="c1"># will be passed to the wrapped function or class</span>
-        <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">run_hooks</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
-            <span class="n">arguments</span><span class="p">[</span><span class="n">param</span><span class="o">.</span><span class="n">arg_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">exhastive_check</span><span class="p">(</span><span class="n">parsed</span><span class="p">)</span>
-
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Function Arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">arguments</span><span class="p">))</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">callback_store</span><span class="o">.</span><span class="n">pre_execution</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">BAR</span><span class="p">)</span>
-
         <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Construct the arguments dict, the final product of which</span>
+            <span class="c1"># will be passed to the wrapped function or class</span>
+            <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">start_hooks</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
+                <span class="n">arguments</span><span class="p">[</span><span class="n">param</span><span class="o">.</span><span class="n">arg_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">exhastive_check</span><span class="p">(</span><span class="n">parsed</span><span class="p">)</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Function Arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">arguments</span><span class="p">))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">callback_store</span><span class="o">.</span><span class="n">pre_execution</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">BAR</span><span class="p">)</span>
             <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="p">(</span><span class="n">Ok</span><span class="p">,</span> <span class="n">Err</span><span class="p">)):</span>
                 <span class="n">result</span> <span class="o">=</span> <span class="n">Ok</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
@@ -189,6 +188,8 @@
             <span class="k">raise</span>
         <span class="k">finally</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">BAR</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">param</span><span class="o">.</span><span class="n">end_hooks</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">callback_store</span><span class="o">.</span><span class="n">post_execution</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">result</span>
@@ -326,22 +327,21 @@
         <span class="n">parsed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">parsed</span>
         <span class="k">assert</span> <span class="n">parsed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
-        <span class="c1"># Construct the arguments dict, the final product of which</span>
-        <span class="c1"># will be passed to the wrapped function or class</span>
-        <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">run_hooks</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
-            <span class="n">arguments</span><span class="p">[</span><span class="n">param</span><span class="o">.</span><span class="n">arg_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">exhastive_check</span><span class="p">(</span><span class="n">parsed</span><span class="p">)</span>
-
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Function Arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">arguments</span><span class="p">))</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">callback_store</span><span class="o">.</span><span class="n">pre_execution</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">BAR</span><span class="p">)</span>
-
         <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Construct the arguments dict, the final product of which</span>
+            <span class="c1"># will be passed to the wrapped function or class</span>
+            <span class="n">arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">start_hooks</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
+                <span class="n">arguments</span><span class="p">[</span><span class="n">param</span><span class="o">.</span><span class="n">arg_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">exhastive_check</span><span class="p">(</span><span class="n">parsed</span><span class="p">)</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Function Arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">arguments</span><span class="p">))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">callback_store</span><span class="o">.</span><span class="n">pre_execution</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">BAR</span><span class="p">)</span>
             <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="p">(</span><span class="n">Ok</span><span class="p">,</span> <span class="n">Err</span><span class="p">)):</span>
                 <span class="n">result</span> <span class="o">=</span> <span class="n">Ok</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
@@ -351,6 +351,8 @@
             <span class="k">raise</span>
         <span class="k">finally</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">BAR</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">param</span><span class="o">.</span><span class="n">end_hooks</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">callback_store</span><span class="o">.</span><span class="n">post_execution</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">result</span>
