@@ -3,6 +3,7 @@ from typing import Annotated, Callable, Optional, Any
 
 from arc import utils
 from arc.autoload import Autoload
+from arc.command.argument_parser import Parsed
 
 from arc.types.params import Meta, VarKeyword
 from arc.command import Command, Context
@@ -147,13 +148,14 @@ class CLI(Command):
         To see a specific command's information, provide
         a command name (some:command:name)
         """
-        namespace, _args = get_command_namespace([command_name])
+        parsed: Parsed = {"pos_values": [command_name], "key_values": {}}
+        namespace = get_command_namespace(parsed)
         chain = find_command_chain(self, namespace)
         state = ExecutionState(
             user_input=[],
             command_namespace=namespace,
-            command_args=[],
             command_chain=chain,
+            parsed=parsed,
         )
         print(state.command.doc(state))
 
