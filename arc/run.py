@@ -1,3 +1,4 @@
+import pprint
 from typing import Optional, Union
 import logging
 import re
@@ -5,9 +6,10 @@ import shlex
 import sys
 import contextlib
 
-from arc import present, utils, errors
-from arc.color import bg, colorize, effects, fg
+from arc import utils, errors
+from arc.color import colorize, effects, fg
 from arc.command import Command, helpers
+from arc.command.argument_parser import Parsed, parse
 from arc.config import config
 from arc.result import Result
 from arc.execution_state import ExecutionState
@@ -65,28 +67,30 @@ def run(
             config.from_file(arcfile)
 
         user_input = get_input(execute)
-        command_namespace, command_args = get_command_namespace(user_input)
+        parsed = parse(user_input)
+        command_namespace = get_command_namespace(parsed)
+        logger.debug("Parser Result: %s", pprint.pformat(parsed))
         command_chain = find_command_chain(root, command_namespace)
         command = command_chain[-1]
         state = ExecutionState(
             user_input=user_input,
             command_namespace=command_namespace,
-            command_args=command_args,
             command_chain=command_chain,
+            parsed=parsed,
         )
 
-        logger.debug(
-            str(
-                present.Box(
-                    f"{bg.ARC_BLUE} {':'.join(command_namespace) or 'root'} {effects.CLEAR} "
-                    + " ".join(
-                        f"{bg.GREY} {arg} {effects.CLEAR}" for arg in command_args
-                    ),
-                    justify="center",
-                    padding=1,
-                )
-            ),
-        )
+        # logger.debug(
+        #     str(
+        #         present.Box(
+        #             f"{bg.ARC_BLUE} {':'.join(command_namespace) or 'root'} {effects.CLEAR} "
+        #             + " ".join(
+        #                 f"{bg.GREY} {arg} {effects.CLEAR}" for arg in command_args
+        #             ),
+        #             justify="center",
+        #             padding=1,
+        #         )
+        #     ),
+        # )
 
         result = command.run(state)
 
@@ -109,18 +113,19 @@ def get_input(execute: Optional[str]) -> list[str]:
 
 
 def get_command_namespace(
-    user_input: list[str],
-) -> tuple[list[str], list[str]]:
+    parsed_data: Parsed,
+) -> list[str]:
     """Checks to see if the first argument from the user is a valid
     namespace name. If it is not, it will return an emtpy namespace list and
     cli.missing_command will be executed.
     """
-    if len(user_input) > 0:
-        namespace = user_input[0]
-        if namespace_seperated.match(namespace):
-            return namespace.split(config.namespace_sep), user_input[1:]
 
-    return [], user_input
+    if len(parsed_data["pos_values"]) > 0:
+        namespace = parsed_data["pos_values"].pop(0)
+        if namespace_seperated.match(namespace):
+            return namespace.split(config.namespace_sep)
+
+    return []
 
 
 def find_command_chain(command: Command, command_namespace: list[str]) -> list[Command]:

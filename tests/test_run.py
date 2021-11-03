@@ -56,24 +56,23 @@ class TestRunFunction:
 
 class TestGetCommandNamespace:
     command = "command"
-    command_args = ["name=sean", "--flag"]
+    command_args = ["--name sean", "--flag", "--", "value"]
     args = [command, *command_args]
 
     def test_empty(self):
-        assert get_command_namespace([]) == ([], [])
+        assert get_command_namespace({"pos_values": []}) == []
 
     def test_no_namespace(self):
-        assert get_command_namespace(self.command_args) == ([], self.command_args)
+        assert get_command_namespace(parse(self.command_args)) == []
 
     def test_single(self):
-        assert get_command_namespace(self.args) == ([self.command], self.command_args)
+        assert get_command_namespace(parse(self.args)) == [self.command]
 
     def test_nested(self):
         nested = "nested:command:name"
-        assert get_command_namespace([nested, *self.command_args]) == (
-            nested.split(":"),
-            self.command_args,
-        )
+        assert get_command_namespace(
+            parse([nested, *self.command_args])
+        ) == nested.split(":")
 
 
 class TestFindCommand:

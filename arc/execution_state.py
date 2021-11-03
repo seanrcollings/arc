@@ -15,10 +15,9 @@ class ExecutionState:
 
     user_input: list[str]
     command_namespace: list[str]
-    command_args: list[str]
     command_chain: list[Command]
+    parsed: Parsed
     executable: Optional[Executable] = None
-    parsed: Optional[Parsed] = None
 
     @property
     def root(self):
@@ -37,6 +36,6 @@ class ExecutionState:
         return ExecutionState(
             user_input=[],
             command_namespace=[],
-            command_args=[],
             command_chain=[],
+            parsed={"pos_values": [], "key_values": {}},
         )

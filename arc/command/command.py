@@ -1,5 +1,4 @@
 from typing import Dict, Callable, Optional, Any, Union
-import pprint
 import logging
 
 from arc.color import effects, fg
@@ -8,7 +7,6 @@ from arc.result import Result
 from arc.config import config
 from arc.execution_state import ExecutionState
 
-from .argument_parser import parse
 from .command_doc import CommandDoc
 from .executable import Executable, FunctionExecutable, ClassExecutable
 
@@ -56,10 +54,7 @@ class Command:
 
     def run(self, state: ExecutionState) -> Result:
         """External interface to execute a command"""
-        parsed_args = parse(state.command_args)
 
-        logger.debug("Parser Result: %s", pprint.pformat(parsed_args))
-        state.parsed = parsed_args
         return self.executable(state)
 
     ### Building Subcommands ###
