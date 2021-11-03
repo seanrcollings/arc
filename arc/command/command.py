@@ -8,7 +8,7 @@ from arc.result import Result
 from arc.config import config
 from arc.execution_state import ExecutionState
 
-from .argument_parser import ArgumentParser
+from .argument_parser import parse
 from .command_doc import CommandDoc
 from .executable import Executable, FunctionExecutable, ClassExecutable
 
@@ -33,7 +33,6 @@ class Command:
             if isinstance(executable, type)
             else FunctionExecutable(executable)
         )
-        self.parser = ArgumentParser(self.executable)
 
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
@@ -57,7 +56,7 @@ class Command:
 
     def run(self, state: ExecutionState) -> Result:
         """External interface to execute a command"""
-        parsed_args = self.parser.parse(state.command_args)
+        parsed_args = parse(state.command_args)
 
         logger.debug("Parser Result: %s", pprint.pformat(parsed_args))
         state.parsed = parsed_args

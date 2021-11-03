@@ -1,127 +1,134 @@
-from __future__ import annotations
-from typing import Callable, Any, Union, TypedDict, TYPE_CHECKING
+import logging
+from typing import TypedDict, Union
+from dataclasses import dataclass
 import re
-
-from arc import errors
+import enum
 from arc.config import config
-from arc.color import colorize, fg
 from arc.utils import IDENT
+from arc.types.params import MISSING
+from arc.utils.other import symbol
 
 
-if TYPE_CHECKING:
-    from arc.command.executable import Executable
+logger = logging.getLogger("arc_logger")
+
+
+class TokenType(enum.Enum):
+    VALUE = 1
+    KEYWORD = 2
+    POS_ONLY = 3
+    SHORT_KEYWORD = 4
+
+
+matchers = {
+    TokenType.KEYWORD: re.compile(fr"^{config.flag_denoter}({IDENT})$"),
+    TokenType.SHORT_KEYWORD: re.compile(fr"^{config.short_flag_denoter}([a-zA-Z]+)$"),
+    TokenType.POS_ONLY: re.compile(fr"^({config.flag_denoter})$"),
+    TokenType.VALUE: re.compile(r"^(.+)$"),
+}
+
+
+@dataclass
+class Token:
+    value: str
+    type: TokenType
 
 
 class Parsed(TypedDict):
-    pos_args: list[str]
-    options: dict[str, str]
-    flags: list[str]
+    pos_values: list[str]
+    key_values: dict[str, Union[str, symbol]]
+
+
+class Lexer:
+    def __init__(self, to_tokenize: list[str]):
+        self.to_tokenize = to_tokenize
+        self.tokens: list[Token] = []
+
+    def tokenize(self):
+        while len(self.to_tokenize) > 0:
+            curr: str = self.to_tokenize.pop(0)
+            for name, regex in matchers.items():
+                if match := regex.match(curr):
+                    logger.debug(f"Matched {curr} -> {name}")
+                    self.add_token(match, name)
+                    break
+            else:
+                raise ValueError(f"Could not tokenize {curr}")
+
+        return self.tokens
+
+    def add_token(self, match: re.Match, kind: TokenType):
+        value: str = match.groups()[0]
+        self.tokens.append(Token(value, kind))
 
 
 class ArgumentParser:
-    matchers = {
-        "option": re.compile(fr"^{config.flag_denoter}({IDENT})$"),
-        "short_option": re.compile(fr"^{config.short_flag_denoter}([a-zA-Z]+)$"),
-        "pos_only": re.compile(fr"^({config.flag_denoter})$"),
-        "value": re.compile(r"^(.+)$"),
-    }
-
-    to_parse: list[str]
-
-    def __init__(self, executable: Executable):
-        self.executable = executable
+    def __init__(self, tokens: list[Token]):
+        self.tokens = tokens
+        self.parsed: Parsed = {"pos_values": [], "key_values": {}}
         self.pos_only = False
-        self.parsed: Parsed = {
-            "pos_args": [],
-            "options": {},
-            "flags": [],
+
+    def parse(self):
+        parser_table = {
+            TokenType.KEYWORD: self.parse_keyword,
+            TokenType.SHORT_KEYWORD: self.parse_short_keyword,
+            TokenType.POS_ONLY: self.parse_pos_only,
+            TokenType.VALUE: self.parse_value,
         }
+        while self.tokens:
+            curr = self.consume()
+            if self.pos_only and curr.type != TokenType.VALUE:
+                raise ValueError("POS ONLY")
+            parser_table[curr.type](curr)
 
-    def parse(self, to_parse: list[str]):
-        self.to_parse = to_parse.copy()
-        while len(self.to_parse) > 0:
-            curr_token = self.consume()
-            for name, regex in self.matchers.items():
-                if match := regex.match(curr_token):
-                    self.handle_match(match, name)
-                    break
-            else:
-                raise errors.ParserError(f"Could not parse {curr_token}")
+        return self.parsed
 
-        parsed = self.parsed
-        self.parsed = {"pos_args": [], "options": {}, "flags": []}
-        return parsed
+    def parse_keyword(self, token: Token):
+        if (next_token := self.peek()) and next_token.type == TokenType.VALUE:
+            value = self.consume().value
+        else:
+            value = MISSING
 
-    ### Handlers ###
-    def handle_match(self, match: re.Match, name: str) -> tuple[str, Any]:
-        groups: Union[dict[str, str], str] = self.get_match_values(match)
-        handler: Callable = getattr(self, f"handle_{name}")
-        return handler(groups)
+        self.parsed["key_values"][token.value] = value
 
-    def handle_option(self, option: str):
-        if self.pos_only:
-            raise errors.ParserError(
-                "Options are not allowed after "
-                f"{colorize(config.flag_denoter, fg.YELLOW)} if it is present"
-            )
+    def parse_short_keyword(self, token: Token):
+        if (next_token := self.peek()) and next_token.type == TokenType.VALUE:
+            assert len(token.value) == 1
+            self.parsed["key_values"][token.value] = self.consume().value
+        else:
+            for char in token.value:
+                self.parsed["key_values"][char] = MISSING
 
-        try:
-            param = self.executable.get_or_raise(
-                option, f"Option {colorize('--' + option, fg.YELLOW)} not found."
-            )
-            if param.is_flag:
-                self.parsed["flags"].append(param.arg_alias)
-            elif self.peek():
-                value = self.consume()
-                self.parsed["options"][param.arg_alias] = value
-            else:
-                raise errors.ParserError(
-                    f"Option {colorize('--' + option, fg.YELLOW)} requires a value"
-                )
-        except errors.MissingArgError:
-            if self.peek() and not self.peek().startswith(config.flag_denoter):
-                value = self.consume()
-                self.parsed["options"][option] = value
-            else:
-                self.parsed["flags"].append(option)
-
-    def handle_short_option(self, short_option):
-        for char in short_option:
-            param = self.executable.get_or_raise(
-                char, f"Option {colorize('-' + short_option, fg.YELLOW)} not found."
-            )
-            if len(short_option) > 1 and not param.is_flag:
-                raise errors.ParserError(
-                    f"Option {colorize('-' + char, fg.YELLOW)} requires a value"
-                )
-
-            self.handle_option(param.arg_alias)
-
-    def handle_pos_only(self, _):
+    def parse_pos_only(self, _token: Token):
         self.pos_only = True
-        if len(self.parsed["pos_args"]) > 0:
-            raise errors.ParserError(
-                "Positional arguments must be placed after "
-                f"{colorize(config.flag_denoter, fg.YELLOW)} if it is present"
-            )
 
-    def handle_value(self, value):
-        self.parsed["pos_args"].append(value)
-
-    ### Helpers ###
-
-    def peek(self):
-        if len(self.to_parse) == 0:
-            return None
-
-        return self.to_parse[0]
+    def parse_value(self, token: Token):
+        self.parsed["pos_values"].append(token.value)
 
     def consume(self):
-        return self.to_parse.pop(0)
+        return self.tokens.pop(0)
 
-    @staticmethod
-    def get_match_values(match: re.Match) -> Union[dict[str, str], str]:
-        if groups := match.groupdict():
-            return groups
+    def peek(self):
+        return self.tokens[0] if self.tokens else None
 
-        return match.groups()[0]
+
+def parse(args: list[str]):
+    tokens = Lexer(args).tokenize()
+    return ArgumentParser(tokens).parse()
+
+
+if __name__ == "__main__":
+    lexer = Lexer(
+        [
+            "--name",
+            "value",
+            "--name2",
+            "value2",
+            "--flag",
+            "-f",
+            "-vb",
+            "--",
+            "other such things and stuff",
+        ]
+    )
+    parser = ArgumentParser(lexer.tokenize())
+    print(parser.parse())

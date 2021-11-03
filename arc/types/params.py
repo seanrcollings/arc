@@ -109,8 +109,8 @@ class _VarPositional(list[T]):
     @staticmethod
     def positional_hook(_default: list, param: Param, state: ExecutionState):
         assert state.parsed
-        values = state.parsed["pos_args"]
-        state.parsed["pos_args"] = []
+        values = state.parsed["pos_values"]
+        state.parsed["pos_values"] = []
 
         if (args := get_args(param.annotation)) and not isinstance(args[0], TypeVar):
             values = [convert(value, args[0], param.arg_alias) for value in values]
@@ -122,8 +122,8 @@ class _VarKeyword(dict[str, T]):
     @staticmethod
     def keyword_hook(_default: dict, param: Param, state: ExecutionState):
         assert state.parsed
-        values = state.parsed["options"]
-        state.parsed["options"] = {}
+        values = state.parsed["key_values"]
+        state.parsed["key_values"] = {}
 
         if (args := get_args(param.annotation)) and not isinstance(args[0], TypeVar):
             values = {key: convert(val, args[0], key) for key, val in values.items()}

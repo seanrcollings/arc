@@ -176,14 +176,14 @@ class BuiltinHooks:
     @staticmethod
     def positional_hook(default: Any, _param: Param, state: ExecutionState):
         assert state.parsed
-        pos_args = state.parsed["pos_args"]
+        pos_args = state.parsed["pos_values"]
         return default if len(pos_args) == 0 else pos_args.pop(0)
 
     @staticmethod
     def keyword_hook(default: Any, param: Param, state: ExecutionState):
         assert state.parsed
 
-        options = state.parsed["options"]
+        options = state.parsed["key_values"]
         if value := options.get(param.arg_alias):
             options.pop(param.arg_alias)
         elif value := options.get(param.short):  # type: ignore
@@ -197,12 +197,12 @@ class BuiltinHooks:
     def flag_hook(default: bool, param: Param, state: ExecutionState):
         assert state.parsed
 
-        flags = state.parsed["flags"]
+        flags = state.parsed["key_values"]
         if param.arg_alias in flags:
-            flags.remove(param.arg_alias)
+            flags.pop(param.arg_alias)
             return not default
         elif param.short in flags:
-            flags.remove(param.short)
+            flags.pop(param.short)
             return not default
         else:
             return default

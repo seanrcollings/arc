@@ -78,20 +78,17 @@ class Executable(abc.ABC, ParamMixin):
 
     def exhastive_check(self, parsed: Parsed):
         """Ensures that all arguments from the parser are handled"""
-        if parsed["pos_args"]:
+        if parsed["pos_values"]:
 
             pos_params_len = len(self.pos_params)
             raise errors.ArgumentError(
                 f"{self.state.command_name} expects {pos_params_len} "
                 f"positional argument{'s' if pos_params_len > 1 else ''}, "
-                f"but recieved {pos_params_len + len(parsed['pos_args'])}"
+                f"but recieved {pos_params_len + len(parsed['pos_values'])}"
             )
 
-        if parsed["options"]:
-            raise self.non_existant_args(list(parsed["options"].keys()))
-
-        if parsed["flags"]:
-            raise self.non_existant_args(parsed["flags"])
+        if parsed["key_values"]:
+            raise self.non_existant_args(list(parsed["key_values"].keys()))
 
     def get_or_raise(self, key: str, message):
         arg = self.params.get(key)
