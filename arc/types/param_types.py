@@ -44,9 +44,12 @@ class ParamType:
     _param_type_map: dict[Annotation, type[ParamType]] = {}
     _param_type_cache: dict[Annotation, ParamType] = {}
 
-    def __init__(self, annotation: Annotation = None):
+    def __init__(
+        self, annotation: Annotation = None, type_info: dict[str, t.Any] = None
+    ):
         annotation = annotation or self.handles
         self.annotation = annotation
+        self.type_info = type_info
         self.origin = t.get_origin(annotation)
         self.args = t.get_args(annotation)
 
@@ -68,12 +71,13 @@ class ParamType:
 
             raise errors.ArgumentError(message)
 
-        if self.cleanup:
-            self.param._cleanup_funcs.add(self.cleanup)
-
         if value is not None:
             self.param = param
             self.state = state
+
+            if self.cleanup:
+                self.param._cleanup_funcs.add(self.cleanup)
+
             try:
                 if self.is_generic:
                     value = self.g_convert(value)
@@ -125,32 +129,34 @@ class ParamType:
         )
 
     @classmethod
-    def get_param_type(cls, kind: type, default=None):
+    def get_param_type(cls, kind: type):
         # Unwrap to handle generic types (list[int])
-        origin = t.get_origin(kind) or kind
+        base_type = t.get_origin(kind) or kind
+        type_info = {}
 
-        try:
-            if issubclass(origin, ParamType):
-                return kind()
-        except TypeError:
-            ...
+        if base_type is t.Annotated:
+            args = t.get_args(kind)
+            base_type = args[0]
+            kind = base_type
+            type_info = args[1]
 
-        if origin in cls._param_type_cache:
-            return cls._param_type_cache[origin]
+        if base_type in cls._param_type_cache:
+            breakpoint()
+            return cls._param_type_cache[base_type]
 
         # Type is a key
         # We perform this check once before hand
         # because some typing types don't have
         # the mro() method
-        if origin in cls._param_type_map:
-            return cls._param_type_map[origin](kind)
+        if base_type in cls._param_type_map:
+            return cls._param_type_map[base_type](kind, type_info)
 
         # Type is a subclass of a key
-        for parent in origin.mro():
+        for parent in base_type.mro():
             if parent in cls._param_type_map:
-                return cls._param_type_map[parent](kind)
+                return cls._param_type_map[parent](kind, type_info)
 
-        raise errors.ArcError(f"No Param type for {kind}")
+        raise errors.ArcError(f"No Param type for {base_type}")
 
 
 ## Basic Types
@@ -350,43 +356,22 @@ class ContextParamType(ParamType):
         return self.annotation(ctx)
 
 
-class File:
-    class FileType(t.IO, ParamType, cache=True):
-        name = "File"
-        _file_handles: list[t.IO]
-        mode: str
+class FileParamType(ParamType):
+    name = "File"
+    handles = t.IO
+    _file_handle: t.IO
 
-        def convert(self, value: str) -> t.IO:
-            file = open(value, self.mode)
-            self._file_handles.append(file)
-            return file
+    def convert(self, value: str) -> t.IO:
+        file = open(value, **self.open_args())
+        self._file_handle = file
+        return file
 
-        @classmethod
-        def cleanup(cls):
-            for handle in cls._file_handles:
-                logger.debug("Closing File handle for: %s", handle.name)
-                handle.close()
+    def cleanup(self):
+        logger.debug("Closing File handle for: %s", self._file_handle.name)
+        self._file_handle.close()
 
-        def __init_subclass__(cls, **kwargs):
-            cls._file_handles = []
-            cls.name = f"File.{cls.__name__}"
-
-            super().__init_subclass__(cls, **kwargs)
-
-    class Read(FileType):
-        mode = "r"
-
-    class Write(FileType):
-        mode = "w"
-
-    class ReadWrite(FileType):
-        mode = "rw"
-
-    class ReadCreate(FileType):
-        mode = "r+"
-
-    class WriteCreate(FileType):
-        mode = "r+"
-
-    class Append(FileType):
-        mode = "a"
+    def open_args(self):
+        if isinstance(self.type_info, str):
+            return {"mode": self.type_info}
+        if isinstance(self.type_info, dict):
+            return self.type_info
