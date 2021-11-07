@@ -5,8 +5,8 @@ import re
 import enum
 from arc.config import config
 from arc.utils import IDENT
-from arc.types.params import MISSING
 from arc.utils.other import symbol
+from arc.command.param import MISSING
 
 
 logger = logging.getLogger("arc_logger")
@@ -48,7 +48,7 @@ class Lexer:
             curr: str = self.to_tokenize.pop(0)
             for name, regex in matchers.items():
                 if match := regex.match(curr):
-                    logger.debug(f"Matched {curr} -> {name}")
+                    logger.debug("Matched %s -> %s", curr, name)
                     self.add_token(match, name)
                     break
             else:

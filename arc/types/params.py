@@ -1,168 +1,130 @@
-"""Defines types relevant to Param Definition / Creation"""
+"""Public API for hanlding paramater modification"""
 from __future__ import annotations
-from typing import (
-    Annotated,
-    Optional,
-    Any,
-    MutableSequence,
-    Callable,
-    TextIO,
-    TypeVar,
-    get_args,
-    TYPE_CHECKING,
-)
-import enum
-from dataclasses import dataclass, field
-from arc.execution_state import ExecutionState
-
-from arc.utils import symbol
-from arc.types.type_store import convert
-
-if TYPE_CHECKING:
-    from arc.command.param import Param
-
-# Represents a missing value
-# Used to represent an arguments
-# with no default value
-MISSING = symbol("MISSING")
-T = TypeVar("T")
+from typing import Any
+from arc.command import param
 
 
-@dataclass
-class Meta:
-    """Represents meta-data about an argument
+class ParamInfo:
+    def __init__(
+        self,
+        param_cls: type[param.Param] = None,
+        name: str = None,
+        short: str = None,
+        default: Any = param.MISSING,
+    ):
+        self.param_cls = param_cls
+        self.name = name
+        self.short = short
+        self.default = default
 
-    Args:
-        name (str): The name that will be used on the command line for this argument
-        type (ParamType): The type of the argument. `ParamType.POS` or `ParamType.KEY`
-            are the most common
-        short (str): The single-character short name to refer to this argument
-            on the command line
-        hidden (bool): whether or not this paramater is exposed to the command line
-        default (Any): Value to pass if no value is given on the command line
-        hooks (Callable): sequence of callable objects
 
-    Usage:
+def Param(
+    name: str = None,
+    short: str = None,
+    default: Any = param.MISSING,
+) -> Any:
+    """A CLI Paramater. Automatically decides whether it is
+    a `positional`, `keyword`, or `flag` paramater.
 
+    # Example
     ```py
-    @cli.subcommand()
-    def command(val: Annotated[int, Meta(short='v')]):
-        ...
+    @cli.command()
+    def test(val: int = Param(), *, val2: int = Param(), flag: bool = Param()):
+        print(val, val2, flag)
+    ```
+    Each Param type will be determined as follows:
+    - `val`: Precedes the bare `*`.
+    - `val2`: Proceeds the bare `*`. Python considers this a "keyword only"
+        argument, and so does arc
+    - `flag`: Has a `bool` type
+
+    ```
+    $ python example.py test --val2 3 --flag -- 2
+    2 3 True
     ```
     """
-
-    name: Optional[str] = None
-    type: Optional[ParamType] = None
-    short: Optional[str] = None
-    hidden: bool = False
-    default: Any = MISSING
-    hooks: MutableSequence[Callable[[Any, Param, ExecutionState], Any]] = field(
-        default_factory=list
-    )
+    return ParamInfo(None, name, short, default)
 
 
-def meta(**kwargs):
-    """Wraps a given type with meta-data. Any
-    refernce to that type will carry the same
-    meta-data
+def PosParam(
+    name: str = None,
+    short: str = None,
+    default: Any = param.MISSING,
+) -> Any:
+    """A CLI Paramater. Input will be passed in positionally.
 
+    # Example
     ```py
-    @meta(short="s")
-    class Shoe:
-        ...
+    @cli.command()
+    def test(val: int = PosParam()):
+        print(val)
+    ```
 
-    # Both of these command's 'shoe' argument will have the short-name of "s"
-    @cli.subcommand()
-    def command(shoe: Shoe):
-        ...
-
-    @cli.subcommand()
-    def other_command(shoe: Shoe):
-        ...
+    ```
+    $ python example.py command 2
+    2
     ```
     """
-
-    def inner(cls: type):
-        return Annotated[cls, Meta(**kwargs)]
-
-    return inner
+    return ParamInfo(param.PositionalParam, name, short, default)
 
 
-class ParamType(enum.Enum):
-    """All the types that a Paramater can be
+def KeyParam(
+    name: str = None,
+    short: str = None,
+    default: Any = param.MISSING,
+) -> Any:
+    """A CLI parameter. Input will be passed in by keyword"""
+    return ParamInfo(param.KeywordParam, name, short, default)
 
-    - `POS` is given to regular arguments to a function
-    - `KEY` is given to keyword-only arguments of a function
-    - `FLAG` is given to arguments with a `bool` annotation
-    - `SPECIAL` isn't given to any arguments by default, but
-        can be used to explicitly mark a a special type. Internally,
-        arc uses this to mark `Context`, `VarPositional `, and `VarKeyword`
+
+def FlagParam(
+    name: str = None,
+    short: str = None,
+    default: Any = param.MISSING,
+) -> Any:
+    """A CLI parameter. Input will be passed in by
+    keyword, but a value is not neccessary"""
+    return ParamInfo(param.FlagParam, name, short, default)
+
+
+def SpecialParam(
+    name: str = None,
+    short: str = None,
+    default: Any = param.MISSING,
+) -> Any:
+    """Special Params do not select a value from user input.
+    As such, they're values must originate elsewhere, or be manually selected.
     """
-
-    POS = "positional"
-    KEY = "keyword"
-    FLAG = "flag"
-    SPECIAL = "special"
+    return ParamInfo(param.SpecialParam, name, short, default)
 
 
-class _VarPositional(list[T]):
-    @staticmethod
-    def positional_hook(_default: list, param: Param, state: ExecutionState):
-        assert state.parsed
-        values = state.parsed["pos_values"]
-        state.parsed["pos_values"] = []
+def __cls_deco_factory(param_cls: type[param.Param]):
+    def decorator(
+        name: str = None,
+        short: str = None,
+        default: Any = param.MISSING,
+        overwrite: bool = False,
+    ):
+        def inner(cls: type):
+            setattr(
+                cls,
+                "__param_info__",
+                {
+                    "param_cls": param_cls,
+                    "name": name,
+                    "short": short,
+                    "default": default,
+                    "overwrite": overwrite,
+                },
+            )
+            return cls
 
-        if (args := get_args(param.annotation)) and not isinstance(args[0], TypeVar):
-            values = [convert(value, args[0], param.arg_alias) for value in values]
+        return inner
 
-        return values
-
-
-class _VarKeyword(dict[str, T]):
-    @staticmethod
-    def keyword_hook(_default: dict, param: Param, state: ExecutionState):
-        assert state.parsed
-        values = state.parsed["key_values"]
-        state.parsed["key_values"] = {}
-
-        if (args := get_args(param.annotation)) and not isinstance(args[0], TypeVar):
-            values = {key: convert(val, args[0], key) for key, val in values.items()}
-
-        return values
-
-
-VarPositional = Annotated[
-    _VarPositional[T],
-    Meta(
-        hidden=True,
-        type=ParamType.SPECIAL,
-        default=[],
-        hooks=[_VarPositional.positional_hook],
-    ),
-]
+    return decorator
 
 
-VarKeyword = Annotated[
-    _VarKeyword[T],
-    Meta(
-        hidden=True,
-        type=ParamType.SPECIAL,
-        default={},
-        hooks=[_VarKeyword.keyword_hook],
-    ),
-]
-
-
-def _open_file(mode: str):
-    def inner(val, _param, _state):
-        with open(val, mode) as file:
-            yield file
-
-    return inner
-
-
-class File:
-    Read = Annotated[TextIO, Meta(hooks=[_open_file("r")])]
-    Write = Annotated[TextIO, Meta(hooks=[_open_file("w")])]
-    Append = Annotated[TextIO, Meta(hooks=[_open_file("a")])]
-    ReadWrite = Annotated[TextIO, Meta(hooks=[_open_file("r+")])]
+as_pos_param = __cls_deco_factory(param.PositionalParam)
+as_keyword_param = __cls_deco_factory(param.KeywordParam)
+as_flag_param = __cls_deco_factory(param.FlagParam)
+as_special_param = __cls_deco_factory(param.SpecialParam)

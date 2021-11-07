@@ -4,8 +4,7 @@ import os
 import sys
 from arc.color import fg, effects
 from arc import errors
-from arc.types.params import MISSING
-
+from arc.command.param import MISSING
 from .callbacks import around, before
 
 

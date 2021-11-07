@@ -5,8 +5,8 @@ from arc import utils
 from arc.autoload import Autoload
 from arc.command.argument_parser import Parsed
 
-from arc.types.params import Meta, VarKeyword
-from arc.command import Command, Context
+from arc.command import Command
+from arc.types import Context
 from arc.config import config as config_obj
 from arc.run import find_command_chain, get_command_namespace, run
 from arc.execution_state import ExecutionState
@@ -98,10 +98,9 @@ class CLI(Command):
     # pylint: disable=redefined-builtin
     def missing_command(
         self,
-        _help: Annotated[bool, Meta(name="help", short="h")],
-        version: Annotated[bool, Meta(short="v")],
+        # _help: Annotated[bool, Meta(name="help", short="h")],
+        # version: Annotated[bool, Meta(short="v")],
         ctx: Context,
-        kwargs: VarKeyword,
     ):
         """View specific help with "help <command-name>"
 
@@ -142,7 +141,10 @@ class CLI(Command):
         into the CLI from the provided paths"""
         Autoload(paths, self).load()
 
-    def helper(self, command_name: Annotated[str, Meta(default="")]):
+    def helper(
+        self,
+        # command_name: Annotated[str, Meta(default="")]
+    ):
         """Displays information for a given command
         By default, shows help for the top-level command.
         To see a specific command's information, provide

@@ -105,11 +105,11 @@ class ConfigBase:
 
     def __convert_loaded_value(self, name: str, value: str):
         # pylint: disable=import-outside-toplevel
-        from arc.types import type_store
+        return value
 
-        annotation = get_type_hints(self)[name]
-        converter = type_store.get_converter(annotation)
-        return converter(annotation).convert(value)
+        # annotation = get_type_hints(self)[name]
+        # converter = type_store.get_converter(annotation)
+        # return converter(annotation).convert(value)
 
     def post_load(self):
         """Executed after a loading a config from file or from env

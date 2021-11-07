@@ -2,7 +2,6 @@ from typing import Callable
 from arc import utils
 
 from .command import Command
-from .context import Context
 from .argument_parser import ArgumentParser
 
 

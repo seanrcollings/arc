@@ -47,8 +47,7 @@ class Executable(abc.ABC, ParamMixin):
             # will be passed to the wrapped function or class
             arguments: dict[str, Any] = {}
             for param in self.params.values():
-                value = param.default
-                value = param.start_hooks(value, self.state)
+                value = param.pre_run(self.state)
                 arguments[param.arg_name] = value
 
             self.exhastive_check(parsed)
@@ -67,7 +66,8 @@ class Executable(abc.ABC, ParamMixin):
         finally:
             logger.debug(BAR)
             for param in self.params.values():
-                param.end_hooks(result)
+                param.post_run(result)
+
             self.callback_store.post_execution(result)
 
         return result
