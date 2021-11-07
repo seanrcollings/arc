@@ -2,7 +2,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import enum
 
-from arc import command, Context
+from arc import command
+from arc.types import Context
 from arc.autocomplete import fish
 
 if TYPE_CHECKING:

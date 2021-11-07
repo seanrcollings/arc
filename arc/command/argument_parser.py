@@ -20,9 +20,9 @@ class TokenType(enum.Enum):
 
 
 matchers = {
-    TokenType.KEYWORD: re.compile(fr"^{config.flag_denoter}({IDENT})$"),
-    TokenType.SHORT_KEYWORD: re.compile(fr"^{config.short_flag_denoter}([a-zA-Z]+)$"),
-    TokenType.POS_ONLY: re.compile(fr"^({config.flag_denoter})$"),
+    TokenType.KEYWORD: re.compile(fr"^{config.flag_prefix}({IDENT})$"),
+    TokenType.SHORT_KEYWORD: re.compile(fr"^{config.short_flag_prefix}([a-zA-Z]+)$"),
+    TokenType.POS_ONLY: re.compile(fr"^({config.flag_prefix})$"),
     TokenType.VALUE: re.compile(r"^(.+)$"),
 }
 

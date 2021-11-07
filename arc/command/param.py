@@ -54,7 +54,10 @@ class Param:
     def __repr__(self):
         type_name = getattr(self.annotation, "__name__", self.annotation)
 
-        return f"<Param {self.arg_name}({self.__class__.__name__}): {type_name} = {self.default}>"
+        return (
+            f"<{self.__class__.__name__} {self.arg_name}"
+            f"({self.__class__.__name__}): {type_name} = {self.default}>"
+        )
 
     def __format__(self, spec: str):
         modifiers = spec.split("|")
@@ -66,9 +69,9 @@ class Param:
             if "short" in modifiers:
                 assert self.short
                 name = self.short
-                denoter = config.short_flag_denoter
+                denoter = config.short_flag_prefix
             else:
-                denoter = config.flag_denoter
+                denoter = config.flag_prefix
 
             formatted = f"{denoter}{name}"
 

@@ -61,15 +61,16 @@ def run(
         check_result (bool): whether or not to check if the result contains
             errors. Defaults to False.
     """
-    utils.header("EXECUTE")
+
     with error_handler(handle_exception):
         if arcfile:
             config.from_file(arcfile)
 
+        utils.header("PARSING")
         user_input = get_input(execute)
         parsed = parse(user_input)
-        command_namespace = get_command_namespace(parsed)
         logger.debug("Parser Result: %s", pprint.pformat(parsed))
+        command_namespace = get_command_namespace(parsed)
         command_chain = find_command_chain(root, command_namespace)
         command = command_chain[-1]
         state = ExecutionState(
@@ -77,6 +78,11 @@ def run(
             command_namespace=command_namespace,
             command_chain=command_chain,
             parsed=parsed,
+        )
+
+        logger.debug(
+            "Executing command: %s",
+            colorize(state.command_name or "-root", fg.ARC_BLUE),
         )
 
         # logger.debug(
@@ -91,6 +97,8 @@ def run(
         #         )
         #     ),
         # )
+
+        utils.header("EXECUTE")
 
         result = command.run(state)
 

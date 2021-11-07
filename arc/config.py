@@ -125,12 +125,9 @@ class Config(ConfigBase):
     ENV_PREFIX = "ARC_"
     namespace_sep: str = ":"
     """Character to seperate command names: `parent:child:granchild`"""
-    arg_assignment: str = "="
-    """Character to seperate argument names from argument values
-    when parsing via keyword `name=value`"""
-    flag_denoter: str = "--"
+    flag_prefix: str = "--"
     """Characters the proceed a flag argument: `--flag`"""
-    short_flag_denoter: str = "-"
+    short_flag_prefix: str = "-"
     """Characters that proceed a shortened flag `-f`"""
     mode: str = "production"
     """The current mode of the application, possible values:

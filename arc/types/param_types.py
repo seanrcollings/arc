@@ -66,7 +66,7 @@ class ParamType:
 
             else:
                 message = "No value provided for required option " + colorize(
-                    config.flag_denoter + param.arg_alias, fg.YELLOW
+                    config.flag_prefix + param.arg_alias, fg.YELLOW
                 )
 
             raise errors.ArgumentError(message)
@@ -293,7 +293,7 @@ class UnionParamType(ParamType):
 
 class LiteralParamType(ParamType):
     name = "Literals"
-    handles = t.Union
+    handles = t.Literal
 
     def g_convert(self, value: t.Any):
         if value in self.args:

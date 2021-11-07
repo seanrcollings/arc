@@ -103,11 +103,11 @@ class Executable(abc.ABC, ParamMixin):
 
     def non_existant_args(self, vals: list[str]):
         if len(vals) == 1:
-            styled = colorize(config.flag_denoter + vals[0], fg.YELLOW)
+            styled = colorize(config.flag_prefix + vals[0], fg.YELLOW)
             message = f"Option {styled} not recognized"
         else:
             styled = " ".join(
-                colorize(config.flag_denoter + arg, fg.YELLOW) for arg in vals
+                colorize(config.flag_prefix + arg, fg.YELLOW) for arg in vals
             )
             message = f"Options {styled} not recognized"
 

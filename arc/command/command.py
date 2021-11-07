@@ -54,7 +54,6 @@ class Command:
 
     def run(self, state: ExecutionState) -> Result:
         """External interface to execute a command"""
-
         return self.executable(state)
 
     ### Building Subcommands ###

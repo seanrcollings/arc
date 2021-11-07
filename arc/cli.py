@@ -1,12 +1,12 @@
 import logging
-from typing import Annotated, Callable, Optional, Any
+from typing import Callable, Optional, Any
 
 from arc import utils
 from arc.autoload import Autoload
 from arc.command.argument_parser import Parsed
 
 from arc.command import Command
-from arc.types import Context
+from arc.types import Context, Param
 from arc.config import config as config_obj
 from arc.run import find_command_chain, get_command_namespace, run
 from arc.execution_state import ExecutionState
@@ -98,9 +98,9 @@ class CLI(Command):
     # pylint: disable=redefined-builtin
     def missing_command(
         self,
-        # _help: Annotated[bool, Meta(name="help", short="h")],
-        # version: Annotated[bool, Meta(short="v")],
         ctx: Context,
+        _help: bool = Param(name="help", short="h"),
+        version: bool = Param(short="v"),
     ):
         """View specific help with "help <command-name>"
 
@@ -143,7 +143,7 @@ class CLI(Command):
 
     def helper(
         self,
-        # command_name: Annotated[str, Meta(default="")]
+        command_name: str = "",
     ):
         """Displays information for a given command
         By default, shows help for the top-level command.

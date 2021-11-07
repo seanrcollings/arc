@@ -60,7 +60,7 @@ class ParamBuilder:
                 if info.default is param.MISSING:
                     info.default = False
 
-            if arg.kind is arg.POSITIONAL_ONLY:
+            elif arg.kind is arg.POSITIONAL_ONLY:
                 raise errors.ArgumentError(
                     "Positional only arguments are not allowed as arc "
                     "passes all arguments by keyword internally"

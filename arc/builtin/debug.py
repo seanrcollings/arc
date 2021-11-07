@@ -1,7 +1,8 @@
 import os
 
-from arc import namespace, config
-from arc.types.type_store import type_store
+from arc import namespace
+from arc.config import config, Config
+from arc.types import param_types
 from arc.present import Table, Box
 
 debug = namespace("debug")
@@ -11,35 +12,29 @@ debug = namespace("debug")
 def config_command():
     """Displays information about the current config of the Arc app"""
     config_items = [
-        ["Namespace Seperator", config.namespace_sep, ":"],
-        ["Argument Assignment", config.arg_assignment, "="],
-        ["Flag Denoter", config.flag_denoter, "--"],
-        ["Mode", config.mode, "production"],
-        ["Converters", "See debug:converters", "-"],
+        [name, getattr(config, name), value.default]
+        for name, value in Config.__dataclass_fields__.items()  # pylint: disable=no-member
     ]
 
-    table = Table(columns=["NAME", "VALUE", "DEFAULT"], rows=config_items)
+    table = Table(
+        columns=[{"name": "NAME", "width": 30}, "VALUE", "DEFAULT"], rows=config_items
+    )
     print(Box(str(table), justify="center", padding=1))
 
 
 @debug.subcommand()
 def converters():
     """Displays information aboubt the currently accessible converters"""
+
     table = Table(
         columns=[
+            {"name": "NAME", "justify": "left"},
             {"name": "TYPE", "justify": "left", "width": 40},
-            {"name": "CONVERTER", "justify": "right"},
-            {"name": "DISPLAY NAME", "justify": "right", "width": 30},
+            {"name": "PARAM TYPE", "justify": "right", "width": 40},
         ],
         rows=[
-            [
-                k,
-                v["converter"].__name__,
-                v["display_name"]
-                if isinstance(v["display_name"], str)
-                else "Context dependant",
-            ]
-            for k, v in type_store.items()
+            [v.name, k, v.__name__]
+            for k, v in param_types.ParamType._param_type_map.items()
         ],
     )
     print(Box(str(table), justify="center", padding=1))

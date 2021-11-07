@@ -162,7 +162,7 @@ class CommandDoc:
             string = format(arg, "usage")
             args.append(string)
 
-        args.append("[" + config.flag_denoter + "]")
+        args.append("[" + config.flag_prefix + "]")
 
         for arg in self.state.command.executable.pos_params.values():
             args.append(format(arg))
