@@ -13,6 +13,7 @@ from arc.types.context import Context
 from arc.config import config
 from arc.color import colorize, fg
 from arc.execution_state import ExecutionState
+from arc.types.range import Range
 from arc.utils import symbol
 
 if t.TYPE_CHECKING:
@@ -40,13 +41,12 @@ class ParamType:
     cleanup: t.Optional[types.MethodType] = None
     handles: t.ClassVar[t.Optional[Annotation]] = None
     allow_missing: bool = False
+    allowed_annotated_args: t.ClassVar[int] = 0
 
     _param_type_map: dict[Annotation, type[ParamType]] = {}
     _param_type_cache: dict[Annotation, ParamType] = {}
 
-    def __init__(
-        self, annotation: Annotation = None, type_info: dict[str, t.Any] = None
-    ):
+    def __init__(self, annotation: Annotation = None, type_info: t.Any = None):
         annotation = annotation or self.handles
         self.annotation = annotation
         self.type_info = type_info
@@ -83,7 +83,7 @@ class ParamType:
                     value = self.g_convert(value)
                 else:
                     value = self.convert(value)
-            except Exception as e:
+            except errors.ConversionError as e:
                 raise errors.ArgumentError(self.fail(value, e)) from e
 
         return value
@@ -123,7 +123,7 @@ class ParamType:
             expected = "a " + expected
 
         return (
-            f"Paramater {colorize(self.param.arg_alias, fg.BLUE)} expected "
+            f"Paramater {colorize(self.param.arg_alias, fg.BLUE)} expects "
             f"{expected}, but was "
             f"{colorize(value, fg.YELLOW)}. {helper}"
         )
@@ -132,31 +132,46 @@ class ParamType:
     def get_param_type(cls, kind: type):
         # Unwrap to handle generic types (list[int])
         base_type = t.get_origin(kind) or kind
-        type_info = {}
+        type_info: t.Optional[tuple] = None
 
         if base_type is t.Annotated:
             args = t.get_args(kind)
             base_type = args[0]
             kind = base_type
-            type_info = args[1]
+            type_info = args[1:]
+
+        param_type = None
 
         if base_type in cls._param_type_cache:
-            breakpoint()
             return cls._param_type_cache[base_type]
 
         # Type is a key
         # We perform this check once before hand
         # because some typing types don't have
         # the mro() method
-        if base_type in cls._param_type_map:
-            return cls._param_type_map[base_type](kind, type_info)
+        elif base_type in cls._param_type_map:
+            param_type = cls._param_type_map[base_type]
 
-        # Type is a subclass of a key
-        for parent in base_type.mro():
-            if parent in cls._param_type_map:
-                return cls._param_type_map[parent](kind, type_info)
+        else:
+            # Type is a subclass of a key
+            for parent in base_type.mro():
+                if parent in cls._param_type_map:
+                    param_type = cls._param_type_map[parent]
 
-        raise errors.ArcError(f"No Param type for {base_type}")
+        if not param_type:
+            raise errors.ArcError(f"No Param type for {base_type}")
+
+        if type_info:
+            if len(type_info) > param_type.allowed_annotated_args:
+                raise errors.ArcError(
+                    f"{param_type.name} permits {param_type.allowed_annotated_args} "
+                    f"annotated arguments. Recieved {len(type_info)}"
+                )
+
+            if param_type.allowed_annotated_args == 1:
+                type_info = type_info[0]
+
+        return param_type(kind, type_info)
 
 
 ## Basic Types
@@ -360,6 +375,7 @@ class FileParamType(ParamType):
     name = "File"
     handles = t.IO
     _file_handle: t.IO
+    allowed_annotated_args = 1
 
     def convert(self, value: str) -> t.IO:
         file = open(value, **self.open_args())
@@ -375,3 +391,24 @@ class FileParamType(ParamType):
             return {"mode": self.type_info}
         if isinstance(self.type_info, dict):
             return self.type_info
+
+
+class RangeParamType(ParamType):
+    name = "Range"
+    handles = Range
+    allowed_annotated_args = 2
+    type_info: tuple[int, int]
+
+    def convert(self, value: str) -> Range:
+        if not self.type_info:
+            raise errors.ArgumentError(
+                "Ranges must have an assocated lower / upper bound."
+            )
+
+        num: int = ParamType.get_param_type(int)(value, self.param, self.state)
+        try:
+            return Range(num, *self.type_info)
+        except AssertionError as e:
+            raise errors.ConversionError(
+                value, f"integer between {self.type_info}"
+            ) from e
