@@ -33,7 +33,7 @@ def converters():
             {"name": "PARAM TYPE", "justify": "right", "width": 40},
         ],
         rows=[
-            [v.name, k, v.__name__]
+            [v.accepts, k, v.__name__]
             for k, v in param_types.ParamType._param_type_map.items()
         ],
     )

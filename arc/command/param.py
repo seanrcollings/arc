@@ -102,6 +102,11 @@ class Param:
         for func in self._cleanup_funcs:
             func()
 
+    def cli_rep(self) -> str:
+        """Provides the representation that
+        would be seen on the command line"""
+        return self.arg_alias
+
     @property
     def optional(self):
         return self.default is not MISSING
@@ -132,15 +137,18 @@ class PositionalParam(Param):
 
 
 class KeywordParam(Param):
-    ...
+    def cli_rep(self) -> str:
+        return f"{config.flag_prefix}{self.arg_alias}"
 
 
 class FlagParam(Param):
-    ...
+    def cli_rep(self) -> str:
+        return f"{config.flag_prefix}{self.arg_alias}"
 
 
 class SpecialParam(Param):
-    ...
+    def cli_rep(self) -> str:
+        return f"Special: {self.arg_alias}"
 
 
 class Selectors:
