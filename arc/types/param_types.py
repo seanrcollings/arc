@@ -28,10 +28,9 @@ MISSING = symbol("MISSING")
 
 Annotation = t.Union[t._SpecialForm, type]
 
-# pylint: disable=abstract-method
+# pylint: disable=abstract-method,inconsistent-return-statements
 
 # TODO:
-# - Add human-readable error-handling for types
 # - Make a more user-friendly api for creating custom types
 
 
@@ -84,11 +83,16 @@ class ParamType:
                     value = self.g_convert(value)
                 else:
                     value = self.convert(value)
-            except Exception:
+            except Exception as e:
                 if self.cleanup:
                     self.param._cleanup_funcs.remove(self.cleanup)
 
-                raise
+                if isinstance(e, errors.InvalidParamaterError):
+                    raise
+                else:
+                    raise errors.InvalidParamaterError(
+                        f"accepts: {self.accepts}, was: {value}", self.param, self.state
+                    ) from e
 
         return value
 
@@ -439,5 +443,5 @@ class RangeParamType(ParamType):
         num: int = ParamType.get_param_type(int)(value, self.param, self.state)
         try:
             return Range(num, *self.type_info)
-        except AssertionError as e:
+        except AssertionError:
             self.fail(f"must be a number between {self.type_info}")
