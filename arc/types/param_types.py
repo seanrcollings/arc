@@ -410,7 +410,7 @@ class FileParamType(ParamType):
             self._file_handle = file
             return file
         except FileNotFoundError:
-            self.fail(f"No file named {value}")
+            return self.fail(f"No file named {value}")
 
     def cleanup(self):
         logger.debug("Closing File handle for: %s", self._file_handle.name)
@@ -444,4 +444,4 @@ class RangeParamType(ParamType):
         try:
             return Range(num, *self.type_info)
         except AssertionError:
-            self.fail(f"must be a number between {self.type_info}")
+            return self.fail(f"must be a number between {self.type_info}")
