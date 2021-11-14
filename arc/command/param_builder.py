@@ -5,6 +5,7 @@ from typing import Any, Optional, get_type_hints, TYPE_CHECKING
 import inspect
 
 from arc import errors
+from arc.config import config
 from arc.color import colorize, fg
 from arc.command import param
 from arc.types.params import ParamInfo
@@ -48,10 +49,19 @@ class ParamBuilder:
         return params
 
     def create_param_info(self, arg: inspect.Parameter) -> ParamInfo:
-        return ParamInfo(
+        info = ParamInfo(
             name=arg.name,
             default=arg.default if arg.default is not arg.empty else param.MISSING,
         )
+
+        # By default, snake_case args are transformed to kebab-case
+        # for the command line. However, this can be ignored
+        # by declaring an explicit name in the Meta()
+        # or by setting the config value to false
+        if config.transform_snake_case:
+            info.name = arg.name.replace("_", "-")
+
+        return info
 
     def negotiate_param_type(self, arg: inspect.Parameter, info: ParamInfo):
         if not info.param_cls:

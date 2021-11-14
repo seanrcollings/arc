@@ -82,7 +82,7 @@ class Command:
                 wrapped = wrapped.executable.wrapped
 
             wrapped_name = wrapped.__name__
-            if config.tranform_snake_case:
+            if config.transform_snake_case:
                 wrapped_name = wrapped_name.replace("_", "-")
 
             command_name = self.handle_command_aliases(name or wrapped_name)

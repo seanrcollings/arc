@@ -199,7 +199,7 @@ class TestKebab:
 
     def test_disable_transform(self, cli: CLI):
         try:
-            config.tranform_snake_case = False
+            config.transform_snake_case = False
 
             @cli.subcommand()
             def two_words(*, first_name: str = "", other_arg: str = ""):
@@ -214,7 +214,7 @@ class TestKebab:
             with pytest.raises(errors.ArgumentError):
                 cli("two_words --first-name sean --other-arg hi")
         finally:
-            config.tranform_snake_case = True
+            config.transform_snake_case = True
 
     def test_explicit_name(self, cli: CLI):
         @cli.subcommand()

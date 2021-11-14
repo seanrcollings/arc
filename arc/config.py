@@ -156,7 +156,7 @@ class Config(ConfigBase):
     """Wether or not to attempt to parse the argument
     section of help documentation to provide better documentation"""
 
-    tranform_snake_case: bool = True
+    transform_snake_case: bool = True
     """Transforms snake_case argument names to kebab-case. Defaults to True"""
 
     color: bool = True
