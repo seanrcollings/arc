@@ -8,12 +8,6 @@ from arc.result import Err
 
 logger = logging.getLogger("arc_logger")
 
-NO_OP = Err("NoOp")
-
-
-def no_op():
-    return NO_OP
-
 
 class handle:
     def __init__(self, *exceptions: type[Exception], exit_code: int = 1):

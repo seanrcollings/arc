@@ -1,8 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from arc import utils
 from arc.config import config
 
+from arc import utils
 
 if TYPE_CHECKING:
     from .command import Command

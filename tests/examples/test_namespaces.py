@@ -10,5 +10,5 @@ class TestNamespace(TestCase):
 
     @patch("sys.stdout", new_callable=StringIO)
     def test_execute(self, mock_out):
-        cli("converse:greet --name Sean")
+        cli("converse:greet Sean")
         self.assertIn("Howdy, Sean!", mock_out.getvalue().strip())

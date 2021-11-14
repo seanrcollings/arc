@@ -103,7 +103,7 @@ def run(
         result = command.run(state)
 
         if check_result:
-            return handle_result(result, command_namespace)
+            return handle_result(result)
 
         return result
 
@@ -170,14 +170,7 @@ def find_command_chain(command: Command, command_namespace: list[str]) -> list[C
     return command_chain
 
 
-def handle_result(result: Result, command_namespace: list[str]):
-    if result is utils.NO_OP:
-        namespace_str = config.namespace_sep.join(command_namespace)
-        raise errors.ExecutionError(
-            f"{colorize(namespace_str, fg.YELLOW)} is not executable. "
-            f"\n\tCheck {colorize('help ' + namespace_str, fg.ARC_BLUE)} for subcommands"
-        )
-
+def handle_result(result: Result):
     if result.err:
         raise errors.ExecutionError(result.unwrap() or "No message")
 
