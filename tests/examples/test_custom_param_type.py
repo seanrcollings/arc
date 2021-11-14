@@ -1,7 +1,7 @@
 from io import StringIO
 from unittest.mock import patch
 from unittest import TestCase
-from examples.custom_converter import Circle, cli
+from examples.custom_param_type import Circle, cli
 
 
 class TestCustomConverter(TestCase):
@@ -9,4 +9,6 @@ class TestCustomConverter(TestCase):
     def test_command(self, mock_out):
         circle = Circle(4)
         cli("circle 4")
-        assert mock_out.getvalue().strip() == str(circle)
+        assert mock_out.getvalue().strip() == str(circle) + "\n" + str(
+            circle.circumference
+        )

@@ -1,7 +1,7 @@
 import pytest
 from typing import Annotated
 from arc import CLI, errors, config
-from arc.types import Meta, ParamType, VarPositional, VarKeyword
+from arc.types import VarPositional, VarKeyword, Param, PosParam, KeyParam, FlagParam
 
 
 class TestSimpleSyntax:
@@ -113,10 +113,10 @@ class TestSimpleSyntax:
             cli("key --val 2")
 
 
-class TestAdvancedSyntax:
+class TestParamSyntax:
     def test_name(self, cli: CLI):
         @cli.subcommand()
-        def na(name: Annotated[str, Meta(type=ParamType.KEY, name="long_name")]):
+        def na(*, name: str = KeyParam(name="long_name")):
             return name
 
         assert cli("na --long_name sean") == "sean"
@@ -126,19 +126,18 @@ class TestAdvancedSyntax:
 
     def test_short_args(self, cli: CLI):
         @cli.subcommand()
-        def ar(name: str, flag: Annotated[bool, Meta(short="f")]):
-            assert name == "sean"
-            assert flag
+        def ar(name: str, flag: bool = FlagParam(short="f")):
+            return name, flag
 
-        cli("ar sean --flag")
-        cli("ar sean -f")
+        assert cli("ar sean --flag") == ("sean", True)
+        assert cli("ar sean -f") == ("sean", True)
 
         with pytest.raises(errors.ArgumentError):
 
             @cli.subcommand()
             def un(
-                arg1: Annotated[bool, Meta(short="a")],
-                arg2: Annotated[bool, Meta(short="a")],
+                arg1: bool = FlagParam(short="a"),
+                arg2: bool = FlagParam(short="a"),
             ):
                 ...
 
@@ -148,38 +147,12 @@ class TestAdvancedSyntax:
 
             @cli.subcommand()
             def un(
-                arg1: Annotated[bool, Meta(short="a")],
-                arg2: Annotated[bool, Meta(short="a2")],
+                arg1: bool = FlagParam(short="a"),
+                arg2: bool = FlagParam(short="a2"),
             ):
                 ...
 
             cli("un -a")
-
-    def test_basic_hook(self, cli: CLI):
-        increment = lambda val, _param, _state: val + 1
-
-        @cli.subcommand()
-        def command(val: Annotated[int, Meta(hooks=[increment])] = 1):
-            return val
-
-        assert cli("command") == 2
-        assert cli("command 2") == 3
-
-    def test_meta_merging(self, cli: CLI):
-        @cli.subcommand()
-        def command(
-            val: Annotated[
-                int,
-                Meta(name="test-val", hooks=[lambda: None]),
-                Meta(short="v", hooks=[lambda: None]),
-            ] = 1
-        ):
-            return val
-
-        assert "test-val" in command.executable.params
-        assert command.executable.params["test-val"].short == "v"
-        # Two additional hooks + the 2 builtin ones
-        assert len(command.executable.params["test-val"].hooks) == 4
 
 
 class TestKebab:
@@ -215,17 +188,3 @@ class TestKebab:
                 cli("two_words --first-name sean --other-arg hi")
         finally:
             config.transform_snake_case = True
-
-    def test_explicit_name(self, cli: CLI):
-        @cli.subcommand()
-        def two_words(
-            *,
-            first_name: str = "",
-            other_arg: Annotated[str, Meta(name="other_arg")] = ""
-        ):
-            return other_arg
-
-        assert cli("two-words --other_arg thing") == "thing"
-
-        with pytest.raises(errors.ArgumentError):
-            assert cli("two-words --other-arg thing") == "thing"

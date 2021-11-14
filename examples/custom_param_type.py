@@ -16,6 +16,7 @@ class Circle:
 
 
 class CircleParamType(ParamType):
+    accepts = "Circle radius"  # used for error handling
     handles = Circle  # Marks it as the ParamType associated with Circle
 
     def convert(self, value: str):
@@ -36,7 +37,7 @@ cli = CLI()
 
 
 @cli.command()
-def circle(*, new_circle: Circle):
+def circle(new_circle: Circle):
     """Displays some info about the circle object the command is passed"""
     print(new_circle)
     print(new_circle.circumference)

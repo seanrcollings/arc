@@ -25,7 +25,14 @@ class ParamBuilder:
         params: dict = {}
         for arg in self.sig.parameters.values():
             arg._annotation = self.annotations.get(arg.name) or str
-            self.argument_hook(arg)
+
+            if arg.kind in (arg.VAR_KEYWORD, arg.VAR_POSITIONAL):
+                raise errors.ArgumentError(
+                    "Arc does not support *args and **kwargs. "
+                    f"Please use their typed counterparts "
+                    f"{colorize('arc.VarPositional', fg.ARC_BLUE)} "
+                    f"and {colorize('arc.VarKeyword', fg.ARC_BLUE)}"
+                )
 
             if isinstance(arg.default, ParamInfo):
                 info: ParamInfo = arg.default
@@ -45,6 +52,12 @@ class ParamBuilder:
             )
 
             params[param_obj.arg_alias] = param_obj
+
+        shorts = [param.short for param in params.values() if param.short]
+        if len(shorts) != len(set(shorts)):
+            raise errors.ArgumentError(
+                "A Command's short argument names must be unique"
+            )
 
         return params
 
@@ -119,53 +132,3 @@ class ParamBuilder:
                     setattr(info, name, value)
 
         return should_negotiate_param_type
-
-    def argument_hook(self, _arg: inspect.Parameter):
-        ...
-
-    def param_hook(self, _param: param.Param):
-        ...
-
-
-class FunctionParamBuilder(ParamBuilder):
-    def argument_hook(self, arg: inspect.Parameter):
-        if arg.kind in (arg.VAR_KEYWORD, arg.VAR_POSITIONAL):
-            raise errors.ArgumentError(
-                "Arc does not support *args and **kwargs. "
-                f"Please use their typed counterparts {colorize('arc.VarPositional', fg.ARC_BLUE)} "
-                f"and {colorize('arc.VarKeyword', fg.ARC_BLUE)}"
-            )
-
-
-class ClassParamBuilder(ParamBuilder):
-    def __init__(self, executable: Executable):
-        self.__build_class_params(executable.wrapped)
-        super().__init__(executable)
-
-    def __build_class_params(self, executable):
-        sig = inspect.signature(executable)
-        annotations = get_type_hints(executable, include_extras=True)
-        defaults = {
-            name: val for name, val in vars(executable).items() if name in annotations
-        }
-
-        sig._parameters = MappingProxyType(  # type: ignore # pylint: disable=protected-access
-            {
-                name: inspect.Parameter(
-                    name=name,
-                    kind=inspect.Parameter.KEYWORD_ONLY
-                    if (default := defaults.get(name, inspect.Parameter.empty))
-                    is not inspect.Parameter.empty
-                    else inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                    default=default,
-                    annotation=annotation,
-                )
-                for name, annotation in annotations.items()
-            }
-        )
-
-        # inspect.signature() checks for a cached signature object
-        # at __signature__. So we can cache it there
-        # to generate the correct signature object for
-        # self.build()
-        executable.__signature__ = sig  # type: ignore

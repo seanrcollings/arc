@@ -23,8 +23,8 @@ def config_command():
 
 
 @debug.subcommand()
-def converters():
-    """Displays information aboubt the currently accessible converters"""
+def types():
+    """Displays information aboubt the currently accessible types"""
 
     table = Table(
         columns=[
@@ -37,7 +37,8 @@ def converters():
             for k, v in param_types.ParamType._param_type_map.items()
         ],
     )
-    print(Box(str(table), justify="center", padding=1))
+    # print(Box(str(table), justify="center", padding=1))
+    print(table)
 
 
 @debug.subcommand()

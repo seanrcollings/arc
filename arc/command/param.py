@@ -142,6 +142,16 @@ class KeywordParam(Param):
 
 
 class FlagParam(Param):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.default not in {True, False, MISSING}:
+            raise errors.ArgumentError(
+                "The default for a FlagParam must be True, False, or not specified."
+            )
+
+        if self.default is MISSING:
+            self.default = False
+
     def cli_rep(self) -> str:
         return f"{config.flag_prefix}{self.arg_alias}"
 
