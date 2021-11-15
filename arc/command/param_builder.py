@@ -49,6 +49,7 @@ class ParamBuilder:
                 arg_alias=info.name,
                 short=info.short,
                 default=info.default,
+                description=info.description,
             )
 
             params[param_obj.arg_alias] = param_obj

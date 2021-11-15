@@ -35,6 +35,7 @@ class Param:
         arg_alias: str = None,
         short: str = None,
         default: Any = MISSING,
+        description: str = None,
     ):
         from arc.types.param_types import ParamType
 
@@ -43,6 +44,7 @@ class Param:
         self.arg_alias: str = arg_alias if arg_alias else arg_name
         self.short: Optional[str] = short
         self.default: Any = default
+        self.description: Optional[str] = description
         self.param_type: ParamType = ParamType.get_param_type(self.annotation)
         self._cleanup_funcs: set[Callable] = set()
 

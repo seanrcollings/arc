@@ -18,12 +18,14 @@ class Command:
         self,
         name: str,
         executable: Callable,
-        context: Optional[Dict] = None,
+        context: Optional[dict] = None,
+        description: Optional[str] = None,
     ):
         self.name = name
-        self.subcommands: Dict[str, Command] = {}
+        self.subcommands: dict[str, Command] = {}
         self.subcommand_aliases: dict[str, str] = {}
         self.context = context or {}
+        self.description: Optional[str] = description
 
         self.executable: Executable = (
             ClassExecutable(executable)
@@ -60,6 +62,7 @@ class Command:
     def subcommand(
         self,
         name: Union[str, list[str], tuple[str, ...]] = None,
+        description: Optional[str] = None,
         context: dict[str, Any] = None,
     ):
         """Create and install a subcommands
@@ -69,6 +72,10 @@ class Command:
                 this subcommand by. Can optionally be a `list` of names. In this case,
                 the first in the list will be treated as the "true" name, and the others
                 will be treated as aliases. If no value is provided, `function.__name__` is used
+
+            description(Optional[str]): Description of the command's function. Can be used
+            to generate documentation.
+
             context (dict[str, Any], optional): Special data that will be
                 passed to this command (and any subcommands) at runtime. Defaults to None.
 
@@ -85,11 +92,7 @@ class Command:
                 wrapped_name = wrapped_name.replace("_", "-")
 
             command_name = self.handle_command_aliases(name or wrapped_name)
-            command = Command(
-                command_name,
-                wrapped,
-                context or {},
-            )
+            command = Command(command_name, wrapped, context or {}, description)
             return self.install_command(command)
 
         return decorator
