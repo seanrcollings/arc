@@ -1,40 +1,4 @@
-from typing import Union, GenericAlias, Sequence, _AnnotatedAlias  # type: ignore
-
-
-def is_annotated(annotation) -> bool:
-    return isinstance(annotation, _AnnotatedAlias)
-
-
-def unwrap(annotation) -> type:
-    """Handles unwrapping `GenericTypes`, `SpecialForms`, etc...
-    To retrive the inner origin type.
-
-    For Example:
-
-    - `list[int] -> list`
-    - `Union[int, str] -> Union`
-    - `File[File.Read] -> File`
-    - `list -> list`
-    """
-    if origin := getattr(annotation, "__origin__", None):
-        return origin
-    else:
-        return annotation
-
-
-def safe_issubclass(cls, classes: Union[type, tuple[type, ...]]) -> bool:
-    """Safe wrapper around issubclass for
-    generic types like Union
-    """
-    cls = unwrap(cls)
-    try:
-        return issubclass(cls, classes)
-    except TypeError:
-        return False
-
-
-def is_alias(alias):
-    return isinstance(alias, GenericAlias) or getattr(alias, "__origin__", False)
+from typing import Sequence
 
 
 def joiner(values: Sequence, join_str: str = ", ", last_str: str = ", "):
@@ -79,10 +43,3 @@ def join_and(values: Sequence) -> str:
         str: joined values
     """
     return joiner(values, last_str=" and ")
-
-
-class UnwrapHelper:
-    @classmethod
-    def is_origin(cls, other: type):
-        other = unwrap(other)
-        return cls is other
