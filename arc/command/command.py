@@ -51,6 +51,19 @@ class Command:
         )
         return doc
 
+    def schema(self):
+        return {
+            "name": self.name,
+            "description": self.description,
+            "context": self.context,
+            "subcommands": {
+                name: command.schema() for name, command in self.subcommands.items()
+            },
+            "parameters": {
+                name: param.schema() for name, param in self.executable.params.items()
+            },
+        }
+
     ### Execution ###
 
     def run(self, state: ExecutionState) -> Result:

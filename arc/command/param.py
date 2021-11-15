@@ -86,6 +86,17 @@ class Param:
 
         return formatted
 
+    def schema(self) -> dict[str, Any]:
+        return {
+            "arg_name": self.arg_name,
+            "arg_alias": self.arg_alias,
+            "annotation": self.annotation,
+            "short": self.short,
+            "default": self.default,
+            "description": self.description,
+            "type": self.__class__.__name__,
+        }
+
     def pre_run(self, state: ExecutionState) -> Any:
         """Hook that is ran before the command is executed. Should
         return the value of the param.

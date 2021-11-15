@@ -128,6 +128,35 @@ class CLI(Command):
 
         return self("help")
 
+    def helper(
+        self,
+        command_name: str = "",
+    ):
+        """Displays information for a given command
+        By default, shows help for the top-level command.
+        To see a specific command's information, provide
+        a command name (some:command:name)
+        """
+        parsed: Parsed = {"pos_values": [command_name], "key_values": {}}
+        namespace = get_command_namespace(parsed)
+        chain = find_command_chain(self, namespace)
+        state = ExecutionState(
+            user_input=[],
+            command_namespace=namespace,
+            command_chain=chain,
+            parsed=parsed,
+        )
+        print(state.command.doc(state))
+
+    def schema(self):
+        return {
+            "name": self.name,
+            "version": self.version,
+            "subcommands": {
+                name: command.schema() for name, command in self.subcommands.items()
+            },
+        }
+
     def autocomplete(self, completions_for: str = None):
         """Enables autocompletion support for this CLI
 
@@ -149,26 +178,6 @@ class CLI(Command):
         """Attempts to autoload command objects
         into the CLI from the provided paths"""
         Autoload(paths, self).load()
-
-    def helper(
-        self,
-        command_name: str = "",
-    ):
-        """Displays information for a given command
-        By default, shows help for the top-level command.
-        To see a specific command's information, provide
-        a command name (some:command:name)
-        """
-        parsed: Parsed = {"pos_values": [command_name], "key_values": {}}
-        namespace = get_command_namespace(parsed)
-        chain = find_command_chain(self, namespace)
-        state = ExecutionState(
-            user_input=[],
-            command_namespace=namespace,
-            command_chain=chain,
-            parsed=parsed,
-        )
-        print(state.command.doc(state))
 
     def __logging_setup(self):
         root = logging.getLogger("arc_logger")
