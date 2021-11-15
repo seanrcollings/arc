@@ -11,17 +11,20 @@ class ParamInfo:
         name: str = None,
         short: str = None,
         default: Any = param.MISSING,
+        description: str = None,
     ):
         self.param_cls = param_cls
         self.name = name
         self.short = short
         self.default = default
+        self.description = description
 
 
 def Param(
     name: str = None,
     short: str = None,
     default: Any = param.MISSING,
+    description: str = None,
 ) -> Any:
     """A CLI Paramater. Automatically decides whether it is
     a `positional`, `keyword`, or `flag` paramater.
@@ -43,13 +46,14 @@ def Param(
     2 3 True
     ```
     """
-    return ParamInfo(None, name, short, default)
+    return ParamInfo(None, name, short, default, description)
 
 
 def PosParam(
     name: str = None,
     short: str = None,
     default: Any = param.MISSING,
+    description: str = None,
 ) -> Any:
     """A CLI Paramater. Input will be passed in positionally.
 
@@ -65,37 +69,40 @@ def PosParam(
     2
     ```
     """
-    return ParamInfo(param.PositionalParam, name, short, default)
+    return ParamInfo(param.PositionalParam, name, short, default, description)
 
 
 def KeyParam(
     name: str = None,
     short: str = None,
     default: Any = param.MISSING,
+    description: str = None,
 ) -> Any:
     """A CLI parameter. Input will be passed in by keyword"""
-    return ParamInfo(param.KeywordParam, name, short, default)
+    return ParamInfo(param.KeywordParam, name, short, default, description)
 
 
 def FlagParam(
     name: str = None,
     short: str = None,
     default: Any = param.MISSING,
+    description: str = None,
 ) -> Any:
     """A CLI parameter. Input will be passed in by
     keyword, but a value is not neccessary"""
-    return ParamInfo(param.FlagParam, name, short, default)
+    return ParamInfo(param.FlagParam, name, short, default, description)
 
 
 def SpecialParam(
     name: str = None,
     short: str = None,
     default: Any = param.MISSING,
+    description: str = None,
 ) -> Any:
     """Special Params do not select a value from user input.
     As such, they're values must originate elsewhere, or be manually selected.
     """
-    return ParamInfo(param.SpecialParam, name, short, default)
+    return ParamInfo(param.SpecialParam, name, short, default, description)
 
 
 T = TypeVar("T")
@@ -106,6 +113,7 @@ def __cls_deco_factory(param_cls: type[param.Param]):
         name: str = None,
         short: str = None,
         default: Any = param.MISSING,
+        description: str = None,
         overwrite: bool = False,
     ):
         def inner(cls: T) -> T:
@@ -117,6 +125,7 @@ def __cls_deco_factory(param_cls: type[param.Param]):
                     "name": name,
                     "short": short,
                     "default": default,
+                    "description": description,
                     "overwrite": overwrite,
                 },
             )
