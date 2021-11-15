@@ -1,17 +1,16 @@
 from __future__ import annotations
-from typing import Any, Callable, Generator, Optional, TYPE_CHECKING, Sequence
+from typing import Any, Callable, Optional
 
 from arc import errors
-from arc.color import colorize, fg
 from arc.config import config
 from arc.execution_state import ExecutionState
-from arc.types.params import MISSING, ParamType
-from arc.types import convert
+from arc.result import Result
+from arc.utils.other import symbol
 
-if TYPE_CHECKING:
-    from arc.types import Meta
-
-HookFunction = Callable[[Any, "Param", ExecutionState], Any]
+# Represents a missing value
+# Used to represent an arguments
+# with no default value
+MISSING = symbol("MISSING")
 
 
 class Param:
@@ -25,12 +24,8 @@ class Param:
             `arg_name` if no other value is provided
         annotation (type): The type of the argument
         default (Any): Default value for the argument
-        hidden (bool): Whether or not the value is visible to the
-            command  line. Usually used to hide `Context` arguments
         short (str): the single-character shortened name for the
             argument on the command line
-        hooks (list[Callable]): list of callables that will recieve the
-            provided data-type at runtime and return a modified value
     """
 
     def __init__(
@@ -38,39 +33,31 @@ class Param:
         arg_name: str,
         annotation: type,
         arg_alias: str = None,
-        type: ParamType = ParamType.POS,
         short: str = None,
-        hidden: bool = False,
         default: Any = MISSING,
-        hooks: Sequence[HookFunction] = None,
     ):
+        from arc.types.param_types import ParamType
+
         self.annotation = annotation
         self.arg_name: str = arg_name
         self.arg_alias: str = arg_alias if arg_alias else arg_name
-        self.type: ParamType = type
         self.short: Optional[str] = short
-        self.hidden: bool = hidden
         self.default: Any = default
-        self.hooks: Sequence[Hook] = BuiltinHooks.wrap(hooks)
+        self.param_type: ParamType = ParamType.get_param_type(self.annotation)
+        self._cleanup_funcs: set[Callable] = set()
 
         if self.short and len(self.short) > 1:
             raise errors.ArgumentError(
                 f"Argument {self.arg_name}'s shortened name is longer than 1 character"
             )
 
-    def start_hooks(self, val: Any, state: ExecutionState):
-        for hook in self.hooks:
-            val = hook.start_hook(val, self, state)
-        return val
-
-    def end_hooks(self, val: Any):
-        for hook in self.hooks:
-            hook.end_hook(val)
-
     def __repr__(self):
         type_name = getattr(self.annotation, "__name__", self.annotation)
 
-        return f"<Param {self.arg_name}({self.type}): {type_name} = {self.default}>"
+        return (
+            f"<{self.__class__.__name__} {self.arg_name}"
+            f"({self.__class__.__name__}): {type_name} = {self.default}>"
+        )
 
     def __format__(self, spec: str):
         modifiers = spec.split("|")
@@ -82,9 +69,9 @@ class Param:
             if "short" in modifiers:
                 assert self.short
                 name = self.short
-                denoter = config.short_flag_denoter
+                denoter = config.short_flag_prefix
             else:
-                denoter = config.flag_denoter
+                denoter = config.flag_prefix
 
             formatted = f"{denoter}{name}"
 
@@ -97,90 +84,108 @@ class Param:
 
         return formatted
 
+    def pre_run(self, state: ExecutionState) -> Any:
+        """Hook that is ran before the command is executed. Should
+        return the value of the param.
+        """
+        value = Selectors.select_value(self, state)
+        return self.convert(value, state)
+
+    def post_run(self, res: Result):
+        """Hook that runs after the command is excuted."""
+        self.cleanup()
+
+    def convert(self, value: str, state):
+        return self.param_type(value, self, state)
+
+    def cleanup(self):
+        for func in self._cleanup_funcs:
+            func()
+
+    def cli_rep(self) -> str:
+        """Provides the representation that
+        would be seen on the command line"""
+        return self.arg_alias
+
     @property
     def optional(self):
         return self.default is not MISSING
 
     @property
     def is_keyword(self):
-        return self.type is ParamType.KEY
+        return isinstance(self, KeywordParam)
 
     @property
     def is_positional(self):
-        return self.type is ParamType.POS
+        return isinstance(self, PositionalParam)
 
     @property
     def is_flag(self):
-        return self.type is ParamType.FLAG
+        return isinstance(self, FlagParam)
 
     @property
     def is_special(self):
-        return self.type is ParamType.SPECIAL
+        return isinstance(self, SpecialParam)
+
+    @property
+    def hidden(self):
+        return self.is_special
 
 
-class Hook:
-    def __init__(self, func: HookFunction):
-        self.func = func
-        self.gen: Optional[Generator] = None
-
-    def start_hook(self, value: Any, param: Param, state: ExecutionState):
-        val = self.func(value, param, state)
-        if isinstance(val, Generator):
-            self.gen = val
-            return next(self.gen)
-        else:
-            return val
-
-    def end_hook(self, value: Any):
-        if self.gen:
-            try:
-                self.gen.send(value)
-            except StopIteration:
-                ...
+class PositionalParam(Param):
+    ...
 
 
-class BuiltinHooks:
+class KeywordParam(Param):
+    def cli_rep(self) -> str:
+        return f"{config.flag_prefix}{self.arg_alias}"
+
+
+class FlagParam(Param):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.default not in {True, False, MISSING}:
+            raise errors.ArgumentError(
+                "The default for a FlagParam must be True, False, or not specified."
+            )
+
+        if self.default is MISSING:
+            self.default = False
+
+    def cli_rep(self) -> str:
+        return f"{config.flag_prefix}{self.arg_alias}"
+
+
+class SpecialParam(Param):
+    def cli_rep(self) -> str:
+        return f"Special: {self.arg_alias}"
+
+
+class Selectors:
     @staticmethod
-    def wrap(user_hooks: Optional[Sequence[HookFunction]]):
-        """Sandwiches the user hooks in between the `pre_run` and `post_run` builtin hooks
-        and wraps each function in the `Hook` class
-        """
-        hooks: list[Hook] = [Hook(BuiltinHooks.pre_run)]
+    def select_value(param: Param, state: ExecutionState):
+        default = param.default
 
-        if user_hooks:
-            hooks.extend(Hook(hook) for hook in user_hooks)
-
-        hooks.append(Hook(BuiltinHooks.post_run))
-        return hooks
-
-    @staticmethod
-    def pre_run(default: Any, param: Param, state: ExecutionState) -> Any:
-        # Special params are expected to be handled on
-        # a type-by-type basis, so the other handers
-        # don't apply. These would generally be user-defined
         if param.is_special:
             return default
 
         if param.is_positional:
-            value = BuiltinHooks.positional_hook(default, param, state)
+            value = Selectors.select_positional_value(default, param, state)
         elif param.is_keyword:
-            value = BuiltinHooks.keyword_hook(default, param, state)
+            value = Selectors.select_keyword_value(default, param, state)
         elif param.is_flag:
-            value = BuiltinHooks.flag_hook(default, param, state)
-
-        if isinstance(value, str):
-            value = BuiltinHooks.convert_hook(value, param, state)
+            value = Selectors.select_flag_value(default, param, state)
 
         return value
 
     @staticmethod
-    def positional_hook(default: Any, _param: Param, state: ExecutionState):
+    def select_positional_value(default: Any, _param: Param, state: ExecutionState):
         assert state.parsed
         pos_args = state.parsed["pos_values"]
         return default if len(pos_args) == 0 else pos_args.pop(0)
 
     @staticmethod
-    def keyword_hook(default: Any, param: Param, state: ExecutionState):
+    def select_keyword_value(default: Any, param: Param, state: ExecutionState):
         assert state.parsed
 
         options = state.parsed["key_values"]
@@ -194,7 +199,7 @@ class BuiltinHooks:
         return value
 
     @staticmethod
-    def flag_hook(default: bool, param: Param, state: ExecutionState):
+    def select_flag_value(default: bool, param: Param, state: ExecutionState):
         assert state.parsed
 
         flags = state.parsed["key_values"]
@@ -206,30 +211,3 @@ class BuiltinHooks:
             return not default
         else:
             return default
-
-    @staticmethod
-    def convert_hook(value: str, param: Param, _state: ExecutionState):
-        return convert(value, param.annotation, param.arg_alias)
-
-    @staticmethod
-    def post_run(value: Any, param: Param, state: ExecutionState):
-        value = BuiltinHooks.missing_hook(value, param, state)
-        return value
-
-    @staticmethod
-    def missing_hook(value: Any, param: Param, _state: ExecutionState):
-        if value is MISSING:
-            if param.is_positional:
-                message = (
-                    "No value provided for required positional argument: "
-                    + colorize(param.arg_alias, fg.YELLOW)
-                )
-
-            else:
-                message = "No value provided for required option " + colorize(
-                    config.flag_denoter + param.arg_alias, fg.YELLOW
-                )
-
-            raise errors.ArgumentError(message)
-
-        return value

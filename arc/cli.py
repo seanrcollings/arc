@@ -1,15 +1,16 @@
 import logging
-from typing import Annotated, Callable, Optional, Any
+from typing import Callable, Optional, Any
 
 from arc import utils
 from arc.autoload import Autoload
 from arc.command.argument_parser import Parsed
 
-from arc.types.params import Meta, VarKeyword
-from arc.command import Command, Context
+from arc.command import Command
+from arc.types import Context, Param, VarKeyword
 from arc.config import config as config_obj
 from arc.run import find_command_chain, get_command_namespace, run
 from arc.execution_state import ExecutionState
+from arc.types.var_types import VarPositional
 
 
 class CLI(Command):
@@ -81,6 +82,8 @@ class CLI(Command):
         as `Command.subcommand`
         """
 
+        # Current limitation: default command can only accept
+        # keyword arguments.
         def decorator(wrapped):
             if isinstance(wrapped, Command):
                 wrapped = wrapped.executable.wrapped
@@ -98,10 +101,11 @@ class CLI(Command):
     # pylint: disable=redefined-builtin
     def missing_command(
         self,
-        _help: Annotated[bool, Meta(name="help", short="h")],
-        version: Annotated[bool, Meta(short="v")],
         ctx: Context,
+        args: VarPositional,
         kwargs: VarKeyword,
+        _help: bool = Param(name="help", short="h"),
+        version: bool = Param(short="v"),
     ):
         """View specific help with "help <command-name>"
 
@@ -116,6 +120,10 @@ class CLI(Command):
             return
         elif self.default_action:
             ctx.state.command_chain += [self.default_action]
+            ctx.state.parsed = {
+                "pos_values": args,
+                "key_values": kwargs,
+            }
             return self.default_action.run(ctx.state)
 
         return self("help")
@@ -142,7 +150,10 @@ class CLI(Command):
         into the CLI from the provided paths"""
         Autoload(paths, self).load()
 
-    def helper(self, command_name: Annotated[str, Meta(default="")]):
+    def helper(
+        self,
+        command_name: str = "",
+    ):
         """Displays information for a given command
         By default, shows help for the top-level command.
         To see a specific command's information, provide

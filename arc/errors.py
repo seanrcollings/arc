@@ -1,3 +1,14 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from arc import color
+
+
+if TYPE_CHECKING:
+    from arc.command.param import Param
+    from arc.execution_state import ExecutionState
+
+
 class ArcError(Exception):
     """Base Arc Exception"""
 
@@ -45,7 +56,15 @@ class MissingArgError(ArgumentError):
         self.data = data
 
 
-class ConversionError(ArcError):
+class InvalidParamaterError(ArgumentError):
+    def __init__(self, message: str, param: Param, state: ExecutionState):
+        arg = color.colorize(param.cli_rep(), color.fg.ARC_BLUE)
+        super().__init__(f"Invalid value for {arg}: {message}")
+        self.param = param
+        self.state = state
+
+
+class ConversionError(ArgumentError):
     """Raised if a type conversion fails """
 
     def __init__(self, value, expected: str, helper_text: str = ""):

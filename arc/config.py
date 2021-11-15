@@ -105,11 +105,11 @@ class ConfigBase:
 
     def __convert_loaded_value(self, name: str, value: str):
         # pylint: disable=import-outside-toplevel
-        from arc.types import type_store
+        return value
 
-        annotation = get_type_hints(self)[name]
-        converter = type_store.get_converter(annotation)
-        return converter(annotation).convert(value)
+        # annotation = get_type_hints(self)[name]
+        # converter = type_store.get_converter(annotation)
+        # return converter(annotation).convert(value)
 
     def post_load(self):
         """Executed after a loading a config from file or from env
@@ -125,12 +125,9 @@ class Config(ConfigBase):
     ENV_PREFIX = "ARC_"
     namespace_sep: str = ":"
     """Character to seperate command names: `parent:child:granchild`"""
-    arg_assignment: str = "="
-    """Character to seperate argument names from argument values
-    when parsing via keyword `name=value`"""
-    flag_denoter: str = "--"
+    flag_prefix: str = "--"
     """Characters the proceed a flag argument: `--flag`"""
-    short_flag_denoter: str = "-"
+    short_flag_prefix: str = "-"
     """Characters that proceed a shortened flag `-f`"""
     mode: str = "production"
     """The current mode of the application, possible values:
@@ -159,7 +156,7 @@ class Config(ConfigBase):
     """Wether or not to attempt to parse the argument
     section of help documentation to provide better documentation"""
 
-    tranform_snake_case: bool = True
+    transform_snake_case: bool = True
     """Transforms snake_case argument names to kebab-case. Defaults to True"""
 
     color: bool = True

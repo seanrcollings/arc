@@ -1,6 +1,7 @@
 from typing_extensions import TypedDict, get_args
 import pytest
-from arc import run, CLI, namespace, errors, Context
+from arc import run, CLI, namespace, errors
+from arc.types import Context
 
 
 @pytest.fixture(scope="function")

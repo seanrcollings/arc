@@ -5,8 +5,8 @@ import re
 import enum
 from arc.config import config
 from arc.utils import IDENT
-from arc.types.params import MISSING
 from arc.utils.other import symbol
+from arc.command.param import MISSING
 
 
 logger = logging.getLogger("arc_logger")
@@ -20,9 +20,9 @@ class TokenType(enum.Enum):
 
 
 matchers = {
-    TokenType.KEYWORD: re.compile(fr"^{config.flag_denoter}({IDENT})$"),
-    TokenType.SHORT_KEYWORD: re.compile(fr"^{config.short_flag_denoter}([a-zA-Z]+)$"),
-    TokenType.POS_ONLY: re.compile(fr"^({config.flag_denoter})$"),
+    TokenType.KEYWORD: re.compile(fr"^{config.flag_prefix}({IDENT})$"),
+    TokenType.SHORT_KEYWORD: re.compile(fr"^{config.short_flag_prefix}([a-zA-Z]+)$"),
+    TokenType.POS_ONLY: re.compile(fr"^({config.flag_prefix})$"),
     TokenType.VALUE: re.compile(r"^(.+)$"),
 }
 
@@ -48,7 +48,7 @@ class Lexer:
             curr: str = self.to_tokenize.pop(0)
             for name, regex in matchers.items():
                 if match := regex.match(curr):
-                    logger.debug(f"Matched {curr} -> {name}")
+                    logger.debug("Matched %s -> %s", curr, name)
                     self.add_token(match, name)
                     break
             else:

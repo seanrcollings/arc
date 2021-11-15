@@ -1,6 +1,7 @@
+import inspect
 import pprint
-from types import FunctionType
-from typing import Any, Callable, Optional, Protocol
+from types import FunctionType, MappingProxyType
+from typing import Any, Callable, Optional, Protocol, get_type_hints
 import logging
 import abc
 
@@ -15,11 +16,7 @@ from arc.command.argument_parser import Parsed
 from arc.types.helpers import join_and
 from arc.callbacks.callback_store import CallbackStore
 from arc.command.param_mixin import ParamMixin
-from arc.command.param_builder import (
-    ClassParamBuilder,
-    FunctionParamBuilder,
-    ParamBuilder,
-)
+from arc.command.param_builder import ParamBuilder
 
 logger = logging.getLogger("arc_logger")
 
@@ -27,7 +24,7 @@ BAR = "―" * 40
 
 
 class Executable(abc.ABC, ParamMixin):
-    builder: type[ParamBuilder]
+    builder: type[ParamBuilder] = ParamBuilder
     state: ExecutionState
 
     def __init__(self, wrapped: Callable):
@@ -47,8 +44,7 @@ class Executable(abc.ABC, ParamMixin):
             # will be passed to the wrapped function or class
             arguments: dict[str, Any] = {}
             for param in self.params.values():
-                value = param.default
-                value = param.start_hooks(value, self.state)
+                value = param.pre_run(self.state)
                 arguments[param.arg_name] = value
 
             self.exhastive_check(parsed)
@@ -67,7 +63,8 @@ class Executable(abc.ABC, ParamMixin):
         finally:
             logger.debug(BAR)
             for param in self.params.values():
-                param.end_hooks(result)
+                param.post_run(result)
+
             self.callback_store.post_execution(result)
 
         return result
@@ -103,11 +100,11 @@ class Executable(abc.ABC, ParamMixin):
 
     def non_existant_args(self, vals: list[str]):
         if len(vals) == 1:
-            styled = colorize(config.flag_denoter + vals[0], fg.YELLOW)
+            styled = colorize(config.flag_prefix + vals[0], fg.YELLOW)
             message = f"Option {styled} not recognized"
         else:
             styled = " ".join(
-                colorize(config.flag_denoter + arg, fg.YELLOW) for arg in vals
+                colorize(config.flag_prefix + arg, fg.YELLOW) for arg in vals
             )
             message = f"Options {styled} not recognized"
 
@@ -140,7 +137,6 @@ class Executable(abc.ABC, ParamMixin):
 
 
 class FunctionExecutable(Executable):
-    builder = FunctionParamBuilder
     wrapped: FunctionType
 
     def run(self, args: dict[str, Any]):
@@ -153,7 +149,6 @@ class WrappedClassExecutable(Protocol):
 
 
 class ClassExecutable(Executable):
-    builder = ClassParamBuilder
     wrapped: type[WrappedClassExecutable]
 
     def __init__(self, wrapped: type[WrappedClassExecutable]):
@@ -163,6 +158,7 @@ class ClassExecutable(Executable):
             )
 
         super().__init__(wrapped)
+        self.__build_class_params()
 
     def run(self, args: dict[str, Any]):
         instance = self.wrapped()
@@ -170,3 +166,31 @@ class ClassExecutable(Executable):
             setattr(instance, key, val)
 
         return instance.handle()
+
+    def __build_class_params(self):
+        sig = inspect.signature(self.wrapped)
+        annotations = get_type_hints(self.wrapped, include_extras=True)
+        defaults = {
+            name: val for name, val in vars(self.wrapped).items() if name in annotations
+        }
+
+        sig._parameters = MappingProxyType(  # type: ignore # pylint: disable=protected-access
+            {
+                name: inspect.Parameter(
+                    name=name,
+                    kind=inspect.Parameter.KEYWORD_ONLY
+                    if (default := defaults.get(name, inspect.Parameter.empty))
+                    is not inspect.Parameter.empty
+                    else inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    default=default,
+                    annotation=annotation,
+                )
+                for name, annotation in annotations.items()
+            }
+        )
+
+        # inspect.signature() checks for a cached signature object
+        # at __signature__. So we can cache it there
+        # to generate the correct signature object for
+        # self.build()
+        self.wrapped.__signature__ = sig  # type: ignore

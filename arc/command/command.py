@@ -2,7 +2,6 @@ from typing import Dict, Callable, Optional, Any, Union
 import logging
 
 from arc.color import effects, fg
-from arc import utils
 from arc.result import Result
 from arc.config import config
 from arc.execution_state import ExecutionState
@@ -54,7 +53,6 @@ class Command:
 
     def run(self, state: ExecutionState) -> Result:
         """External interface to execute a command"""
-
         return self.executable(state)
 
     ### Building Subcommands ###
@@ -83,7 +81,7 @@ class Command:
                 wrapped = wrapped.executable.wrapped
 
             wrapped_name = wrapped.__name__
-            if config.tranform_snake_case:
+            if config.transform_snake_case:
                 wrapped_name = wrapped_name.replace("_", "-")
 
             command_name = self.handle_command_aliases(name or wrapped_name)
@@ -136,4 +134,6 @@ class Command:
         return name
 
     def is_namespace(self):
-        return self.function is utils.no_op
+        from . import command_builders
+
+        return self.function is command_builders.no_op
