@@ -6,10 +6,11 @@ from arc.autoload import Autoload
 from arc.command.argument_parser import Parsed
 
 from arc.command import Command
-from arc.types import Context, Param
+from arc.types import Context, Param, VarKeyword
 from arc.config import config as config_obj
 from arc.run import find_command_chain, get_command_namespace, run
 from arc.execution_state import ExecutionState
+from arc.types.var_types import VarPositional
 
 
 class CLI(Command):
@@ -81,6 +82,8 @@ class CLI(Command):
         as `Command.subcommand`
         """
 
+        # Current limitation: default command can only accept
+        # keyword arguments.
         def decorator(wrapped):
             if isinstance(wrapped, Command):
                 wrapped = wrapped.executable.wrapped
@@ -99,6 +102,8 @@ class CLI(Command):
     def missing_command(
         self,
         ctx: Context,
+        args: VarPositional,
+        kwargs: VarKeyword,
         _help: bool = Param(name="help", short="h"),
         version: bool = Param(short="v"),
     ):
@@ -115,6 +120,10 @@ class CLI(Command):
             return
         elif self.default_action:
             ctx.state.command_chain += [self.default_action]
+            ctx.state.parsed = {
+                "pos_values": args,
+                "key_values": kwargs,
+            }
             return self.default_action.run(ctx.state)
 
         return self("help")

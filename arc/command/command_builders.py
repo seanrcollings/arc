@@ -8,7 +8,7 @@ from arc.config import config
 from arc.command.command import Command
 
 
-def _no_op(ctx: Context):
+def no_op(ctx: Context):
     namespace_str = config.namespace_sep.join(ctx.state.command_namespace)
 
     return result.Err(
@@ -39,7 +39,7 @@ def namespace(name: str, **kwargs) -> Command:
     When installed into a CLI, the function could be executed with `ns:hello`
     but `ns` would not be a valid command
     """
-    c = Command(name, _no_op, **kwargs)
+    c = Command(name, no_op, **kwargs)
     c.__autoload__ = True  # type: ignore
     return c
 

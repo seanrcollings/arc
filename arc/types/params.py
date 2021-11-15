@@ -1,6 +1,6 @@
 """Public API for hanlding paramater modification"""
 from __future__ import annotations
-from typing import Any
+from typing import Any, TypeVar
 from arc.command import param
 
 
@@ -98,6 +98,9 @@ def SpecialParam(
     return ParamInfo(param.SpecialParam, name, short, default)
 
 
+T = TypeVar("T")
+
+
 def __cls_deco_factory(param_cls: type[param.Param]):
     def decorator(
         name: str = None,
@@ -105,7 +108,7 @@ def __cls_deco_factory(param_cls: type[param.Param]):
         default: Any = param.MISSING,
         overwrite: bool = False,
     ):
-        def inner(cls: type):
+        def inner(cls: T) -> T:
             setattr(
                 cls,
                 "__param_info__",

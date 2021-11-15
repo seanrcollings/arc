@@ -2,7 +2,6 @@ from typing import Dict, Callable, Optional, Any, Union
 import logging
 
 from arc.color import effects, fg
-from arc import utils
 from arc.result import Result
 from arc.config import config
 from arc.execution_state import ExecutionState
@@ -135,4 +134,6 @@ class Command:
         return name
 
     def is_namespace(self):
-        return self.function is utils.no_op
+        from . import command_builders
+
+        return self.function is command_builders.no_op
