@@ -1,5 +1,5 @@
 from __future__ import annotations
-import logging
+from arc import logging
 from types import MappingProxyType
 from typing import Any, Optional, get_type_hints, TYPE_CHECKING
 import inspect
@@ -13,7 +13,7 @@ from arc.types.params import ParamInfo
 if TYPE_CHECKING:
     from arc.command.executable import Executable
 
-logger = logging.getLogger("arc_logger")
+logger = logging.getArcLogger("prb")
 
 
 class ParamBuilder:

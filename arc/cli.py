@@ -1,9 +1,9 @@
-import logging
 from typing import Callable, Optional, Any
 
 from arc import utils
 from arc.autoload import Autoload
 from arc.command.argument_parser import Parsed
+from arc import logging
 
 from arc.command import Command
 from arc.types import Context, Param, VarKeyword
@@ -46,7 +46,7 @@ class CLI(Command):
         if config_file:
             config_obj.from_file(config_file)
 
-        self.__logging_setup()
+        logging.root_setup()
         utils.header("INIT")
         self.version = version
         self.install_command(Command("help", self.helper))
@@ -178,28 +178,3 @@ class CLI(Command):
         """Attempts to autoload command objects
         into the CLI from the provided paths"""
         Autoload(paths, self).load()
-
-    def __logging_setup(self):
-        root = logging.getLogger("arc_logger")
-        if len(root.handlers) == 0:
-            level = config_obj.mode_map.get(config_obj.mode, logging.WARNING)
-            root.setLevel(level)
-            handler = logging.StreamHandler()
-            formatter = ArcFormatter()
-            handler.setFormatter(formatter)
-            root.addHandler(handler)
-
-
-class ArcFormatter(logging.Formatter):
-    def format(self, record: logging.LogRecord):
-        from arc.color import colorize, effects, fg
-
-        prefixes = {
-            logging.INFO: colorize("🛈 ", fg.BLUE),
-            logging.WARNING: colorize("WARNING", fg.YELLOW, effects.BOLD) + ": ",
-            logging.ERROR: colorize("ERROR", fg.RED, effects.BOLD) + ": ",
-        }
-
-        prefix = prefixes.get(record.levelno, "")
-        record.msg = prefix + str(record.msg)
-        return super().format(record)

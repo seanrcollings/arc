@@ -1,9 +1,8 @@
-import logging
 import pytest
 
-from arc import CLI
+from arc import CLI, logging
 
-logger = logging.getLogger("arc_logger")
+logger = logging.getArcLogger()
 
 
 @pytest.fixture

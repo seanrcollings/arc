@@ -6,7 +6,7 @@ from __future__ import annotations
 import enum
 import typing as t
 import types
-import logging
+from arc import logging
 from pathlib import Path
 from arc import errors
 from arc.types.context import Context
@@ -21,7 +21,7 @@ from arc.utils import symbol
 if t.TYPE_CHECKING:
     from arc.command.param import Param
 
-logger = logging.getLogger("arc_logger")
+logger = logging.getArcLogger("prt")
 
 
 MISSING = symbol("MISSING")

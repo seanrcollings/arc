@@ -1,4 +1,4 @@
-import logging
+from arc import logging
 from typing import TypedDict, Union
 from dataclasses import dataclass
 import re
@@ -9,7 +9,7 @@ from arc.utils.other import symbol
 from arc.command.param import MISSING
 
 
-logger = logging.getLogger("arc_logger")
+logger = logging.getArcLogger("prs")
 
 
 class TokenType(enum.Enum):

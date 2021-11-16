@@ -1,5 +1,5 @@
 from typing import Dict, Callable, Optional, Any, Union
-import logging
+from arc import logging
 
 from arc.color import effects, fg
 from arc.result import Result
@@ -10,7 +10,7 @@ from .command_doc import CommandDoc
 from .executable import Executable, FunctionExecutable, ClassExecutable
 
 
-logger = logging.getLogger("arc_logger")
+logger = logging.getArcLogger("com")
 
 
 class Command:

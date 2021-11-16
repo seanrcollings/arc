@@ -31,7 +31,7 @@ def test_execute(cli: CLI):
 
 
 def test_nonexistant_command(cli: CLI):
-    with pytest.raises(CommandError), mock.patch("arc.utils.handle"):
+    with pytest.raises(CommandError):
         cli("doesnotexist x=2")
 
 

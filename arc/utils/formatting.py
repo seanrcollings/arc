@@ -1,8 +1,8 @@
-import logging
+from arc import logging
 from arc.color import fg, effects, colorize
 
 
-logger = logging.getLogger("arc_logger")
+logger = logging.getArcLogger("utl")
 
 
 def indent(string: str, distance="\t", split="\n"):

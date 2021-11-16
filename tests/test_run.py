@@ -1,4 +1,3 @@
-from arc.utils.exceptions import handle
 import pytest
 
 from arc import CLI

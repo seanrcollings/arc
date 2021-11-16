@@ -1,11 +1,11 @@
 import pprint
 from typing import Optional, Union
-import logging
 import re
 import shlex
 import sys
 import contextlib
 
+from arc import logging
 from arc import utils, errors
 from arc.color import colorize, effects, fg
 from arc.command import Command, helpers
@@ -14,7 +14,7 @@ from arc.config import config
 from arc.result import Result
 from arc.execution_state import ExecutionState
 
-logger = logging.getLogger("arc_logger")
+logger = logging.getArcLogger("run")
 
 namespace_seperated = re.compile(
     fr"\A\b((?:(?:{utils.IDENT}{config.namespace_sep})+"

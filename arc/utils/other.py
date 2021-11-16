@@ -1,10 +1,10 @@
-import logging
+from arc import logging
 import functools
 import re
 import time
 from arc.color import fg, effects
 
-logger = logging.getLogger("arc_logger")
+logger = logging.getArcLogger("utl")
 
 IDENT = r"[a-zA-Z-_0-9]+"
 

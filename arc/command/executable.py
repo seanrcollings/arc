@@ -2,7 +2,7 @@ import inspect
 import pprint
 from types import FunctionType, MappingProxyType
 from typing import Any, Callable, Optional, Protocol, get_type_hints
-import logging
+from arc import logging
 import abc
 
 from arc import errors
@@ -18,7 +18,7 @@ from arc.callbacks.callback_store import CallbackStore
 from arc.command.param_mixin import ParamMixin
 from arc.command.param_builder import ParamBuilder
 
-logger = logging.getLogger("arc_logger")
+logger = logging.getArcLogger("exe")
 
 BAR = "―" * 40
 
@@ -49,7 +49,7 @@ class Executable(abc.ABC, ParamMixin):
 
             self.exhastive_check(parsed)
 
-            logger.debug("Function Arguments: %s", pprint.pformat(arguments))
+            logger.info("Function Arguments: %s", pprint.pformat(arguments))
 
             self.callback_store.pre_execution(arguments)
             logger.debug(BAR)
