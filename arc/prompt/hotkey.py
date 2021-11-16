@@ -1,7 +1,8 @@
-from typing import Callable, Optional, TypeVar, Generic
+from typing import Callable, Optional, TypeVar, Generic, Union
 import sys
 import tty
 import termios
+import threading
 from arc.color import fg, colorize
 
 
@@ -79,7 +80,15 @@ class HotKey(Generic[T]):
         self._onquit = f
         return f
 
-    def run(self) -> Optional[T]:
+    def run(self, blocking: bool = True) -> Union[Optional[T], threading.Thread]:
+        if blocking:
+            return self._run()
+        else:
+            thread = threading.Thread(target=self._run)
+            thread.start()
+            return thread
+
+    def _run(self) -> Optional[T]:
         """Runs the central loop"""
         if self._onstart:
             self._onstart()
