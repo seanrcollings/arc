@@ -5,7 +5,7 @@ from arc import errors
 from arc.config import config
 from arc.execution_state import ExecutionState
 from arc.result import Result
-from arc.utils.other import symbol
+from arc.utils import symbol
 
 # Represents a missing value
 # Used to represent an arguments

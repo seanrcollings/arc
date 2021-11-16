@@ -6,8 +6,8 @@ from __future__ import annotations
 import enum
 import typing as t
 import types
-from arc import logging
 from pathlib import Path
+from arc import logging
 from arc import errors
 from arc.types.context import Context
 from arc.config import config

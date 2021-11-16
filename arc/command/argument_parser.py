@@ -5,7 +5,7 @@ import re
 import enum
 from arc.config import config
 from arc.utils import IDENT
-from arc.utils.other import symbol
+from arc.utils import symbol
 from arc.command.param import MISSING
 
 
