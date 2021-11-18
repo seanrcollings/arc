@@ -1,6 +1,21 @@
 from typing import Sequence
 
 
+def isclassmethod(method):
+    bound_to = getattr(method, "__self__", None)
+
+    if not isinstance(bound_to, type):
+        return False
+
+    name = method.__name__
+    for cls in bound_to.__mro__:
+        descriptor = vars(cls).get(name)
+        if descriptor is not None:
+            return isinstance(descriptor, classmethod)
+
+    return False
+
+
 def joiner(values: Sequence, join_str: str = ", ", last_str: str = ", "):
     """Joins values together with an additional `last_str` to format how
     the final value is joined to the rest of the list
