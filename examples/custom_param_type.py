@@ -16,8 +16,9 @@ class Circle:
 
 
 class CircleParamType(ParamType):
-    accepts = "Circle radius"  # used for error handling
-    handles = Circle  # Marks it as the ParamType associated with Circle
+    class Config:
+        name = "Circle radius"  # used for error handling
+        handles = Circle  # Marks it as the ParamType associated with Circle
 
     def convert(self, value: str):
         """
