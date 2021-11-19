@@ -13,8 +13,7 @@ from arc.types.context import Context
 from arc.config import config
 from arc.color import colorize, fg
 from arc.execution_state import ExecutionState
-from arc.types.helpers import join_or, isclassmethod
-from arc.types.range import Range
+from arc.types.helpers import join_or, isclassmethod, safe_issubclass
 from arc.types.var_types import VarPositional, VarKeyword
 from arc.utils import symbol
 
@@ -29,9 +28,6 @@ MISSING = symbol("MISSING")
 Annotation = t.Union[t._SpecialForm, type]
 
 # pylint: disable=abstract-method,inconsistent-return-statements
-
-# TODO:
-# - Make a more user-friendly api for creating custom types
 
 
 class ParamType:
@@ -101,12 +97,12 @@ class ParamType:
 
                 if isinstance(e, errors.InvalidParamaterError):
                     raise
-                else:
-                    raise errors.InvalidParamaterError(
-                        f"accepts: {self.Config.name}, was: {value}",
-                        self.param,
-                        self.state,
-                    ) from e
+
+                raise errors.InvalidParamaterError(
+                    f"accepts: {self.Config.name}, was: {value}",
+                    self.param,
+                    self.state,
+                ) from e
 
         return value
 
@@ -150,13 +146,9 @@ class ParamType:
 
         param_type: t.Optional[type[ParamType]] = None
 
-        try:
-            if issubclass(base_type, CustomType):
-                param_type = CustomParamType
-        except TypeError:
-            ...
-
-        if base_type in cls._param_type_cache:
+        if safe_issubclass(base_type, CustomType):
+            param_type = CustomParamType
+        elif base_type in cls._param_type_cache:
             # Type is cached
             return cls._param_type_cache[base_type]
         elif base_type in cls._param_type_map:
@@ -200,7 +192,7 @@ class CustomParamType(ParamType):
     annotation: type[CustomType]
 
     def __init__(self, annotation: type[CustomType], annotated_args: t.Any = None):
-        if not isclassmethod(getattr(annotation, "__convert__")):
+        if not isclassmethod(getattr(annotation, "__convert__", None)):
             raise errors.ArgumentError(
                 "Custom types must have a classmethod __convert__"
             )
@@ -213,10 +205,17 @@ class CustomParamType(ParamType):
         super().__init__(annotation, annotated_args)
 
     def convert(self, value: str):
-        return self.annotation.__convert__(value, self)
+        return self._convert(value)
 
     def g_convert(self, value: str):
-        return self.annotation.__convert__(value, self)
+        return self._convert(value)
+
+    def _convert(self, value: str):
+        converted = self.annotation.__convert__(value, self)
+        if cleanup := getattr(converted, "__cleanup__", None):
+            self.param._cleanup_funcs.add(cleanup)
+
+        return converted
 
 
 ## Basic Types
@@ -503,29 +502,3 @@ class FileParamType(ParamType):
             return {"mode": arg}
         if isinstance(arg, dict):
             return arg
-
-
-class RangeParamType(ParamType):
-    annotated_args: tuple[int, int]
-
-    class Config:
-        name = "range"
-        handles = Range
-        allowed_annotated_args = 2
-
-    class NoRangeBounds(errors.ArgumentError):
-        ...
-
-    def convert(self, value: str) -> Range:
-        if not self.annotated_args:
-            raise RangeParamType.NoRangeBounds(
-                "Ranges must have an associated lower / upper bound.\n"
-                "Replace `Range` in your function definition with"
-                "`typing.Annotated[Range, <lower>, <upper>]`"
-            )
-
-        num: int = ParamType.get_param_type(int)(value, self.param, self.state)
-        try:
-            return Range(num, *self.annotated_args)
-        except AssertionError:
-            return self.fail(f"must be a number between {self.annotated_args}")

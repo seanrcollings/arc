@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Sequence, Union
 
 
 def isclassmethod(method):
@@ -14,6 +14,13 @@ def isclassmethod(method):
             return isinstance(descriptor, classmethod)
 
     return False
+
+
+def safe_issubclass(_type: type, _classes: Union[type, tuple[type, ...]]):
+    try:
+        return issubclass(_type, _classes)
+    except TypeError:
+        return False
 
 
 def joiner(values: Sequence, join_str: str = ", ", last_str: str = ", "):
