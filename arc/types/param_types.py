@@ -172,12 +172,16 @@ class ParamType:
                     param_type = cls._param_type_map[parent]
 
         if not param_type:
-            raise errors.ArcError(f"No Param type for {base_type}")
+            raise errors.MissingParamType(f"No Param type for {base_type}")
 
         return param_type(kind, annotated_args)
 
     @classmethod
     def update_config(cls, param_type):
+        """Updates param_type.Config with any missing values that are present
+        on cls.Config. A form of "dirty inhertiance" so the configuration classes
+        don't need to perform any inhertiance and we still get valid values
+        """
         parent_props = [prop for prop in dir(cls.Config) if not prop.startswith("__")]
         for prop in parent_props:
             child_prop = getattr(param_type.Config, prop, None)
