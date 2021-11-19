@@ -83,9 +83,6 @@ class ParamType:
             self.param = param
             self.state = state
 
-            if self.cleanup:
-                self.param._cleanup_funcs.add(self.cleanup)
-
             try:
                 if self.is_generic:
                     value = self.g_convert(value)
@@ -109,6 +106,8 @@ class ParamType:
     def __init_subclass__(cls, cache: bool = False) -> None:
         if getattr(cls, "Config", None):
             ParamType.update_config(cls)
+        else:
+            cls.Config = ParamType.Config  # type: ignore
 
         if cls.Config.handles:
             cls._param_type_map[cls.Config.handles] = cls
@@ -205,17 +204,10 @@ class CustomParamType(ParamType):
         super().__init__(annotation, annotated_args)
 
     def convert(self, value: str):
-        return self._convert(value)
+        return self.annotation.__convert__(value, self)
 
     def g_convert(self, value: str):
-        return self._convert(value)
-
-    def _convert(self, value: str):
-        converted = self.annotation.__convert__(value, self)
-        if cleanup := getattr(converted, "__cleanup__", None):
-            self.param._cleanup_funcs.add(cleanup)
-
-        return converted
+        return self.annotation.__convert__(value, self)
 
 
 ## Basic Types
@@ -402,7 +394,32 @@ class PathParamType(ParamType, cache=True):
         return Path(value)
 
 
-### Custom Types
+class FileParamType(ParamType):
+    _file_handle: t.IO
+
+    class Config:
+        name = "filepath"
+        handles = t.IO
+        allowed_annotated_args = 1
+
+    def convert(self, value: str) -> t.IO:
+        try:
+            file = open(value, **self.open_args())
+            self._file_handle = file
+            return file
+        except FileNotFoundError:
+            return self.fail(f"No file named {value}")
+
+    def cleanup(self):
+        logger.debug("Closing File handle for: %s", self._file_handle.name)
+        self._file_handle.close()
+
+    def open_args(self):
+        arg = self.annotated_args[0]
+        if isinstance(arg, str):
+            return {"mode": arg}
+        if isinstance(arg, dict):
+            return arg
 
 
 class VarPositionalParamType(ParamType):
@@ -450,55 +467,3 @@ class VarKeywordParamType(ParamType):
             name: param_type(value, self.param, self.state)
             for name, value in values.items()
         }
-
-
-class ContextParamType(ParamType):
-    annotation: type
-
-    class Config:
-        name = "Context"
-        handles = Context
-        allow_missing = True
-
-    def convert(self, value: t.Any):
-        ctx: dict[str, t.Any] = {}
-
-        if value is MISSING:
-            value = {}
-
-        ctx |= value
-
-        for command in self.state.command_chain:
-            ctx = command.context | ctx
-
-        ctx["state"] = self.state
-
-        return self.annotation(ctx)
-
-
-class FileParamType(ParamType):
-    _file_handle: t.IO
-
-    class Config:
-        name = "filepath"
-        handles = t.IO
-        allowed_annotated_args = 1
-
-    def convert(self, value: str) -> t.IO:
-        try:
-            file = open(value, **self.open_args())
-            self._file_handle = file
-            return file
-        except FileNotFoundError:
-            return self.fail(f"No file named {value}")
-
-    def cleanup(self):
-        logger.debug("Closing File handle for: %s", self._file_handle.name)
-        self._file_handle.close()
-
-    def open_args(self):
-        arg = self.annotated_args[0]
-        if isinstance(arg, str):
-            return {"mode": arg}
-        if isinstance(arg, dict):
-            return arg

@@ -48,6 +48,9 @@ class Param:
         self.param_type: ParamType = ParamType.get_param_type(self.annotation)
         self._cleanup_funcs: set[Callable] = set()
 
+        if self.param_type.cleanup:
+            self._cleanup_funcs.add(self.param_type.cleanup)
+
         if self.short and len(self.short) > 1:
             raise errors.ArgumentError(
                 f"Argument {self.arg_name}'s shortened name is longer than 1 character"
@@ -102,7 +105,12 @@ class Param:
         return the value of the param.
         """
         value = Selectors.select_value(self, state)
-        return self.convert(value, state)
+        converted = self.convert(value, state)
+
+        if cleanup := getattr(converted, "__cleanup__", None):
+            self._cleanup_funcs.add(cleanup)
+
+        return converted
 
     def post_run(self, res: Result):
         """Hook that runs after the command is excuted."""

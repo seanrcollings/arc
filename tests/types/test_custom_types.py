@@ -69,3 +69,28 @@ def test_config_updating(cli: CLI):
         param_type.Config.allowed_annotated_args
         == TestType.Config.allowed_annotated_args
     )
+
+
+def test_cleanup(cli: CLI):
+    class TestType:
+        class Config:
+            name = "TestType"
+            allow_missing = True
+            allowed_annotated_args = 2
+
+        def __init__(self, value: str):
+            self.value = value
+
+        @classmethod
+        def __convert__(cls, value, param_type):
+            # Give us easy access to the param_type
+            return cls(value)
+
+        def __cleanup__(self):
+            ...
+
+    @cli.command()
+    def c(val: TestType):
+        return val
+
+    assert cli("c 2").__cleanup__ in c.executable.params["val"]._cleanup_funcs
