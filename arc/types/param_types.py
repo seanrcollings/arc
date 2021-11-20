@@ -3,13 +3,13 @@ that represent a specific CLI Paramater's type.
 Used to transform user input into the correct type value
 """
 from __future__ import annotations
+from dataclasses import dataclass
 import enum
 import typing as t
 import types
 from pathlib import Path
 from arc import logging
 from arc import errors
-from arc.types.context import Context
 from arc.config import config
 from arc.color import colorize, fg
 from arc.execution_state import ExecutionState
@@ -28,6 +28,12 @@ MISSING = symbol("MISSING")
 Annotation = t.Union[t._SpecialForm, type]
 
 # pylint: disable=abstract-method,inconsistent-return-statements
+
+
+# class ParamTypeInfo:
+#     param: Param
+#     state: ExecutionState
+#     name: str = "param"
 
 
 class ParamType:
