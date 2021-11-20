@@ -50,5 +50,5 @@ class Context(dict):
 
     def __cleanup__(self):
         """Empty Cleanup Function Because
-        __getattr__ returns a KeyError otherwise
+        __getattr__ raises a KeyError otherwise
         when checking for a cleanup function"""

@@ -163,7 +163,13 @@ class ParamType:
                     param_type = cls._param_type_map[parent]
 
         if not param_type:
-            raise errors.MissingParamType(f"No Param type for {base_type}")
+            name = colorize(base_type.__name__, fg.YELLOW)
+            raise errors.MissingParamType(
+                f"{name} is not a valid type. "
+                f"Please ensure that you've registered a custom ParamType, "
+                f"or that {name} conforms to the custom type protocol: "
+                "<link stub>"
+            )
 
         return param_type(kind, annotated_args)
 
