@@ -14,13 +14,8 @@ class Circle:
     def circumference(self):
         return self.radius * 2 * pi
 
-
-class CircleParamType(ParamType):
-    class Config:
-        name = "Circle radius"  # used for error handling
-        handles = Circle  # Marks it as the ParamType associated with Circle
-
-    def convert(self, value: str):
+    @classmethod
+    def __convert__(cls, value: str, param_type: ParamType):
         """
         The conversion method will get called with
         whatever data the user passed in. Then you can
@@ -32,9 +27,9 @@ class CircleParamType(ParamType):
             radius = int(value)
             return Circle(radius=radius)
 
-        self.fail("radius must be a number")
+        param_type.fail("radius must be a number")
 
-    def cleanup(self):
+    def __cleanup__(self):
         """Arc will call this method after the command exits.
         Use it to cleanup any open resources (like files, or network
         connections) or simply some exiting code. This method

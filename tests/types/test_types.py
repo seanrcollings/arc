@@ -171,9 +171,9 @@ def test_file(cli: CLI):
 def test_range(cli: CLI):
     @cli.command()
     def ra(range: Annotated[Range, 1, 10]):
-        return int(range)
+        return range
 
-    assert cli("ra 1") == 1
+    assert (res := cli("ra 1")) == 1 and isinstance(res, Range)
     assert cli("ra 5") == 5
     assert cli("ra 10") == 10
 

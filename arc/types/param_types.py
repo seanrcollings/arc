@@ -3,18 +3,17 @@ that represent a specific CLI Paramater's type.
 Used to transform user input into the correct type value
 """
 from __future__ import annotations
+from dataclasses import dataclass
 import enum
 import typing as t
 import types
 from pathlib import Path
 from arc import logging
 from arc import errors
-from arc.types.context import Context
 from arc.config import config
 from arc.color import colorize, fg
 from arc.execution_state import ExecutionState
-from arc.types.helpers import join_or
-from arc.types.range import Range
+from arc.types.helpers import join_or, isclassmethod, safe_issubclass
 from arc.types.var_types import VarPositional, VarKeyword
 from arc.utils import symbol
 
@@ -30,34 +29,49 @@ Annotation = t.Union[t._SpecialForm, type]
 
 # pylint: disable=abstract-method,inconsistent-return-statements
 
-# TODO:
-# - Make a more user-friendly api for creating custom types
+
+# class ParamTypeInfo:
+#     param: Param
+#     state: ExecutionState
+#     name: str = "param"
 
 
 class ParamType:
-    accepts: t.ClassVar[str]
     param: Param
     state: ExecutionState
+
     cleanup: t.Optional[types.MethodType] = None
-    handles: t.ClassVar[t.Optional[Annotation]] = None
-    allow_missing: bool = False
-    allowed_annotated_args: t.ClassVar[int] = 0
 
     _param_type_map: dict[Annotation, type[ParamType]] = {}
     _param_type_cache: dict[Annotation, ParamType] = {}
 
-    def __init__(self, annotation: Annotation = None, type_info: t.Any = None):
-        annotation = annotation or self.handles
+    # Optional values that can be defined in subclasses
+    class Config:
+        name: str = "param"
+        handles: t.ClassVar[t.Optional[Annotation]] = None
+        allow_missing: t.ClassVar[bool] = False
+        allowed_annotated_args: t.ClassVar[int] = 0
+
+    def __init__(self, annotation: Annotation = None, annotated_args: tuple = None):
+        annotation = annotation or self.Config.handles
+        annotated_args = annotated_args or ()
+
+        if len(annotated_args) > self.Config.allowed_annotated_args:
+            raise errors.ArcError(
+                f"{self.Config.name} permits {self.Config.allowed_annotated_args} "
+                f"annotated arguments. Recieved {len(annotated_args)}"
+            )
+
         self.annotation = annotation
-        self.type_info = type_info
         self.origin = t.get_origin(annotation)
-        self.args = t.get_args(annotation)
+        self.type_args = t.get_args(annotation)
+        self.annotated_args = annotated_args
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(oannotation={self.annotation})"
+        return f"{self.__class__.__name__}(annotation={self.annotation})"
 
     def __call__(self, value: t.Any, param: Param, state: ExecutionState):
-        if value is MISSING and not self.allow_missing:
+        if value is MISSING and not self.Config.allow_missing:
             if param.is_positional:
                 message = (
                     "No value provided for required positional argument: "
@@ -75,9 +89,6 @@ class ParamType:
             self.param = param
             self.state = state
 
-            if self.cleanup:
-                self.param._cleanup_funcs.add(self.cleanup)
-
             try:
                 if self.is_generic:
                     value = self.g_convert(value)
@@ -89,19 +100,26 @@ class ParamType:
 
                 if isinstance(e, errors.InvalidParamaterError):
                     raise
-                else:
-                    raise errors.InvalidParamaterError(
-                        f"accepts: {self.accepts}, was: {value}", self.param, self.state
-                    ) from e
+
+                raise errors.InvalidParamaterError(
+                    f"accepts: {self.Config.name}, was: {value}",
+                    self.param,
+                    self.state,
+                ) from e
 
         return value
 
     def __init_subclass__(cls, cache: bool = False) -> None:
-        if cls.handles:
-            cls._param_type_map[cls.handles] = cls
+        if getattr(cls, "Config", None):
+            ParamType.update_config(cls)
+        else:
+            cls.Config = ParamType.Config  # type: ignore
+
+        if cls.Config.handles:
+            cls._param_type_map[cls.Config.handles] = cls
 
             if cache:
-                cls._param_type_cache[cls.handles] = cls()
+                cls._param_type_cache[cls.Config.handles] = cls()
 
         return super().__init_subclass__()
 
@@ -123,26 +141,27 @@ class ParamType:
     def get_param_type(cls, kind: type):
         # Unwrap to handle generic types (list[int])
         base_type = t.get_origin(kind) or kind
-        type_info: t.Optional[tuple] = None
+        annotated_args: t.Optional[tuple] = None
 
         if base_type is t.Annotated:
             args = t.get_args(kind)
             base_type = args[0]
             kind = base_type
-            type_info = args[1:]
+            annotated_args = args[1:]
 
-        param_type = None
+        param_type: t.Optional[type[ParamType]] = None
 
-        if base_type in cls._param_type_cache:
+        if safe_issubclass(base_type, CustomType):
+            param_type = CustomParamType
+        elif base_type in cls._param_type_cache:
+            # Type is cached
             return cls._param_type_cache[base_type]
-
-        # Type is a key
-        # We perform this check once before hand
-        # because some typing types don't have
-        # the mro() method
         elif base_type in cls._param_type_map:
+            # Type is a key
+            # We perform this check once before hand
+            # because some typing types don't have
+            # the mro() method
             param_type = cls._param_type_map[base_type]
-
         else:
             # Type is a subclass of a key
             for parent in base_type.mro():
@@ -150,63 +169,108 @@ class ParamType:
                     param_type = cls._param_type_map[parent]
 
         if not param_type:
-            raise errors.ArcError(f"No Param type for {base_type}")
+            name = colorize(base_type.__name__, fg.YELLOW)
+            raise errors.MissingParamType(
+                f"{name} is not a valid type. "
+                f"Please ensure that you've registered a custom ParamType, "
+                f"or that {name} conforms to the custom type protocol: "
+                "<link stub>"
+            )
 
-        if type_info:
-            if len(type_info) > param_type.allowed_annotated_args:
-                raise errors.ArcError(
-                    f"{param_type.accepts} permits {param_type.allowed_annotated_args} "
-                    f"annotated arguments. Recieved {len(type_info)}"
-                )
+        return param_type(kind, annotated_args)
 
-            if param_type.allowed_annotated_args == 1:
-                type_info = type_info[0]
+    @classmethod
+    def update_config(cls, param_type):
+        """Updates param_type.Config with any missing values that are present
+        on cls.Config. A form of "dirty inhertiance" so the configuration classes
+        don't need to perform any inhertiance and we still get valid values
+        """
+        parent_props = [prop for prop in dir(cls.Config) if not prop.startswith("__")]
+        for prop in parent_props:
+            child_prop = getattr(param_type.Config, prop, None)
+            if child_prop is None:
+                setattr(param_type.Config, prop, getattr(cls.Config, prop))
 
-        return param_type(kind, type_info)
+
+@t.runtime_checkable
+class CustomType(t.Protocol):
+    @classmethod
+    def __convert__(cls, value, param_type: CustomParamType) -> CustomType:
+        ...
+
+
+class CustomParamType(ParamType):
+    annotation: type[CustomType]
+
+    def __init__(self, annotation: type[CustomType], annotated_args: t.Any = None):
+        if not isclassmethod(getattr(annotation, "__convert__", None)):
+            raise errors.ArgumentError(
+                "Custom types must have a classmethod __convert__"
+            )
+
+        type_config: type = getattr(annotation, "Config", None)
+        if type_config:
+            self.Config = type_config  # type: ignore
+            ParamType.update_config(self)
+
+        super().__init__(annotation, annotated_args)
+
+    def convert(self, value: str):
+        return self.annotation.__convert__(value, self)
+
+    def g_convert(self, value: str):
+        return self.annotation.__convert__(value, self)
 
 
 ## Basic Types
 
 
 class StringParamType(ParamType, cache=True):
-    accepts = "string"
-    handles = str
+    class Config:
+        name = "string"
+        handles = str
 
     def convert(self, value: t.Any) -> str:
         return str(value)
 
 
 class _NumberBaseParamType(ParamType, cache=True):
-    handles: t.ClassVar[type]
+    class Config:
+        name: str
+        handles: t.ClassVar[type]
 
     def convert(self, value: t.Any) -> t.Any:
         try:
-            return self.handles(value)
+            return self.Config.handles(value)
         except ValueError:
-            return self.fail(f"{value} is not a valid {self.accepts}")
+            return self.fail(f"{value} is not a valid {self.Config.name}")
 
 
 class IntParamType(_NumberBaseParamType, cache=True):
-    accepts = "integer"
-    handles = int
+    class Config:
+        name = "integer"
+        handles = int
 
 
 class FloatParamType(_NumberBaseParamType, cache=True):
-    accepts = "float"
-    handles = float
+    class Config:
+        name = "float"
+        handles = float
 
 
 class BytesParamType(ParamType, cache=True):
-    accepts = "bytes"
-    handles = bytes
+    class Config:
+        name = "bytes"
+        handles = bytes
 
     def convert(self, value: t.Any) -> bytes:
         return str(value).encode()
 
 
 class BoolParamType(ParamType, cache=True):
-    accepts = "boolean"
-    handles = bool
+    class Config:
+        name = "boolean"
+        handles = bool
 
     def convert(self, value: t.Any) -> bool:
         if isinstance(value, str):
@@ -222,63 +286,71 @@ class BoolParamType(ParamType, cache=True):
         return bool(value)
 
 
-class CollectionParamType(ParamType):
-    handles: t.ClassVar[type]
+class _CollectionParamType(ParamType):
+    class Config:
+        name: str
+        handles: t.ClassVar[type]
 
     def convert(self, value: str):
-        return self.handles(value.split(","))
+        return self.Config.handles(value.split(","))
 
     def g_convert(self, value: str):
         lst = self.convert(value)
-        param_type = ParamType.get_param_type(self.args[0])
+        param_type = ParamType.get_param_type(self.type_args[0])
         try:
-            return self.handles([param_type(v, self.param, self.state) for v in lst])
+            return self.Config.handles(
+                [param_type(v, self.param, self.state) for v in lst]
+            )
         except errors.InvalidParamaterError:
             return self.fail(
-                f"{value} is not a valid {self.accepts} of {param_type.accepts}s"
+                f"{value} is not a valid {self.Config.name} of {param_type.Config.name}s"
             )
 
 
-class ListParamType(CollectionParamType):
-    accepts = "list"
-    handles = list
+class ListParamType(_CollectionParamType):
+    class Config:
+        name = "list"
+        handles = list
 
 
-class SetParamType(CollectionParamType):
-    accepts = "set"
-    handles = set
+class SetParamType(_CollectionParamType):
+    class Config:
+        name = "set"
+        handles = set
 
 
-class TupleParamType(CollectionParamType):
-    accepts = "tuple"
-    handles = tuple
+class TupleParamType(_CollectionParamType):
+    class Config:
+        name = "tuple"
+        handles = tuple
 
     def g_convert(self, value: str) -> tuple:
         tup = self.convert(value)
 
         # Arbitraryily sized tuples
-        if self.args[-1] is Ellipsis:
+        if self.type_args[-1] is Ellipsis:
             return super().g_convert(value)
 
         # Statically sized tuples
-        if len(self.args) != len(tup):
-            return self.fail(f"only allow {len(self.args)} elements")
+        if len(self.type_args) != len(tup):
+            return self.fail(f"only allow {len(self.type_args)} elements")
 
         return tuple(
             ParamType.get_param_type(item_type).convert(item)
-            for item_type, item in zip(self.args, tup)
+            for item_type, item in zip(self.type_args, tup)
         )
 
 
 # Typing Types
 class UnionParamType(ParamType):
-    accepts = "Union"
-    handles = t.Union
+    class Config:
+        name = "Union"
+        handles = t.Union
 
     def g_convert(self, value: t.Any):
         param_types: set[ParamType] = set()
 
-        for arg in self.args:
+        for arg in self.type_args:
             try:
                 param_type = ParamType.get_param_type(arg)
                 param_types.add(param_type)
@@ -286,27 +358,32 @@ class UnionParamType(ParamType):
             except errors.ArcError:
                 ...
 
-        self.fail(f"{value} must be a {join_or(list(p.accepts for p in param_types))}")
+        self.fail(
+            f"{value} must be a {join_or(list(p.Config.name for p in param_types))}"
+        )
 
 
 class LiteralParamType(ParamType):
-    accepts = "Literals"
-    handles = t.Literal
+    class Config:
+        name = "Literals"
+        handles = t.Literal
 
     def g_convert(self, value: t.Any):
-        if value in self.args:
+        if value in self.type_args:
             return value
 
-        raise self.fail(f"{value} must be {join_or(self.args)}")
+        raise self.fail(f"{value} must be {join_or(self.type_args)}")
 
 
 ### Std Lib Types
 
 
 class EnumParamType(ParamType):
-    accepts = "Eumeration"
-    handles = enum.Enum
     annotation: type[enum.Enum]
+
+    class Config:
+        name = "Eumeration"
+        handles = enum.Enum
 
     def convert(self, value: t.Any):
         try:
@@ -321,20 +398,47 @@ class EnumParamType(ParamType):
 
 
 class PathParamType(ParamType, cache=True):
-    accepts = "FilePath"
-    handles = Path
+    class Config:
+        name = "FilePath"
+        handles = Path
 
     def convert(self, value: t.Any) -> Path:
         return Path(value)
 
 
-### Custom Types
+class FileParamType(ParamType):
+    _file_handle: t.IO
+
+    class Config:
+        name = "filepath"
+        handles = t.IO
+        allowed_annotated_args = 1
+
+    def convert(self, value: str) -> t.IO:
+        try:
+            file = open(value, **self.open_args())
+            self._file_handle = file
+            return file
+        except FileNotFoundError:
+            return self.fail(f"No file named {value}")
+
+    def cleanup(self):
+        logger.debug("Closing File handle for: %s", self._file_handle.name)
+        self._file_handle.close()
+
+    def open_args(self):
+        arg = self.annotated_args[0]
+        if isinstance(arg, str):
+            return {"mode": arg}
+        if isinstance(arg, dict):
+            return arg
 
 
 class VarPositionalParamType(ParamType):
-    accepts = "*args"
-    handles = VarPositional
-    allow_missing = True
+    class Config:
+        name = "*args"
+        handles = VarPositional
+        allow_missing = True
 
     def convert(self, _value: t.Any) -> list:
         values = self.state.parsed["pos_values"]
@@ -343,14 +447,15 @@ class VarPositionalParamType(ParamType):
 
     def g_convert(self, _value: t.Any) -> list[t.Any]:
         lst = self.convert(None)
-        param_type = ParamType.get_param_type(self.args[0])
+        param_type = ParamType.get_param_type(self.type_args[0])
         return [param_type(v, self.param, self.state) for v in lst]
 
 
 class VarKeywordParamType(ParamType):
-    accepts = "**kwargs"
-    handles = VarKeyword
-    allow_missing = True
+    class Config:
+        name = "**kwargs"
+        handles = VarKeyword
+        allow_missing = True
 
     def convert(self, _value: t.Any) -> dict[str, t.Any]:
         assert self.state.executable
@@ -369,79 +474,8 @@ class VarKeywordParamType(ParamType):
 
     def g_convert(self, value: t.Any) -> dict[str, t.Any]:
         values = self.convert(None)
-        param_type = ParamType.get_param_type(self.args[0])
+        param_type = ParamType.get_param_type(self.type_args[0])
         return {
             name: param_type(value, self.param, self.state)
             for name, value in values.items()
         }
-
-
-class ContextParamType(ParamType):
-    annotation: type
-    accepts = "Context"
-    handles = Context
-    allow_missing = True
-
-    def convert(self, value: t.Any):
-        ctx: dict[str, t.Any] = {}
-
-        if value is MISSING:
-            value = {}
-
-        ctx |= value
-
-        for command in self.state.command_chain:
-            ctx = command.context | ctx
-
-        ctx["state"] = self.state
-
-        return self.annotation(ctx)
-
-
-class FileParamType(ParamType):
-    accepts = "filepath"
-    handles = t.IO
-    _file_handle: t.IO
-    allowed_annotated_args = 1
-
-    def convert(self, value: str) -> t.IO:
-        try:
-            file = open(value, **self.open_args())
-            self._file_handle = file
-            return file
-        except FileNotFoundError:
-            return self.fail(f"No file named {value}")
-
-    def cleanup(self):
-        logger.debug("Closing File handle for: %s", self._file_handle.name)
-        self._file_handle.close()
-
-    def open_args(self):
-        if isinstance(self.type_info, str):
-            return {"mode": self.type_info}
-        if isinstance(self.type_info, dict):
-            return self.type_info
-
-
-class RangeParamType(ParamType):
-    accepts = "range"
-    handles = Range
-    allowed_annotated_args = 2
-    type_info: tuple[int, int]
-
-    class NoRangeBounds(errors.ArgumentError):
-        ...
-
-    def convert(self, value: str) -> Range:
-        if not self.type_info:
-            raise RangeParamType.NoRangeBounds(
-                "Ranges must have an associated lower / upper bound.\n"
-                "Replace `Range` in your function definition with"
-                "`typing.Annotated[Range, <lower>, <upper>]`"
-            )
-
-        num: int = ParamType.get_param_type(int)(value, self.param, self.state)
-        try:
-            return Range(num, *self.type_info)
-        except AssertionError:
-            return self.fail(f"must be a number between {self.type_info}")

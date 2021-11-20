@@ -50,6 +50,10 @@ class ArgumentError(ArcError):
     """Raised when an error occurs to the scope of a single argument"""
 
 
+class MissingParamType(ArgumentError):
+    ...
+
+
 class MissingArgError(ArgumentError):
     def __init__(self, message: str, **data):
         super().__init__(message)

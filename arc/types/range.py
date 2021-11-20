@@ -1,5 +1,7 @@
 import math
 import typing as t
+from arc import errors
+from arc.types.param_types import ParamType
 
 
 class Range(int):
@@ -28,3 +30,29 @@ class Range(int):
         with whether or not it was the value picked"""
         for i in self.range(step):
             yield i, i == self
+
+    class Config:
+        name = "range"
+        allowed_annotated_args = 2
+
+    class NoRangeBounds(errors.ArgumentError):
+        ...
+
+    @classmethod
+    def __convert__(cls, value, param_type: ParamType):
+        if not param_type.annotated_args:
+            raise cls.NoRangeBounds(
+                "Ranges must have an associated lower / upper bound.\n"
+                "Replace `Range` in your function definition with"
+                "`typing.Annotated[Range, <lower>, <upper>]`"
+            )
+
+        num: int = ParamType.get_param_type(int)(
+            value, param_type.param, param_type.state
+        )
+        try:
+            return Range(num, *param_type.annotated_args)
+        except AssertionError:
+            return param_type.fail(
+                f"must be a number between {param_type.annotated_args}"
+            )

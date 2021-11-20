@@ -54,10 +54,9 @@ class ArcFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord):
         record.message = record.getMessage()
-        color = self.level_color[record.levelno]
         record.levelname = colorize(
             f" {record.levelname:^8} ",
-            color,
+            self.level_color[record.levelno],
             effects.BOLD,
         )
         record.name = colorize(f" {record.name} ", bg.GREY)
