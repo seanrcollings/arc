@@ -1,22 +1,35 @@
+from __future__ import annotations
 import inspect
 import pprint
 from types import FunctionType, MappingProxyType
-from typing import Any, Callable, Optional, Protocol, get_type_hints
-from arc import logging
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    Optional,
+    Protocol,
+    get_type_hints,
+    TYPE_CHECKING,
+)
 import abc
 
+from arc import logging
 from arc import errors
 from arc.utils import levenshtein
 from arc.config import config
 from arc.result import Err, Ok
 from arc.color import colorize, fg
-from arc.command.param import Param
-from arc.execution_state import ExecutionState
-from arc.command.argument_parser import Parsed
+
 from arc.types.helpers import join_and
 from arc.callbacks.callback_store import CallbackStore
 from arc.command.param_mixin import ParamMixin
 from arc.command.param_builder import ParamBuilder
+
+if TYPE_CHECKING:
+    from arc.command.param import Param
+    from arc.execution_state import ExecutionState
+    from arc.command.argument_parser import Parsed
+
 
 logger = logging.getArcLogger("exe")
 
@@ -56,17 +69,18 @@ class Executable(abc.ABC, ParamMixin):
             result = self.run(arguments)
             if not isinstance(result, (Ok, Err)):
                 result = Ok(result)
-        except BaseException:
+        except BaseException as e:
             # TODO: add more descriptive error message here
-            result = Err("Execution failed")
+            self.handle_context_managers(arguments.values(), e)
+            result = Err(e)
             raise
         finally:
             logger.debug(BAR)
-            for param in self.params.values():
-                param.post_run(result)
-
+            # for func in reversed(state.cleanup):
+            #     func()
             self.callback_store.post_execution(result)
 
+        self.handle_context_managers(arguments.values())
         return result
 
     @abc.abstractmethod
@@ -86,17 +100,6 @@ class Executable(abc.ABC, ParamMixin):
 
         if parsed["key_values"]:
             raise self.non_existant_args(list(parsed["key_values"].keys()))
-
-    def get_or_raise(self, key: str, message):
-        arg = self.params.get(key)
-        if arg and not arg.hidden:
-            return arg
-
-        for arg in self.params.values():
-            if key == arg.short and not arg.hidden:
-                return arg
-
-        raise errors.MissingArgError(message, name=key)
 
     def non_existant_args(self, vals: list[str]):
         if len(vals) == 1:
@@ -134,6 +137,21 @@ class Executable(abc.ABC, ParamMixin):
                 return arg
 
         return None
+
+    def handle_context_managers(
+        self, values: Iterable[Any], exc: Optional[BaseException] = None
+    ):
+        if exc:
+            args: tuple = (type(exc), exc, exc.__traceback__)
+        else:
+            args = (None, None, None)
+
+        for val in values:
+            if isinstance(val, (list, set, tuple)):
+                return self.handle_context_managers(val)
+
+            if getattr(val, "__exit__", None):
+                val.__exit__(*args)
 
 
 class FunctionExecutable(Executable):

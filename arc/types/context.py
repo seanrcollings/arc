@@ -3,15 +3,16 @@
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
-
 from arc.types.params import as_special_param
-from arc.command.param import MISSING
+from arc.utils import symbol
+
+MISSING = symbol("MISSING")
 
 if TYPE_CHECKING:
     from arc.execution_state import ExecutionState
 
 
-@as_special_param()
+@as_special_param(default={})
 class Context(dict):
     """Context object, extends `dict`"""
 
@@ -22,7 +23,10 @@ class Context(dict):
         return f"<{self.__class__.__name__} : {' '.join(values)}>"
 
     def __getattr__(self, attr):
-        return self[attr]
+        try:
+            return self[attr]
+        except KeyError as e:
+            raise AttributeError(str(e)) from e
 
     def __setattr__(self, name: str, value):
         return self.__setitem__(name, value)
@@ -32,12 +36,8 @@ class Context(dict):
         allow_missing = True
 
     @classmethod
-    def __convert__(cls, value: Any, param_type):
-        state = param_type.state
+    def __convert__(cls, value: Any, _, state: ExecutionState):
         ctx: dict[str, Any] = {}
-
-        if value is MISSING:
-            value = {}
 
         ctx |= value
 
@@ -48,7 +48,7 @@ class Context(dict):
 
         return cls(ctx)
 
-    def __cleanup__(self):
+    def __cleanup__(self, _):
         """Empty Cleanup Function Because
         __getattr__ raises a KeyError otherwise
         when checking for a cleanup function"""

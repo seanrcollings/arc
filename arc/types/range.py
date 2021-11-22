@@ -1,7 +1,8 @@
 import math
 import typing as t
 from arc import errors
-from arc.types.param_types import ParamType
+from arc.types.helpers import TypeInfo
+from arc.types.aliases import Alias
 
 
 class Range(int):
@@ -31,28 +32,23 @@ class Range(int):
         for i in self.range(step):
             yield i, i == self
 
-    class Config:
-        name = "range"
-        allowed_annotated_args = 2
-
     class NoRangeBounds(errors.ArgumentError):
         ...
 
     @classmethod
-    def __convert__(cls, value, param_type: ParamType):
-        if not param_type.annotated_args:
+    def __convert__(cls, value, info: TypeInfo, state):
+        if not info.annotations:
             raise cls.NoRangeBounds(
                 "Ranges must have an associated lower / upper bound.\n"
                 "Replace `Range` in your function definition with"
                 "`typing.Annotated[Range, <lower>, <upper>]`"
             )
 
-        num: int = ParamType.get_param_type(int)(
-            value, param_type.param, param_type.state
-        )
+        sub = TypeInfo.analyze(int)
+        num: int = Alias.resolve(sub).__convert__(value, sub, state)
         try:
-            return Range(num, *param_type.annotated_args)
-        except AssertionError:
-            return param_type.fail(
-                f"must be a number between {param_type.annotated_args}"
-            )
+            return Range(num, *info.annotations)
+        except AssertionError as e:
+            raise errors.ConversionError(
+                value, f"must be a number between {info.annotations}"
+            ) from e

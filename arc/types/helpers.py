@@ -1,4 +1,62 @@
-from typing import Sequence, Union
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import (
+    Optional,
+    Sequence,
+    Union,
+    Any,
+    get_origin,
+    Annotated,
+    get_args,
+    Generic,
+    TypeVar,
+)
+
+from arc.typing import Annotation
+
+
+T = TypeVar("T")
+
+
+@dataclass
+class TypeInfo(Generic[T]):
+    base: Annotation
+    origin: type[T]
+    sub_types: tuple[TypeInfo, ...]
+    annotations: tuple[Any, ...]
+    _name: Optional[str] = None
+
+    @property
+    def name(self) -> str:
+        if self._name:
+            return self._name
+        elif name := getattr(self.origin, "name", None):
+            return name
+        elif name := getattr(self.origin, "__name__", None):
+            return name
+
+        return str(self.origin)
+
+    @classmethod
+    def analyze(cls, annotation) -> TypeInfo:
+        base = annotation
+        origin = get_origin(annotation) or annotation
+        annotated_args: tuple = tuple()
+
+        if origin is Annotated:
+            args = get_args(annotation)
+            annotation = args[0]
+            origin = get_origin(annotation) or annotation
+            annotated_args = args[1:]
+
+        sub_types = tuple(cls.analyze(arg) for arg in get_args(annotation))
+
+        return cls(
+            base=base,
+            origin=origin,
+            sub_types=sub_types,
+            annotations=annotated_args,
+        )
 
 
 def isclassmethod(method):
@@ -16,7 +74,7 @@ def isclassmethod(method):
     return False
 
 
-def safe_issubclass(_type: type, _classes: Union[type, tuple[type, ...]]):
+def safe_issubclass(_type, _classes: Union[type, tuple[type, ...]]):
     try:
         return issubclass(_type, _classes)
     except TypeError:

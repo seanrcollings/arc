@@ -22,7 +22,7 @@ class TestDebug:
         debug_cli("debug:config")
 
     def test_converters(self, debug_cli: CLI):
-        debug_cli("debug:types")
+        debug_cli("debug:aliases")
 
     def test_arcfile(self, debug_cli: CLI):
         debug_cli("debug:arcfile")

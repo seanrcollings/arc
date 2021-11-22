@@ -79,7 +79,6 @@ class ConfigBase:
                 key, value = line.split("=")
                 parsed[key] = self.__convert_loaded_value(key, value)
         except Exception as e:
-            breakpoint()
             raise errors.ArcError(
                 "Config values must follow the form `name=value`"
             ) from e

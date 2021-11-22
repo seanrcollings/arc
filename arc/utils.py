@@ -1,11 +1,16 @@
 import functools
 import re
 import time
+from types import MethodType
+from typing import Callable
 
 from arc import logging
 from arc.color import fg, effects, colorize
 
 logger = logging.getArcLogger("utl")
+
+
+IDENT = r"[a-zA-Z-_0-9]+"
 
 
 def indent(string: str, distance="\t", split="\n"):
@@ -15,9 +20,6 @@ def indent(string: str, distance="\t", split="\n"):
 
 def header(contents: str):
     logger.debug(colorize(f"{contents:^35}", effects.UNDERLINE, effects.BOLD, fg.BLUE))
-
-
-IDENT = r"[a-zA-Z-_0-9]+"
 
 
 def clean(string):
@@ -113,3 +115,29 @@ def levenshtein(s1: str, s2: str):
         previous_row = current_row  # type: ignore
 
     return previous_row[-1]
+
+
+def dispatch_args(func: Callable, *args):
+    """Calls the given `func` with the maximum
+    slice of `*args` that it can accept. Handles
+    function and method types
+
+    For example:
+    ```py
+    def foo(bar, baz): # only accepts 2 args
+        print(bar, baz)
+
+    # Will call the provided function with the first
+    # two arguments
+    dispatch_args(foo, 1, 2, 3, 4)
+    # 1 2
+    ```
+    """
+    if isinstance(func, MethodType):
+        unwrapped = func.__func__
+    else:
+        unwrapped = func  # type: ignore
+
+    arg_count = unwrapped.__code__.co_argcount
+    args = args[0 : arg_count - 1]
+    return func(*args)
