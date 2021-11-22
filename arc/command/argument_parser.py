@@ -1,8 +1,8 @@
-from arc import logging
 from typing import TypedDict, Union
 from dataclasses import dataclass
 import re
 import enum
+from arc import logging
 from arc.config import config
 from arc.utils import IDENT
 from arc.utils import symbol
