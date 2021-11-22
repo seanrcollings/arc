@@ -1,10 +1,10 @@
 from __future__ import annotations
-from arc import logging
 from types import MappingProxyType
 from typing import Any, Optional, get_type_hints, TYPE_CHECKING
 import inspect
 
-from arc import errors
+
+from arc import errors, logging
 from arc.config import config
 from arc.color import colorize, fg
 from arc.command import param
@@ -30,8 +30,8 @@ class ParamBuilder:
                 raise errors.ArgumentError(
                     "Arc does not support *args and **kwargs. "
                     f"Please use their typed counterparts "
-                    f"{colorize('arc.VarPositional', fg.ARC_BLUE)} "
-                    f"and {colorize('arc.VarKeyword', fg.ARC_BLUE)}"
+                    f"{colorize('arc.types.VarPositional', fg.ARC_BLUE)} "
+                    f"and {colorize('arc.types.VarKeyword', fg.ARC_BLUE)}"
                 )
 
             if isinstance(arg.default, ParamInfo):

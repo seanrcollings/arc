@@ -71,14 +71,6 @@ class InvalidParamaterError(ArgumentError):
 class ConversionError(ArgumentError):
     """Raised if a type conversion fails """
 
-    def __init__(self, value, expected: str, helper_text: str = ""):
-        """Initializes the conversion errors
-        :param value: the value attempting to be converted
-        :param expected: string describing what the value should be
-        :param helper_text: any additional helper text for the user
-        """
+    def __init__(self, value, message: str):
         self.value = value
-        self.expected = expected
-        self.helper_text = helper_text
-
-        super().__init__(f"\nValue: {value}\nExpected: {expected}\nInfo: {helper_text}")
+        super().__init__(message)

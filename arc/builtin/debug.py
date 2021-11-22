@@ -2,7 +2,7 @@ import os
 
 from arc import namespace
 from arc.config import config, Config
-from arc.types import param_types
+from arc.types import aliases
 from arc.present import Table, Box
 
 debug = namespace("debug")
@@ -22,20 +22,16 @@ def config_command():
     print(Box(str(table), justify="center", padding=1))
 
 
-@debug.subcommand()
-def types():
-    """Displays information aboubt the currently accessible types"""
+@debug.subcommand("aliases")
+def aliases_c():
+    """Displays information aboubt the currently accessible type aliases"""
 
     table = Table(
         columns=[
             {"name": "NAME", "justify": "left"},
             {"name": "TYPE", "justify": "left", "width": 40},
-            {"name": "PARAM TYPE", "justify": "right", "width": 40},
         ],
-        rows=[
-            [v.Config.name, k, v.__name__]
-            for k, v in param_types.ParamType._param_type_map.items()
-        ],
+        rows=[[str(v), k] for k, v in aliases.Alias.aliases.items()],
     )
     # print(Box(str(table), justify="center", padding=1))
     print(table)

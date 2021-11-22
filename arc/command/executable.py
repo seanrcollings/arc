@@ -1,22 +1,27 @@
+from __future__ import annotations
 import inspect
 import pprint
 from types import FunctionType, MappingProxyType
-from typing import Any, Callable, Optional, Protocol, get_type_hints
-from arc import logging
+from typing import Any, Callable, Optional, Protocol, get_type_hints, TYPE_CHECKING
 import abc
 
+from arc import logging
 from arc import errors
 from arc.utils import levenshtein
 from arc.config import config
 from arc.result import Err, Ok
 from arc.color import colorize, fg
-from arc.command.param import Param
-from arc.execution_state import ExecutionState
-from arc.command.argument_parser import Parsed
+
 from arc.types.helpers import join_and
 from arc.callbacks.callback_store import CallbackStore
 from arc.command.param_mixin import ParamMixin
 from arc.command.param_builder import ParamBuilder
+
+if TYPE_CHECKING:
+    from arc.command.param import Param
+    from arc.execution_state import ExecutionState
+    from arc.command.argument_parser import Parsed
+
 
 logger = logging.getArcLogger("exe")
 

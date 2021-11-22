@@ -1,33 +1,23 @@
 from __future__ import annotations
+
+from dataclasses import asdict
 from typing import Any, Callable, Optional
 
-from arc import errors
+from arc import errors, utils
+from arc.color import colorize, fg
 from arc.config import config
 from arc.execution_state import ExecutionState
 from arc.result import Result
-from arc.utils import symbol
+from arc.types import aliases
+from arc.types.helpers import TypeInfo
 
 # Represents a missing value
-# Used to represent an arguments
+# Used to represent an argument
 # with no default value
-MISSING = symbol("MISSING")
+MISSING = utils.symbol("MISSING")
 
 
 class Param:
-    """Represents a single command-line parameter.
-
-    Instance Variables:
-        arg_name (str): The actual name of the argument of the function.
-            can be used to pass some value to said function
-        arg_alias (str): The name to be used to pass a value to
-            the argument from the command line. Will default to the
-            `arg_name` if no other value is provided
-        annotation (type): The type of the argument
-        default (Any): Default value for the argument
-        short (str): the single-character shortened name for the
-            argument on the command line
-    """
-
     def __init__(
         self,
         arg_name: str,
@@ -37,19 +27,14 @@ class Param:
         default: Any = MISSING,
         description: str = None,
     ):
-        from arc.types.param_types import ParamType
 
-        self.annotation = annotation
+        self.type_info = TypeInfo.analyze(annotation)
         self.arg_name: str = arg_name
         self.arg_alias: str = arg_alias if arg_alias else arg_name
         self.short: Optional[str] = short
         self.default: Any = default
         self.description: Optional[str] = description
-        self.param_type: ParamType = ParamType.get_param_type(self.annotation)
         self._cleanup_funcs: set[Callable] = set()
-
-        if self.param_type.cleanup:
-            self._cleanup_funcs.add(self.param_type.cleanup)
 
         if self.short and len(self.short) > 1:
             raise errors.ArgumentError(
@@ -57,7 +42,7 @@ class Param:
             )
 
     def __repr__(self):
-        type_name = getattr(self.annotation, "__name__", self.annotation)
+        type_name = getattr(self.type_info.origin, "__name__", self.type_info.origin)
 
         return (
             f"<{self.__class__.__name__} {self.arg_name}"
@@ -89,45 +74,6 @@ class Param:
 
         return formatted
 
-    def schema(self) -> dict[str, Any]:
-        return {
-            "arg_name": self.arg_name,
-            "arg_alias": self.arg_alias,
-            "annotation": self.annotation,
-            "short": self.short,
-            "default": self.default,
-            "description": self.description,
-            "type": self.__class__.__name__,
-        }
-
-    def pre_run(self, state: ExecutionState) -> Any:
-        """Hook that is ran before the command is executed. Should
-        return the value of the param.
-        """
-        value = Selectors.select_value(self, state)
-        converted = self.convert(value, state)
-
-        if cleanup := getattr(converted, "__cleanup__", None):
-            self._cleanup_funcs.add(cleanup)
-
-        return converted
-
-    def post_run(self, res: Result):
-        """Hook that runs after the command is excuted."""
-        self.cleanup()
-
-    def convert(self, value: str, state):
-        return self.param_type(value, self, state)
-
-    def cleanup(self):
-        for func in self._cleanup_funcs:
-            func()
-
-    def cli_rep(self) -> str:
-        """Provides the representation that
-        would be seen on the command line"""
-        return self.arg_alias
-
     @property
     def optional(self):
         return self.default is not MISSING
@@ -151,6 +97,71 @@ class Param:
     @property
     def hidden(self):
         return self.is_special
+
+    def schema(self) -> dict[str, Any]:
+        return {
+            "arg_name": self.arg_name,
+            "arg_alias": self.arg_alias,
+            "type_info": asdict(self.type_info),
+            "short": self.short,
+            "default": self.default,
+            "description": self.description,
+            "arg_type": self.__class__.__name__,
+            "optional": self.optional,
+        }
+
+    def pre_run(self, state: ExecutionState) -> Any:
+        """Hook that is ran before the command is executed. Should
+        return the value of the param.
+        """
+        value = Selectors.select_value(self, state)
+        converted = self.convert(value, state)
+
+        return converted
+
+    def post_run(self, res: Result):
+        """Hook that runs after the command is excuted."""
+        self.cleanup()
+
+    def convert(self, value: Any, state):
+
+        type_class: type[aliases.TypeProtocol] = aliases.Alias.resolve(self.type_info)
+        if value is MISSING:
+            raise errors.MissingArgError(
+                "No value provided for required argument "
+                + colorize(self.cli_rep(), fg.YELLOW)
+            )
+
+        try:
+            converted = utils.dispatch_args(
+                type_class.__convert__, value, self.type_info, state
+            )
+        except errors.ConversionError as e:
+            raise errors.InvalidParamaterError(e.message, self, state) from e
+
+        self._register_cleanup(type_class, converted)
+
+        return converted
+
+    def cleanup(self):
+        for func in self._cleanup_funcs:
+            func()
+
+    def cli_rep(self) -> str:
+        """Provides the representation that
+        would be seen on the command line"""
+        return self.arg_alias
+
+    def _register_cleanup(self, type_class, value: Any):
+        if not isinstance(value, type_class):
+            # type_class is an alias for a concrete
+            # value type (Int -> int)
+            cleanup_origin = type_class
+        else:
+            cleanup_origin = value
+
+        if getattr(cleanup_origin, "__cleanup__", None):
+            self._cleanup_funcs.add(lambda: cleanup_origin.__cleanup__(value))
 
 
 class PositionalParam(Param):
@@ -178,8 +189,7 @@ class FlagParam(Param):
 
 
 class SpecialParam(Param):
-    def cli_rep(self) -> str:
-        return f"Special: {self.arg_alias}"
+    ...
 
 
 class Selectors:

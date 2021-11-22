@@ -55,6 +55,7 @@ class Command:
         return {
             "name": self.name,
             "description": self.description,
+            "doc": self.function.__doc__,
             "context": self.context,
             "subcommands": {
                 name: command.schema() for name, command in self.subcommands.items()
