@@ -18,7 +18,6 @@ class ExecutionState:
     command_chain: list[Command]
     parsed: Parsed
     executable: Optional[Executable] = None
-    cleanup: list[Callable] = field(default_factory=list)
 
     @property
     def root(self):

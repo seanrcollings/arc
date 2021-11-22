@@ -276,7 +276,6 @@ class IO(Alias, of=(_io._IOBase, t.IO)):
     def convert(cls, value: str, info: TypeInfo, state: ExecutionState) -> t.IO:
         try:
             file: t.IO = open(value, **cls.open_args(info))
-            state.cleanup.append(lambda f=file: cls.__cleanup(f))
             return file
         except FileNotFoundError as e:
             raise errors.ConversionError(value, f"No file named {value}") from e
