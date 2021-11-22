@@ -23,7 +23,10 @@ class Context(dict):
         return f"<{self.__class__.__name__} : {' '.join(values)}>"
 
     def __getattr__(self, attr):
-        return self[attr]
+        try:
+            return self[attr]
+        except KeyError as e:
+            raise AttributeError(str(e)) from e
 
     def __setattr__(self, name: str, value):
         return self.__setitem__(name, value)

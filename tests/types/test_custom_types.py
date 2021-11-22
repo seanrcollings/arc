@@ -52,12 +52,11 @@ def test_cleanup(cli: CLI):
             self.value = value
 
         @classmethod
-        def __convert__(cls, value, param_type):
-            # Give us easy access to the param_type
+        def __convert__(cls, value, info, state):
             return cls(value)
 
-        @classmethod
-        def __cleanup__(cls, value):
+        def __exit__(self, exc_type, exc_value, trace):
+            assert self.value == "2"
             raise CleanupError()
 
     @cli.command()

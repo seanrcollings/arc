@@ -34,7 +34,6 @@ class Param:
         self.short: Optional[str] = short
         self.default: Any = default
         self.description: Optional[str] = description
-        self._cleanup_funcs: set[Callable] = set()
 
         if self.short and len(self.short) > 1:
             raise errors.ArgumentError(
@@ -119,10 +118,6 @@ class Param:
 
         return converted
 
-    def post_run(self, res: Result):
-        """Hook that runs after the command is excuted."""
-        self.cleanup()
-
     def convert(self, value: Any, state):
 
         type_class: type[aliases.TypeProtocol] = aliases.Alias.resolve(self.type_info)
@@ -139,29 +134,12 @@ class Param:
         except errors.ConversionError as e:
             raise errors.InvalidParamaterError(e.message, self, state) from e
 
-        self._register_cleanup(type_class, converted)
-
         return converted
-
-    def cleanup(self):
-        for func in self._cleanup_funcs:
-            func()
 
     def cli_rep(self) -> str:
         """Provides the representation that
         would be seen on the command line"""
         return self.arg_alias
-
-    def _register_cleanup(self, type_class, value: Any):
-        if not isinstance(value, type_class):
-            # type_class is an alias for a concrete
-            # value type (Int -> int)
-            cleanup_origin = type_class
-        else:
-            cleanup_origin = value
-
-        if getattr(cleanup_origin, "__cleanup__", None):
-            self._cleanup_funcs.add(lambda: cleanup_origin.__cleanup__(value))
 
 
 class PositionalParam(Param):

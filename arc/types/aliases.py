@@ -2,19 +2,19 @@
 All builtin types (int, str, float, etc...) have a corresponding Alias type.
 """
 from __future__ import annotations
+
 import enum
-import typing as t
 import pathlib
+import typing as t
+import _io  # type: ignore
 
-from arc import errors, utils, logging
+from arc import errors, logging, utils
 from arc.color import colorize, fg
-from arc.types.helpers import join_or, safe_issubclass
-
+from arc.types.helpers import TypeInfo, join_or, safe_issubclass
 
 if t.TYPE_CHECKING:
-    from arc.types.helpers import TypeInfo
-    from arc.typing import Annotation
     from arc.execution_state import ExecutionState
+    from arc.typing import Annotation
 
 logger = logging.getArcLogger("ali")
 
@@ -38,7 +38,7 @@ class Alias:
     """
 
     aliases: dict[Annotation, type[TypeProtocol]] = {}
-    alias_for: t.ClassVar[Annotation]
+    alias_for: t.ClassVar[t.Union[Annotation, tuple[Annotation, ...]]]
     name: t.ClassVar[t.Optional[str]] = None
     convert: t.Callable
     g_convert: t.Callable
@@ -55,12 +55,20 @@ class Alias:
 
     def __init_subclass__(cls, register: bool = True):
         if register:
-            Alias.aliases[cls.alias_for] = cls  # type: ignore
+            if isinstance(cls.alias_for, tuple):
+                aliases = cls.alias_for
+            else:
+                aliases = (cls.alias_for,)
+
+            for alias in aliases:
+                Alias.aliases[alias] = cls  # type: ignore
 
     @classmethod
-    def resolve(cls, info: TypeInfo) -> type[TypeProtocol]:
+    def resolve(cls, annotation: t.Union[TypeInfo, type]) -> type[TypeProtocol]:
         """Handles resolving alias types"""
-        annotation = info.origin
+        if isinstance(annotation, TypeInfo):
+            annotation = annotation.origin
+
         if safe_issubclass(annotation, TypeProtocol):
             return annotation
         elif annotation in cls.aliases:
@@ -187,7 +195,7 @@ class Tuple(tuple, _CollectionAlias):
         tup = cls.convert(value)
 
         # Arbitraryily sized tuples
-        if info.sub_types[-1].origin is Ellipsis:
+        if cls.any_size(info):
             return super().g_convert(value, info, state)
 
         # Statically sized tuples
@@ -202,6 +210,10 @@ class Tuple(tuple, _CollectionAlias):
             )
             for item_type, item in zip(info.sub_types, tup)
         )
+
+    @classmethod
+    def any_size(cls, info: TypeInfo):
+        return info.sub_types[-1].origin is Ellipsis
 
 
 # Typing types ---------------------------------------------------------------------------------
@@ -269,12 +281,13 @@ class Path(Alias):
 
 
 class IO(Alias):
-    alias_for = t.IO
+    alias_for = _io._IOBase, t.IO
 
     @classmethod
-    def convert(cls, value: str, info: TypeInfo) -> t.IO:
+    def convert(cls, value: str, info: TypeInfo, state: ExecutionState) -> t.IO:
         try:
-            file = open(value, **cls.open_args(info))
+            file: t.IO = open(value, **cls.open_args(info))
+            state.cleanup.append(lambda f=file: cls.__cleanup(f))
             return file
         except FileNotFoundError as e:
             raise errors.ConversionError(value, f"No file named {value}") from e
@@ -287,7 +300,7 @@ class IO(Alias):
         if isinstance(arg, dict):
             return arg
 
-    @classmethod
-    def __cleanup__(cls, handle: t.IO):
-        logger.debug("Closing File handle for: %s", handle.name)
+    @staticmethod
+    def __cleanup(handle: t.IO):
+        logger.info("Closing stream for: %s", handle.name)
         handle.close()
