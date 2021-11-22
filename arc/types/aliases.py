@@ -12,9 +12,11 @@ from arc import errors, logging, utils
 from arc.color import colorize, fg
 from arc.types.helpers import TypeInfo, join_or, safe_issubclass
 
+from arc.typing import Annotation
+
 if t.TYPE_CHECKING:
     from arc.execution_state import ExecutionState
-    from arc.typing import Annotation
+
 
 logger = logging.getArcLogger("ali")
 
@@ -29,6 +31,9 @@ class TypeProtocol(t.Protocol):
         ...
 
 
+AliasFor = t.Union[Annotation, t.Tuple[Annotation, ...]]
+
+
 class Alias:
     """Parent class for all aliases. Stores references to all
     known alias types and handles resolving them. Additionally,
@@ -38,7 +43,7 @@ class Alias:
     """
 
     aliases: dict[Annotation, type[TypeProtocol]] = {}
-    alias_for: t.ClassVar[t.Union[Annotation, tuple[Annotation, ...]]]
+    alias_for: t.ClassVar[AliasFor] = None  # type: ignore
     name: t.ClassVar[t.Optional[str]] = None
     convert: t.Callable
     g_convert: t.Callable
@@ -53,8 +58,11 @@ class Alias:
         else:
             return utils.dispatch_args(cls.g_convert, value, typ, state)
 
-    def __init_subclass__(cls, register: bool = True):
-        if register:
+    def __init_subclass__(cls, of: t.Optional[AliasFor] = None):
+        if of:
+            cls.alias_for = of
+
+        if cls.alias_for:
             if isinstance(cls.alias_for, tuple):
                 aliases = cls.alias_for
             else:
@@ -95,27 +103,23 @@ class Alias:
 # Builtin Types ---------------------------------------------------------------------------------
 
 
-class String(str, Alias):
-    alias_for = str
-
+class String(Alias, of=str):
     @classmethod
-    def convert(cls, value: t.Any) -> str:  # type: ignore
+    def convert(cls, value: t.Any) -> str:
         return str(value)
 
 
-class Bytes(bytes, Alias):
-    alias_for = bytes
-
+class Bytes(Alias, of=bytes):
     @classmethod
-    def convert(cls, value: t.Any) -> bytes:  # type: ignore
+    def convert(cls, value: t.Any) -> bytes:
         return str(value).encode()
 
 
-class _NumberBaseParamType(Alias, register=False):
+class _NumberBaseParamType(Alias):
     alias_for: t.ClassVar[type]
 
     @classmethod
-    def convert(cls, value: t.Any, typ: TypeInfo) -> t.Any:  # type: ignore
+    def convert(cls, value: t.Any, typ: TypeInfo) -> t.Any:
         try:
             return cls.alias_for(value)
         except ValueError as e:
@@ -124,13 +128,11 @@ class _NumberBaseParamType(Alias, register=False):
             ) from e
 
 
-class Int(int, _NumberBaseParamType):
-    alias_for = int
+class Int(_NumberBaseParamType, of=int):
     name = "integer"
 
 
-class Float(float, _NumberBaseParamType):
-    alias_for = float
+class Float(float, _NumberBaseParamType, of=float):
     name = "float"
 
 
@@ -138,12 +140,11 @@ TRUE_VALUES = {"true", "t", "yes", "1"}
 FALSE_VALUES = {"false", "f", "no", "0"}
 
 
-class Bool(int, Alias):
-    alias_for = bool
+class Bool(Alias, of=bool):
     name = "boolean"
 
     @classmethod
-    def convert(cls, value: t.Any) -> bool:  # type: ignore
+    def convert(cls, value: t.Any) -> bool:
         if isinstance(value, str):
             if value.isnumeric():
                 return bool(int(value))
@@ -157,15 +158,15 @@ class Bool(int, Alias):
         return bool(value)
 
 
-class _CollectionAlias(Alias, register=False):
+class _CollectionAlias(Alias):
     alias_for: t.ClassVar[type]
 
     @classmethod
-    def convert(cls, value: str):  # type: ignore
+    def convert(cls, value: str):
         return cls.alias_for(value.split(","))
 
     @classmethod
-    def g_convert(cls, value: str, typ: TypeInfo, state):  # type: ignore
+    def g_convert(cls, value: str, typ: TypeInfo, state):
         lst = cls.convert(value)
         sub = typ.sub_types[0]
         sub_type = Alias.resolve(sub)
@@ -179,19 +180,17 @@ class _CollectionAlias(Alias, register=False):
             ) from e
 
 
-class List(list, _CollectionAlias):
-    alias_for = list
+class List(_CollectionAlias, of=list):
+    ...
 
 
-class Set(set, _CollectionAlias):
-    alias_for = set
+class Set(_CollectionAlias, of=set):
+    ...
 
 
-class Tuple(tuple, _CollectionAlias):
-    alias_for = tuple
-
+class Tuple(_CollectionAlias, of=tuple):
     @classmethod
-    def g_convert(cls, value: str, info: TypeInfo, state: ExecutionState):  # type: ignore
+    def g_convert(cls, value: str, info: TypeInfo, state: ExecutionState):
         tup = cls.convert(value)
 
         # Arbitraryily sized tuples
@@ -219,11 +218,9 @@ class Tuple(tuple, _CollectionAlias):
 # Typing types ---------------------------------------------------------------------------------
 
 
-class UnionAlias(Alias):
-    alias_for = t.Union
-
+class UnionAlias(Alias, of=t.Union):
     @classmethod
-    def g_convert(cls, value: t.Any, info: TypeInfo, state):  # type: ignore
+    def g_convert(cls, value: t.Any, info: TypeInfo, state):
 
         for sub in info.sub_types:
             try:
@@ -238,11 +235,9 @@ class UnionAlias(Alias):
         )
 
 
-class LiteralAlias(Alias):
-    alias_for = t.Literal
-
+class LiteralAlias(Alias, of=t.Literal):
     @classmethod
-    def g_convert(cls, value: t.Any, info: TypeInfo):  # type: ignore
+    def g_convert(cls, value: t.Any, info: TypeInfo):
         for sub in info.sub_types:
             if str(sub.base) == value:
                 return sub.base
@@ -255,11 +250,9 @@ class LiteralAlias(Alias):
 # Stdlib types ---------------------------------------------------------------------------------
 
 
-class Enum(Alias):
-    alias_for = enum.Enum
-
+class Enum(Alias, of=enum.Enum):
     @classmethod
-    def convert(cls, value: t.Any, info: TypeInfo[enum.Enum]):  # type: ignore
+    def convert(cls, value: t.Any, info: TypeInfo[enum.Enum]):
         try:
             if issubclass(info.origin, enum.IntEnum):
                 return info.origin(int(value))
@@ -272,17 +265,13 @@ class Enum(Alias):
             ) from e
 
 
-class Path(Alias):
-    alias_for = pathlib.Path
-
+class Path(Alias, of=pathlib.Path):
     @classmethod
-    def convert(cls, value: t.Any):  # type: ignore
+    def convert(cls, value: t.Any):
         return pathlib.Path(value)
 
 
-class IO(Alias):
-    alias_for = _io._IOBase, t.IO
-
+class IO(Alias, of=(_io._IOBase, t.IO)):
     @classmethod
     def convert(cls, value: str, info: TypeInfo, state: ExecutionState) -> t.IO:
         try:
