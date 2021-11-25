@@ -45,6 +45,9 @@ class Executable(abc.ABC, ParamMixin):
         self.wrapped = wrapped
         self.callback_store = CallbackStore()
 
+        if config.mode == "development":
+            self.params  # instantiate params for dev
+
     def __call__(self, state: ExecutionState):
         # Setup
         self.state = state

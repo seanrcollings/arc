@@ -113,7 +113,3 @@ class HttpUrl(Url):
 
 class PostgresUrl(Url):
     allowed_schemes = {"postgresql", "postgres"}
-
-
-# def ConstrainedUrl(allowed_schemes: set[str] = None):
-#     return type("ConstrainedUrl", (Url,), {"allowed_schemes": allowed_schemes})

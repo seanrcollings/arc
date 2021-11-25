@@ -6,8 +6,9 @@ from __future__ import annotations
 import enum
 import pathlib
 import typing as t
-import _io  # type: ignore
 import ipaddress
+import dataclasses
+import _io  # type: ignore
 
 from arc import errors, logging, utils
 from arc.color import colorize, fg
@@ -104,19 +105,19 @@ class Alias:
 # Builtin Types ---------------------------------------------------------------------------------
 
 
-class String(Alias, of=str):
+class StringAlias(Alias, of=str):
     @classmethod
     def convert(cls, value: t.Any) -> str:
         return str(value)
 
 
-class Bytes(Alias, of=bytes):
+class BytesAlias(Alias, of=bytes):
     @classmethod
     def convert(cls, value: t.Any) -> bytes:
         return str(value).encode()
 
 
-class _NumberBaseParamType(Alias):
+class _NumberBaseAlias(Alias):
     alias_for: t.ClassVar[type]
 
     @classmethod
@@ -129,11 +130,11 @@ class _NumberBaseParamType(Alias):
             ) from e
 
 
-class Int(_NumberBaseParamType, of=int):
+class IntAlias(_NumberBaseAlias, of=int):
     name = "integer"
 
 
-class Float(float, _NumberBaseParamType, of=float):
+class FloatAlias(float, _NumberBaseAlias, of=float):
     name = "float"
 
 
@@ -141,7 +142,7 @@ TRUE_VALUES = {"true", "t", "yes", "1"}
 FALSE_VALUES = {"false", "f", "no", "0"}
 
 
-class Bool(Alias, of=bool):
+class BoolAlias(Alias, of=bool):
     name = "boolean"
 
     @classmethod
@@ -181,15 +182,15 @@ class _CollectionAlias(Alias):
             ) from e
 
 
-class List(_CollectionAlias, of=list):
+class ListAlias(_CollectionAlias, of=list):
     ...
 
 
-class Set(_CollectionAlias, of=set):
+class SetAlias(_CollectionAlias, of=set):
     ...
 
 
-class Tuple(_CollectionAlias, of=tuple):
+class TupleAlias(_CollectionAlias, of=tuple):
     @classmethod
     def g_convert(cls, value: str, info: TypeInfo, state: ExecutionState):
         tup = cls.convert(value)
@@ -251,7 +252,7 @@ class LiteralAlias(Alias, of=t.Literal):
 # Stdlib types ---------------------------------------------------------------------------------
 
 
-class Enum(Alias, of=enum.Enum):
+class EnumAlias(Alias, of=enum.Enum):
     @classmethod
     def convert(cls, value: t.Any, info: TypeInfo[enum.Enum]):
         try:
@@ -266,15 +267,15 @@ class Enum(Alias, of=enum.Enum):
             ) from e
 
 
-class Path(Alias, of=pathlib.Path):
+class PathAlias(Alias, of=pathlib.Path):
     @classmethod
     def convert(cls, value: t.Any):
         return pathlib.Path(value)
 
 
-class IO(Alias, of=(_io._IOBase, t.IO)):
+class IOAlias(Alias, of=(_io._IOBase, t.IO)):
     @classmethod
-    def convert(cls, value: str, info: TypeInfo, state: ExecutionState) -> t.IO:
+    def convert(cls, value: str, info: TypeInfo) -> t.IO:
         try:
             file: t.IO = open(value, **cls.open_args(info))
             return file
@@ -286,8 +287,8 @@ class IO(Alias, of=(_io._IOBase, t.IO)):
         arg = info.annotations[0]
         if isinstance(arg, str):
             return {"mode": arg}
-        if isinstance(arg, dict):
-            return arg
+        if dataclasses.is_dataclass(arg):
+            return dataclasses.asdict(arg)
 
 
 class _Address(Alias):
@@ -303,9 +304,9 @@ class _Address(Alias):
             ) from e
 
 
-class IPv4(_Address, of=ipaddress.IPv4Address):
+class IPv4Alias(_Address, of=ipaddress.IPv4Address):
     name = "IPv4"
 
 
-class IPv6(_Address, of=ipaddress.IPv6Address):
+class IPv6Alias(_Address, of=ipaddress.IPv6Address):
     name = "IPv6"

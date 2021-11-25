@@ -70,7 +70,7 @@ class ParamBuilder:
 
         # By default, snake_case args are transformed to kebab-case
         # for the command line. However, this can be ignored
-        # by declaring an explicit name in the Meta()
+        # by declaring an explicit name in the ParamInfo
         # or by setting the config value to false
         if config.transform_snake_case:
             info.name = arg.name.replace("_", "-")

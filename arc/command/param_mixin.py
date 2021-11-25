@@ -1,9 +1,11 @@
+"""Mixin for param properties and functions
+Note that in development, all paramaters are insantiated, but
+in production only the command being executed parameters are
+created.
+"""
 import functools
 from arc.command.param_builder import ParamBuilder
 from arc.command.param import Param
-
-# Params aren't constructed until
-# a command is actually executed
 
 
 class ParamMixin:

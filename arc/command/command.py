@@ -1,4 +1,4 @@
-from typing import Dict, Callable, Optional, Any, Union
+from typing import Callable, Optional, Any, Union
 from arc import logging
 
 from arc.color import effects, fg
