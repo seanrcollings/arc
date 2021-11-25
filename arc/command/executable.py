@@ -175,8 +175,8 @@ class ClassExecutable(Executable):
                 f"Class-based commands must have a {colorize('handle()', fg.YELLOW)} method"
             )
 
+        self.__build_class_params(wrapped)
         super().__init__(wrapped)
-        self.__build_class_params()
 
     def run(self, args: dict[str, Any]):
         instance = self.wrapped()
@@ -185,11 +185,11 @@ class ClassExecutable(Executable):
 
         return instance.handle()
 
-    def __build_class_params(self):
-        sig = inspect.signature(self.wrapped)
-        annotations = get_type_hints(self.wrapped, include_extras=True)
+    def __build_class_params(self, wrapped: type[WrappedClassExecutable]):
+        sig = inspect.signature(wrapped)
+        annotations = get_type_hints(wrapped, include_extras=True)
         defaults = {
-            name: val for name, val in vars(self.wrapped).items() if name in annotations
+            name: val for name, val in vars(wrapped).items() if name in annotations
         }
 
         sig._parameters = MappingProxyType(  # type: ignore # pylint: disable=protected-access
@@ -209,6 +209,6 @@ class ClassExecutable(Executable):
 
         # inspect.signature() checks for a cached signature object
         # at __signature__. So we can cache it there
-        # to generate the correct signature object for
-        # self.build()
-        self.wrapped.__signature__ = sig  # type: ignore
+        # to generate the correct signature object
+        # during the paramater building process
+        wrapped.__signature__ = sig  # type: ignore

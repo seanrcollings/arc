@@ -47,12 +47,12 @@ class TestSimpleSyntax:
         assert cli("post") == []
 
     def test_star_args(self, cli: CLI):
-        @cli.subcommand()
-        def pos(*vals):
-            ...
 
         with pytest.raises(errors.ArgumentError):
-            cli("pos")
+
+            @cli.subcommand()
+            def pos(*vals):
+                ...
 
     def test_pos_missing(self, cli: CLI):
         @cli.subcommand()
@@ -97,12 +97,12 @@ class TestSimpleSyntax:
         assert cli("key --val 2 --val2 10") == {"val": 2, "val2": 10}
 
     def test_star_kwargs(self, cli: CLI):
-        @cli.subcommand()
-        def key(*kwargs):
-            ...
 
         with pytest.raises(errors.ArgumentError):
-            cli("key")
+
+            @cli.subcommand()
+            def key(*kwargs):
+                ...
 
     def test_key_missing(self, cli: CLI):
         @cli.subcommand()
