@@ -6,7 +6,7 @@ import typing as t
 from arc.types.helpers import join_or
 from arc import errors
 
-__all__ = ["IPAddress", "Url", "HttpUrl", "PostgresUrl"]
+__all__ = ["IPAddress", "Url", "HttpUrl", "PostgresUrl", "stricturl"]
 
 IPAddress = t.Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
 
@@ -115,5 +115,5 @@ class PostgresUrl(Url):
     allowed_schemes = {"postgresql", "postgres"}
 
 
-# def ConstrainedUrl(allowed_schemes: set[str] = None):
-#     return type("ConstrainedUrl", (Url,), {"allowed_schemes": allowed_schemes})
+def stricturl(allowed_schemes: set[str] = None) -> type[Url]:
+    return type("StrictUrl", (Url,), {"allowed_schemes": allowed_schemes})
