@@ -70,17 +70,14 @@ class Executable(abc.ABC, ParamMixin):
             if not isinstance(result, (Ok, Err)):
                 result = Ok(result)
         except BaseException as e:
-            # TODO: add more descriptive error message here
-            self.handle_context_managers(arguments.values(), e)
+            self.close_context_managers(arguments.values(), e)
             result = Err(e)
             raise
         finally:
             logger.debug(BAR)
-            # for func in reversed(state.cleanup):
-            #     func()
             self.callback_store.post_execution(result)
 
-        self.handle_context_managers(arguments.values())
+        self.close_context_managers(arguments.values())
         return result
 
     @abc.abstractmethod
@@ -138,7 +135,7 @@ class Executable(abc.ABC, ParamMixin):
 
         return None
 
-    def handle_context_managers(
+    def close_context_managers(
         self, values: Iterable[Any], exc: Optional[BaseException] = None
     ):
         if exc:
@@ -148,7 +145,7 @@ class Executable(abc.ABC, ParamMixin):
 
         for val in values:
             if isinstance(val, (list, set, tuple)):
-                return self.handle_context_managers(val)
+                return self.close_context_managers(val)
 
             if getattr(val, "__exit__", None):
                 val.__exit__(*args)
