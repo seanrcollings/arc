@@ -10,3 +10,4 @@ from .var_types import VarPositional, VarKeyword
 from .aliases import Alias
 from .semvar import SemVar
 from .network import *
+from .path import *
