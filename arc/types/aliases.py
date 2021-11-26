@@ -12,7 +12,7 @@ import _io  # type: ignore
 
 from arc import errors, logging, utils
 from arc.color import colorize, fg
-from arc.types.helpers import TypeInfo, join_or, safe_issubclass
+from arc.types.helpers import TypeInfo, join_and, join_or, safe_issubclass
 
 from arc.typing import Annotation
 
@@ -222,24 +222,29 @@ class DictAlias(Alias, of=dict):
     name = "dictionary"
 
     @classmethod
-    def convert(cls, value: str):
-        return cls.alias_for(i.split("=") for i in value.split(","))
+    def convert(cls, value: str, info: TypeInfo, state):
+        dct = cls.alias_for(i.split("=") for i in value.split(","))
+        if isinstance(info.origin, t._TypedDictMeta):  # type: ignore
+            return cls.__typed_dict_convert(dct, info, state)
+
+        return dct
 
     @classmethod
-    def g_convert(cls, value, typ: TypeInfo, state):
-        dct: dict = cls.convert(value)
-
-        key_sub = typ.sub_types[0]
+    def g_convert(cls, value, info: TypeInfo, state):
+        dct: dict = cls.convert(value, info, state)
+        key_sub = info.sub_types[0]
         key_type = Alias.resolve(key_sub)
-        value_sub = typ.sub_types[1]
+        value_sub = info.sub_types[1]
         value_type = Alias.resolve(value_sub)
 
         try:
             return cls.alias_for(
                 [
                     (
-                        key_type.__convert__(k, key_sub, state),
-                        value_type.__convert__(v, value_sub, state),
+                        utils.dispatch_args(key_type.__convert__, k, key_sub, state),
+                        utils.dispatch_args(
+                            value_type.__convert__, v, value_sub, state
+                        ),
                     )
                     for k, v in dct.items()
                 ]
@@ -247,10 +252,33 @@ class DictAlias(Alias, of=dict):
         except errors.ConversionError as e:
             raise errors.ConversionError(
                 value,
-                f"{value} is not a valid {typ.name} of "
+                f"{value} is not a valid {info.name} of "
                 f"{key_sub.name} keys and {value_sub.name} values",
                 source=e,
             ) from e
+
+    @classmethod
+    def __typed_dict_convert(cls, elements: dict[str, str], info: TypeInfo, state):
+        hints = t.get_type_hints(info.origin, include_extras=True)
+        for key, value in elements.items():
+            if key not in hints:
+                raise errors.ConversionError(
+                    elements,
+                    f"{key} is not a valid key name. "
+                    f"Valid keys are: {join_and(list(hints.keys()))}",
+                )
+
+            sub_type = Alias.resolve(hints[key])
+            try:
+                elements[key] = utils.dispatch_args(
+                    sub_type.__convert__, value, info, state
+                )
+            except errors.ConversionError as e:
+                raise errors.ConversionError(
+                    value, f"{value} is not a valid value for key {key}", e
+                ) from e
+
+        return elements
 
 
 # Typing types ---------------------------------------------------------------------------------

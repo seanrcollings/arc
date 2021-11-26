@@ -1,4 +1,4 @@
-from typing import Annotated, Literal, Union
+from typing import Annotated, Literal, Union, TypedDict
 from pathlib import Path
 import enum
 import pytest
@@ -124,6 +124,23 @@ class TestDict:
 
         with pytest.raises(errors.InvalidParamaterError):
             cli("di one=1,two=2,three=three")
+
+    def test_typed_dict(self, cli: CLI):
+        class Thing(TypedDict):
+            val1: int
+            val2: float
+
+        @cli.subcommand()
+        def td(val: Thing):
+            return val
+
+        assert cli("td val1=1,val2=2.0") == Thing(val1=1, val2=2.0)
+
+        with pytest.raises(errors.InvalidParamaterError):
+            cli("td val1=string,val2=string")
+
+        with pytest.raises(errors.InvalidParamaterError):
+            cli("td val1=string")
 
 
 def test_enum(cli: CLI):
