@@ -132,7 +132,11 @@ class Param:
                 type_class.__convert__, value, self.type_info, state
             )
         except errors.ConversionError as e:
-            raise errors.InvalidParamaterError(e.message, self, state) from e
+            message = e.message
+            if e.source:
+                message += f" ({e.source})"
+
+            raise errors.InvalidParamaterError(message, self, state) from e
 
         return converted
 

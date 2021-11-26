@@ -71,6 +71,7 @@ class InvalidParamaterError(ArgumentError):
 class ConversionError(ArgumentError):
     """Raised if a type conversion fails """
 
-    def __init__(self, value, message: str):
+    def __init__(self, value, message: str, source=None):
         self.value = value
+        self.source = source
         super().__init__(message)

@@ -217,6 +217,42 @@ class TupleAlias(_CollectionAlias, of=tuple):
         return info.sub_types[-1].origin is Ellipsis
 
 
+class DictAlias(Alias, of=dict):
+    alias_for: t.ClassVar[type]
+    name = "dictionary"
+
+    @classmethod
+    def convert(cls, value: str):
+        return cls.alias_for(i.split("=") for i in value.split(","))
+
+    @classmethod
+    def g_convert(cls, value, typ: TypeInfo, state):
+        dct: dict = cls.convert(value)
+
+        key_sub = typ.sub_types[0]
+        key_type = Alias.resolve(key_sub)
+        value_sub = typ.sub_types[1]
+        value_type = Alias.resolve(value_sub)
+
+        try:
+            return cls.alias_for(
+                [
+                    (
+                        key_type.__convert__(k, key_sub, state),
+                        value_type.__convert__(v, value_sub, state),
+                    )
+                    for k, v in dct.items()
+                ]
+            )
+        except errors.ConversionError as e:
+            raise errors.ConversionError(
+                value,
+                f"{value} is not a valid {typ.name} of "
+                f"{key_sub.name} keys and {value_sub.name} values",
+                source=e,
+            ) from e
+
+
 # Typing types ---------------------------------------------------------------------------------
 
 
