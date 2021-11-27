@@ -1,6 +1,8 @@
 import os
+from pprint import pprint
 
-from arc import namespace
+from arc import namespace, CLI
+from arc.types import Context
 from arc.config import config, Config
 from arc.types import aliases
 from arc.present import Table, Box
@@ -28,10 +30,10 @@ def aliases_c():
 
     table = Table(
         columns=[
-            {"name": "NAME", "justify": "left"},
-            {"name": "TYPE", "justify": "left", "width": 40},
+            {"name": "ALIAS", "justify": "left", "width": 20},
+            {"name": "TYPE", "justify": "right", "width": 40},
         ],
-        rows=[[str(v), k] for k, v in aliases.Alias.aliases.items()],
+        rows=[[v.__name__, k] for k, v in aliases.Alias.aliases.items()],
     )
     # print(Box(str(table), justify="center", padding=1))
     print(table)
@@ -47,3 +49,8 @@ def arcfile():
         file.close()
     else:
         print(".arc file does not exist")
+
+
+@debug.subcommand()
+def schema(ctx: Context):
+    pprint(ctx.state.root.schema())

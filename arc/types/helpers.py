@@ -76,21 +76,6 @@ def convert(
     return utils.dispatch_args(protocol.__convert__, value, info, state)
 
 
-def isclassmethod(method):
-    bound_to = getattr(method, "__self__", None)
-
-    if not isinstance(bound_to, type):
-        return False
-
-    name = method.__name__
-    for cls in bound_to.__mro__:
-        descriptor = vars(cls).get(name)
-        if descriptor is not None:
-            return isinstance(descriptor, classmethod)
-
-    return False
-
-
 def safe_issubclass(_type, _classes: Union[type, tuple[type, ...]]):
     try:
         return issubclass(_type, _classes)

@@ -7,7 +7,7 @@ from typing import Callable
 from arc import logging
 from arc.color import fg, effects, colorize
 
-logger = logging.getArcLogger("utl")
+logger = logging.getArcLogger("util")
 
 
 IDENT = r"[a-zA-Z-_0-9]+"

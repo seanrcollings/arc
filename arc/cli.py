@@ -48,6 +48,12 @@ class CLI(Command):
 
         logging.root_setup()
         utils.header("INIT")
+
+        if config_obj.mode == "development":
+            from ._debug import debug  # pylint: disable=import-outside-toplevel
+
+            self.install_command(debug)
+
         self.version = version
         self.install_command(Command("help", self.helper))
         self.default_action: Optional[Command] = (

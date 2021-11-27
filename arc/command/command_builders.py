@@ -1,23 +1,29 @@
 from __future__ import annotations
 from typing import Callable
 
+from arc import result, logging
 from arc.color import colorize, fg
 from arc.types import Context
-from arc import result
 from arc.config import config
 from arc.command.command import Command
 
+logger = logging.getArcLogger("build")
+
 
 def no_op(ctx: Context):
-    namespace_str = config.namespace_sep.join(ctx.state.command_namespace)
 
     return result.Err(
-        f"{colorize(namespace_str, fg.YELLOW)} is not executable. "
-        f"Check {colorize('help ' + namespace_str, fg.ARC_BLUE)} for subcommands"
+        f"{colorize(ctx.state.command_name, fg.YELLOW)} is not executable. "
+        f"Check {colorize('help ' + ctx.state.command_name, fg.ARC_BLUE)} for subcommands"
     )
 
 
-def namespace(name: str, **kwargs) -> Command:
+def helper(ctx: Context):
+    logger.warning(f"{colorize(ctx.state.command_name, fg.YELLOW)} is not executable. ")
+    return ctx.state.root(f"help {ctx.state.command_name}")
+
+
+def namespace(name: str, show_help: bool = True, **kwargs) -> Command:
     """Creates a non-executable Command namespace.
 
     Namespaces are autoloadable with `cli.autoload()`
@@ -39,7 +45,7 @@ def namespace(name: str, **kwargs) -> Command:
     When installed into a CLI, the function could be executed with `ns:hello`
     but `ns` would not be a valid command
     """
-    c = Command(name, no_op, **kwargs)
+    c = Command(name, helper if show_help else no_op, **kwargs)
     c.__autoload__ = True  # type: ignore
     return c
 

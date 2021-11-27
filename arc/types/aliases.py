@@ -95,13 +95,13 @@ class Alias:
 # Builtin Types ---------------------------------------------------------------------------------
 
 
-class StringAlias(Alias, of=str):
+class StringAlias(str, Alias, of=str):
     @classmethod
     def convert(cls, value: t.Any) -> str:
         return str(value)
 
 
-class BytesAlias(Alias, of=bytes):
+class BytesAlias(bytes, Alias, of=bytes):
     @classmethod
     def convert(cls, value: t.Any) -> bytes:
         return str(value).encode()
@@ -120,7 +120,7 @@ class _NumberBaseAlias(Alias):
             ) from e
 
 
-class IntAlias(_NumberBaseAlias, of=int):
+class IntAlias(int, _NumberBaseAlias, of=int):
     name = "integer"
 
 
@@ -132,7 +132,7 @@ TRUE_VALUES = {"true", "t", "yes", "1"}
 FALSE_VALUES = {"false", "f", "no", "0"}
 
 
-class BoolAlias(Alias, of=bool):
+class BoolAlias(int, Alias, of=bool):
     name = "boolean"
 
     @classmethod
@@ -172,15 +172,15 @@ class _CollectionAlias(Alias):
             ) from e
 
 
-class ListAlias(_CollectionAlias, of=list):
+class ListAlias(list, _CollectionAlias, of=list):
     ...
 
 
-class SetAlias(_CollectionAlias, of=set):
+class SetAlias(set, _CollectionAlias, of=set):
     ...
 
 
-class TupleAlias(_CollectionAlias, of=tuple):
+class TupleAlias(tuple, _CollectionAlias, of=tuple):
     @classmethod
     def g_convert(cls, value: str, info: TypeInfo, state: ExecutionState):
         tup = cls.convert(value)
@@ -205,7 +205,7 @@ class TupleAlias(_CollectionAlias, of=tuple):
         return info.sub_types[-1].origin is Ellipsis
 
 
-class DictAlias(Alias, of=dict):
+class DictAlias(dict, Alias, of=dict):
     alias_for: t.ClassVar[type]
     name = "dictionary"
 
@@ -345,6 +345,9 @@ class _Address(Alias):
     @classmethod
     def convert(cls, value: str, info):
         try:
+            if value.isnumeric():
+                return cls.alias_for(int(value))
+
             return cls.alias_for(value)
         except ipaddress.AddressValueError as e:
             raise errors.ConversionError(
@@ -352,9 +355,9 @@ class _Address(Alias):
             ) from e
 
 
-class IPv4Alias(_Address, of=ipaddress.IPv4Address):
+class IPv4Alias(ipaddress.IPv4Address, _Address, of=ipaddress.IPv4Address):
     name = "IPv4"
 
 
-class IPv6Alias(_Address, of=ipaddress.IPv6Address):
+class IPv6Alias(ipaddress.IPv4Address, _Address, of=ipaddress.IPv6Address):
     name = "IPv6"

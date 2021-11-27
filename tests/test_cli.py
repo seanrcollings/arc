@@ -4,7 +4,7 @@ import pytest
 
 from arc import CLI, namespace
 from arc.errors import CommandError
-from arc.builtin.debug import debug
+from arc._debug import debug
 
 
 def test_base(cli: CLI):
@@ -39,19 +39,19 @@ class TestAutoload:
     root = Path(__file__).parent.parent
 
     def test_autoload_file(self, cli: CLI):
-        cli.autoload(str(self.root / "arc/builtin/debug.py"))
+        cli.subcommands.pop("debug")
+        cli.autoload(str(self.root / "arc/_debug.py"))
         assert "debug" in cli.subcommands
 
-    def test_autoload_dir(self, cli: CLI):
-        cli.autoload(str(self.root / "arc/builtin"))
-        assert "debug" in cli.subcommands
-        assert "files" in cli.subcommands
-        assert "https" in cli.subcommands
+    # def test_autoload_dir(self, cli: CLI):
+    #     cli.autoload(str(self.root / "arc/builtin"))
+    #     assert "debug" in cli.subcommands
+    #     assert "files" in cli.subcommands
+    #     assert "https" in cli.subcommands
 
     def test_autoload_error(self, cli: CLI):
-        cli.install_command(debug)
         with pytest.raises(CommandError):
-            cli.autoload(str(self.root / "arc/builtin/debug.py"))
+            cli.autoload(str(self.root / "arc/_debug.py"))
 
 
 def test_command_alias(cli: CLI):

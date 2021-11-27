@@ -10,7 +10,7 @@ from .command_doc import CommandDoc
 from .executable import Executable, FunctionExecutable, ClassExecutable
 
 
-logger = logging.getArcLogger("com")
+logger = logging.getArcLogger("command")
 
 
 class Command:

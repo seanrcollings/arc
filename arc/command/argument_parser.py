@@ -9,7 +9,7 @@ from arc.utils import symbol
 from arc.command.param import MISSING
 
 
-logger = logging.getArcLogger("prs")
+logger = logging.getArcLogger("parse")
 
 
 class TokenType(enum.Enum):

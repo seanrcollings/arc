@@ -2,7 +2,6 @@ import ipaddress
 from urllib.parse import urlparse, ParseResult
 import webbrowser
 import typing as t
-import re
 
 from arc.types.helpers import join_or, match
 from arc import errors
@@ -16,7 +15,7 @@ IPAddress = t.Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
 class Url(str, metaclass=Meta):
     allowed_schemes: t.ClassVar[set[str]] = set()
     strip_whitespace: t.ClassVar[bool] = True
-    host_required: t.ClassVar[bool] = True
+    host_required: t.ClassVar[bool] = False
     user_required: t.ClassVar[bool] = False
     matches: t.ClassVar[t.Optional[str]] = None
 
@@ -70,7 +69,7 @@ class Url(str, metaclass=Meta):
         if cls.strip_whitespace:
             url = url.strip()
 
-        result = urlparse(url)
+        result = urlparse(url.strip())
         cls.__validate(url, result)
 
         return cls(
@@ -118,7 +117,16 @@ class HttpUrl(Url):
 
 
 class PostgresUrl(Url):
-    allowed_schemes = {"postgresql", "postgres"}
+    allowed_schemes = {
+        "postgresql",
+        "postgres",
+        "postgresql+asyncpg",
+        "postgresql+pg8000",
+        "postgresql+psycopg2",
+        "postgresql+psycopg2cffi",
+        "postgresql+py-postgresql",
+        "postgresql+pygresql",
+    }
 
 
 def stricturl(
