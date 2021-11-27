@@ -1,7 +1,12 @@
 import pathlib
-from arc import errors
+import typing as t
 
-__all__ = ["ValidPath", "FilePath", "DirectoryPath"]
+from arc import errors
+from arc.types import helpers
+
+from ._meta import Meta
+
+__all__ = ["ValidPath", "FilePath", "DirectoryPath", "strictpath"]
 
 # The concrete implementation of Path isn't chosen
 # until instantiation, so you can't sublcass Path directly
@@ -10,41 +15,91 @@ __all__ = ["ValidPath", "FilePath", "DirectoryPath"]
 PathType = type(pathlib.Path())
 
 
-class ValidPath(PathType):  # type: ignore
-    _validate = lambda self: self.exists()
+class ValidPath(PathType, metaclass=Meta):  # type: ignore
     name = "path"
+
+    ## -- Validators --
+    valid: t.ClassVar[bool] = True
+    directory: t.ClassVar[bool] = False
+    file: t.ClassVar[bool] = False
+    matches: t.ClassVar[t.Optional[str]] = None
 
     def _init(self, *args, **kwargs):
         super()._init(*args, **kwargs)
-        if not self._validate():
-            self._fail()
+        self.__validate()
 
-    def _fail(self):
-        raise ValueError(f"{self} does not exist")
+    def __validate(self):
+        if self.valid and not self.exists():
+            raise ValueError(f"{self} does not exist")
+
+        if self.directory and not self.is_dir():
+            raise ValueError(f"{self} is a file, not a directory")
+
+        if self.file and not self.is_file():
+            raise ValueError(f"{self} is a directory, not a file")
+
+        if self.matches:
+            helpers.match(self.matches, str(self.resolve()))
+
+    def resolve(self, strict=False):
+        # resolve() creates a new Path object, so
+        # __validate will get called recursively when
+        # matches is set.
+        cls = type(self)
+        matches, cls.matches = cls.matches, None
+        resolved = super().resolve(strict)
+        cls.matches = matches
+        return resolved
 
     @classmethod
     def __convert__(cls, value: str):
         try:
-            cls(value)
+            return cls(value)
         except AssertionError as e:
-            raise errors.ConversionError(value, str(e))
+            raise errors.ConversionError(value, str(e)) from e
 
 
 class FilePath(ValidPath):
-    _validate = lambda self: self.is_file()
-
-    def _fail(self):
-        if self.is_dir():
-            raise ValueError(f"{self} is a directory, not a file")
-
-        super()._fail()
+    file = True
 
 
 class DirectoryPath(ValidPath):
-    _validate = lambda self: self.is_dir()
+    directory = True
 
-    def _fail(self):
-        if self.is_file():
-            raise ValueError(f"{self} is a file, not a directory")
 
-        super()._fail()
+def strictpath(
+    valid: bool = True,
+    directory: bool = False,
+    file: bool = False,
+    matches: t.Optional[str] = None,
+) -> type[ValidPath]:
+    """Creates a custom `ValidPath` type with specific validations
+
+    Args:
+        valid (bool, optional): Is a valid path to validate. Defaults to True.
+        directory (bool, optional): Path is a directory. Defaults to False.
+        file (bool, optional): Path is a file. Defaults to False.
+        matches (t.Optional[str], optional): Path matches the given regex.
+        Matches to the resolved path. Defaults to None.
+
+    Raises:
+        ValueError: If directory and file are both true
+
+    Returns:
+        type[ValidPath]: The `StrictPath` type
+    """
+    if all([directory, file]):
+        raise ValueError(
+            "directory and file are mutually exclusive and cannot both be true"
+        )
+
+    return type(
+        "StrictPath",
+        (ValidPath,),
+        {
+            "valid": valid,
+            "directory": directory,
+            "file": file,
+            "matches": matches,
+        },
+    )

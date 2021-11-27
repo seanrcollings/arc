@@ -4,7 +4,7 @@ from mypy.plugin import Plugin, DynamicClassDefContext
 from mypy.nodes import TypeInfo, SymbolTable, ClassDef, Block, SymbolTableNode, GDEF
 
 
-STRICT_FUNCTIONS = {"arc.types.network.stricturl"}
+STRICT_FUNCTIONS = {"arc.types.network.stricturl", "arc.types.path.strictpath"}
 
 
 class ArcPlugin(Plugin):
@@ -31,4 +31,3 @@ def dynamic_class_hook(ctx: DynamicClassDefContext):
 
 def plugin(_version: str):
     return ArcPlugin
-

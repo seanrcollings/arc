@@ -11,6 +11,7 @@ from typing import (
     Generic,
     TypeVar,
 )
+import re
 
 from arc.typing import Annotation
 
@@ -123,3 +124,8 @@ def join_and(values: Sequence) -> str:
         str: joined values
     """
     return joiner(values, last_str=" and ")
+
+
+def match(pattern: str, string: str):
+    if not re.match(pattern, string):
+        raise ValueError(f"does not follow required format: {pattern}")

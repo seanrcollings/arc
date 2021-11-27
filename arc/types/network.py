@@ -4,7 +4,7 @@ import webbrowser
 import typing as t
 import re
 
-from arc.types.helpers import join_or
+from arc.types.helpers import join_or, match
 from arc import errors
 from ._meta import Meta
 
@@ -98,8 +98,8 @@ class Url(str, metaclass=Meta):
         if cls.user_required and not result.username:
             raise ValueError("username required")
 
-        if cls.matches and not re.match(cls.matches, url):
-            raise ValueError(f"does not follow required format: {cls.matches}")
+        if cls.matches:
+            match(cls.matches, url)
 
     @classmethod
     def __convert__(cls, value):
