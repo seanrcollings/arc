@@ -1,5 +1,4 @@
 import pathlib
-import typing as t
 from arc import errors
 
 __all__ = ["ValidPath", "FilePath", "DirectoryPath"]

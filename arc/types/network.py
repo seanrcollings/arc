@@ -2,20 +2,23 @@ import ipaddress
 from urllib.parse import urlparse, ParseResult
 import webbrowser
 import typing as t
+import re
 
 from arc.types.helpers import join_or
 from arc import errors
+from ._meta import Meta
 
 __all__ = ["IPAddress", "Url", "HttpUrl", "PostgresUrl", "stricturl"]
 
 IPAddress = t.Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
 
 
-class Url(str):
+class Url(str, metaclass=Meta):
     allowed_schemes: t.ClassVar[set[str]] = set()
     strip_whitespace: t.ClassVar[bool] = True
     host_required: t.ClassVar[bool] = True
     user_required: t.ClassVar[bool] = False
+    matches: t.ClassVar[t.Optional[str]] = None
 
     __slots__ = (
         "url",
@@ -68,7 +71,7 @@ class Url(str):
             url = url.strip()
 
         result = urlparse(url)
-        cls.__validate_result(result)
+        cls.__validate(url, result)
 
         return cls(
             url=url,
@@ -85,7 +88,7 @@ class Url(str):
         )
 
     @classmethod
-    def __validate_result(cls, result: ParseResult):
+    def __validate(cls, url: str, result: ParseResult):
         if cls.allowed_schemes and result.scheme not in cls.allowed_schemes:
             raise ValueError(f"scheme must be {join_or(tuple(cls.allowed_schemes))}")
 
@@ -94,6 +97,9 @@ class Url(str):
 
         if cls.user_required and not result.username:
             raise ValueError("username required")
+
+        if cls.matches and not re.match(cls.matches, url):
+            raise ValueError(f"does not follow required format: {cls.matches}")
 
     @classmethod
     def __convert__(cls, value):
@@ -115,5 +121,37 @@ class PostgresUrl(Url):
     allowed_schemes = {"postgresql", "postgres"}
 
 
-def stricturl(allowed_schemes: set[str] = None) -> type[Url]:
-    return type("StrictUrl", (Url,), {"allowed_schemes": allowed_schemes})
+def stricturl(
+    allowed_schemes: set[str] = None,
+    strip_whitespace: bool = True,
+    host_required: bool = True,
+    user_required: bool = False,
+    matches: str = None,
+) -> type[Url]:
+    """Creates a custom `Url` type with specific validations
+
+    Args:
+        allowed_schemes (set[str], optional): The allowed url schemes
+            (http, https, ftp, ssh, etc...). Defaults to None.
+        strip_whitespace (bool, optional): Remove leading and trailing whitespace.
+            Defaults to True.
+        host_required (bool, optional): Require host portion of the URL (example.com).
+            Defaults to True.
+        user_required (bool, optional): Requires a username to be present in the URL
+            (sean@example.com). Defaults to False.
+        matches (str, optional): Regex string to match input against. Defaults to None.
+
+    Returns:
+        type[Url]: StrictUrl type
+    """
+    return type(
+        "StrictUrl",
+        (Url,),
+        {
+            "allowed_schemes": allowed_schemes,
+            "strip_whitespace": strip_whitespace,
+            "host_required": host_required,
+            "user_required": user_required,
+            "matches": matches,
+        },
+    )
