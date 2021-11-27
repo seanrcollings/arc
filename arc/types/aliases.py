@@ -7,6 +7,7 @@ import enum
 import pathlib
 import typing as t
 import _io  # type: ignore
+import ipaddress
 
 from arc import errors, logging, utils
 from arc.color import colorize, fg
@@ -288,7 +289,23 @@ class IO(Alias, of=(_io._IOBase, t.IO)):
         if isinstance(arg, dict):
             return arg
 
-    @staticmethod
-    def __cleanup(handle: t.IO):
-        logger.info("Closing stream for: %s", handle.name)
-        handle.close()
+
+class _Address(Alias):
+    alias_for: t.ClassVar[type]
+
+    @classmethod
+    def convert(cls, value: str, info):
+        try:
+            return cls.alias_for(value)
+        except ipaddress.AddressValueError as e:
+            raise errors.ConversionError(
+                value, f"Not a valid {info.name} Address"
+            ) from e
+
+
+class IPv4(_Address, of=ipaddress.IPv4Address):
+    name = "IPv4"
+
+
+class IPv6(_Address, of=ipaddress.IPv6Address):
+    name = "IPv6"

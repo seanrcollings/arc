@@ -8,3 +8,5 @@ from .file import File
 from .range import Range
 from .var_types import VarPositional, VarKeyword
 from .aliases import Alias
+from .semvar import SemVar
+from .network import *
