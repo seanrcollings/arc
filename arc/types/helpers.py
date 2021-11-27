@@ -10,10 +10,16 @@ from typing import (
     get_args,
     Generic,
     TypeVar,
+    TYPE_CHECKING,
 )
 import re
 
-from arc.typing import Annotation
+from arc import utils
+
+if TYPE_CHECKING:
+    from arc.typing import Annotation
+    from arc.types.aliases import TypeProtocol
+    from arc.execution_state import ExecutionState
 
 
 T = TypeVar("T")
@@ -58,6 +64,16 @@ class TypeInfo(Generic[T]):
             sub_types=sub_types,
             annotations=annotated_args,
         )
+
+
+def convert(
+    protocol: type[TypeProtocol],
+    value: Any,
+    info: TypeInfo,
+    state: ExecutionState,
+):
+    """Uses `protocol` to convert `value`"""
+    return utils.dispatch_args(protocol.__convert__, value, info, state)
 
 
 def isclassmethod(method):

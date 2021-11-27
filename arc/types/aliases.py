@@ -12,25 +12,15 @@ import _io  # type: ignore
 
 from arc import errors, logging, utils
 from arc.color import colorize, fg
-from arc.types.helpers import TypeInfo, join_and, join_or, safe_issubclass
+from arc.types.helpers import TypeInfo, join_and, join_or, safe_issubclass, convert
 
-from arc.typing import Annotation
+from arc.typing import Annotation, TypeProtocol
 
 if t.TYPE_CHECKING:
     from arc.execution_state import ExecutionState
 
 
 logger = logging.getArcLogger("ali")
-
-
-@t.runtime_checkable
-class TypeProtocol(t.Protocol):
-    # name: t.ClassVar[t.Optional[str]]
-    # allow_missing: t.ClassVar[t.Optional[bool]]
-
-    @classmethod
-    def __convert__(cls, value, *args):
-        ...
 
 
 AliasFor = t.Union[Annotation, t.Tuple[Annotation, ...]]
@@ -206,9 +196,7 @@ class TupleAlias(_CollectionAlias, of=tuple):
             )
 
         return tuple(
-            utils.dispatch_args(
-                Alias.resolve(item_type).__convert__, item, item_type, state
-            )
+            convert(Alias.resolve(item_type), item, item_type, state)
             for item_type, item in zip(info.sub_types, tup)
         )
 
@@ -241,10 +229,8 @@ class DictAlias(Alias, of=dict):
             return cls.alias_for(
                 [
                     (
-                        utils.dispatch_args(key_type.__convert__, k, key_sub, state),
-                        utils.dispatch_args(
-                            value_type.__convert__, v, value_sub, state
-                        ),
+                        convert(key_type, k, key_sub, state),
+                        convert(value_type, v, value_sub, state),
                     )
                     for k, v in dct.items()
                 ]
@@ -270,9 +256,7 @@ class DictAlias(Alias, of=dict):
 
             sub_type = Alias.resolve(hints[key])
             try:
-                elements[key] = utils.dispatch_args(
-                    sub_type.__convert__, value, info, state
-                )
+                elements[key] = convert(sub_type, value, info, state)
             except errors.ConversionError as e:
                 raise errors.ConversionError(
                     value, f"{value} is not a valid value for key {key}", e
@@ -291,7 +275,7 @@ class UnionAlias(Alias, of=t.Union):
         for sub in info.sub_types:
             try:
                 type_cls = Alias.resolve(sub)
-                return utils.dispatch_args(type_cls.__convert__, value, sub, state)
+                return convert(type_cls, value, sub, state)
             except Exception:
                 ...
 

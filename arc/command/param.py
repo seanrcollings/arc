@@ -9,7 +9,7 @@ from arc.config import config
 from arc.execution_state import ExecutionState
 from arc.result import Result
 from arc.types import aliases
-from arc.types.helpers import TypeInfo
+from arc.types.helpers import TypeInfo, convert
 
 # Represents a missing value
 # Used to represent an argument
@@ -128,9 +128,7 @@ class Param:
             )
 
         try:
-            converted = utils.dispatch_args(
-                type_class.__convert__, value, self.type_info, state
-            )
+            converted = convert(type_class, value, self.type_info, state)
         except errors.ConversionError as e:
             message = e.message
             if e.source:
