@@ -51,7 +51,6 @@ def Param(
 
 def PosParam(
     name: str = None,
-    short: str = None,
     default: Any = param.MISSING,
     description: str = None,
 ) -> Any:
@@ -69,7 +68,12 @@ def PosParam(
     2
     ```
     """
-    return ParamInfo(param.PositionalParam, name, short, default, description)
+    return ParamInfo(
+        param_cls=param.PositionalParam,
+        name=name,
+        default=default,
+        description=description,
+    )
 
 
 def KeyParam(
@@ -79,18 +83,30 @@ def KeyParam(
     description: str = None,
 ) -> Any:
     """A CLI parameter. Input will be passed in by keyword"""
-    return ParamInfo(param.KeywordParam, name, short, default, description)
+    return ParamInfo(
+        param_cls=param.KeywordParam,
+        name=name,
+        short=short,
+        default=default,
+        description=description,
+    )
 
 
 def FlagParam(
     name: str = None,
     short: str = None,
-    default: Any = param.MISSING,
+    default: bool = False,
     description: str = None,
 ) -> Any:
     """A CLI parameter. Input will be passed in by
     keyword, but a value is not neccessary"""
-    return ParamInfo(param.FlagParam, name, short, default, description)
+    return ParamInfo(
+        param_cls=param.FlagParam,
+        name=name,
+        short=short,
+        default=default,
+        description=description,
+    )
 
 
 def SpecialParam(
@@ -102,7 +118,13 @@ def SpecialParam(
     """Special Params do not select a value from user input.
     As such, they're values must originate elsewhere, or be manually selected.
     """
-    return ParamInfo(param.SpecialParam, name, short, default, description)
+    return ParamInfo(
+        param_cls=param.SpecialParam,
+        name=name,
+        short=short,
+        default=default,
+        description=description,
+    )
 
 
 T = TypeVar("T")
