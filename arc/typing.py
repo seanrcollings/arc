@@ -12,3 +12,6 @@ class TypeProtocol(t.Protocol):
     @classmethod
     def __convert__(cls, value, *args):
         ...
+
+
+CompareReturn = t.Literal[-1, 0, 1]

@@ -11,6 +11,7 @@ from typing import (
     Generic,
     TypeVar,
     TYPE_CHECKING,
+    Callable,
 )
 import re
 
@@ -76,9 +77,9 @@ def convert(
     return utils.dispatch_args(protocol.__convert__, value, info, state)
 
 
-def safe_issubclass(_type, _classes: Union[type, tuple[type, ...]]):
+def safe_issubclass(typ, classes: Union[type, tuple[type, ...]]):
     try:
-        return issubclass(_type, _classes)
+        return issubclass(typ, classes)
     except TypeError:
         return False
 
@@ -130,3 +131,25 @@ def join_and(values: Sequence) -> str:
 def match(pattern: str, string: str):
     if not re.match(pattern, string):
         raise ValueError(f"does not follow required format: {pattern}")
+
+
+# def properties(*names: str, writeable=False) -> Callable[[T], T]:
+#     def inner(cls: T):
+#         for name in names:
+
+#             getter = lambda self, name=name: getattr(self, f"_{name}")
+
+#             if writeable:
+#                 setter: Union[Callable, None] = lambda self, value, name=name: setattr(
+#                     self, f"_{name}", value
+#                 )
+#             else:
+#                 setter = None
+
+#             prop = property(getter, setter)
+
+#             setattr(cls, name, prop)
+
+#         return cls
+
+#     return inner

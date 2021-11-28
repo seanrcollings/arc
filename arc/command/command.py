@@ -153,4 +153,4 @@ class Command:
     def is_namespace(self):
         from . import command_builders
 
-        return self.function is command_builders.no_op
+        return self.function in (command_builders.no_op, command_builders.helper)

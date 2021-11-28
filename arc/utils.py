@@ -4,7 +4,7 @@ import time
 from types import MethodType
 from typing import Callable
 
-from arc import logging
+from arc import logging, typing as at
 from arc.color import fg, effects, colorize
 
 logger = logging.getArcLogger("util")
@@ -141,3 +141,18 @@ def dispatch_args(func: Callable, *args):
     arg_count = unwrapped.__code__.co_argcount
     args = args[0 : arg_count - 1]
     return func(*args)
+
+
+def cmp(a, b) -> at.CompareReturn:
+    """Compare two values
+
+    Args:
+        a (Any): First value
+        b (Any): Second value
+
+    Returns:
+        - `a < b  => -1`
+        - `a == b =>  0`
+        - `a > b  =>  1`
+    """
+    return (a > b) - (a < b)

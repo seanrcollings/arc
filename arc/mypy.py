@@ -1,7 +1,14 @@
 # pylint: disable=no-name-in-module
 from mypy.mro import calculate_mro
 from mypy.plugin import Plugin, DynamicClassDefContext
-from mypy.nodes import TypeInfo, SymbolTable, ClassDef, Block, SymbolTableNode, GDEF
+from mypy.nodes import (
+    TypeInfo,
+    SymbolTable,
+    ClassDef,
+    Block,
+    SymbolTableNode,
+    GDEF,
+)
 
 
 STRICT_FUNCTIONS = {"arc.types.network.stricturl", "arc.types.path.strictpath"}
