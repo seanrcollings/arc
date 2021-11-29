@@ -15,7 +15,7 @@ from typing import (
 )
 import re
 
-from arc import utils
+from arc import utils, result
 
 if TYPE_CHECKING:
     from arc.typing import Annotation
@@ -128,9 +128,11 @@ def join_and(values: Sequence) -> str:
     return joiner(values, last_str=" and ")
 
 
-def match(pattern: str, string: str):
+def match(pattern: str, string: str) -> result.Result[None, str]:
     if not re.match(pattern, string):
-        raise ValueError(f"does not follow required format: {pattern}")
+        return result.Err(f"does not follow required format: {pattern}")
+
+    return result.Ok()
 
 
 # def properties(*names: str, writeable=False) -> Callable[[T], T]:

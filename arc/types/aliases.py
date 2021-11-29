@@ -8,13 +8,22 @@ import pathlib
 import typing as t
 import ipaddress
 import dataclasses
+from dataclasses import dataclass
 import _io  # type: ignore
 
 from arc import errors, logging, utils
 from arc.color import colorize, fg
-from arc.types.helpers import TypeInfo, join_and, join_or, safe_issubclass, convert
+from arc.types.helpers import (
+    TypeInfo,
+    join_and,
+    join_or,
+    match,
+    safe_issubclass,
+    convert,
+)
 
 from arc.typing import Annotation, TypeProtocol
+from ._meta import Meta
 
 if t.TYPE_CHECKING:
     from arc.execution_state import ExecutionState
@@ -54,7 +63,6 @@ class Alias:
         if of:
             cls.alias_for = of
 
-        if cls.alias_for:
             if isinstance(cls.alias_for, tuple):
                 aliases = cls.alias_for
             else:
@@ -109,19 +117,50 @@ class BytesAlias(bytes, Alias, of=bytes):
 
 class _NumberBaseAlias(Alias):
     alias_for: t.ClassVar[type]
+    base: t.ClassVar[int] = 10
+    greater_than: t.ClassVar[t.Union[int, float]] = float("-inf")
+    less_than: t.ClassVar[t.Union[int, float]] = float("inf")
+    matches: t.ClassVar[t.Optional[str]] = None
 
     @classmethod
     def convert(cls, value: t.Any, typ: TypeInfo) -> t.Any:
         try:
-            return cls.alias_for(value)
+            converted = cls.alias_for(value, **cls.kwargs(value, typ))
         except ValueError as e:
             raise errors.ConversionError(
-                value, f"{value} is not a valid {typ.name}"
+                value, f"{value} is not a valid {typ.name}", source=e
             ) from e
 
+        cls.__validate(converted)
+        return converted
 
-class IntAlias(int, _NumberBaseAlias, of=int):
+    @classmethod
+    def __validate(cls, value):
+        if value > cls.less_than:
+            raise errors.ConversionError(value, f"must be less than {cls.less_than}")
+        if value < cls.greater_than:
+            raise errors.ConversionError(
+                value, f"must be greater than {cls.greater_than}"
+            )
+
+        if cls.matches:
+            if (err := match(cls.matches, str(value))).err:
+                raise errors.ConversionError(value, str(err))
+
+    @classmethod
+    def kwargs(cls, _value: t.Any, _typ: TypeInfo):
+        return {}
+
+
+class IntAlias(_NumberBaseAlias, of=int):
     name = "integer"
+
+    @classmethod
+    def kwargs(cls, value: t.Any, type: TypeInfo):
+        if isinstance(value, str):
+            return {"base": cls.base}
+
+        return {}
 
 
 class FloatAlias(float, _NumberBaseAlias, of=float):

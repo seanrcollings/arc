@@ -98,7 +98,8 @@ class Url(str, metaclass=Meta):
             raise ValueError("username required")
 
         if cls.matches:
-            match(cls.matches, url)
+            if (err := match(cls.matches, url)).err:
+                raise ValueError(str(err))
 
     @classmethod
     def __convert__(cls, value):

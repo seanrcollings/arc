@@ -11,3 +11,4 @@ from .aliases import Alias
 from .semver import SemVer
 from .network import *
 from .path import *
+from .numbers import *

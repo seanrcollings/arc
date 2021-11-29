@@ -4,7 +4,7 @@ from typing import Callable
 from arc import result, logging
 from arc.color import colorize, fg
 from arc.types import Context
-from arc.config import config
+
 from arc.command.command import Command
 
 logger = logging.getArcLogger("build")
@@ -19,7 +19,7 @@ def no_op(ctx: Context):
 
 
 def helper(ctx: Context):
-    logger.warning(f"{colorize(ctx.state.command_name, fg.YELLOW)} is not executable. ")
+    logger.warning("%s is not executable.", colorize(ctx.state.command_name, fg.YELLOW))
     return ctx.state.root(f"help {ctx.state.command_name}")
 
 

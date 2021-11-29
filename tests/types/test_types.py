@@ -8,12 +8,52 @@ from arc.types import File, Range
 from arc import CLI
 
 
-def test_float(cli: CLI):
+@pytest.mark.parametrize(
+    "value,passing",
+    [
+        (1, True),
+        (2, True),
+        (3, True),
+        (11, True),
+        (99999, True),
+        (100000032, True),
+        ("0xFF0000", False),
+        ("string", False),
+    ],
+)
+def test_int(cli: CLI, value, passing: bool):
+    @cli.subcommand()
+    def it(val: int):
+        return val
+
+    if passing:
+        assert cli(f"it {value}") == value
+    else:
+        with pytest.raises(errors.InvalidParamaterError):
+            cli(f"it {value}")
+
+
+@pytest.mark.parametrize(
+    "value,passing",
+    [
+        (1, True),
+        (1121314, True),
+        (1.4, True),
+        (0.3, True),
+        (".19", True),
+        ("string", False),
+    ],
+)
+def test_float(cli: CLI, value, passing: bool):
     @cli.subcommand()
     def fl(val: float):
         return val
 
-    assert cli("fl 2.3") == 2.3
+    if passing:
+        assert cli(f"fl {value}") == float(value)
+    else:
+        with pytest.raises(errors.InvalidParamaterError):
+            cli(f"fl {value}")
 
 
 def test_bytes(cli: CLI):

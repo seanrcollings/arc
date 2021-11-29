@@ -39,7 +39,8 @@ class ValidPath(PathType, metaclass=Meta):  # type: ignore
             raise ValueError(f"{self} is a directory, not a file")
 
         if self.matches:
-            helpers.match(self.matches, str(self.resolve()))
+            if (err := helpers.match(self.matches, str(self.resolve()))).err:
+                raise ValueError(str(err))
 
     def resolve(self, strict=False):
         # resolve() creates a new Path object, so
