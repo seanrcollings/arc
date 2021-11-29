@@ -12,6 +12,8 @@ from arc.run import find_command_chain, get_command_namespace, run
 from arc.execution_state import ExecutionState
 from arc.types.var_types import VarPositional
 
+from arc.command.command_doc import CommandDoc
+
 
 class CLI(Command):
     """Core class for arc"""
@@ -110,15 +112,10 @@ class CLI(Command):
         ctx: Context,
         args: VarPositional,
         kwargs: VarKeyword,
-        _help: bool = Param(name="help", short="h"),
-        version: bool = Param(short="v"),
+        _help: bool = Param(name="help", short="h", description="display this help"),
+        version: bool = Param(short="v", description="display application version "),
     ):
-        """View specific help with "help <command-name>"
-
-        # Arguments
-            help: shows this help
-            version: displays the version
-        """
+        """View specific help with "help <command-name>" """
         if _help:
             return self("help")
         elif version:
@@ -152,7 +149,7 @@ class CLI(Command):
             command_chain=chain,
             parsed=parsed,
         )
-        print(state.command.doc(state))
+        print(CommandDoc(state))
 
     def schema(self):
         return {

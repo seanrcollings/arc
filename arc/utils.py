@@ -22,9 +22,11 @@ def header(contents: str):
     logger.debug(colorize(f"{contents:^35}", effects.UNDERLINE, effects.BOLD, fg.BLUE))
 
 
+ansi_escape = re.compile(r"(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]")
+
+
 def clean(string):
     """Gets rid of escape sequences"""
-    ansi_escape = re.compile(r"(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]")
     return ansi_escape.sub("", string)
 
 

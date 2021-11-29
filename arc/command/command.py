@@ -7,7 +7,6 @@ from arc.result import Result
 from arc.config import config
 from arc.execution_state import ExecutionState
 
-from .command_doc import CommandDoc
 from .executable import Executable, FunctionExecutable, ClassExecutable
 
 
@@ -27,6 +26,7 @@ class Command:
         self.subcommand_aliases: dict[str, str] = {}
         self.context = context or {}
         self.description: Optional[str] = description
+        self.doc = executable.__doc__
 
         self.executable: Executable = (
             ClassExecutable(executable)
@@ -44,13 +44,13 @@ class Command:
     def function(self):
         return self.executable.wrapped
 
-    def doc(self, state: ExecutionState) -> CommandDoc:
-        doc = CommandDoc(
-            self.function.__doc__ or "",
-            state,
-            ("usage",),
-        )
-        return doc
+    # def doc(self, state: ExecutionState) -> CommandDoc:
+    #     doc = CommandDoc(
+    #         self.function.__doc__ or "",
+    #         state,
+    #         ("usage",),
+    #     )
+    #     return doc
 
     def schema(self):
         return {
