@@ -47,7 +47,7 @@ class HelpFormatter(TextFormatter):
             with self.section(section):
                 self.write_text(body.split("\n\n"))
 
-        self.write_subcommands(command.subcommands.values())
+        self.write_subcommands(command, command.subcommands.values())
 
     def write_heading(self, heading: str):
         super().write_heading(colorize(heading.upper(), effects.BOLD))
@@ -109,11 +109,22 @@ class HelpFormatter(TextFormatter):
                 )
                 self.write_paragraph()
 
-    def write_subcommands(self, commands: t.Collection[Command]):
-        data = [
-            (colored(colorize(command.name, fg.ARC_BLUE)), command.short_description)
-            for command in commands
-        ]
+    def write_subcommands(self, parent: Command, commands: t.Collection[Command]):
+        data = []
+        for command in commands:
+            name = colored(colorize(command.name, fg.ARC_BLUE))
+            desc = command.short_description
+            aliases = tuple(
+                alias
+                for alias, name in parent.subcommand_aliases.items()
+                if name == command.name
+            )
+            if aliases:
+                name = colored(
+                    name + colorize(" (" + ", ".join(aliases) + ")", fg.GREY)
+                )
+
+            data.append((name, desc))
 
         if not data:
             return
