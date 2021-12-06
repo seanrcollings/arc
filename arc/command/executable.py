@@ -35,6 +35,11 @@ logger = logging.getArcLogger("exe")
 
 BAR = "―" * 40
 
+# TODO: Consider moving a lot of this logic back into the Command class
+# It doesn't really make sense here because the exectuable should just
+# be concerned with how to call the underlying the object, which is a lot
+# more than the object is doing
+
 
 class Executable(abc.ABC, ParamMixin):
     builder: type[ParamBuilder] = ParamBuilder
@@ -150,7 +155,7 @@ class Executable(abc.ABC, ParamMixin):
             if isinstance(val, (list, set, tuple)):
                 return self.close_context_managers(val)
 
-            if getattr(val, "__exit__", None):
+            if hasattr(val, "__exit__"):
                 val.__exit__(*args)
 
 

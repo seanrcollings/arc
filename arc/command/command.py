@@ -1,8 +1,11 @@
 from __future__ import annotations
+import re
+from functools import cached_property
 from typing import Callable, Optional, Any, Union
-from arc import logging
+from functools import cached_property
 
-from arc.color import effects, fg
+from arc import logging
+from arc.color import effects, fg, colorize
 from arc.result import Result
 from arc.config import config
 from arc.execution_state import ExecutionState
@@ -11,6 +14,7 @@ from .executable import Executable, FunctionExecutable, ClassExecutable
 
 
 logger = logging.getArcLogger("command")
+DEFAULT_SECTION: str = config.default_section_name
 
 
 class Command:
@@ -25,8 +29,7 @@ class Command:
         self.subcommands: dict[str, Command] = {}
         self.subcommand_aliases: dict[str, str] = {}
         self.context = context or {}
-        self.description: Optional[str] = description
-        self.doc = executable.__doc__
+        self.doc = executable.__doc__ or description
 
         self.executable: Executable = (
             ClassExecutable(executable)
@@ -43,14 +46,6 @@ class Command:
     @property
     def function(self):
         return self.executable.wrapped
-
-    # def doc(self, state: ExecutionState) -> CommandDoc:
-    #     doc = CommandDoc(
-    #         self.function.__doc__ or "",
-    #         state,
-    #         ("usage",),
-    #     )
-    #     return doc
 
     def schema(self):
         return {
@@ -155,3 +150,77 @@ class Command:
         from . import command_builders
 
         return self.function in (command_builders.no_op, command_builders.helper)
+
+    ## Docstring
+    @cached_property
+    def parsed_docstring(self):
+        """Parsed docstring for the command
+
+        Sections are denoted by a new line, and
+        then a line beginning with `#`. Whatever
+        comes after the `#` will be the key in
+        the sections dict. And all content between
+        that `#` and the next `#` will be the value.
+
+        The first section of the docstring is not
+        required to possess a section header, and
+        will be entered in as the `description` section.
+        """
+        parsed: dict[str, str] = {DEFAULT_SECTION: ""}
+        if not self.doc:
+            return {}
+
+        lines = [line.strip() for line in self.doc.split("\n")]
+
+        current_section = DEFAULT_SECTION
+
+        for line in lines:
+            if line.startswith("#"):
+                current_section = line[1:].strip().lower()
+                parsed[current_section] = ""
+            else:
+                parsed[current_section] += line + "\n"
+
+        return parsed
+
+    @property
+    def description(self) -> Optional[str]:
+        return self.parsed_docstring.get("description")
+
+    @property
+    def short_description(self) -> Optional[str]:
+        description = self.description
+        return description if description is None else description.split("\n")[0]
+
+    @cached_property
+    def _parsed_argument_section(self) -> Optional[dict[str, str]]:
+        arguments = self.parsed_docstring.get("arguments")
+        if not arguments:
+            return None
+
+        parsed: dict[str, str] = {}
+        regex = re.compile(r"^\w+:.+")
+        current_param = ""
+
+        for line in arguments.splitlines():
+            if regex.match(line):
+                param, first_line = line.split(":")
+                current_param = param
+                parsed[current_param] = first_line.strip()
+            elif current_param:
+                parsed[current_param] += " " + line.strip()
+
+        return parsed
+
+    def update_param_descriptions(self):
+        """Parses the function docstring, then updates
+        paramaters with the associated description in the arguments section
+        if the param does not have a description already.
+        """
+        descriptions = self._parsed_argument_section
+        if not descriptions:
+            return
+
+        for param in self.executable.params.values():
+            if not param.description:
+                param.description = descriptions.get(param.arg_name)

@@ -6,13 +6,12 @@ from arc.command.argument_parser import Parsed
 from arc import logging
 
 from arc.command import Command
+from arc.present.help_formatter import print_help
 from arc.types import Context, Param, VarKeyword
 from arc.config import config as config_obj
 from arc.run import find_command_chain, get_command_namespace, run
 from arc.execution_state import ExecutionState
 from arc.types.var_types import VarPositional
-
-from arc.command.command_doc import CommandDoc
 
 
 class CLI(Command):
@@ -106,7 +105,6 @@ class CLI(Command):
 
         return decorator
 
-    # pylint: disable=redefined-builtin
     def missing_command(
         self,
         ctx: Context,
@@ -149,7 +147,7 @@ class CLI(Command):
             command_chain=chain,
             parsed=parsed,
         )
-        print(CommandDoc(state))
+        print_help(state.command, state)
 
     def schema(self):
         return {

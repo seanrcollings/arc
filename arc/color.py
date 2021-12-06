@@ -120,14 +120,14 @@ class colored(str):
 
     @cached_property
     def _cleaned(self):
-        return utils.clean(self)
-
-    def __len__(self):
-        return len(self._cleaned)
+        return utils.ansi_clean(self)
 
     def __format__(self, spec: str):
         formatted = format(self._cleaned, spec)
         return formatted.replace(self._cleaned, self)
+
+    def split(self, *args, **kwargs):
+        return [colored(s) for s in super().split(*args, **kwargs)]
 
 
 def colorize(string: str, *codes: str, clear: bool = True):
