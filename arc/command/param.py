@@ -142,7 +142,7 @@ class PositionalParam(Param):
         return f"<{self.arg_alias}>"
 
     def _format_arguments(self):
-        return colored(colorize(f"<{self.arg_alias}>", fg.ARC_BLUE))
+        return colored(colorize(f"<{self.arg_alias}>", config.brand_color))
 
     def cli_rep(self, short=False) -> str:
         return f"<{self.arg_alias}>"
@@ -160,7 +160,7 @@ class _KeywordFlagShared(Param):
         return string
 
     def _format_arguments(self):
-        string = colorize(f"{config.flag_prefix}{self.arg_alias}", fg.ARC_BLUE)
+        string = colorize(f"{config.flag_prefix}{self.arg_alias}", config.brand_color)
         if self.short:
             string += colorize(f" ({config.short_flag_prefix}{self.short})", fg.GREY)
 

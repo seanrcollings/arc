@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 from typing import get_type_hints
 from arc import errors
+from arc.color import fg
 
 
 class ConfigBase:
@@ -151,15 +152,14 @@ class Config(ConfigBase):
     in a command docstring is anonymous
     """
 
-    parse_argument_help: bool = False
-    """Wether or not to attempt to parse the argument
-    section of help documentation to provide better documentation"""
-
     transform_snake_case: bool = True
     """Transforms snake_case argument names to kebab-case. Defaults to True"""
 
     color: bool = True
     """Use Ansi-escape sequences. Defaults to true"""
+
+    brand_color: str = fg.ARC_BLUE
+    """Highlight color to use in help documentation"""
 
     mode_map = {
         "development": logging.DEBUG,

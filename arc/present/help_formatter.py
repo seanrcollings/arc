@@ -70,7 +70,7 @@ class HelpFormatter(TextFormatter):
         with self.section("USAGE"):
             self.write_text(
                 colored(
-                    f"{colorize(state.root.name, fg.ARC_BLUE)} "
+                    f"{colorize(state.root.name, config.brand_color)} "
                     f"{colorize(command_str, effects.UNDERLINE)} {params_str}",
                 )
             )
@@ -116,7 +116,7 @@ class HelpFormatter(TextFormatter):
     def write_subcommands(self, parent: Command, commands: t.Collection[Command]):
         data = []
         for command in commands:
-            name = colored(colorize(command.name, fg.ARC_BLUE))
+            name = colored(colorize(command.name, config.brand_color))
             desc = command.short_description
             aliases = tuple(
                 alias

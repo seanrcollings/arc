@@ -1,6 +1,5 @@
 from functools import cached_property
 from typing import Union
-from arc.config import config
 from arc import utils
 
 
@@ -18,6 +17,8 @@ class Color(str):
         self.code = code
 
     def __str__(self):
+        from arc.config import config
+
         if not config.color:
             return ""
         return super().__str__()
