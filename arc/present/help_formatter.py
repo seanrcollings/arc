@@ -13,6 +13,10 @@ from arc.present.formatters import TextFormatter
 logger = logging.getArcLogger("cdoc")
 
 
+def paragraphize(string: str) -> list[str]:
+    return string.split("\n\n")
+
+
 def print_help(command: Command, state: ExecutionState = None):
     f = HelpFormatter(width=80)
     f.write_help(command, state)
@@ -34,7 +38,7 @@ class HelpFormatter(TextFormatter):
 
         if command.description:
             with self.section("DESCRIPTION"):
-                self.write_text(command.description)
+                self.write_text(paragraphize(command.description))
 
         command.update_param_descriptions()
 
@@ -45,7 +49,7 @@ class HelpFormatter(TextFormatter):
                 continue
 
             with self.section(section):
-                self.write_text(body.split("\n\n"))
+                self.write_text(paragraphize(body))
 
         self.write_subcommands(command, command.subcommands.values())
 

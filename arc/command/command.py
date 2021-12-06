@@ -29,7 +29,8 @@ class Command:
         self.subcommands: dict[str, Command] = {}
         self.subcommand_aliases: dict[str, str] = {}
         self.context = context or {}
-        self.doc = executable.__doc__ or description
+        self._description = description
+        self.doc = executable.__doc__
 
         self.executable: Executable = (
             ClassExecutable(executable)
@@ -185,7 +186,7 @@ class Command:
 
     @property
     def description(self) -> Optional[str]:
-        return self.parsed_docstring.get("description")
+        return self._description or self.parsed_docstring.get("description")
 
     @property
     def short_description(self) -> Optional[str]:
