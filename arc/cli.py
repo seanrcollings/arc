@@ -2,7 +2,7 @@ from typing import Callable, Optional, Any
 
 from arc import utils
 from arc.autoload import Autoload
-from arc.command.argument_parser import Parsed
+from arc.parser import Parsed
 from arc import logging
 
 from arc.command import Command

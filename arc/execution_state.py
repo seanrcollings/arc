@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from arc.config import config
 
 if TYPE_CHECKING:
-    from arc.command.argument_parser import Parsed
+    from arc.parser import Parsed
     from arc.command import Command
     from arc.command.executable import Executable
 

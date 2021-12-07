@@ -21,8 +21,7 @@ class TextFormatter:
 
         if width is None:
             width = max_width
-
-        width = min(shutil.get_terminal_size().columns, width) - 2
+            width = min(shutil.get_terminal_size().columns, width) - 2
 
         self.width = width
         self.current_indent = 0
@@ -83,6 +82,7 @@ class TextFormatter:
             initial_indent=initial_indent,
             subsequent_indent=subsequent_indent,
             replace_whitespace=True,
+            drop_whitespace=True,
         )
 
         for para in text:

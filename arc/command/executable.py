@@ -1,5 +1,4 @@
 from __future__ import annotations
-from unittest.mock import patch
 import inspect
 import pprint
 from types import FunctionType, MappingProxyType
@@ -29,7 +28,7 @@ from arc.command.param_builder import ParamBuilder
 if TYPE_CHECKING:
     from arc.command.param import Param
     from arc.execution_state import ExecutionState
-    from arc.command.argument_parser import Parsed
+    from arc.parser import Parsed
 
 
 logger = logging.getArcLogger("exe")

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing as t
+import textwrap
 from arc import logging
 from arc.color import colored, colorize, fg, effects
 from arc.config import config
@@ -14,11 +15,11 @@ logger = logging.getArcLogger("cdoc")
 
 
 def paragraphize(string: str) -> list[str]:
-    return string.split("\n\n")
+    return [textwrap.dedent(para).strip("\n") for para in string.split("\n\n")]
 
 
 def print_help(command: Command, state: ExecutionState = None):
-    f = HelpFormatter(width=80)
+    f = HelpFormatter(width=100)
     f.write_help(command, state)
     print(f.value)
 
@@ -93,7 +94,13 @@ class HelpFormatter(TextFormatter):
         return " ".join(params)
 
     def write_params(self, params: t.Collection[Param]):
-        data = [(format(param, "arguments"), param.description) for param in params]
+        data = [
+            (
+                format(param, "arguments"),
+                textwrap.dedent(param.description or "").strip("\n"),
+            )
+            for param in params
+        ]
         if not data:
             return
 
@@ -103,6 +110,7 @@ class HelpFormatter(TextFormatter):
 
         with self.section("ARGUMENTS"):
             for name, desc in data:
+
                 self.write(
                     self.wrap_text(
                         f"{name:<{longest}}{desc or ''}",
@@ -150,3 +158,5 @@ class HelpFormatter(TextFormatter):
                     )
                 )
                 self.write_paragraph()
+
+        self._buffer.pop()
