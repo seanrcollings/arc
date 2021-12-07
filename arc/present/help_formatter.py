@@ -113,6 +113,9 @@ class HelpFormatter(TextFormatter):
                 )
                 self.write_paragraph()
 
+        # Quick fix for added empty line from self.section()
+        self._buffer.pop()
+
     def write_subcommands(self, parent: Command, commands: t.Collection[Command]):
         data = []
         for command in commands:

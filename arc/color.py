@@ -3,13 +3,13 @@ from typing import Union
 from arc import utils
 
 
-class Color(str):
+class Ansi(str):
     """Color class, extends str"""
 
     ESCAPE = "\033["
 
-    def __new__(cls, content, extra="m"):
-        obj = str.__new__(cls, f"{cls.ESCAPE}{content}{extra}")
+    def __new__(cls, content):
+        obj = str.__new__(cls, f"{cls.ESCAPE}{content}m")
         return obj
 
     def __init__(self, code, *_args):
@@ -19,17 +19,17 @@ class Color(str):
     def __str__(self):
         from arc.config import config
 
-        if not config.color:
+        if not config.ansi:
             return ""
         return super().__str__()
 
     @property
     def bright(self):
-        return Color(self.code + 60)
+        return Ansi(self.code + 60)
 
 
-def _rgb(val: int, red: int = 0, green: int = 0, blue: int = 0) -> Color:
-    return Color(f"{val};2;{red};{green};{blue}")
+def _rgb(val: int, red: int = 0, green: int = 0, blue: int = 0) -> Ansi:
+    return Ansi(f"{val};2;{red};{green};{blue}")
 
 
 def _hex_to_rgb(hex_rep: Union[str, int]):
@@ -54,16 +54,16 @@ def _hex_to_rgb(hex_rep: Union[str, int]):
 # fmt: off
 class fg:
     """Foreground colors"""
-    BLACK    = Color(30)
-    RED      = Color(31)
-    GREEN    = Color(32)
-    YELLOW   = Color(33)
-    BLUE     = Color(34)
-    MAGENTA  = Color(35)
-    CYAN     = Color(36)
-    WHITE    = Color(37)
+    BLACK    = Ansi(30)
+    RED      = Ansi(31)
+    GREEN    = Ansi(32)
+    YELLOW   = Ansi(33)
+    BLUE     = Ansi(34)
+    MAGENTA  = Ansi(35)
+    CYAN     = Ansi(36)
+    WHITE    = Ansi(37)
     GREY     = BLACK.bright
-    ARC_BLUE = Color('38;2;59;192;240')
+    ARC_BLUE = Ansi('38;2;59;192;240')
 
     @staticmethod
     def rgb(red: int = 0, green: int = 0, blue: int = 0):
@@ -80,16 +80,16 @@ class fg:
 
 class bg:
     """Background colors"""
-    BLACK    = Color(40)
-    RED      = Color(41)
-    GREEN    = Color(42)
-    YELLOW   = Color(43)
-    BLUE     = Color(44)
-    MAGENTA  = Color(45)
-    CYAN     = Color(46)
-    WHITE    = Color(47)
+    BLACK    = Ansi(40)
+    RED      = Ansi(41)
+    GREEN    = Ansi(42)
+    YELLOW   = Ansi(43)
+    BLUE     = Ansi(44)
+    MAGENTA  = Ansi(45)
+    CYAN     = Ansi(46)
+    WHITE    = Ansi(47)
     GREY     = BLACK.bright
-    ARC_BLUE = Color('48;2;59;192;240')
+    ARC_BLUE = Ansi('48;2;59;192;240')
 
     @staticmethod
     def rgb(red: int = 0, green: int = 0, blue: int = 0):
@@ -106,11 +106,11 @@ class bg:
 
 class effects:
     """Other effects"""
-    CLEAR         = Color(0)
-    BOLD          = Color(1)
-    ITALIC        = Color(3)
-    UNDERLINE     = Color(4)
-    STRIKETHROUGH = Color(9)
+    CLEAR         = Ansi(0)
+    BOLD          = Ansi(1)
+    ITALIC        = Ansi(3)
+    UNDERLINE     = Ansi(4)
+    STRIKETHROUGH = Ansi(9)
 
 # fmt: on
 
