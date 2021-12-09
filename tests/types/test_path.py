@@ -1,6 +1,6 @@
 import pytest
 import pathlib
-from arc import CLI
+from arc import CLI, errors
 from arc.types import path
 
 
@@ -33,7 +33,7 @@ class TestImpl:
         DirectoryPath = path.strictpath(directory=True)
         assert DirectoryPath("arc") == path.DirectoryPath("arc")
 
-        MatchPath = path.strictpath(matches="^/home/sean/.+")
+        MatchPath = path.strictpath(matches=r"^/home/sean/.+")
         assert MatchPath("arc") == pathlib.Path("arc")
 
         with pytest.raises(ValueError):
@@ -47,5 +47,5 @@ def test_usage(cli: CLI):
 
     assert cli("pa arc") == path.ValidPath("arc")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(errors.InvalidParamaterError):
         cli("pa doesnotexist")

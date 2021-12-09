@@ -19,9 +19,10 @@ def strictint(
     greater_than: t.Union[int, float] = float("-inf"),
     less_than: t.Union[int, float] = float("inf"),
     matches: str = None,
-) -> type[int]:
+    name: str = None,
+) -> type[aliases.IntAlias]:
     return type(
-        "StrictInteger",
+        name or "StrictInteger",
         (aliases.IntAlias,),
         {
             "base": base,
@@ -32,20 +33,21 @@ def strictint(
     )
 
 
-Binary = strictint(base=2)
-Oct = strictint(base=8)
-Hex = strictint(base=16)
-PositiveInt = strictint(greater_than=0)
-NegativeInt = strictint(less_than=0)
+Binary = strictint(base=2, name="Binary")
+Oct = strictint(base=8, name="Oct")
+Hex = strictint(base=16, name="Hex")
+PositiveInt = strictint(greater_than=0, name="PositiveInt")
+NegativeInt = strictint(less_than=0, name="NegativeInt")
 
 # Floats -------------------------------------------------------------------
 def strictfloat(
     greater_than: t.Union[int, float] = float("-inf"),
     less_than: t.Union[int, float] = float("inf"),
     matches: str = None,
-) -> type[int]:
+    name: str = None,
+) -> type[aliases.FloatAlias]:
     return type(
-        "StrictFloat",
+        name or "StrictFloat",
         (aliases.FloatAlias,),
         {
             "greater_than": greater_than,
@@ -55,8 +57,8 @@ def strictfloat(
     )
 
 
-PositiveFloat = strictfloat(greater_than=0)
-NegativeFloat = strictfloat(less_than=0)
+PositiveFloat = strictfloat(greater_than=0, name="PositiveFloat")
+NegativeFloat = strictfloat(less_than=0, name="NegativeFloat")
 
 
 AnyNumber = t.Union[float, Hex, Oct, Binary, int]

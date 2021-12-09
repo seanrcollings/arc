@@ -87,18 +87,18 @@ class File(t.IO, abc.ABC):
     """Equivalent to `open(filename, "rb")"""
     BinaryWrite = t.Annotated[t.BinaryIO, "wb"]
     """Equivalent to `open(filename, "wb")"""
-    BinaryReadWrite = t.Annotated[t.BinaryIO, "r+b"]
-    """Equivalent to `open(filename, "r+b")"""
+    BinaryReadWrite = t.Annotated[t.BinaryIO, "rb+"]
+    """Equivalent to `open(filename, "rb+")"""
     BinaryCreateWrite = t.Annotated[t.BinaryIO, "xb"]
     """Equivalent to `open(filename, "xb")"""
     BinaryAppend = t.Annotated[t.BinaryIO, "ab"]
     """Equivalent to `open(filename, "ab")"""
-    BinaryAppendRead = t.Annotated[t.BinaryIO, "a+b"]
-    """Equivalent to `open(filename, "a+b")"""
+    BinaryAppendRead = t.Annotated[t.BinaryIO, "ab+"]
+    """Equivalent to `open(filename, "ab+")"""
 
 
 class StandardStream(str):
-    stream: t.ClassVar[t.TextIO]
+    _stream: t.ClassVar[t.TextIO]
 
     @dataclass
     class Args:
@@ -106,16 +106,18 @@ class StandardStream(str):
 
     @classmethod
     def __convert__(cls, value, info):
-        meta = info.annotations[0] if len(info.annotations) >= 1 else cls.Args()
+        meta: StandardStream.Args = (  # pylint: disable=used-before-assignment
+            info.annotations[0] if len(info.annotations) >= 1 else cls.Args()
+        )
 
         if value == "-":
-            if meta["line_breaks"]:
-                return cls.stream.readlines()
+            if meta.line_breaks:
+                return cls._stream.readlines()
             else:
-                return cls.stream.read()
+                return cls._stream.read()
         else:
             return cls(value)
 
 
 class Stdin(StandardStream):
-    stream = sys.stdin
+    _stream = sys.stdin

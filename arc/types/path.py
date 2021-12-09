@@ -18,7 +18,6 @@ PathType = type(pathlib.Path())
 class ValidPath(PathType, metaclass=Meta):  # type: ignore
     name = "path"
 
-    ## -- Validators --
     valid: t.ClassVar[bool] = True
     directory: t.ClassVar[bool] = False
     file: t.ClassVar[bool] = False
@@ -56,7 +55,7 @@ class ValidPath(PathType, metaclass=Meta):  # type: ignore
     def __convert__(cls, value: str):
         try:
             return cls(value)
-        except AssertionError as e:
+        except (AssertionError, ValueError) as e:
             raise errors.ConversionError(value, str(e)) from e
 
 

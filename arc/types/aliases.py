@@ -8,7 +8,6 @@ import pathlib
 import typing as t
 import ipaddress
 import dataclasses
-from dataclasses import dataclass
 import _io  # type: ignore
 
 from arc import errors, logging, utils
@@ -20,6 +19,7 @@ from arc.types.helpers import (
     match,
     safe_issubclass,
     convert,
+    validate,
 )
 
 from arc.typing import Annotation, TypeProtocol
@@ -55,9 +55,19 @@ class Alias:
             typ._name = cls.name
 
         if not typ.sub_types:
-            return utils.dispatch_args(cls.convert, value, typ, state)
+            obj = utils.dispatch_args(cls.convert, value, typ, state)
         else:
-            return utils.dispatch_args(cls.g_convert, value, typ, state)
+            obj = utils.dispatch_args(cls.g_convert, value, typ, state)
+
+        # Alias types that have an associated "strict" type
+        # will always return an instance of themselves, so all
+        # validations will execute. For the alias itself, we just
+        # want to return the type it aliases, so we convert it
+        # back to that type
+        if isinstance(obj, cls):
+            obj = cls.alias_for(obj)  # type: ignore # pylint: disable=not-callable
+
+        return obj
 
     def __init_subclass__(cls, of: t.Optional[AliasFor] = None):
         if of:
@@ -103,10 +113,29 @@ class Alias:
 # Builtin Types ---------------------------------------------------------------------------------
 
 
-class StringAlias(str, Alias, of=str):
+@validate
+class StringAlias(Alias, str, of=str):
+    max_length: t.ClassVar[t.Optional[int]] = None
+    min_length: t.ClassVar[t.Optional[int]] = None
+    length: t.ClassVar[t.Optional[int]] = None
+    matches: t.ClassVar[t.Optional[str]] = None
+
     @classmethod
     def convert(cls, value: t.Any) -> str:
-        return str(value)
+        return cls(value)
+
+    def _validate(self):
+        if self.max_length and len(self) > self.max_length:
+            raise ValueError(self, f"maximum length is {self.max_length}")
+
+        if self.min_length and len(self) < self.min_length:
+            raise ValueError(self, f"minimum length is {self.min_length}")
+
+        if self.length and len(self) != self.length:
+            raise ValueError(self, f"must be {self.length} characters long")
+
+        if self.matches and (err := match(self.matches, self)).err:
+            raise ValueError(self, err.unwrap())
 
 
 class BytesAlias(bytes, Alias, of=bytes):
@@ -117,7 +146,6 @@ class BytesAlias(bytes, Alias, of=bytes):
 
 class _NumberBaseAlias(Alias):
     alias_for: t.ClassVar[type]
-    base: t.ClassVar[int] = 10
     greater_than: t.ClassVar[t.Union[int, float]] = float("-inf")
     less_than: t.ClassVar[t.Union[int, float]] = float("inf")
     matches: t.ClassVar[t.Optional[str]] = None
@@ -125,44 +153,36 @@ class _NumberBaseAlias(Alias):
     @classmethod
     def convert(cls, value: t.Any, typ: TypeInfo) -> t.Any:
         try:
-            converted = cls.alias_for(value, **cls.kwargs(value, typ))
+            converted = cls(value)  # type: ignore
         except ValueError as e:
-            raise errors.ConversionError(
-                value, f"{value} is not a valid {typ.name}", source=e
-            ) from e
+            raise errors.ConversionError(value, str(e)) from e
 
-        cls.__validate(converted)
         return converted
 
-    @classmethod
-    def __validate(cls, value):
-        if value > cls.less_than:
-            raise errors.ConversionError(value, f"must be less than {cls.less_than}")
-        if value < cls.greater_than:
-            raise errors.ConversionError(
-                value, f"must be greater than {cls.greater_than}"
-            )
+    def validate(self):
+        if self > self.less_than:
+            raise ValueError(f"must be less than {self.less_than}")
+        if self < self.greater_than:
+            raise ValueError(f"must be greater than {self.greater_than}")
 
-        if cls.matches:
-            if (err := match(cls.matches, str(value))).err:
-                raise errors.ConversionError(value, str(err))
-
-    @classmethod
-    def kwargs(cls, _value: t.Any, _typ: TypeInfo):
-        return {}
+        if self.matches:
+            if (err := match(self.matches, str(self))).err:
+                raise ValueError(self, str(err))
 
 
-class IntAlias(_NumberBaseAlias, of=int):
+@validate
+class IntAlias(int, _NumberBaseAlias, of=int):
     name = "integer"
+    base: t.ClassVar[int] = 10
 
-    @classmethod
-    def kwargs(cls, value: t.Any, type: TypeInfo):
+    def __new__(cls, value: t.Any):
         if isinstance(value, str):
-            return {"base": cls.base}
+            return int.__new__(cls, value, base=cls.base)
+        else:
+            return int.__new__(cls, value)
 
-        return {}
 
-
+@validate
 class FloatAlias(float, _NumberBaseAlias, of=float):
     name = "float"
 

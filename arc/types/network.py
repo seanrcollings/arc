@@ -3,7 +3,7 @@ from urllib.parse import urlparse, ParseResult
 import webbrowser
 import typing as t
 
-from arc.types.helpers import join_or, match
+from arc.types.helpers import join_or, match, validate
 from arc import errors
 from ._meta import Meta
 
@@ -12,6 +12,7 @@ __all__ = ["IPAddress", "Url", "HttpUrl", "PostgresUrl", "stricturl"]
 IPAddress = t.Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
 
 
+@validate
 class Url(str, metaclass=Meta):
     allowed_schemes: t.ClassVar[set[str]] = set()
     strip_whitespace: t.ClassVar[bool] = True
@@ -34,7 +35,7 @@ class Url(str, metaclass=Meta):
     )
 
     def __new__(cls, url: str, **_kwargs):
-        return str.__new__(cls, url)
+        return super().__new__(cls, url)
 
     def __init__(
         self,
@@ -51,7 +52,7 @@ class Url(str, metaclass=Meta):
         query: t.Optional[str] = None,
         fragment: t.Optional[str] = None,
     ):
-        str.__init__(url)
+        super().__init__()
         self.url = url
         self.scheme = scheme
         self.netloc = netloc
@@ -70,7 +71,6 @@ class Url(str, metaclass=Meta):
             url = url.strip()
 
         result = urlparse(url.strip())
-        cls.__validate(url, result)
 
         return cls(
             url=url,
@@ -86,19 +86,18 @@ class Url(str, metaclass=Meta):
             fragment=result.fragment,
         )
 
-    @classmethod
-    def __validate(cls, url: str, result: ParseResult):
-        if cls.allowed_schemes and result.scheme not in cls.allowed_schemes:
-            raise ValueError(f"scheme must be {join_or(tuple(cls.allowed_schemes))}")
+    def _validate_url(self):
+        if self.allowed_schemes and self.scheme not in self.allowed_schemes:
+            raise ValueError(f"scheme must be {join_or(tuple(self.allowed_schemes))}")
 
-        if cls.host_required and not result.hostname:
+        if self.host_required and not self.host:
             raise ValueError("hostname required")
 
-        if cls.user_required and not result.username:
+        if self.user_required and not self.username:
             raise ValueError("username required")
 
-        if cls.matches:
-            if (err := match(cls.matches, url)).err:
+        if self.matches:
+            if (err := match(self.matches, self)).err:
                 raise ValueError(str(err))
 
     @classmethod
@@ -133,7 +132,7 @@ class PostgresUrl(Url):
 def stricturl(
     allowed_schemes: set[str] = None,
     strip_whitespace: bool = True,
-    host_required: bool = True,
+    host_required: bool = False,
     user_required: bool = False,
     matches: str = None,
 ) -> type[Url]:

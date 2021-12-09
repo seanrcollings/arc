@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
+import functools
 from typing import (
     Optional,
     Sequence,
@@ -11,7 +12,6 @@ from typing import (
     Generic,
     TypeVar,
     TYPE_CHECKING,
-    Callable,
 )
 import re
 
@@ -65,6 +65,38 @@ class TypeInfo(Generic[T]):
             sub_types=sub_types,
             annotations=annotated_args,
         )
+
+
+def validate(cls):
+    """Class decorator to mark a class as validatable.
+    On instantiation any method who's name follows
+    the form `-?validate.+` will be executed. Note that this
+    includes protected methods, but not private ones
+    """
+    if not hasattr(cls, "__init__"):
+        return cls
+
+    cls_init = cls.__init__
+
+    validators = list(
+        v
+        for n in dir(cls)
+        if n.strip("_").startswith("validate") and callable(v := getattr(cls, n))
+    )
+
+    def init(instance, *args, **kwargs):
+        if cls_init is object.__init__:
+            cls_init(instance)
+        else:
+            cls_init(instance, *args, **kwargs)
+
+
+        for validator in validators:
+            validator(instance)
+
+    cls.__init__ = init
+
+    return cls
 
 
 def convert(

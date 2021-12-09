@@ -4,6 +4,7 @@ import ipaddress
 from arc.types import network
 from arc import CLI
 
+
 IPV4 = [
     "0.0.0.0",
     "1.1.1.1",

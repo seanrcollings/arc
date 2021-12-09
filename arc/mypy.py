@@ -17,6 +17,7 @@ STRICT_FUNCTIONS = {
     "arc.types.path.strictpath",
     "arc.types.numbers.strictint",
     "arc.types.numbers.strictfloat",
+    "arc.types.strings.strictstr",
 }
 
 

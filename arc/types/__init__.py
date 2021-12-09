@@ -12,3 +12,4 @@ from .semver import SemVer
 from .network import *
 from .path import *
 from .numbers import *
+from .strings import *
