@@ -32,6 +32,12 @@ class ParamMixin:
         return {key: param for key, param in self.params.items() if param.is_special}
 
     @functools.cached_property
+    def visible_params(self) -> dict[str, Param]:
+        return {
+            key: param for key, param in self.params.items() if not param.is_special
+        }
+
+    @functools.cached_property
     def optional_params(self) -> dict[str, Param]:
         return {key: param for key, param in self.params.items() if param.optional}
 

@@ -2,10 +2,11 @@ from typing import Callable, Optional, Any
 
 from arc import utils
 from arc.autoload import Autoload
-from arc.command.argument_parser import Parsed
+from arc.parser import Parsed
 from arc import logging
 
 from arc.command import Command
+from arc.present.help_formatter import print_help
 from arc.types import Context, Param, VarKeyword
 from arc.config import config as config_obj
 from arc.run import find_command_chain, get_command_namespace, run
@@ -104,21 +105,15 @@ class CLI(Command):
 
         return decorator
 
-    # pylint: disable=redefined-builtin
     def missing_command(
         self,
         ctx: Context,
         args: VarPositional,
         kwargs: VarKeyword,
-        _help: bool = Param(name="help", short="h"),
-        version: bool = Param(short="v"),
+        _help: bool = Param(name="help", short="h", description="display this help"),
+        version: bool = Param(short="v", description="display application version "),
     ):
-        """View specific help with "help <command-name>"
-
-        # Arguments
-            help: shows this help
-            version: displays the version
-        """
+        """View specific help with "help <command-name>" """
         if _help:
             return self("help")
         elif version:
@@ -152,7 +147,7 @@ class CLI(Command):
             command_chain=chain,
             parsed=parsed,
         )
-        print(state.command.doc(state))
+        print_help(state.command, state)
 
     def schema(self):
         return {

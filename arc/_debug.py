@@ -7,12 +7,12 @@ from arc.config import config, Config
 from arc.types import aliases
 from arc.present import Table, Box
 
-debug = namespace("debug")
+debug = namespace("debug", description="debug utilties for an arc application")
 
 
 @debug.subcommand("config")
 def config_command():
-    """Displays information about the current config of the Arc app"""
+    """Displays information about the current config of the arc app"""
     config_items = [
         [name, getattr(config, name), value.default]
         for name, value in Config.__dataclass_fields__.items()  # pylint: disable=no-member
@@ -22,6 +22,16 @@ def config_command():
         columns=[{"name": "NAME", "width": 30}, "VALUE", "DEFAULT"], rows=config_items
     )
     print(Box(str(table), justify="center", padding=1))
+
+
+@config_command.subcommand("file")
+def config_to_file():
+    """Outputs the current configuration in .arc file format"""
+    config_items = [
+        [name, getattr(config, name)]
+        for name in Config.__dataclass_fields__  # pylint: disable=no-member
+    ]
+    print("\n".join(f"{name}={value}" for name, value in config_items))
 
 
 @debug.subcommand("aliases")
@@ -53,4 +63,5 @@ def arcfile():
 
 @debug.subcommand()
 def schema(ctx: Context):
+    """Prints out a dictionary representation of the CLI"""
     pprint(ctx.state.root.schema())

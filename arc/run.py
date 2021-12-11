@@ -9,7 +9,7 @@ from arc import logging
 from arc import utils, errors
 from arc.color import colorize, effects, fg
 from arc.command import Command, helpers
-from arc.command.argument_parser import Parsed, parse
+from arc.parser import Parsed, parse
 from arc.config import config
 from arc.result import Result
 from arc.execution_state import ExecutionState

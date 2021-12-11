@@ -16,6 +16,17 @@ def runcli(cli: CLI):
     def ok():
         return Ok()
 
+    @cli.subcommand()
+    def func1(x):
+        assert isinstance(x, str)
+        return x
+
+    @cli.subcommand()
+    @cli.subcommand("func2copy")
+    def func2(x: int):
+        assert isinstance(x, int)
+        return x
+
     return cli
 
 
@@ -75,17 +86,18 @@ class TestGetCommandNamespace:
 
 
 class TestFindCommand:
-    def test_find(self, cli: CLI):
-        @cli.subcommand(("name1", "name2"))
+    def test_find(self, runcli: CLI):
+        @runcli.subcommand(("name1", "name2"))
         def _():
             ...
 
-        assert find_command_chain(cli, ["func1"])[-1] == cli.subcommands["func1"]
-        assert find_command_chain(cli, ["func2"])[-1] == cli.subcommands["func2"]
+        assert find_command_chain(runcli, ["func1"])[-1] == runcli.subcommands["func1"]
+        assert find_command_chain(runcli, ["func2"])[-1] == runcli.subcommands["func2"]
         assert (
-            find_command_chain(cli, ["func2copy"])[-1] == cli.subcommands["func2copy"]
+            find_command_chain(runcli, ["func2copy"])[-1]
+            == runcli.subcommands["func2copy"]
         )
-        assert find_command_chain(cli, ["name2"])[-1] == cli.subcommands["name1"]
+        assert find_command_chain(runcli, ["name2"])[-1] == runcli.subcommands["name1"]
 
         with pytest.raises(errors.CommandError):
-            find_command_chain(cli, ["doesnotexist"])
+            find_command_chain(runcli, ["doesnotexist"])

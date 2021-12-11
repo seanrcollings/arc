@@ -26,6 +26,17 @@ def test_install_group(cli: CLI):
 
 
 def test_execute(cli: CLI):
+    @cli.subcommand()
+    def func1(x):
+        assert isinstance(x, str)
+        return x
+
+    @cli.subcommand()
+    @cli.subcommand("func2copy")
+    def func2(x: int):
+        assert isinstance(x, int)
+        return x
+
     cli("func1 2")
     cli("func2 2")
 
