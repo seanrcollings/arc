@@ -6,13 +6,13 @@ from arc.types import path
 
 class TestImpl:
     def test_valid(self):
-        assert path.ValidPath(".arc") == pathlib.Path(".arc")
+        assert path.ValidPath("tests/.arc") == pathlib.Path("tests/.arc")
 
         with pytest.raises(ValueError):
             path.ValidPath("doesntexist")
 
     def test_file(self):
-        assert path.FilePath(".arc") == pathlib.Path(".arc")
+        assert path.FilePath("tests/.arc") == pathlib.Path("tests/.arc")
 
         with pytest.raises(ValueError):
             path.FilePath("doesntexist")
@@ -27,7 +27,7 @@ class TestImpl:
             path.DirectoryPath("doesntexist")
 
         with pytest.raises(ValueError):
-            path.DirectoryPath(".arc")
+            path.DirectoryPath("tests/.arc")
 
     def test_strict(self):
         DirectoryPath = path.strictpath(directory=True)

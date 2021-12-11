@@ -252,7 +252,7 @@ def test_file(cli: CLI):
     def fi(file: File.Read):
         return file
 
-    file = cli("fi .arc")
+    file = cli("fi tests/.arc")
     assert file.mode == "r"
     assert file.closed
 
