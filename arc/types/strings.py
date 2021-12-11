@@ -5,13 +5,15 @@ __all__ = ["strictstr", "Char"]
 
 
 def strictstr(
+    *,
     max_length: t.Optional[int] = None,
     min_length: t.Optional[int] = None,
     length: t.Optional[int] = None,
     matches: t.Optional[str] = None,
+    name: t.Optional[str] = None,
 ) -> type[str]:
     return type(
-        "StrictStr",
+        name or "StrictStr",
         (aliases.StringAlias,),
         {
             "max_length": max_length,
@@ -22,5 +24,5 @@ def strictstr(
     )
 
 
-Char = strictstr(min_length=1, max_length=1)
+Char = strictstr(name="Char", min_length=1, max_length=1)
 """String than can only be length 1"""

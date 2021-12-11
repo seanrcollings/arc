@@ -109,12 +109,46 @@ def test_any_number(cli: CLI, cls, value, passes):
             cli(f"test {value}")
 
 
-class TestStrict:
-    def test_matches(self):
-        MatchInt = numbers.strictint(matches=r"^\d*1$")
-        assert MatchInt("1") == 1
-        assert MatchInt("555551") == 555551
-        assert MatchInt("10000000000000000001") == 10000000000000000001
+def test_int_matches():
+    MatchInt = numbers.strictint(matches=r"^\d*1$")
+    assert MatchInt("1") == 1
+    assert MatchInt("555551") == 555551
+    assert MatchInt("10000000000000000001") == 10000000000000000001
 
-        with pytest.raises(ValueError):
-            MatchInt("5")
+    with pytest.raises(ValueError):
+        MatchInt("5")
+
+
+def test_float_matches():
+    MatchFloat = numbers.strictfloat(matches=r"^\d*\.0+1$")
+    assert MatchFloat("1.01") == 1.01
+    assert MatchFloat("5555.000000001") == 5555.000000001
+
+    with pytest.raises(ValueError):
+        MatchFloat("231.1")
+
+
+def test_max_precision():
+    MaxPercision = numbers.strictfloat(max_precision=10)
+    assert MaxPercision("1.1123124111") == 1.1123124111
+
+    with pytest.raises(ValueError):
+        MaxPercision("1.112312411111111")
+
+
+def test_min_precision():
+    MinPrecision = numbers.strictfloat(min_precision=5)
+    assert MinPrecision("1.1123124111") == 1.1123124111
+    assert MinPrecision("1.11211") == 1.11211
+
+    with pytest.raises(ValueError):
+        MinPrecision("1.1")
+
+
+def test_precision():
+    Precision = numbers.strictfloat(precision=5)
+    assert Precision("1.12345") == 1.12345
+    assert Precision("1.11211") == 1.11211
+
+    with pytest.raises(ValueError):
+        Precision("1.1")

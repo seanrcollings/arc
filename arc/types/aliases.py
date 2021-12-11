@@ -122,20 +122,23 @@ class StringAlias(Alias, str, of=str):
 
     @classmethod
     def convert(cls, value: t.Any) -> str:
-        return cls(value)
+        try:
+            return cls(value)  # type: ignore
+        except ValueError as e:
+            raise errors.ConversionError(value, str(e)) from e
 
     def _validate(self):
         if self.max_length and len(self) > self.max_length:
-            raise ValueError(self, f"maximum length is {self.max_length}")
+            raise ValueError(f"maximum length is {self.max_length}")
 
         if self.min_length and len(self) < self.min_length:
-            raise ValueError(self, f"minimum length is {self.min_length}")
+            raise ValueError(f"minimum length is {self.min_length}")
 
         if self.length and len(self) != self.length:
-            raise ValueError(self, f"must be {self.length} characters long")
+            raise ValueError(f"must be {self.length} characters long")
 
         if self.matches and (err := match(self.matches, self)).err:
-            raise ValueError(self, err.unwrap())
+            raise ValueError(err.unwrap())
 
 
 class BytesAlias(bytes, Alias, of=bytes):
@@ -151,7 +154,7 @@ class _NumberBaseAlias(Alias):
     matches: t.ClassVar[t.Optional[str]] = None
 
     @classmethod
-    def convert(cls, value: t.Any, typ: TypeInfo) -> t.Any:
+    def convert(cls, value: t.Any) -> t.Any:
         try:
             converted = cls(value)  # type: ignore
         except ValueError as e:
@@ -159,7 +162,7 @@ class _NumberBaseAlias(Alias):
 
         return converted
 
-    def validate(self):
+    def _validate_shared(self):
         if self > self.less_than:
             raise ValueError(f"must be less than {self.less_than}")
         if self < self.greater_than:
@@ -167,7 +170,7 @@ class _NumberBaseAlias(Alias):
 
         if self.matches:
             if (err := match(self.matches, str(self))).err:
-                raise ValueError(self, str(err))
+                raise ValueError(str(err))
 
 
 @validate
@@ -185,6 +188,25 @@ class IntAlias(int, _NumberBaseAlias, of=int):
 @validate
 class FloatAlias(float, _NumberBaseAlias, of=float):
     name = "float"
+    min_precision: t.ClassVar[t.Optional[int]] = None
+    max_precision: t.ClassVar[t.Optional[int]] = None
+    precision: t.ClassVar[t.Optional[int]] = None
+
+    def _validate(self):
+        _natural, fractional = str(self).split(".")
+
+        if self.min_precision and self.min_precision > len(fractional):
+            raise ValueError(
+                f"minimum decimal precision allowed is {self.min_precision}"
+            )
+
+        if self.max_precision and self.max_precision < len(fractional):
+            raise ValueError(
+                f"maximum decimal precision allowed is {self.min_precision}"
+            )
+
+        if self.precision and self.precision != len(fractional):
+            raise ValueError(f"decimal precision must be {self.precision}")
 
 
 TRUE_VALUES = {"true", "t", "yes", "1"}

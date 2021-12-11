@@ -44,6 +44,9 @@ def strictfloat(
     greater_than: t.Union[int, float] = float("-inf"),
     less_than: t.Union[int, float] = float("inf"),
     matches: str = None,
+    min_precision: t.Optional[int] = None,
+    max_precision: t.Optional[int] = None,
+    precision: t.Optional[int] = None,
     name: str = None,
 ) -> type[aliases.FloatAlias]:
     return type(
@@ -52,6 +55,9 @@ def strictfloat(
         {
             "greater_than": greater_than,
             "less_than": less_than,
+            "min_precision": min_precision,
+            "max_precision": max_precision,
+            "precision": precision,
             "matches": matches,
         },
     )

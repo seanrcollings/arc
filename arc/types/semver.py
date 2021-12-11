@@ -57,7 +57,7 @@ class SemVer:
         return f"SemVar({str(self)!r})"
 
     def __iter__(self):
-        yield from self.tuple()
+        yield from (a for a in self.tuple() if a)
 
     @property
     def major(self):
