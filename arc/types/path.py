@@ -4,7 +4,6 @@ import typing as t
 from arc import errors
 from arc.types import helpers
 
-from ._meta import Meta
 
 __all__ = ["ValidPath", "FilePath", "DirectoryPath", "strictpath"]
 
@@ -15,7 +14,7 @@ __all__ = ["ValidPath", "FilePath", "DirectoryPath", "strictpath"]
 PathType = type(pathlib.Path())
 
 
-class ValidPath(PathType, metaclass=Meta):  # type: ignore
+class ValidPath(PathType):  # type: ignore
     name = "path"
 
     valid: t.ClassVar[bool] = True

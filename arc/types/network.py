@@ -1,11 +1,10 @@
 import ipaddress
-from urllib.parse import urlparse, ParseResult
+from urllib.parse import urlparse
 import webbrowser
 import typing as t
 
 from arc.types.helpers import join_or, match, validate
 from arc import errors
-from ._meta import Meta
 
 __all__ = ["IPAddress", "Url", "HttpUrl", "PostgresUrl", "stricturl"]
 
@@ -13,7 +12,7 @@ IPAddress = t.Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
 
 
 @validate
-class Url(str, metaclass=Meta):
+class Url(str):
     allowed_schemes: t.ClassVar[set[str]] = set()
     strip_whitespace: t.ClassVar[bool] = True
     host_required: t.ClassVar[bool] = False

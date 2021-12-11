@@ -23,7 +23,6 @@ from arc.types.helpers import (
 )
 
 from arc.typing import Annotation, TypeProtocol
-from ._meta import Meta
 
 if t.TYPE_CHECKING:
     from arc.execution_state import ExecutionState
