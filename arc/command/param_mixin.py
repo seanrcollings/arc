@@ -1,9 +1,11 @@
+"""Mixin for param properties and functions
+Note that in development, all paramaters are insantiated, but
+in production only the command being executed parameters are
+created.
+"""
 import functools
 from arc.command.param_builder import ParamBuilder
 from arc.command.param import Param
-
-# Params aren't constructed until
-# a command is actually executed
 
 
 class ParamMixin:
@@ -28,6 +30,12 @@ class ParamMixin:
     @functools.cached_property
     def special_params(self) -> dict[str, Param]:
         return {key: param for key, param in self.params.items() if param.is_special}
+
+    @functools.cached_property
+    def visible_params(self) -> dict[str, Param]:
+        return {
+            key: param for key, param in self.params.items() if not param.is_special
+        }
 
     @functools.cached_property
     def optional_params(self) -> dict[str, Param]:

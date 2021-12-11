@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
+import functools
 from typing import (
     Optional,
     Sequence,
@@ -10,9 +11,16 @@ from typing import (
     get_args,
     Generic,
     TypeVar,
+    TYPE_CHECKING,
 )
+import re
 
-from arc.typing import Annotation
+from arc import utils, result
+
+if TYPE_CHECKING:
+    from arc.typing import Annotation
+    from arc.types.aliases import TypeProtocol
+    from arc.execution_state import ExecutionState
 
 
 T = TypeVar("T")
@@ -59,24 +67,51 @@ class TypeInfo(Generic[T]):
         )
 
 
-def isclassmethod(method):
-    bound_to = getattr(method, "__self__", None)
+def validate(cls):
+    """Class decorator to mark a class as validatable.
+    On instantiation any method who's name follows
+    the form `-?validate.+` will be executed. Note that this
+    includes protected methods, but not private ones
+    """
+    if not hasattr(cls, "__init__"):
+        return cls
 
-    if not isinstance(bound_to, type):
-        return False
+    cls_init = cls.__init__
 
-    name = method.__name__
-    for cls in bound_to.__mro__:
-        descriptor = vars(cls).get(name)
-        if descriptor is not None:
-            return isinstance(descriptor, classmethod)
+    validators = list(
+        v
+        for n in dir(cls)
+        if n.strip("_").startswith("validate") and callable(v := getattr(cls, n))
+    )
 
-    return False
+    def init(instance, *args, **kwargs):
+        if cls_init is object.__init__:
+            cls_init(instance)
+        else:
+            cls_init(instance, *args, **kwargs)
 
 
-def safe_issubclass(_type, _classes: Union[type, tuple[type, ...]]):
+        for validator in validators:
+            validator(instance)
+
+    cls.__init__ = init
+
+    return cls
+
+
+def convert(
+    protocol: type[TypeProtocol],
+    value: Any,
+    info: TypeInfo,
+    state: ExecutionState,
+):
+    """Uses `protocol` to convert `value`"""
+    return utils.dispatch_args(protocol.__convert__, value, info, state)
+
+
+def safe_issubclass(typ, classes: Union[type, tuple[type, ...]]):
     try:
-        return issubclass(_type, _classes)
+        return issubclass(typ, classes)
     except TypeError:
         return False
 
@@ -123,3 +158,32 @@ def join_and(values: Sequence) -> str:
         str: joined values
     """
     return joiner(values, last_str=" and ")
+
+
+def match(pattern: str, string: str) -> result.Result[None, str]:
+    if not re.match(pattern, string):
+        return result.Err(f"does not follow required format: {pattern}")
+
+    return result.Ok()
+
+
+# def properties(*names: str, writeable=False) -> Callable[[T], T]:
+#     def inner(cls: T):
+#         for name in names:
+
+#             getter = lambda self, name=name: getattr(self, f"_{name}")
+
+#             if writeable:
+#                 setter: Union[Callable, None] = lambda self, value, name=name: setattr(
+#                     self, f"_{name}", value
+#                 )
+#             else:
+#                 setter = None
+
+#             prop = property(getter, setter)
+
+#             setattr(cls, name, prop)
+
+#         return cls
+
+#     return inner

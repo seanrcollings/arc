@@ -9,7 +9,7 @@ from arc.utils import symbol
 from arc.command.param import MISSING
 
 
-logger = logging.getArcLogger("prs")
+logger = logging.getArcLogger("parse")
 
 
 class TokenType(enum.Enum):
@@ -61,7 +61,7 @@ class Lexer:
         self.tokens.append(Token(value, kind))
 
 
-class ArgumentParser:
+class Parser:
     def __init__(self, tokens: list[Token]):
         self.tokens = tokens
         self.parsed: Parsed = {"pos_values": [], "key_values": {}}
@@ -113,7 +113,7 @@ class ArgumentParser:
 
 def parse(args: list[str]):
     tokens = Lexer(args).tokenize()
-    return ArgumentParser(tokens).parse()
+    return Parser(tokens).parse()
 
 
 if __name__ == "__main__":
@@ -130,5 +130,5 @@ if __name__ == "__main__":
             "other such things and stuff",
         ]
     )
-    parser = ArgumentParser(lexer.tokenize())
+    parser = Parser(lexer.tokenize())
     print(parser.parse())

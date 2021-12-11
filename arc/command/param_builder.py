@@ -37,7 +37,18 @@ class ParamBuilder:
             if isinstance(arg.default, ParamInfo):
                 info: ParamInfo = arg.default
             else:
-                info = self.create_param_info(arg)
+                info = ParamInfo(
+                    default=arg.default
+                    if arg.default is not arg.empty
+                    else param.MISSING,
+                )
+
+            # By default, snake_case args are transformed to kebab-case
+            # for the command line. However, this can be ignored
+            # by declaring an explicit name in the ParamInfo
+            # or by setting the config value to false
+            if config.transform_snake_case and not info.name:
+                info.name = arg.name.replace("_", "-")
 
             should_negotiate_param_type = self.param_type_override(arg, info)
             if should_negotiate_param_type:
@@ -61,21 +72,6 @@ class ParamBuilder:
             )
 
         return params
-
-    def create_param_info(self, arg: inspect.Parameter) -> ParamInfo:
-        info = ParamInfo(
-            name=arg.name,
-            default=arg.default if arg.default is not arg.empty else param.MISSING,
-        )
-
-        # By default, snake_case args are transformed to kebab-case
-        # for the command line. However, this can be ignored
-        # by declaring an explicit name in the Meta()
-        # or by setting the config value to false
-        if config.transform_snake_case:
-            info.name = arg.name.replace("_", "-")
-
-        return info
 
     def negotiate_param_type(self, arg: inspect.Parameter, info: ParamInfo):
         if not info.param_cls:

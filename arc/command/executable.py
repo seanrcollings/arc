@@ -28,12 +28,17 @@ from arc.command.param_builder import ParamBuilder
 if TYPE_CHECKING:
     from arc.command.param import Param
     from arc.execution_state import ExecutionState
-    from arc.command.argument_parser import Parsed
+    from arc.parser import Parsed
 
 
 logger = logging.getArcLogger("exe")
 
 BAR = "―" * 40
+
+# TODO: Consider moving a lot of this logic back into the Command class
+# It doesn't really make sense here because the exectuable should just
+# be concerned with how to call the underlying the object, which is a lot
+# more than the object is doing
 
 
 class Executable(abc.ABC, ParamMixin):
@@ -44,6 +49,9 @@ class Executable(abc.ABC, ParamMixin):
         super().__init__()
         self.wrapped = wrapped
         self.callback_store = CallbackStore()
+
+        if config.mode == "development":
+            self.params  # instantiate params for dev
 
     def __call__(self, state: ExecutionState):
         # Setup
@@ -147,7 +155,7 @@ class Executable(abc.ABC, ParamMixin):
             if isinstance(val, (list, set, tuple)):
                 return self.close_context_managers(val)
 
-            if getattr(val, "__exit__", None):
+            if hasattr(val, "__exit__"):
                 val.__exit__(*args)
 
 
@@ -172,8 +180,8 @@ class ClassExecutable(Executable):
                 f"Class-based commands must have a {colorize('handle()', fg.YELLOW)} method"
             )
 
+        self.__build_class_params(wrapped)
         super().__init__(wrapped)
-        self.__build_class_params()
 
     def run(self, args: dict[str, Any]):
         instance = self.wrapped()
@@ -182,11 +190,11 @@ class ClassExecutable(Executable):
 
         return instance.handle()
 
-    def __build_class_params(self):
-        sig = inspect.signature(self.wrapped)
-        annotations = get_type_hints(self.wrapped, include_extras=True)
+    def __build_class_params(self, wrapped: type[WrappedClassExecutable]):
+        sig = inspect.signature(wrapped)
+        annotations = get_type_hints(wrapped, include_extras=True)
         defaults = {
-            name: val for name, val in vars(self.wrapped).items() if name in annotations
+            name: val for name, val in vars(wrapped).items() if name in annotations
         }
 
         sig._parameters = MappingProxyType(  # type: ignore # pylint: disable=protected-access
@@ -206,6 +214,6 @@ class ClassExecutable(Executable):
 
         # inspect.signature() checks for a cached signature object
         # at __signature__. So we can cache it there
-        # to generate the correct signature object for
-        # self.build()
-        self.wrapped.__signature__ = sig  # type: ignore
+        # to generate the correct signature object
+        # during the paramater building process
+        wrapped.__signature__ = sig  # type: ignore

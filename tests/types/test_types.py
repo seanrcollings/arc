@@ -1,4 +1,4 @@
-from typing import Annotated, Literal, Union
+from typing import Annotated, Literal, Union, TypedDict
 from pathlib import Path
 import enum
 import pytest
@@ -8,90 +8,179 @@ from arc.types import File, Range
 from arc import CLI
 
 
-def test_float(cli: CLI):
+@pytest.mark.parametrize(
+    "value,passing",
+    [
+        (1, True),
+        (2, True),
+        (3, True),
+        (11, True),
+        (99999, True),
+        (100000032, True),
+        ("0xFF0000", False),
+        ("string", False),
+    ],
+)
+def test_int(cli: CLI, value, passing: bool):
+    @cli.subcommand()
+    def it(val: int):
+        return val
+
+    if passing:
+        assert cli(f"it {value}") == value
+    else:
+        with pytest.raises(errors.InvalidParamaterError):
+            cli(f"it {value}")
+
+
+@pytest.mark.parametrize(
+    "value,passing",
+    [
+        (1, True),
+        (1121314, True),
+        (1.4, True),
+        (0.3, True),
+        (".19", True),
+        ("string", False),
+    ],
+)
+def test_float(cli: CLI, value, passing: bool):
     @cli.subcommand()
     def fl(val: float):
         return val
 
-    assert cli("fl 2.3") == 2.3
+    if passing:
+        assert cli(f"fl {value}") == float(value)
+    else:
+        with pytest.raises(errors.InvalidParamaterError):
+            cli(f"fl {value}")
 
 
 def test_bytes(cli: CLI):
     @cli.subcommand()
     def by(val: bytes):
-        assert val == b"hi"
+        return val
 
-    cli("by hi")
+    assert cli("by hi") == b"hi"
 
 
 def test_bool(cli: CLI):
     @cli.subcommand()
     def true_val(val: bool):
-        assert val
+        return val
 
     @cli.subcommand()
     def false_val(val: bool = True):
-        assert not val
-
-    cli("true-val --val")
-
-    cli("false-val --val")
-
-
-def test_list(cli: CLI):
-    @cli.subcommand()
-    def li(val: list):
-        assert val == ["1"]
-
-    cli("li 1")
-
-
-def test_list_generic(cli: CLI):
-    @cli.subcommand()
-    def li(val: list[int]):
         return val
 
-    assert cli("li 1,2,3") == [1, 2, 3]
-
-    with pytest.raises(errors.ArgumentError):
-        cli("li ainfe")
-
-    @cli.subcommand()
-    def liu(val: list[Union[int, str]]):
-        return val
-
-    assert cli("liu word,1") == ["word", 1]
+    assert not cli("true-val")
+    assert cli("true-val --val")
+    assert cli("false-val")
+    assert not cli("false-val --val")
 
 
-def test_tuple_generic(cli: CLI):
-    @cli.subcommand()
-    def tu(val: tuple[int]):
-        assert val == (1,)
+class TestList:
+    def test_standard(self, cli: CLI):
+        @cli.subcommand()
+        def li(val: list):
+            return val
 
-    cli("tu 1")
+        assert cli("li 1") == ["1"]
+        assert cli("li 1,2,3,4") == ["1", "2", "3", "4"]
 
-    with pytest.raises(errors.ArgumentError):
-        cli("tu 1,2")
+    def test_generic(self, cli: CLI):
+        @cli.subcommand()
+        def li(val: list[int]):
+            return val
 
-    @cli.subcommand()
-    def any_size(val: tuple[int, ...]):
-        for i in val:
-            assert isinstance(i, int)
+        assert cli("li 1,2,3") == [1, 2, 3]
 
-    cli("any-size 1")
-    cli("any-size 1,2,3,4")
-    cli("any-size 1,2,3,4,5,6")
+        with pytest.raises(errors.ArgumentError):
+            cli("li ainfe")
+
+    def test_nested_union(self, cli: CLI):
+        @cli.subcommand()
+        def liu(val: list[Union[int, str]]):
+            return val
+
+        assert cli("liu word,1") == ["word", 1]
+
+
+class TestTuple:
+    def test_standard(self, cli: CLI):
+        @cli.subcommand()
+        def tu(val: tuple):
+            return val
+
+        assert cli("tu 1") == ("1",)
+        assert cli("tu 1,2") == ("1", "2")
+
+    def test_static_size(self, cli: CLI):
+        @cli.subcommand()
+        def tu(val: tuple[int]):
+            assert val == (1,)
+
+        cli("tu 1")
+
+        with pytest.raises(errors.ArgumentError):
+            cli("tu 1,2")
+
+    def test_variable_size(self, cli: CLI):
+        @cli.subcommand()
+        def any_size(val: tuple[int, ...]):
+            for i in val:
+                assert isinstance(i, int)
+
+        cli("any-size 1")
+        cli("any-size 1,2,3,4")
+        cli("any-size 1,2,3,4,5,6")
 
 
 def test_set_generic(cli: CLI):
     @cli.subcommand()
     def se(val: set[int]):
-        assert val == {1}
+        return val
 
-    cli("se 1")
+    assert cli("se 1") == {1}
 
     with pytest.raises(errors.ArgumentError):
         cli("se word")
+
+
+class TestDict:
+    def test_standard(self, cli: CLI):
+        @cli.subcommand()
+        def di(val: dict):
+            return val
+
+        assert cli("di one=1,two=2,three=3") == dict(one="1", two="2", three="3")
+
+    def test_generic(self, cli: CLI):
+        @cli.subcommand()
+        def di(val: dict[str, int]):
+            return val
+
+        assert cli("di one=1,two=2,three=3") == dict(one=1, two=2, three=3)
+
+        with pytest.raises(errors.InvalidParamaterError):
+            cli("di one=1,two=2,three=three")
+
+    def test_typed_dict(self, cli: CLI):
+        class Thing(TypedDict):
+            val1: int
+            val2: float
+
+        @cli.subcommand()
+        def td(val: Thing):
+            return val
+
+        assert cli("td val1=1,val2=2.0") == Thing(val1=1, val2=2.0)
+
+        with pytest.raises(errors.InvalidParamaterError):
+            cli("td val1=string,val2=string")
+
+        with pytest.raises(errors.InvalidParamaterError):
+            cli("td val1=string")
 
 
 def test_enum(cli: CLI):
@@ -118,30 +207,30 @@ def test_path(cli: CLI):
     assert cli("pa ./arc") == Path("./arc")
 
 
-def test_union(cli: CLI):
-    @cli.subcommand()
-    def un(*, val: Union[int, str] = 2):
-        return val
+class TestUnion:
+    def test_standard(self, cli: CLI):
+        @cli.subcommand()
+        def un(*, val: Union[int, str] = 2):
+            return val
 
-    assert cli("un --val 2") == 2
-    assert cli("un --val string") == "string"
-    assert cli("un") == 2
+        assert cli("un --val 2") == 2
+        assert cli("un --val string") == "string"
+        assert cli("un") == 2
 
+    def test_nested(self, cli: CLI):
+        @cli.subcommand()
+        def un(val: list[Union[int, str]]):
+            return val
 
-def test_nested_union(cli: CLI):
-    @cli.subcommand()
-    def un(val: list[Union[int, str]]):
-        return val
+        assert cli("un 1,2,3,4") == [1, 2, 3, 4]
+        assert cli("un 1,string,2,string") == [1, "string", 2, "string"]
 
-    assert cli("un 1,2,3,4") == [1, 2, 3, 4]
-    assert cli("un 1,string,2,string") == [1, "string", 2, "string"]
+        @cli.subcommand()
+        def un2(val: Union[list[int], list[str]]):
+            return val
 
-    @cli.subcommand()
-    def un2(val: Union[list[int], list[str]]):
-        return val
-
-    assert cli("un2 1,2,3,4") == [1, 2, 3, 4]
-    assert cli("un2 1,string,3,4") == ["1", "string", "3", "4"]
+        assert cli("un2 1,2,3,4") == [1, 2, 3, 4]
+        assert cli("un2 1,string,3,4") == ["1", "string", "3", "4"]
 
 
 def test_literal(cli: CLI):

@@ -59,5 +59,5 @@ class ArcFormatter(logging.Formatter):
             self.level_color[record.levelno],
             effects.BOLD,
         )
-        record.name = colorize(f" {record.name} ", bg.GREY)
+        record.name = colorize(f"{record.name:^13}", bg.GREY)
         return super().format(record)

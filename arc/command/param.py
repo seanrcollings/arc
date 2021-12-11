@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 
 from arc import errors, utils
-from arc.color import colorize, fg
+from arc.color import colorize, fg, colored
 from arc.config import config
 from arc.execution_state import ExecutionState
-from arc.result import Result
 from arc.types import aliases
-from arc.types.helpers import TypeInfo
+from arc.types.helpers import TypeInfo, convert
 
 # Represents a missing value
 # Used to represent an argument
@@ -49,29 +48,20 @@ class Param:
         )
 
     def __format__(self, spec: str):
-        modifiers = spec.split("|")
-        name = self.arg_alias
-
-        if self.is_positional:
-            formatted = f"<{name}>"
+        if spec == "usage":
+            return self._format_usage()
+        elif spec == "arguments":
+            return self._format_arguments()
         else:
-            if "short" in modifiers:
-                assert self.short
-                name = self.short
-                denoter = config.short_flag_prefix
-            else:
-                denoter = config.flag_prefix
+            raise ValueError(
+                "Invalid value for format spec, must be usage or arguments"
+            )
 
-            formatted = f"{denoter}{name}"
+    def _format_usage(self):
+        return ""
 
-            if "usage" in modifiers:
-                if self.is_keyword:
-                    formatted += " <...>"
-
-                if self.optional:
-                    formatted = f"[{formatted}]"
-
-        return formatted
+    def _format_arguments(self):
+        return ""
 
     @property
     def optional(self):
@@ -128,30 +118,63 @@ class Param:
             )
 
         try:
-            converted = utils.dispatch_args(
-                type_class.__convert__, value, self.type_info, state
-            )
+            converted = convert(type_class, value, self.type_info, state)
         except errors.ConversionError as e:
-            raise errors.InvalidParamaterError(e.message, self, state) from e
+            message = e.message
+            if e.source:
+                message += f" ({e.source})"
+
+            raise errors.InvalidParamaterError(message, self, state) from e
 
         return converted
 
-    def cli_rep(self) -> str:
+    def cli_rep(self, short=False) -> str:
         """Provides the representation that
         would be seen on the command line"""
         return self.arg_alias
 
 
 class PositionalParam(Param):
-    ...
+    def _format_usage(self):
+        if self.optional:
+            return f"[{self.arg_alias}]"
+
+        return f"<{self.arg_alias}>"
+
+    def _format_arguments(self):
+        return colored(colorize(f"<{self.arg_alias}>", config.brand_color))
+
+    def cli_rep(self, short=False) -> str:
+        return f"<{self.arg_alias}>"
 
 
-class KeywordParam(Param):
-    def cli_rep(self) -> str:
-        return f"{config.flag_prefix}{self.arg_alias}"
+class _KeywordFlagShared(Param):
+    def _format_usage(self):
+        string = f"{config.flag_prefix}{self.arg_alias}"
+        if self.is_keyword:
+            string += " <...>"
+
+        if self.optional:
+            string = f"[{string}]"
+
+        return string
+
+    def _format_arguments(self):
+        string = colorize(f"{config.flag_prefix}{self.arg_alias}", config.brand_color)
+        if self.short:
+            string += colorize(f" ({config.short_flag_prefix}{self.short})", fg.GREY)
+
+        return colored(string)
 
 
-class FlagParam(Param):
+class KeywordParam(_KeywordFlagShared):
+    def cli_rep(self, short=False) -> str:
+        return (config.short_flag_prefix if short else config.flag_prefix) + (
+            self.short if short and self.short else self.arg_alias
+        )
+
+
+class FlagParam(_KeywordFlagShared):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.default not in {True, False, MISSING}:
@@ -162,8 +185,10 @@ class FlagParam(Param):
         if self.default is MISSING:
             self.default = False
 
-    def cli_rep(self) -> str:
-        return f"{config.flag_prefix}{self.arg_alias}"
+    def cli_rep(self, short=False) -> str:
+        return (config.short_flag_prefix if short else config.flag_prefix) + (
+            self.short if short and self.short else self.arg_alias
+        )
 
 
 class SpecialParam(Param):

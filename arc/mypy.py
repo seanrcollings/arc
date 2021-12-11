@@ -1,10 +1,24 @@
 # pylint: disable=no-name-in-module
 from mypy.mro import calculate_mro
 from mypy.plugin import Plugin, DynamicClassDefContext
-from mypy.nodes import TypeInfo, SymbolTable, ClassDef, Block, SymbolTableNode, GDEF
+from mypy.types import UnboundType
+from mypy.nodes import (
+    TypeInfo,
+    SymbolTable,
+    ClassDef,
+    Block,
+    SymbolTableNode,
+    GDEF,
+)
 
 
-STRICT_FUNCTIONS = {"arc.types.network.stricturl"}
+STRICT_FUNCTIONS = {
+    "arc.types.network.stricturl",
+    "arc.types.path.strictpath",
+    "arc.types.numbers.strictint",
+    "arc.types.numbers.strictfloat",
+    "arc.types.strings.strictstr",
+}
 
 
 class ArcPlugin(Plugin):
@@ -22,8 +36,11 @@ def dynamic_class_hook(ctx: DynamicClassDefContext):
     info = TypeInfo(SymbolTable(), class_def, ctx.api.cur_mod_id)
     class_def.info = info
     node = ctx.call.callee.node  # type: ignore
-    ret_type = node.type.ret_type
-    info.bases = [ret_type.item]
+
+    if isinstance(node.type.ret_type, UnboundType):
+        ctx.api.analyze_func_def(node)  # type: ignore
+
+    info.bases = [node.type.ret_type.item]
     calculate_mro(info)
 
     ctx.api.add_symbol_table_node(ctx.name, SymbolTableNode(GDEF, info))
@@ -31,4 +48,3 @@ def dynamic_class_hook(ctx: DynamicClassDefContext):
 
 def plugin(_version: str):
     return ArcPlugin
-

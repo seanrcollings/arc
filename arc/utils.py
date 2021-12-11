@@ -2,12 +2,13 @@ import functools
 import re
 import time
 from types import MethodType
-from typing import Callable
+import typing as t
+import functools
 
-from arc import logging
+from arc import logging, typing as at
 from arc.color import fg, effects, colorize
 
-logger = logging.getArcLogger("utl")
+logger = logging.getArcLogger("util")
 
 
 IDENT = r"[a-zA-Z-_0-9]+"
@@ -22,10 +23,18 @@ def header(contents: str):
     logger.debug(colorize(f"{contents:^35}", effects.UNDERLINE, effects.BOLD, fg.BLUE))
 
 
-def clean(string):
+ansi_escape = re.compile(r"(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]")
+
+
+@functools.cache
+def ansi_clean(string: str):
     """Gets rid of escape sequences"""
-    ansi_escape = re.compile(r"(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]")
     return ansi_escape.sub("", string)
+
+
+@functools.cache
+def ansi_len(string: str):
+    return len(ansi_clean(string))
 
 
 def timer(name):
@@ -117,7 +126,7 @@ def levenshtein(s1: str, s2: str):
     return previous_row[-1]
 
 
-def dispatch_args(func: Callable, *args):
+def dispatch_args(func: t.Callable, *args):
     """Calls the given `func` with the maximum
     slice of `*args` that it can accept. Handles
     function and method types
@@ -141,3 +150,23 @@ def dispatch_args(func: Callable, *args):
     arg_count = unwrapped.__code__.co_argcount
     args = args[0 : arg_count - 1]
     return func(*args)
+
+
+def cmp(a, b) -> at.CompareReturn:
+    """Compare two values
+
+    Args:
+        a (Any): First value
+        b (Any): Second value
+
+    Returns:
+        - `a < b  => -1`
+        - `a == b =>  0`
+        - `a > b  =>  1`
+    """
+    return (a > b) - (a < b)
+
+
+def partition(item: t.Any, n: int):
+    """Partion `item` into a list of elements `n` long"""
+    return [item[index : index + n] for index in range(0, len(item), n)]

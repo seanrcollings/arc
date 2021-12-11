@@ -1,5 +1,31 @@
 import abc
 import typing as t
+from dataclasses import dataclass
+import types
+import sys
+
+
+__all__ = ["File", "Stdin"]
+
+# TODO: What happens with t.Annotated[File.Read, File.Arg(...)]
+# Which expands to: t.Annotated[t.TextIO, "r", {...}]
+# Options:
+# - Ignore the second annotation argument
+# - Disallow the second annotation argument
+# - Allow it and merge the two
+
+
+OpenNewline = t.Literal[None, "", "\n", "\r", "\r\n"]
+OpenErrors = t.Literal[
+    None,
+    "strict",
+    "ignore",
+    "replace",
+    "surrogateescape",
+    "xmlcharrefreplace",
+    "backslashreplace",
+    "namereplace",
+]
 
 
 class File(t.IO, abc.ABC):
@@ -24,58 +50,74 @@ class File(t.IO, abc.ABC):
 
     ```py
     @cli.command()
-    def command(file: Annotated[File, File.Meta(...)]):
+    def command(file: Annotated[File, File.Args(...)]):
         print(file.read())
     ```
 
-    `File.Meta`'s call signature matches that of `open` (minus the filename), so
+    `File.Args`'s call signature matches that of `open` (minus the filename), so
     all of the same properties apply
 
     `File` is Abstract and cannot be instantiated on it's own
     """
 
-    @staticmethod
-    def Meta(
-        mode: str = "r",
-        buffering: int = -1,
-        encoding: str = None,
-        errors=None,
-        newline: str = None,
-        closefd: bool = True,
-        opener=None,
-    ):
-        return {
-            "mode": mode,
-            "buffering": buffering,
-            "encoding": encoding,
-            "errors": errors,
-            "newline": newline,
-            "closefd": closefd,
-            "opener": opener,
-        }
+    @dataclass
+    class Args:
+        mode: str = "r"
+        buffering: int = -1
+        encoding: t.Optional[str] = None
+        errors: OpenErrors = None
+        newline: OpenNewline = None
+        closefd: bool = True
+        opener: t.Optional[t.Callable] = None
 
     Read = t.Annotated[t.TextIO, "r"]
-    """Equivelant to `open(filename, "r")"""
+    """Equivalent to `open(filename, "r")"""
     Write = t.Annotated[t.TextIO, "w"]
-    """Equivelant to `open(filename, "w")"""
+    """Equivalent to `open(filename, "w")"""
     ReadWrite = t.Annotated[t.TextIO, "r+"]
-    """Equivelant to `open(filename, "r+")"""
+    """Equivalent to `open(filename, "r+")"""
     CreateWrite = t.Annotated[t.TextIO, "x"]
-    """Equivelant to `open(filename, "x")"""
+    """Equivalent to `open(filename, "x")"""
     Append = t.Annotated[t.TextIO, "a"]
-    """Equivelant to `open(filename, "a")"""
+    """Equivalent to `open(filename, "a")"""
     AppendRead = t.Annotated[t.TextIO, "a+"]
-    """Equivelant to `open(filename, "a+")"""
+    """Equivalent to `open(filename, "a+")"""
 
     BinaryRead = t.Annotated[t.BinaryIO, "rb"]
-    """Equivelant to `open(filename, "rb")"""
+    """Equivalent to `open(filename, "rb")"""
     BinaryWrite = t.Annotated[t.BinaryIO, "wb"]
-    """Equivelant to `open(filename, "wb")"""
-    BinaryReadWrite = t.Annotated[t.BinaryIO, "r+b"]
-    """Equivelant to `open(filename, "r+b")"""
+    """Equivalent to `open(filename, "wb")"""
+    BinaryReadWrite = t.Annotated[t.BinaryIO, "rb+"]
+    """Equivalent to `open(filename, "rb+")"""
     BinaryCreateWrite = t.Annotated[t.BinaryIO, "xb"]
-    """Equivelant to `open(filename, "xb")"""
+    """Equivalent to `open(filename, "xb")"""
     BinaryAppend = t.Annotated[t.BinaryIO, "ab"]
-    """Equivelant to `open(filename, "ab")"""
-    BinaryAppendRead = t.Annotated[t.BinaryIO, "a+b"]
-    """Equivelant to `open(filename, "a+b")"""
+    """Equivalent to `open(filename, "ab")"""
+    BinaryAppendRead = t.Annotated[t.BinaryIO, "ab+"]
+    """Equivalent to `open(filename, "ab+")"""
+
+
+class StandardStream(str):
+    _stream: t.ClassVar[t.TextIO]
+
+    @dataclass
+    class Args:
+        line_breaks: bool = False
+
+    @classmethod
+    def __convert__(cls, value, info):
+        meta: StandardStream.Args = (  # pylint: disable=used-before-assignment
+            info.annotations[0] if len(info.annotations) >= 1 else cls.Args()
+        )
+
+        if value == "-":
+            if meta.line_breaks:
+                return cls._stream.readlines()
+            else:
+                return cls._stream.read()
+        else:
+            return cls(value)
+
+
+class Stdin(StandardStream):
+    _stream = sys.stdin
