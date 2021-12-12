@@ -31,10 +31,6 @@ class Context(dict):
     def __setattr__(self, name: str, value):
         return self.__setitem__(name, value)
 
-    class Config:
-        name = "Context"
-        allow_missing = True
-
     @classmethod
     def __convert__(cls, value: Any, _, state: ExecutionState):
         ctx: dict[str, Any] = {}
@@ -47,8 +43,3 @@ class Context(dict):
         ctx["state"] = state
 
         return cls(ctx)
-
-    def __cleanup__(self, _):
-        """Empty Cleanup Function Because
-        __getattr__ raises a KeyError otherwise
-        when checking for a cleanup function"""

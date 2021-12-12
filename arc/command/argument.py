@@ -24,7 +24,7 @@ class Argument:
         self.param = param
 
     def __repr__(self):
-        return f"Argument(value={self.value}, param={self.param!r})"
+        return f"Argument(value={self.value!r}, param={self.param!r})"
 
     @property
     def name(self):
