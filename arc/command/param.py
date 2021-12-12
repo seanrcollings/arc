@@ -9,6 +9,7 @@ from arc.config import config
 from arc.execution_state import ExecutionState
 from arc.types import aliases
 from arc.types.helpers import TypeInfo, convert
+from arc.command.argument import Argument
 
 # Represents a missing value
 # Used to represent an argument
@@ -17,6 +18,11 @@ MISSING = utils.symbol("MISSING")
 
 
 class Param:
+    """Represents both the Python function paramater,
+    and it's equivalent on the command line. `Argument`
+    represents the actual value that a paramater is given.
+    """
+
     def __init__(
         self,
         arg_name: str,
@@ -44,7 +50,7 @@ class Param:
 
         return (
             f"<{self.__class__.__name__} {self.arg_name}"
-            f"({self.__class__.__name__}): {type_name} = {self.default}>"
+            f": {type_name} = {self.default}>"
         )
 
     def __format__(self, spec: str):
@@ -99,18 +105,15 @@ class Param:
             "optional": self.optional,
         }
 
-    def pre_run(self, state: ExecutionState) -> Any:
-        """Hook that is ran before the command is executed. Should
-        return the value of the param.
-        """
+    def get_arg(self, state: ExecutionState) -> Argument:
         value = Selectors.select_value(self, state)
         converted = self.convert(value, state)
 
-        return converted
+        return Argument(converted, self)
 
     def convert(self, value: Any, state):
-
         type_class: type[aliases.TypeProtocol] = aliases.Alias.resolve(self.type_info)
+
         if value is MISSING:
             raise errors.MissingArgError(
                 "No value provided for required argument "
@@ -128,7 +131,7 @@ class Param:
 
         return converted
 
-    def cli_rep(self, short=False) -> str:
+    def cli_rep(self, _short=False) -> str:
         """Provides the representation that
         would be seen on the command line"""
         return self.arg_alias
@@ -179,7 +182,7 @@ class FlagParam(_KeywordFlagShared):
         super().__init__(*args, **kwargs)
         if self.default not in {True, False, MISSING}:
             raise errors.ArgumentError(
-                "The default for a FlagParam must be True, False, or not specified."
+                "The default for a flag must be True, False, or not specified."
             )
 
         if self.default is MISSING:
@@ -201,9 +204,8 @@ class Selectors:
         default = param.default
 
         if param.is_special:
-            return default
-
-        if param.is_positional:
+            value = default
+        elif param.is_positional:
             value = Selectors.select_positional_value(default, param, state)
         elif param.is_keyword:
             value = Selectors.select_keyword_value(default, param, state)

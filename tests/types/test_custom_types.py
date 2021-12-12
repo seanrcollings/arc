@@ -25,7 +25,7 @@ def test_protocol_violation(cli: CLI):
         ...
 
     class NonClassMethod:
-        def __convert__(self, value, param_type):
+        def __convert__(self, value):
             ...
 
     @cli.command()
@@ -54,6 +54,9 @@ def test_cleanup(cli: CLI):
         @classmethod
         def __convert__(cls, value, info, state):
             return cls(value)
+
+        def __enter__(self):
+            return self
 
         def __exit__(self, exc_type, exc_value, trace):
             assert self.value == "2"

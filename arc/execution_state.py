@@ -1,6 +1,7 @@
 from __future__ import annotations
-from typing import Optional, TYPE_CHECKING, Callable
-from dataclasses import dataclass, field
+from typing import Optional, TYPE_CHECKING
+from dataclasses import dataclass
+from arc.command.argument import Argument
 from arc.config import config
 
 if TYPE_CHECKING:
@@ -18,6 +19,7 @@ class ExecutionState:
     command_chain: list[Command]
     parsed: Parsed
     executable: Optional[Executable] = None
+    arguments: Optional[list[Argument]] = None
 
     @property
     def root(self):

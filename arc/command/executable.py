@@ -15,9 +15,10 @@ import abc
 
 from arc import logging
 from arc import errors
+from arc.command.argument import Argument
 from arc.utils import levenshtein
 from arc.config import config
-from arc.result import Err, Ok
+from arc.result import Err, Ok, Result
 from arc.color import colorize, fg
 
 from arc.types.helpers import join_and
@@ -40,6 +41,8 @@ BAR = "―" * 40
 # be concerned with how to call the underlying the object, which is a lot
 # more than the object is doing
 
+# TODO: Retreiving argument values shouldn't modify the Parsed object
+
 
 class Executable(abc.ABC, ParamMixin):
     builder: type[ParamBuilder] = ParamBuilder
@@ -54,43 +57,56 @@ class Executable(abc.ABC, ParamMixin):
             self.params  # instantiate params for dev
 
     def __call__(self, state: ExecutionState):
-        # Setup
         self.state = state
         self.state.executable = self
         parsed = self.state.parsed
         assert parsed is not None
 
+        arguments = self.get_args()
+        state.arguments = arguments
+        self.exhastive_check(parsed)
+        self.setup(arguments)
+
         try:
-            # Construct the arguments dict, the final product of which
-            # will be passed to the wrapped function or class
-            arguments: dict[str, Any] = {}
-            for param in self.params.values():
-                value = param.pre_run(self.state)
-                arguments[param.arg_name] = value
-
-            self.exhastive_check(parsed)
-
-            logger.info("Function Arguments: %s", pprint.pformat(arguments))
-
-            self.callback_store.pre_execution(arguments)
             logger.debug(BAR)
-            result = self.run(arguments)
+            result = self.run({key: arg.value for key, arg in arguments.items()})
             if not isinstance(result, (Ok, Err)):
                 result = Ok(result)
+
         except BaseException as e:
-            self.close_context_managers(arguments.values(), e)
             result = Err(e)
             raise
         finally:
             logger.debug(BAR)
-            self.callback_store.post_execution(result)
+            self.cleanup(result, arguments)
 
-        self.close_context_managers(arguments.values())
         return result
 
     @abc.abstractmethod
     def run(self, args: dict[str, Any]) -> Any:
         ...
+
+    def get_args(self):
+        # Construct the arguments dict, the final product of which
+        # will be passed to the wrapped function or class
+        arguments: dict[str, Argument] = {}
+        for param in self.params.values():
+            arg = param.get_arg(self.state)
+            arg.pre_execute(self.state)
+            arguments[param.arg_name] = arg
+
+        return arguments
+
+    def setup(self, arguments: dict[str, Argument]):
+        logger.info("Arguments: %s", pprint.pformat(arguments))
+        self.callback_store.pre_execution(
+            {key: arg.value for key, arg in arguments.items()}
+        )
+
+    def cleanup(self, result: Result, arguments: dict[str, Argument]):
+        self.callback_store.post_execution(result)
+        for arg in arguments.values():
+            arg.post_execute(result, self.state)
 
     def exhastive_check(self, parsed: Parsed):
         """Ensures that all arguments from the parser are handled"""
@@ -142,21 +158,6 @@ class Executable(abc.ABC, ParamMixin):
                 return arg
 
         return None
-
-    def close_context_managers(
-        self, values: Iterable[Any], exc: Optional[BaseException] = None
-    ):
-        if exc:
-            args: tuple = (type(exc), exc, exc.__traceback__)
-        else:
-            args = (None, None, None)
-
-        for val in values:
-            if isinstance(val, (list, set, tuple)):
-                return self.close_context_managers(val)
-
-            if hasattr(val, "__exit__"):
-                val.__exit__(*args)
 
 
 class FunctionExecutable(Executable):

@@ -1,6 +1,5 @@
 from __future__ import annotations
 from dataclasses import dataclass
-import functools
 from typing import (
     Optional,
     Sequence,
@@ -89,7 +88,6 @@ def validate(cls):
             cls_init(instance)
         else:
             cls_init(instance, *args, **kwargs)
-
 
         for validator in validators:
             validator(instance)
