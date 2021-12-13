@@ -21,7 +21,6 @@ class CLI(Command):
     def __init__(
         self,
         name: str = "cli",
-        function: Callable = None,
         config: dict[str, Any] = None,
         config_file: str = None,
         context: dict = None,
@@ -30,8 +29,6 @@ class CLI(Command):
         """Creates a CLI object.
         Args:
             name: name of the CLI, will be used in the help command.
-            function: function that defines the CLI's default behavior.
-                Identical to calling `@cli.default()`.
             arcfile: arc config file to load. defaults to ./.arc
             context: dictionary of key value pairs to pass to children as context
             version: Version string to display with `--version`
@@ -58,9 +55,6 @@ class CLI(Command):
 
         self.version = version
         self.install_command(Command("help", self.helper))
-        self.default_action: Optional[Command] = (
-            self.default()(function) if function else None
-        )
 
     # pylint: disable=arguments-differ
     def __call__(  # type: ignore
@@ -84,33 +78,9 @@ class CLI(Command):
         """
         return self.subcommand(*args, **kwargs)
 
-    def default(self, name=None, **kwargs):
-        """Define The CLI's default behavior
-        when not given a specific command. Has the same interface
-        as `Command.subcommand`
-        """
-
-        # Current limitation: default command can only accept
-        # keyword arguments.
-        def decorator(wrapped):
-            if isinstance(wrapped, Command):
-                wrapped = wrapped.executable.wrapped
-
-            self.default_action = Command(
-                name or wrapped.__name__,
-                wrapped,
-                **kwargs,
-            )
-
-            return self.default_action
-
-        return decorator
-
     def missing_command(
         self,
         ctx: Context,
-        args: VarPositional,
-        kwargs: VarKeyword,
         _help: bool = Param(name="help", short="h", description="display this help"),
         version: bool = Param(short="v", description="display application version "),
     ):
@@ -120,13 +90,6 @@ class CLI(Command):
         elif version:
             print(self.name, self.version)
             return
-        elif self.default_action:
-            ctx.state.command_chain += [self.default_action]
-            ctx.state.parsed = {
-                "pos_values": args,
-                "key_values": kwargs,
-            }
-            return self.default_action.run(ctx.state)
 
         return self("help")
 

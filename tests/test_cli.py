@@ -7,14 +7,6 @@ from arc.errors import CommandError
 from arc._debug import debug
 
 
-def test_base(cli: CLI):
-    @cli.default()
-    def base(*, val: int = 1):
-        return val
-
-    assert cli("--val 2") == 2
-
-
 def test_install_group(cli: CLI):
     g1 = namespace("g1")
     cli.install_command(g1)
