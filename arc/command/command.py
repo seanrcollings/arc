@@ -2,10 +2,9 @@ from __future__ import annotations
 import re
 from functools import cached_property
 from typing import Callable, Optional, Any, Union
-from functools import cached_property
 
 from arc import logging
-from arc.color import effects, fg, colorize
+from arc.color import effects, fg
 from arc.result import Result
 from arc.config import config
 from arc.execution_state import ExecutionState
