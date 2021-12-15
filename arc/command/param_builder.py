@@ -1,6 +1,6 @@
 from __future__ import annotations
 from types import MappingProxyType
-from typing import Any, Optional, get_type_hints, TYPE_CHECKING
+from typing import Any, Callable, Optional, get_type_hints, TYPE_CHECKING
 import inspect
 
 
@@ -17,9 +17,9 @@ logger = logging.getArcLogger("prb")
 
 
 class ParamBuilder:
-    def __init__(self, executable: Executable):
-        self.sig = inspect.signature(executable.wrapped)
-        self.annotations = get_type_hints(executable.wrapped, include_extras=True)
+    def __init__(self, func: Callable):
+        self.sig = inspect.signature(func)
+        self.annotations = get_type_hints(func, include_extras=True)
 
     def build(self):
         params: dict = {}

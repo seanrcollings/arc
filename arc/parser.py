@@ -1,13 +1,17 @@
+import typing as t
+import sys
+import shlex
 from typing import TypedDict, Union
 from dataclasses import dataclass
 import re
 import enum
-from arc import logging
+
+from arc.context import AppContext
+from arc import errors, logging
 from arc.config import config
 from arc.utils import IDENT
 from arc.utils import symbol
-from arc.command.param import MISSING
-
+from arc.command.param import MISSING, Param
 
 logger = logging.getArcLogger("parse")
 
@@ -19,6 +23,8 @@ class TokenType(enum.Enum):
     SHORT_KEYWORD = 4
 
 
+# Note that this takes advantage of the fact that dictionaries
+# are ordered.
 matchers = {
     TokenType.KEYWORD: re.compile(fr"^{config.flag_prefix}({IDENT})$"),
     TokenType.SHORT_KEYWORD: re.compile(fr"^{config.short_flag_prefix}([a-zA-Z]+)$"),
@@ -39,13 +45,13 @@ class Parsed(TypedDict):
 
 
 class Lexer:
-    def __init__(self, to_tokenize: list[str]):
-        self.to_tokenize = to_tokenize
+    def __init__(self, args: list[str]):
+        self.args = args
         self.tokens: list[Token] = []
 
     def tokenize(self):
-        while len(self.to_tokenize) > 0:
-            curr: str = self.to_tokenize.pop(0)
+        while self.args:
+            curr: str = self.args.pop(0)
             for name, regex in matchers.items():
                 if match := regex.match(curr):
                     logger.debug("Matched %s -> %s", curr, name)
@@ -62,12 +68,31 @@ class Lexer:
 
 
 class Parser:
-    def __init__(self, tokens: list[Token]):
-        self.tokens = tokens
-        self.parsed: Parsed = {"pos_values": [], "key_values": {}}
-        self.pos_only = False
+    tokens: list[Token]
 
-    def parse(self):
+    def __init__(self, ctx: AppContext, allow_extra: bool = False):
+        self.ctx = ctx
+        self.allow_extra = allow_extra
+        self.parsed: dict[str, t.Any] = {}
+        self.extra: list[str] = []
+        self.pos_only = False
+        self.params: list[Param] = []
+        self.pos_params: list[Param] = []
+        self.curr_pos: int = 0
+        self._long_names: dict[str, Param] = {}
+        self._short_names: dict[str, Param] = {}
+
+    def add_param(self, param: Param):
+        self.params.append(param)
+        if param.is_positional:
+            self.pos_params.append(param)
+        if param.is_keyword or param.is_flag:
+            self._long_names[param.arg_alias] = param
+            if param.short:
+                self._short_names[param.short] = param
+
+    def parse(self, args: list[str]):
+        self.tokens = Lexer(args).tokenize()
         parser_table = {
             TokenType.KEYWORD: self.parse_keyword,
             TokenType.SHORT_KEYWORD: self.parse_short_keyword,
@@ -76,11 +101,12 @@ class Parser:
         }
         while self.tokens:
             curr = self.consume()
-            if self.pos_only and curr.type != TokenType.VALUE:
-                raise ValueError("POS ONLY")
-            parser_table[curr.type](curr)
+            if self.pos_only:
+                self.parse_value(curr)
+            else:
+                parser_table[curr.type](curr)
 
-        return self.parsed
+        return self.parsed, self.extra
 
     def parse_keyword(self, token: Token):
         if (next_token := self.peek()) and next_token.type == TokenType.VALUE:
@@ -88,47 +114,63 @@ class Parser:
         else:
             value = MISSING
 
-        self.parsed["key_values"][token.value] = value
+        param = self._long_names.get(token.value)
+
+        if not param:
+            if self.allow_extra:
+                self.extra.extend([token.value, value])
+            else:
+                raise errors.ParserError(f"Unrecognized keyword: {token.value}")
+        else:
+            self.parsed[param.arg_name] = value
 
     def parse_short_keyword(self, token: Token):
-        if (next_token := self.peek()) and next_token.type == TokenType.VALUE:
-            assert len(token.value) == 1
-            self.parsed["key_values"][token.value] = self.consume().value
-        else:
+        def process_single(char: str, flag: bool = False):
+            if flag:
+                value = MISSING
+            elif (next_token := self.peek()) and next_token.type == TokenType.VALUE:
+                value = self.consume().value
+            else:
+                value = MISSING
+
+            param = self._short_names.get(char)
+            if not param:
+                if self.allow_extra:
+                    extra = [char]
+                    if value is not MISSING:
+                        extra.append(value)  # type: ignore
+
+                    self.extra.extend(extra)
+                else:
+                    raise errors.ParserError(f"Unrecognized keyword: {char}")
+            else:
+                self.parsed[param.arg_name] = value
+
+        if len(token.value) > 1:
+            # Flags, cannot recieve a value
             for char in token.value:
-                self.parsed["key_values"][char] = MISSING
+                process_single(char, flag=True)
+        else:
+            # May recieve a value
+            process_single(token.value)
 
     def parse_pos_only(self, _token: Token):
         self.pos_only = True
 
     def parse_value(self, token: Token):
-        self.parsed["pos_values"].append(token.value)
+        if len(self.pos_params) <= self.curr_pos:
+            if self.allow_extra:
+                self.extra.append(token.value)
+                return
+            else:
+                raise errors.ParserError("Too many positional arguments")
+
+        param = self.pos_params[self.curr_pos]
+        self.parsed[param.arg_name] = token.value
+        self.curr_pos += 1
 
     def consume(self):
         return self.tokens.pop(0)
 
     def peek(self):
         return self.tokens[0] if self.tokens else None
-
-
-def parse(args: list[str]):
-    tokens = Lexer(args).tokenize()
-    return Parser(tokens).parse()
-
-
-if __name__ == "__main__":
-    lexer = Lexer(
-        [
-            "--name",
-            "value",
-            "--name2",
-            "value2",
-            "--flag",
-            "-f",
-            "-vb",
-            "--",
-            "other such things and stuff",
-        ]
-    )
-    parser = Parser(lexer.tokenize())
-    print(parser.parse())

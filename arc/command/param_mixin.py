@@ -4,6 +4,7 @@ in production only the command being executed parameters are
 created.
 """
 import functools
+from typing import Callable
 from arc.command.param_builder import ParamBuilder
 from arc.command.param import Param
 
@@ -13,7 +14,7 @@ class ParamMixin:
 
     @functools.cached_property
     def params(self) -> dict[str, Param]:
-        return self.builder(self).build()  # type: ignore
+        return self.builder(self.callback).build()  # type: ignore
 
     @functools.cached_property
     def pos_params(self) -> dict[str, Param]:

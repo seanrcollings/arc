@@ -2,7 +2,7 @@
 .. include:: ../README.md
 """
 from arc import callbacks
-from arc.cli import CLI, run
+from arc.cli import CLI
 from arc.command import command, namespace
 from arc.config import config
 from arc.errors import ExecutionError, ValidationError

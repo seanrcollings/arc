@@ -3,7 +3,8 @@
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
-from arc.types.params import as_special_param
+
+# from arc.types.params import as_special_param
 from arc.utils import symbol
 
 MISSING = symbol("MISSING")
@@ -12,7 +13,7 @@ if TYPE_CHECKING:
     from arc.execution_state import ExecutionState
 
 
-@as_special_param(default={})
+# @as_special_param(default={})
 class Context(dict):
     """Context object, extends `dict`"""
 

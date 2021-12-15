@@ -1,79 +1,109 @@
 from __future__ import annotations
 import re
 from functools import cached_property
-from typing import Callable, Optional, Any, Union
+import typing as t
+import shlex
+import sys
 
 from arc import logging
 from arc.color import effects, fg
+from arc.command.param_builder import ParamBuilder
+from arc.context import AppContext
+from arc.parser import Parser
 from arc.result import Result
 from arc.config import config
 from arc.execution_state import ExecutionState
 
-from .executable import Executable, FunctionExecutable, ClassExecutable
+from .param_mixin import ParamMixin
 
 
 logger = logging.getArcLogger("command")
 DEFAULT_SECTION: str = config.default_section_name
 
 
-class Command:
+class Command(ParamMixin):
+    builder = ParamBuilder
+
     def __init__(
         self,
         name: str,
-        executable: Callable,
-        context: Optional[dict] = None,
-        description: Optional[str] = None,
+        callback: t.Callable,
+        context: t.Optional[dict] = None,
+        description: t.Optional[str] = None,
     ):
+        self.callback = callback
         self.name = name
         self.subcommands: dict[str, Command] = {}
         self.subcommand_aliases: dict[str, str] = {}
         self.context = context or {}
         self._description = description
-        self.doc = executable.__doc__
-
-        self.executable: Executable = (
-            ClassExecutable(executable)
-            if isinstance(executable, type)
-            else FunctionExecutable(executable)
-        )
+        self.doc = callback.__doc__
 
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
 
     def __call__(self, *args, **kwargs):
-        return self.function(*args, **kwargs)
+        self.main(*args, **kwargs)
 
-    @property
-    def function(self):
-        return self.executable.wrapped
+    def main(self, args: t.Union[str, list[str]] = None):
+        with self.create_ctx(self.name) as ctx:
+            self.parse_args(ctx, self.get_args(args))
+            self.execute(ctx)
+
+    def execute(self, ctx: AppContext):
+        if not self.callback:
+            raise RuntimeError("No callback associated with this command to execute")
+
+        ctx.execute(self.callback, **ctx.args)
+
+    def get_args(self, args: t.Union[str, list[str]] = None):
+        if isinstance(args, str):
+            args = shlex.split(args)
+        elif not args:
+            args = sys.argv[1:]
+
+        return args
+
+    def create_ctx(self, fullname: str):
+        ctx = AppContext(self, fullname=fullname)
+        return ctx
+
+    def create_parser(self, ctx: AppContext):
+        parser = Parser(ctx)
+        for param in self.params.values():
+            parser.add_param(param)
+
+        return parser
+
+    def parse_args(self, ctx: AppContext, args: list[str]):
+        parser = self.create_parser(ctx)
+        parsed, extra = parser.parse(args)
+
+        for param in self.params.values():
+            value, extra = param.process_parse_result(ctx, parsed, extra)
+            ctx.args[param.arg_name] = value
+
+        ctx.extra = extra
 
     def schema(self):
         return {
             "name": self.name,
             "description": self.description,
-            "doc": self.function.__doc__,
+            "doc": self.callback.__doc__,
             "context": self.context,
             "subcommands": {
                 name: command.schema() for name, command in self.subcommands.items()
             },
-            "parameters": {
-                name: param.schema() for name, param in self.executable.params.items()
-            },
+            "parameters": {name: param.schema() for name, param in self.params.items()},
         }
-
-    ### Execution ###
-
-    def run(self, state: ExecutionState) -> Result:
-        """External interface to execute a command"""
-        return self.executable(state)
 
     ### Building Subcommands ###
 
     def subcommand(
         self,
-        name: Union[str, list[str], tuple[str, ...]] = None,
-        description: Optional[str] = None,
-        context: dict[str, Any] = None,
+        name: t.Union[str, list[str], tuple[str, ...]] = None,
+        description: t.Optional[str] = None,
+        context: dict[str, t.Any] = None,
     ):
         """Create and install a subcommands
 
@@ -93,9 +123,9 @@ class Command:
             Command: the subcommand created
         """
 
-        def decorator(wrapped: Union[Callable, Command]):
+        def decorator(wrapped: t.Union[t.Callable, Command]):
             if isinstance(wrapped, Command):
-                wrapped = wrapped.executable.wrapped
+                wrapped = wrapped.callback
 
             wrapped_name = wrapped.__name__
             if config.transform_snake_case:
@@ -114,9 +144,9 @@ class Command:
         """Installs a command object as a subcommand
         of the current object"""
         self.subcommands[command.name] = command
-        command.executable.callback_store.register_callbacks(
-            **self.executable.callback_store.inheritable_callbacks()
-        )
+        # command.executable.callback_store.register_callbacks(
+        #     **self.executable.callback_store.inheritable_callbacks()
+        # )
 
         logger.debug(
             "Registered %s%s%s command to %s%s%s",
@@ -133,7 +163,7 @@ class Command:
     ### Helpers ###
 
     def handle_command_aliases(
-        self, command_name: Union[str, list[str], tuple[str, ...]]
+        self, command_name: t.Union[str, list[str], tuple[str, ...]]
     ) -> str:
         if isinstance(command_name, str):
             return command_name
@@ -149,7 +179,7 @@ class Command:
     def is_namespace(self):
         from . import command_builders
 
-        return self.function in (command_builders.no_op, command_builders.helper)
+        return self.callback in (command_builders.no_op, command_builders.helper)
 
     ## Docstring
     @cached_property
@@ -184,16 +214,16 @@ class Command:
         return parsed
 
     @property
-    def description(self) -> Optional[str]:
+    def description(self) -> t.Optional[str]:
         return self._description or self.parsed_docstring.get("description")
 
     @property
-    def short_description(self) -> Optional[str]:
+    def short_description(self) -> t.Optional[str]:
         description = self.description
         return description if description is None else description.split("\n")[0]
 
     @cached_property
-    def _parsed_argument_section(self) -> Optional[dict[str, str]]:
+    def _parsed_argument_section(self) -> t.Optional[dict[str, str]]:
         arguments = self.parsed_docstring.get("arguments")
         if not arguments:
             return None
@@ -212,15 +242,15 @@ class Command:
 
         return parsed
 
-    def update_param_descriptions(self):
-        """Parses the function docstring, then updates
-        paramaters with the associated description in the arguments section
-        if the param does not have a description already.
-        """
-        descriptions = self._parsed_argument_section
-        if not descriptions:
-            return
+    # def update_param_descriptions(self):
+    #     """Parses the function docstring, then updates
+    #     paramaters with the associated description in the arguments section
+    #     if the param does not have a description already.
+    #     """
+    #     descriptions = self._parsed_argument_section
+    #     if not descriptions:
+    #         return
 
-        for param in self.executable.params.values():
-            if not param.description:
-                param.description = descriptions.get(param.arg_name)
+    #     for param in self.executable.params.values():
+    #         if not param.description:
+    #             param.description = descriptions.get(param.arg_name)

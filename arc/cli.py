@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Any
+import typing as t
 
 from arc import utils
 
@@ -10,7 +10,6 @@ from arc.command import Command
 from arc.present.help_formatter import print_help
 from arc.types import Context, Param, VarKeyword
 from arc.config import config as config_obj
-from arc.run import find_command_chain, get_command_namespace, run
 from arc.execution_state import ExecutionState
 from arc.types.var_types import VarPositional
 
@@ -21,7 +20,7 @@ class CLI(Command):
     def __init__(
         self,
         name: str = "cli",
-        config: dict[str, Any] = None,
+        config: dict[str, t.Any] = None,
         config_file: str = None,
         context: dict = None,
         version: str = "¯\\_(ツ)_/¯",
@@ -36,7 +35,7 @@ class CLI(Command):
 
         super().__init__(
             name,
-            self.missing_command,
+            lambda: print("default behavior"),
             context,
         )
 
@@ -54,21 +53,11 @@ class CLI(Command):
             self.install_command(debug)
 
         self.version = version
-        self.install_command(Command("help", self.helper))
+        # self.install_command(Command("help", self.helper))
 
-    # pylint: disable=arguments-differ
-    def __call__(  # type: ignore
-        self,
-        execute: str = None,
-        handle_exception: bool = True,
-        check_result: bool = True,
-    ):
-        return run(
-            self,
-            execute,
-            handle_exception=handle_exception,
-            check_result=check_result,
-        )
+    def main(self, args: t.Union[str, list[str]] = None):
+        args = t.cast(list[str], self.get_args(args))
+        subcommand_name = args.pop(0)
 
     def command(self, *args, **kwargs):
         """Alias for `Command.subcommand`
@@ -93,25 +82,25 @@ class CLI(Command):
 
         return self("help")
 
-    def helper(
-        self,
-        command_name: str = "",
-    ):
-        """Displays information for a given command
-        By default, shows help for the top-level command.
-        To see a specific command's information, provide
-        a command name (some:command:name)
-        """
-        parsed: Parsed = {"pos_values": [command_name], "key_values": {}}
-        namespace = get_command_namespace(parsed)
-        chain = find_command_chain(self, namespace)
-        state = ExecutionState(
-            user_input=[],
-            command_namespace=namespace,
-            command_chain=chain,
-            parsed=parsed,
-        )
-        print_help(state.command, state)
+    # def helper(
+    #     self,
+    #     command_name: str = "",
+    # ):
+    #     """Displays information for a given command
+    #     By default, shows help for the top-level command.
+    #     To see a specific command's information, provide
+    #     a command name (some:command:name)
+    #     """
+    #     parsed: Parsed = {"pos_values": [command_name], "key_values": {}}
+    #     namespace = get_command_namespace(parsed)
+    #     chain = find_command_chain(self, namespace)
+    #     state = ExecutionState(
+    #         user_input=[],
+    #         command_namespace=namespace,
+    #         command_chain=chain,
+    #         parsed=parsed,
+    #     )
+    #     print_help(state.command, state)
 
     def schema(self):
         return {

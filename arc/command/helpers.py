@@ -1,8 +1,9 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from arc.color import effects, fg
 from arc.config import config
 
-from arc import utils
+from arc import errors, utils
 
 if TYPE_CHECKING:
     from .command import Command
@@ -65,3 +66,35 @@ def get_all_commands(
 def get_all_command_names(*args, **kwargs) -> list[str]:
     """Helper function that only returns the names from `get_all_commands`"""
     return list(name for command, name in get_all_commands(*args, **kwargs))
+
+
+def find_command_chain(command: Command, command_namespace: list[str]) -> list[Command]:
+    """Walks down the subcommand tree using the proveded list of `command_namespace`.
+    As it traverses the tree, it merges each levels context together, which will result
+    in the final context to pass to the command in the end.
+
+    When it hits the bottom of the `command_namespace` list
+    (so long as none of them were invalid namespaces) it has found the called command
+    and will return it.
+    """
+    command_chain = [command]
+
+    for subcommand_name in command_namespace:
+        if subcommand_name in command.subcommands:
+            command = command.subcommands[subcommand_name]
+            command_chain.append(command)
+        elif subcommand_name in command.subcommand_aliases:
+            command = command.subcommands[command.subcommand_aliases[subcommand_name]]
+            command_chain.append(command)
+        else:
+            message = (
+                f"The command {fg.YELLOW}"
+                f"{':'.join(command_namespace)}{effects.CLEAR} not found. "
+                f"Check {fg.BLUE}--help{effects.CLEAR} for available commands"
+            )
+            if possible_command := find_similar_command(command, command_namespace):
+                message += f"\n\tPerhaps you meant {fg.YELLOW}{possible_command}{effects.CLEAR}?"
+
+            raise errors.CommandError(message)
+
+    return command_chain

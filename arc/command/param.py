@@ -7,8 +7,6 @@ from arc import errors, utils
 from arc.color import colorize, fg, colored
 from arc.config import config
 from arc.execution_state import ExecutionState
-from arc.types import aliases
-from arc.types.helpers import TypeInfo, convert
 from arc.command.argument import Argument
 
 # Represents a missing value
@@ -105,6 +103,31 @@ class Param:
             "optional": self.optional,
         }
 
+    def process_parse_result(self, ctx, args: dict, extra: list):
+        value = self.consume_value(ctx, args)
+
+        if value is MISSING:
+            if self.is_flag:
+                value = not self.default
+            else:
+                raise errors.MissingArgError(
+                    f"No Value provided for argument {self.arg_alias} :("
+                )
+
+        return self.convert(value, None), extra
+
+    ## TODO:
+    ## Add other possible sources  if absent on the command line
+    ## Env, config, prompt, ...
+    def consume_value(self, _ctx, args: dict):
+        value = args.get(self.arg_name)
+        if value is not None:
+            args.pop(self.arg_name)
+        else:
+            value = self.default
+
+        return value
+
     def get_arg(self, state: ExecutionState) -> Argument:
         value = Selectors.select_value(self, state)
         converted = self.convert(value, state)
@@ -113,12 +136,6 @@ class Param:
 
     def convert(self, value: Any, state):
         type_class: type[aliases.TypeProtocol] = aliases.Alias.resolve(self.type_info)
-
-        if value is MISSING:
-            raise errors.MissingArgError(
-                "No value provided for required argument "
-                + colorize(self.cli_rep(), fg.YELLOW)
-            )
 
         try:
             converted = convert(type_class, value, self.type_info, state)
@@ -247,3 +264,7 @@ class Selectors:
             return not default
         else:
             return default
+
+
+from arc.types.helpers import TypeInfo, convert
+from arc.types import aliases
