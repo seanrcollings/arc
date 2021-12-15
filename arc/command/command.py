@@ -37,6 +37,9 @@ class Command(ParamMixin):
         self._description = description
         self.doc = callback.__doc__
 
+        if config.mode == "development":
+            self.params
+
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
 
@@ -53,15 +56,13 @@ class Command(ParamMixin):
             try:
                 with self.create_ctx(fullname or self.name, **kwargs) as ctx:
                     args = t.cast(list[str], self.get_args(args))
-                    if not args and len(self.params) - 1 > 0:
-                        print(self.get_usage(ctx))
-
-                        return
+                    if not args and self.need_args():
+                        raise errors.UsageError("Missing required arguments", ctx)
 
                     self.parse_args(ctx, args)
                     return self.execute(ctx)
             except errors.ArcError as e:
-                if ctx.config.mode == "development":
+                if config.mode == "development":
                     raise
 
                 print(str(e))
@@ -94,6 +95,9 @@ class Command(ParamMixin):
             parser.add_param(param)
 
         return parser
+
+    def need_args(self):
+        return len(self.required_params) > 0
 
     def parse_args(self, ctx: Context, args: list[str]):
         parser = self.create_parser(ctx)

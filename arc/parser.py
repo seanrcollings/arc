@@ -194,4 +194,4 @@ class Parser:
                 f"\n\tPerhaps you meant {colorize(join_or(suggest_args), fg.YELLOW)}?"
             )
 
-        return errors.MissingArgError(message)
+        return errors.UsageError(message, self.ctx)

@@ -12,7 +12,7 @@ class TestSimpleSyntax:
 
         assert cli("pos 2") == 2
 
-        with pytest.raises(errors.ArgumentError):
+        with pytest.raises(errors.UsageError):
             cli("pos")
 
         with pytest.raises(errors.ArgumentError):
@@ -26,25 +26,25 @@ class TestSimpleSyntax:
         assert cli("pos") == 1
         assert cli("pos 2") == 2
 
-    def test_var_pos(self, cli: CLI):
-        @cli.subcommand()
-        def pos(vals: VarPositional):
-            return vals
+    # def test_var_pos(self, cli: CLI):
+    #     @cli.subcommand()
+    #     def pos(vals: VarPositional):
+    #         return vals
 
-        assert cli("pos 2") == ["2"]
-        assert cli("pos 1 2") == ["1", "2"]
-        assert cli("pos 1 2 3") == ["1", "2", "3"]
-        assert cli("pos") == []
+    #     assert cli("pos 2") == ["2"]
+    #     assert cli("pos 1 2") == ["1", "2"]
+    #     assert cli("pos 1 2 3") == ["1", "2", "3"]
+    #     assert cli("pos") == []
 
-    def test_var_pos_typed(self, cli: CLI):
-        @cli.subcommand()
-        def post(vals: VarPositional[int]):
-            return vals
+    # def test_var_pos_typed(self, cli: CLI):
+    #     @cli.subcommand()
+    #     def post(vals: VarPositional[int]):
+    #         return vals
 
-        assert cli("post 2") == [2]
-        assert cli("post 1 2") == [1, 2]
-        assert cli("post 1 2 3") == [1, 2, 3]
-        assert cli("post") == []
+    #     assert cli("post 2") == [2]
+    #     assert cli("post 1 2") == [1, 2]
+    #     assert cli("post 1 2 3") == [1, 2, 3]
+    #     assert cli("post") == []
 
     def test_star_args(self, cli: CLI):
 
@@ -59,8 +59,10 @@ class TestSimpleSyntax:
         def pos(val):
             ...
 
-        with pytest.raises(errors.ArgumentError):
+        with pytest.raises(errors.UsageError) as excinfo:
             cli("pos val val2")
+
+        assert "Too many positional arguments" in str(excinfo.value)
 
     def test_keyword(self, cli: CLI):
         @cli.subcommand()
@@ -69,7 +71,7 @@ class TestSimpleSyntax:
 
         assert cli("key --val 2") == 2
 
-        with pytest.raises(errors.ArgumentError):
+        with pytest.raises(errors.UsageError):
             cli("key")
 
     def test_keyword_default(self, cli: CLI):
@@ -80,21 +82,21 @@ class TestSimpleSyntax:
         assert cli("key") == 1
         assert cli("key --val 2") == 2
 
-    def test_var_keyword(self, cli: CLI):
-        @cli.subcommand()
-        def key(kwargs: VarKeyword):
-            return kwargs
+    # def test_var_keyword(self, cli: CLI):
+    #     @cli.subcommand()
+    #     def key(kwargs: VarKeyword):
+    #         return kwargs
 
-        assert cli("key") == {}
-        assert cli("key --val 2 --val2 10") == {"val": "2", "val2": "10"}
+    #     assert cli("key") == {}
+    #     assert cli("key --val 2 --val2 10") == {"val": "2", "val2": "10"}
 
-    def test_var_keyword_typed(self, cli: CLI):
-        @cli.subcommand()
-        def key(kwargs: VarKeyword[int]):
-            return kwargs
+    # def test_var_keyword_typed(self, cli: CLI):
+    #     @cli.subcommand()
+    #     def key(kwargs: VarKeyword[int]):
+    #         return kwargs
 
-        assert cli("key") == {}
-        assert cli("key --val 2 --val2 10") == {"val": 2, "val2": 10}
+    #     assert cli("key") == {}
+    #     assert cli("key --val 2 --val2 10") == {"val": 2, "val2": 10}
 
     def test_star_kwargs(self, cli: CLI):
 
@@ -109,7 +111,7 @@ class TestSimpleSyntax:
         def key():
             ...
 
-        with pytest.raises(errors.MissingArgError):
+        with pytest.raises(errors.UsageError):
             cli("key --val 2")
 
 
@@ -121,7 +123,7 @@ class TestParamSyntax:
 
         assert cli("na --long_name sean") == "sean"
 
-        with pytest.raises(errors.ArgumentError):
+        with pytest.raises(errors.UsageError):
             cli("na --name sean")
 
     def test_short_args(self, cli: CLI):
@@ -167,7 +169,7 @@ class TestKebab:
         with pytest.raises(errors.CommandError):
             cli("two_words")
 
-        with pytest.raises(errors.ArgumentError):
+        with pytest.raises(errors.UsageError):
             cli("two-words --first_name sean")
 
     def test_disable_transform(self, cli: CLI):
@@ -184,7 +186,7 @@ class TestKebab:
             with pytest.raises(errors.CommandError):
                 cli("two-words")
 
-            with pytest.raises(errors.ArgumentError):
+            with pytest.raises(errors.UsageError):
                 cli("two_words --first-name sean --other-arg hi")
         finally:
             config.transform_snake_case = True
