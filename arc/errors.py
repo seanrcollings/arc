@@ -5,7 +5,7 @@ from arc import color
 
 
 if TYPE_CHECKING:
-    from arc.command.param import Param
+    from arc._command.param import Param
     from arc.context import Context
 
 

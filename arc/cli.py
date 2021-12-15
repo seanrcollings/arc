@@ -6,7 +6,7 @@ from arc import errors, utils, logging
 
 from arc.autoload import Autoload
 from arc import logging
-from arc.command import helpers, Command
+from arc._command import helpers, Command
 from arc.config import config as config_obj
 
 

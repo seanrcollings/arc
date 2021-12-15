@@ -6,11 +6,11 @@ import inspect
 from arc import errors, logging
 from arc.config import config
 from arc.color import colorize, fg
-from arc.command import param
+from arc._command import param
 from arc.types.params import ParamInfo
 
 if TYPE_CHECKING:
-    from arc.command.param import Param
+    from arc._command.param import Param
 
 logger = logging.getArcLogger("prb")
 

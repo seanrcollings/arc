@@ -4,7 +4,7 @@ from typing import Callable
 from arc import result, logging
 from arc.color import colorize, fg
 
-from arc.command.command import Command
+from arc._command.command import Command
 
 logger = logging.getArcLogger("build")
 

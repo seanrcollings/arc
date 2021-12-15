@@ -1,7 +1,7 @@
 """Public API for hanlding paramater modification"""
 from __future__ import annotations
 from typing import Any, TypeVar
-from arc.command import param
+from arc._command import param
 
 
 class ParamInfo:

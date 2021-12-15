@@ -7,7 +7,7 @@ from arc.config import config
 from arc.types.params import as_special_param
 
 if t.TYPE_CHECKING:
-    from arc.command import Command
+    from arc._command import Command
 
 logger = logging.getArcLogger("ctx")
 

@@ -7,12 +7,12 @@ import enum
 
 from arc import errors, logging, utils
 from arc.color import colorize, fg
-from arc.command import helpers
+from arc._command import helpers
 from arc.context import Context
 from arc.config import config
 from arc.types.helpers import join_or
 from arc.utils import IDENT, symbol
-from arc.command.param import MISSING, Param
+from arc._command.param import MISSING, Param
 
 logger = logging.getArcLogger("parse")
 

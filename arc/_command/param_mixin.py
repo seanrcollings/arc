@@ -4,8 +4,8 @@ in production only the command being executed parameters are
 created.
 """
 import functools
-from arc.command.param_builder import ParamBuilder
-from arc.command.param import FlagParam, Param
+from arc._command.param_builder import ParamBuilder
+from arc._command.param import FlagParam, Param
 
 
 def _help_callback(value, ctx, param):

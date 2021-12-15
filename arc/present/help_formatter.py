@@ -6,12 +6,12 @@ from arc import logging
 from arc.color import colored, colorize, fg, effects
 from arc.config import config
 from arc.context import Context
-from arc.command.param import Param
+from arc._command.param import Param
 from arc.utils import ansi_len
 from arc.present.formatters import TextFormatter
 
 if t.TYPE_CHECKING:
-    from arc.command.command import Command
+    from arc._command.command import Command
 
 
 logger = logging.getArcLogger("cdoc")

@@ -7,7 +7,7 @@ import sys
 
 from arc import errors, logging, utils
 from arc.color import colorize, effects, fg
-from arc.command.param_builder import ParamBuilder
+from arc._command.param_builder import ParamBuilder
 from arc.context import Context
 from arc.parser import Parser
 from arc.present.help_formatter import HelpFormatter
