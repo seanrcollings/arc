@@ -97,7 +97,7 @@ def find_command_chain(command: Command, command_namespace: list[str]) -> list[C
             if possible_command := find_similar_command(command, command_namespace):
                 message += f"\n\tPerhaps you meant {fg.YELLOW}{possible_command}{effects.CLEAR}?"
 
-            raise errors.CommandError(message)
+            raise errors.CommandNotFound(message)
 
     return command_chain
 

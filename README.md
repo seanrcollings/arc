@@ -28,20 +28,32 @@ $ poetry install
 # Quick Start
 
 ```py
-from arc import CLI
+import arc
 
-cli = CLI()
+@arc.command()
+def hello(name: str):
+    """My first arc program!"""
+    print(f"Hello {name}!")
 
-@cli.command()
-def hello():
-    print("Hello, World!")
-
-cli()
+hello()
 ```
 
 ```
-$ python example.py hello
-Hello, World!
+$ python example.py hello Sean
+Hello, Sean!
+```
+
+```
+$ python example.py --help
+USAGE
+    manage.py [--help] [--] <name>
+
+DESCRIPTION
+    My first arc program!
+
+ARGUMENTS
+    --help (-h)  Shows help documentation
+    <name>
 ```
 Reference [getting started](https://github.com/seanrcollings/arc/wiki) for more info
 

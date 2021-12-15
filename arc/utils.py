@@ -1,8 +1,10 @@
 import functools
 import re
+import sys
 import time
 from types import MethodType
 import typing as t
+import os
 import functools
 
 from arc import logging, typing as at
@@ -174,3 +176,8 @@ def partition(item: t.Any, n: int):
 
 def iscontextmanager(obj: t.Any):
     return hasattr(obj, "__enter__") and hasattr(obj, "__exit__")
+
+
+def discover_name():
+    name = sys.argv[0]
+    return os.path.basename(name)

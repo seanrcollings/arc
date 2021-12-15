@@ -24,8 +24,8 @@ class Command(ParamMixin):
 
     def __init__(
         self,
-        name: str,
         callback: t.Callable,
+        name: str = "",
         context: t.Optional[dict] = None,
         description: t.Optional[str] = None,
     ):
@@ -52,6 +52,8 @@ class Command(ParamMixin):
         fullname: str = None,
         **kwargs,
     ):
+        if not self.name:
+            self.name = utils.discover_name()
 
         try:
             try:
@@ -157,7 +159,7 @@ class Command(ParamMixin):
                 wrapped_name = wrapped_name.replace("_", "-")
 
             command_name = self.handle_command_aliases(name or wrapped_name)
-            command = Command(command_name, wrapped, context or {}, description)
+            command = Command(wrapped, command_name, context or {}, description)
             return self.install_command(command)
 
         return decorator
@@ -168,6 +170,8 @@ class Command(ParamMixin):
     def install_command(self, command: "Command"):
         """Installs a command object as a subcommand
         of the current object"""
+        if not command.name:
+            command.name = command.callback.__name__
         self.subcommands[command.name] = command
         # command.executable.callback_store.register_callbacks(
         #     **self.executable.callback_store.inheritable_callbacks()

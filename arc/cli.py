@@ -13,11 +13,6 @@ from arc.config import config as config_obj
 logger = logging.getArcLogger("cli")
 
 
-def _discover_name():
-    name = sys.argv[0]
-    return os.path.basename(name)
-
-
 class CLI(Command):
     """Core class for arc"""
 
@@ -38,8 +33,8 @@ class CLI(Command):
         """
 
         super().__init__(
-            name or _discover_name(),
             lambda: ...,
+            name or utils.discover_name(),
             context,
         )
 
@@ -83,9 +78,17 @@ class CLI(Command):
                     return super().main(args)
 
                 logger.debug("Execution subcommand: %s", subcommand_name)
-                command_chain = helpers.find_command_chain(self, command_namespace)
+                try:
+                    command_chain = helpers.find_command_chain(self, command_namespace)
+                except errors.CommandNotFound as e:
+                    print(str(e))
+                    raise errors.Exit(1)
+
                 return command_chain[-1](args, subcommand_name, parent=ctx)
+
         except errors.Exit as e:
+            if config_obj.mode == "development":
+                raise
             sys.exit(e.code)
 
     def command(self, *args, **kwargs):

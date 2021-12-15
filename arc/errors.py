@@ -71,6 +71,10 @@ class UnrecognizedArgError(UsageError):
     ...
 
 
+class CommandNotFound(UsageError):
+    """Raised when a command is missing"""
+
+
 class Exit(Exception):
     """Instructs arc to exit with `code`"""
 
