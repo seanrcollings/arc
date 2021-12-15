@@ -6,7 +6,7 @@ created.
 import functools
 from typing import Callable
 from arc.command.param_builder import ParamBuilder
-from arc.command.param import Param
+from arc.command.param import FlagParam, Param
 
 
 class ParamMixin:
@@ -14,7 +14,8 @@ class ParamMixin:
 
     @functools.cached_property
     def params(self) -> dict[str, Param]:
-        return self.builder(self.callback).build()  # type: ignore
+        params = self.builder(self.callback).build()  # type: ignore
+        return params
 
     @functools.cached_property
     def pos_params(self) -> dict[str, Param]:

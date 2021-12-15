@@ -10,6 +10,7 @@ from arc.color import effects, fg
 from arc.command.param_builder import ParamBuilder
 from arc.context import AppContext
 from arc.parser import Parser
+from arc.present.help_formatter import HelpFormatter
 from arc.result import Result
 from arc.config import config
 from arc.execution_state import ExecutionState
@@ -43,29 +44,40 @@ class Command(ParamMixin):
         return f"<{self.__class__.__name__} : {self.name}>"
 
     def __call__(self, *args, **kwargs):
-        self.main(*args, **kwargs)
+        return self.main(*args, **kwargs)
 
-    def main(self, args: t.Union[str, list[str]] = None):
-        with self.create_ctx(self.name) as ctx:
-            self.parse_args(ctx, self.get_args(args))
-            self.execute(ctx)
+    def main(
+        self,
+        args: t.Union[str, list[str]] = None,
+        fullname: str = None,
+        **kwargs,
+    ):
+
+        with self.create_ctx(fullname or self.name, **kwargs) as ctx:
+            args = t.cast(list[str], self.get_args(args))
+            if not args and len(self.params) > 0:
+                print(self.get_help(ctx))
+                return
+
+            self.parse_args(ctx, args)
+            return self.execute(ctx)
 
     def execute(self, ctx: AppContext):
         if not self.callback:
             raise RuntimeError("No callback associated with this command to execute")
 
-        ctx.execute(self.callback, **ctx.args)
+        return ctx.execute(self.callback, **ctx.args)
 
     def get_args(self, args: t.Union[str, list[str]] = None):
         if isinstance(args, str):
             args = shlex.split(args)
-        elif not args:
+        elif args is None:
             args = sys.argv[1:]
 
         return args
 
-    def create_ctx(self, fullname: str):
-        ctx = AppContext(self, fullname=fullname)
+    def create_ctx(self, fullname: str, **kwargs):
+        ctx = AppContext(self, fullname=fullname, **kwargs)
         return ctx
 
     def create_parser(self, ctx: AppContext):
@@ -181,7 +193,13 @@ class Command(ParamMixin):
 
         return self.callback in (command_builders.no_op, command_builders.helper)
 
-    ## Docstring
+    ## Documentation Methods ---------------------------------------------------------
+
+    def get_help(self, ctx: AppContext) -> str:
+        formatter = HelpFormatter()
+        formatter.write_help(self, ctx)
+        return formatter.value
+
     @cached_property
     def parsed_docstring(self):
         """Parsed docstring for the command
@@ -242,15 +260,15 @@ class Command(ParamMixin):
 
         return parsed
 
-    # def update_param_descriptions(self):
-    #     """Parses the function docstring, then updates
-    #     paramaters with the associated description in the arguments section
-    #     if the param does not have a description already.
-    #     """
-    #     descriptions = self._parsed_argument_section
-    #     if not descriptions:
-    #         return
+    def update_param_descriptions(self):
+        """Parses the function docstring, then updates
+        paramaters with the associated description in the arguments section
+        if the param does not have a description already.
+        """
+        descriptions = self._parsed_argument_section
+        if not descriptions:
+            return
 
-    #     for param in self.executable.params.values():
-    #         if not param.description:
-    #             param.description = descriptions.get(param.arg_name)
+        for param in self.params.values():
+            if not param.description:
+                param.description = descriptions.get(param.arg_name)

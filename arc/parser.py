@@ -23,6 +23,10 @@ class TokenType(enum.Enum):
     SHORT_KEYWORD = 4
 
 
+## TODO:
+## Matches strip off -- or - from the start of each item
+## in pos_only mode these should be included
+
 # Note that this takes advantage of the fact that dictionaries
 # are ordered.
 matchers = {

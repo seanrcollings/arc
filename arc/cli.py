@@ -5,9 +5,9 @@ from arc import utils
 from arc.autoload import Autoload
 from arc.parser import Parsed
 from arc import logging
+from arc.command import helpers
 
 from arc.command import Command
-from arc.present.help_formatter import print_help
 from arc.types import Context, Param, VarKeyword
 from arc.config import config as config_obj
 from arc.execution_state import ExecutionState
@@ -55,9 +55,22 @@ class CLI(Command):
         self.version = version
         # self.install_command(Command("help", self.helper))
 
-    def main(self, args: t.Union[str, list[str]] = None):
-        args = t.cast(list[str], self.get_args(args))
-        subcommand_name = args.pop(0)
+    def main(
+        self,
+        args: t.Union[str, list[str]] = None,
+        fullname: str = None,
+        **kwargs,
+    ):
+        with self.create_ctx(fullname or self.name, **kwargs) as ctx:
+            args = t.cast(list[str], self.get_args(args))
+            if not args:
+                print(self.get_help(ctx))
+                return
+
+            subcommand_name = args.pop(0)
+            command_namespace = helpers.get_command_namespace(subcommand_name)
+            command_chain = helpers.find_command_chain(self, command_namespace)
+            return command_chain[-1](args, subcommand_name, parent=ctx)
 
     def command(self, *args, **kwargs):
         """Alias for `Command.subcommand`

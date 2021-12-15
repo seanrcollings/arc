@@ -31,9 +31,7 @@ class AppContext:
     # context will be popped off the stack
     __stack: list[AppContext] = []
 
-    def __init__(
-        self, command: Command, parent: AppContext = None, fullname: str = None
-    ):
+    def __init__(self, command: Command, fullname: str, parent: AppContext = None):
         self.command = command
         self.parent = parent
         self.fullname = fullname
@@ -44,6 +42,9 @@ class AppContext:
         # Keeps track of how many times this context has been pusehd onto the context
         # stack. When it reaches zero, ctx.close() will be called
         self._stack_count = 0
+
+    def __repr__(self):
+        return f"AppContext({self.command!r})"
 
     def __enter__(self):
         self._stack_count += 1

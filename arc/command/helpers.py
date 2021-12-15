@@ -1,4 +1,5 @@
 from __future__ import annotations
+import re
 from typing import TYPE_CHECKING
 from arc.color import effects, fg
 from arc.config import config
@@ -98,3 +99,14 @@ def find_command_chain(command: Command, command_namespace: list[str]) -> list[C
             raise errors.CommandError(message)
 
     return command_chain
+
+
+namespace_seperated = re.compile(
+    fr"\A\b((?:(?:{utils.IDENT}{config.namespace_sep})+"
+    fr"{utils.IDENT})|{utils.IDENT}:?)$"
+)
+
+
+def get_command_namespace(string: str):
+    if namespace_seperated.match(string):
+        return string.split(config.namespace_sep)
