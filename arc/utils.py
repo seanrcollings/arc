@@ -172,5 +172,5 @@ def partition(item: t.Any, n: int):
     return [item[index : index + n] for index in range(0, len(item), n)]
 
 
-def is_context_manager(obj: t.Any):
+def iscontextmanager(obj: t.Any):
     return hasattr(obj, "__enter__") and hasattr(obj, "__exit__")

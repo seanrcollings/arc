@@ -38,7 +38,7 @@ class VarKeyword(dict[str, T]):
         kwargs = {
             name: value
             for name, value in state.parsed["key_values"].items()
-            if name not in state.executable.key_params | state.executable.flag_params
+            if name not in state.executable.key_params + state.executable.flag_params
         }
         state.parsed["key_values"] = {
             name: value

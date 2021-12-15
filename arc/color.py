@@ -1,6 +1,5 @@
 from functools import cached_property
 from typing import Union
-from arc import utils
 
 
 class Ansi(str):
@@ -121,6 +120,8 @@ class colored(str):
 
     @cached_property
     def _cleaned(self):
+        from arc import utils
+
         return utils.ansi_clean(self)
 
     def __format__(self, spec: str):

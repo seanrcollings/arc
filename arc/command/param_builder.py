@@ -1,5 +1,4 @@
 from __future__ import annotations
-from types import MappingProxyType
 from typing import Any, Callable, Optional, get_type_hints, TYPE_CHECKING
 import inspect
 
@@ -11,7 +10,7 @@ from arc.command import param
 from arc.types.params import ParamInfo
 
 if TYPE_CHECKING:
-    from arc.command.executable import Executable
+    from arc.command.param import Param
 
 logger = logging.getArcLogger("prb")
 
@@ -22,7 +21,7 @@ class ParamBuilder:
         self.annotations = get_type_hints(func, include_extras=True)
 
     def build(self):
-        params: dict = {}
+        params: list[Param] = []
         for arg in self.sig.parameters.values():
             arg._annotation = self.annotations.get(arg.name) or str
 
@@ -63,9 +62,9 @@ class ParamBuilder:
                 description=info.description,
             )
 
-            params[param_obj.arg_alias] = param_obj
+            params.append(param_obj)
 
-        shorts = [param.short for param in params.values() if param.short]
+        shorts = [param.short for param in params if param.short]
         if len(shorts) != len(set(shorts)):
             raise errors.ArgumentError(
                 "A Command's short argument names must be unique"

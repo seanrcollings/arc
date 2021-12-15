@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from typing import Any, Optional
+
+import typing as t
 
 from arc import errors, utils
 from arc.color import colorize, fg, colored
 from arc.config import config
-from arc.execution_state import ExecutionState
-from arc.command.argument import Argument
+
+if t.TYPE_CHECKING:
+    from arc.context import Context
 
 # Represents a missing value
 # Used to represent an argument
@@ -16,27 +18,26 @@ MISSING = utils.symbol("MISSING")
 
 
 class Param:
-    """Represents both the Python function paramater,
-    and it's equivalent on the command line. `Argument`
-    represents the actual value that a paramater is given.
-    """
-
     def __init__(
         self,
         arg_name: str,
         annotation: type,
         arg_alias: str = None,
         short: str = None,
-        default: Any = MISSING,
+        default: t.Any = MISSING,
         description: str = None,
+        callback: t.Callable[[t.Any, Context, Param], t.Any] = None,
+        expose: bool = True,
     ):
 
         self.type_info = TypeInfo.analyze(annotation)
         self.arg_name: str = arg_name
         self.arg_alias: str = arg_alias if arg_alias else arg_name
-        self.short: Optional[str] = short
-        self.default: Any = default
-        self.description: Optional[str] = description
+        self.short: t.Optional[str] = short
+        self.default: t.Any = default
+        self.description: t.Optional[str] = description
+        self.callback = callback
+        self.expose = expose
 
         if self.short and len(self.short) > 1:
             raise errors.ArgumentError(
@@ -91,7 +92,7 @@ class Param:
     def hidden(self):
         return self.is_special
 
-    def schema(self) -> dict[str, Any]:
+    def schema(self) -> dict[str, t.Any]:
         return {
             "arg_name": self.arg_name,
             "arg_alias": self.arg_alias,
@@ -103,7 +104,7 @@ class Param:
             "optional": self.optional,
         }
 
-    def process_parse_result(self, ctx, args: dict, extra: list):
+    def process_parse_result(self, ctx: Context, args: dict):
         value = self.consume_value(ctx, args)
 
         if value is MISSING:
@@ -114,12 +115,19 @@ class Param:
                     f"No value provided for required argument {colorize(self.cli_rep(), fg.YELLOW)}"
                 )
 
-        return self.convert(value, None), extra
+        value = self.convert(value, ctx)
+        if self.callback:
+            value = self.callback(value, ctx, self)
+
+        if utils.iscontextmanager(value) and not value is ctx:
+            value = ctx.resource(value)
+
+        return value
 
     ## TODO:
     ## Add other possible sources  if absent on the command line
     ## Env, config, prompt, ...
-    def consume_value(self, _ctx, args: dict):
+    def consume_value(self, _ctx: Context, args: dict):
         value = args.get(self.arg_name)
         if value is not None:
             args.pop(self.arg_name)
@@ -128,17 +136,17 @@ class Param:
 
         return value
 
-    def convert(self, value: Any, state):
+    def convert(self, value: t.Any, ctx: Context):
         type_class: type[aliases.TypeProtocol] = aliases.Alias.resolve(self.type_info)
 
         try:
-            converted = convert(type_class, value, self.type_info, state)
+            converted = convert(type_class, value, self.type_info, ctx)
         except errors.ConversionError as e:
-            message = e.message
+            message = str(e)
             if e.source:
                 message += f" ({e.source})"
 
-            raise errors.InvalidParamaterError(message, self, state) from e
+            raise errors.InvalidParamaterError(message, self, ctx) from e
 
         return converted
 
@@ -207,57 +215,6 @@ class FlagParam(_KeywordFlagShared):
 
 class SpecialParam(Param):
     ...
-
-
-class Selectors:
-    @staticmethod
-    def select_value(param: Param, state: ExecutionState):
-        default = param.default
-
-        if param.is_special:
-            value = default
-        elif param.is_positional:
-            value = Selectors.select_positional_value(default, param, state)
-        elif param.is_keyword:
-            value = Selectors.select_keyword_value(default, param, state)
-        elif param.is_flag:
-            value = Selectors.select_flag_value(default, param, state)
-
-        return value
-
-    @staticmethod
-    def select_positional_value(default: Any, _param: Param, state: ExecutionState):
-        assert state.parsed
-        pos_args = state.parsed["pos_values"]
-        return default if len(pos_args) == 0 else pos_args.pop(0)
-
-    @staticmethod
-    def select_keyword_value(default: Any, param: Param, state: ExecutionState):
-        assert state.parsed
-
-        options = state.parsed["key_values"]
-        if value := options.get(param.arg_alias):
-            options.pop(param.arg_alias)
-        elif value := options.get(param.short):  # type: ignore
-            options.pop(param.short)  # type: ignore
-        else:
-            value = default
-
-        return value
-
-    @staticmethod
-    def select_flag_value(default: bool, param: Param, state: ExecutionState):
-        assert state.parsed
-
-        flags = state.parsed["key_values"]
-        if param.arg_alias in flags:
-            flags.pop(param.arg_alias)
-            return not default
-        elif param.short in flags:
-            flags.pop(param.short)
-            return not default
-        else:
-            return default
 
 
 from arc.types.helpers import TypeInfo, convert

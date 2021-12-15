@@ -1,19 +1,17 @@
 import typing as t
-import sys
-import shlex
 from typing import TypedDict, Union
 from dataclasses import dataclass
 import re
 import enum
+
+
+from arc import errors, logging, utils
 from arc.color import colorize, fg
 from arc.command import helpers
-
-from arc.context import AppContext
-from arc import errors, logging
+from arc.context import Context
 from arc.config import config
-from arc.types.helpers import join_and, join_or
-from arc.utils import IDENT, levenshtein
-from arc.utils import symbol
+from arc.types.helpers import join_or
+from arc.utils import IDENT, symbol
 from arc.command.param import MISSING, Param
 
 logger = logging.getArcLogger("parse")
@@ -77,7 +75,7 @@ class Lexer:
 class Parser:
     tokens: list[Token]
 
-    def __init__(self, ctx: AppContext, allow_extra: bool = False):
+    def __init__(self, ctx: Context, allow_extra: bool = False):
         self.ctx = ctx
         self.allow_extra = allow_extra
         self.parsed: dict[str, t.Any] = {}
@@ -99,6 +97,7 @@ class Parser:
                 self._short_names[param.short] = param
 
     def parse(self, args: list[str]):
+        utils.header("PARSING")
         self.tokens = Lexer(args).tokenize()
         parser_table = {
             TokenType.KEYWORD: self.parse_keyword,
@@ -170,7 +169,7 @@ class Parser:
                 self.extra.append(token.value)
                 return
             else:
-                raise errors.ParserError("Too many positional arguments")
+                raise errors.UsageError("Too many positional arguments", self.ctx)
 
         param = self.pos_params[self.curr_pos]
         self.parsed[param.arg_name] = token.value

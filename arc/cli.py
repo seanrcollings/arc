@@ -1,6 +1,7 @@
 import typing as t
+import sys
 
-from arc import utils
+from arc import errors, utils
 
 from arc.autoload import Autoload
 from arc.parser import Parsed
@@ -8,9 +9,8 @@ from arc import logging
 from arc.command import helpers
 
 from arc.command import Command
-from arc.types import Context, Param, VarKeyword
+from arc.types import Param, VarKeyword
 from arc.config import config as config_obj
-from arc.execution_state import ExecutionState
 from arc.types.var_types import VarPositional
 
 
@@ -35,7 +35,7 @@ class CLI(Command):
 
         super().__init__(
             name,
-            lambda: print("default behavior"),
+            lambda: ...,
             context,
         )
 
@@ -61,16 +61,23 @@ class CLI(Command):
         fullname: str = None,
         **kwargs,
     ):
-        with self.create_ctx(fullname or self.name, **kwargs) as ctx:
-            args = t.cast(list[str], self.get_args(args))
-            if not args:
-                print(self.get_help(ctx))
-                return
+        try:
+            with self.create_ctx(fullname or self.name, **kwargs) as ctx:
+                args = t.cast(list[str], self.get_args(args))
+                if not args:
+                    print(self.get_usage(ctx))
+                    return
 
-            subcommand_name = args.pop(0)
-            command_namespace = helpers.get_command_namespace(subcommand_name)
-            command_chain = helpers.find_command_chain(self, command_namespace)
-            return command_chain[-1](args, subcommand_name, parent=ctx)
+                subcommand_name = args.pop(0)
+                command_namespace = helpers.get_command_namespace(subcommand_name)
+                if not command_namespace:
+                    args.append(subcommand_name)
+                    return super().main(args)
+
+                command_chain = helpers.find_command_chain(self, command_namespace)
+                return command_chain[-1](args, subcommand_name, parent=ctx)
+        except errors.Exit as e:
+            sys.exit(e.code)
 
     def command(self, *args, **kwargs):
         """Alias for `Command.subcommand`
@@ -79,41 +86,6 @@ class CLI(Command):
             Command: The subcommand's command object
         """
         return self.subcommand(*args, **kwargs)
-
-    def missing_command(
-        self,
-        ctx: Context,
-        _help: bool = Param(name="help", short="h", description="display this help"),
-        version: bool = Param(short="v", description="display application version "),
-    ):
-        """View specific help with "help <command-name>" """
-        if _help:
-            return self("help")
-        elif version:
-            print(self.name, self.version)
-            return
-
-        return self("help")
-
-    # def helper(
-    #     self,
-    #     command_name: str = "",
-    # ):
-    #     """Displays information for a given command
-    #     By default, shows help for the top-level command.
-    #     To see a specific command's information, provide
-    #     a command name (some:command:name)
-    #     """
-    #     parsed: Parsed = {"pos_values": [command_name], "key_values": {}}
-    #     namespace = get_command_namespace(parsed)
-    #     chain = find_command_chain(self, namespace)
-    #     state = ExecutionState(
-    #         user_input=[],
-    #         command_namespace=namespace,
-    #         command_chain=chain,
-    #         parsed=parsed,
-    #     )
-    #     print_help(state.command, state)
 
     def schema(self):
         return {

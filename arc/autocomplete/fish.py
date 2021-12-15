@@ -4,7 +4,6 @@ from pathlib import Path
 from arc import types
 from arc.config import config
 from arc.command import Command, helpers
-from arc.execution_state import ExecutionState
 
 COMPLETE = "complete -c"
 SEEN_SUBCOMMAND = "__fish_seen_subcommand_from"

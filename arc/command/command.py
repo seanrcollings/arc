@@ -5,16 +5,13 @@ import typing as t
 import shlex
 import sys
 
-from arc import logging
-from arc.color import effects, fg
+from arc import errors, logging
+from arc.color import colorize, effects, fg
 from arc.command.param_builder import ParamBuilder
-from arc.context import AppContext
+from arc.context import Context
 from arc.parser import Parser
 from arc.present.help_formatter import HelpFormatter
-from arc.result import Result
 from arc.config import config
-from arc.execution_state import ExecutionState
-
 from .param_mixin import ParamMixin
 
 
@@ -52,17 +49,28 @@ class Command(ParamMixin):
         fullname: str = None,
         **kwargs,
     ):
+        try:
+            try:
+                with self.create_ctx(fullname or self.name, **kwargs) as ctx:
+                    args = t.cast(list[str], self.get_args(args))
+                    if not args and len(self.params) - 1 > 0:
+                        print(self.get_usage(ctx))
 
-        with self.create_ctx(fullname or self.name, **kwargs) as ctx:
-            args = t.cast(list[str], self.get_args(args))
-            if not args and len(self.params) > 0:
-                print(self.get_help(ctx))
-                return
+                        return
 
-            self.parse_args(ctx, args)
-            return self.execute(ctx)
+                    self.parse_args(ctx, args)
+                    return self.execute(ctx)
+            except errors.ArcError as e:
+                if ctx.config.mode == "development":
+                    raise
 
-    def execute(self, ctx: AppContext):
+                print(str(e))
+                raise errors.Exit(1)
+
+        except errors.Exit as e:
+            sys.exit(e.code)
+
+    def execute(self, ctx: Context):
         if not self.callback:
             raise RuntimeError("No callback associated with this command to execute")
 
@@ -77,25 +85,26 @@ class Command(ParamMixin):
         return args
 
     def create_ctx(self, fullname: str, **kwargs):
-        ctx = AppContext(self, fullname=fullname, **kwargs)
+        ctx = Context(self, fullname=fullname, **kwargs)
         return ctx
 
-    def create_parser(self, ctx: AppContext):
+    def create_parser(self, ctx: Context):
         parser = Parser(ctx)
-        for param in self.params.values():
+        for param in self.params:
             parser.add_param(param)
 
         return parser
 
-    def parse_args(self, ctx: AppContext, args: list[str]):
+    def parse_args(self, ctx: Context, args: list[str]):
         parser = self.create_parser(ctx)
         parsed, extra = parser.parse(args)
 
-        for param in self.params.values():
-            value, extra = param.process_parse_result(ctx, parsed, extra)
-            ctx.args[param.arg_name] = value
-
         ctx.extra = extra
+
+        for param in self.params:
+            value = param.process_parse_result(ctx, parsed)
+            if param.expose:
+                ctx.args[param.arg_name] = value
 
     def schema(self):
         return {
@@ -195,9 +204,19 @@ class Command(ParamMixin):
 
     ## Documentation Methods ---------------------------------------------------------
 
-    def get_help(self, ctx: AppContext) -> str:
+    def get_help(self, ctx: Context) -> str:
         formatter = HelpFormatter()
         formatter.write_help(self, ctx)
+        return formatter.value
+
+    def get_usage(self, ctx: Context, help_hint: bool = True) -> str:
+        formatter = HelpFormatter()
+        formatter.write_usage(self, ctx)
+        if help_hint:
+            formatter.write_paragraph()
+            formatter.write_text(
+                f"Try {colorize(ctx.fullname + ' ' + '--help', fg.ARC_BLUE)} for more information"
+            )
         return formatter.value
 
     @cached_property
@@ -269,6 +288,6 @@ class Command(ParamMixin):
         if not descriptions:
             return
 
-        for param in self.params.values():
+        for param in self.params:
             if not param.description:
                 param.description = descriptions.get(param.arg_name)

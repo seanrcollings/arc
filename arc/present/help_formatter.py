@@ -5,7 +5,7 @@ import textwrap
 from arc import logging
 from arc.color import colored, colorize, fg, effects
 from arc.config import config
-from arc.context import AppContext
+from arc.context import Context
 from arc.command.param import Param
 from arc.utils import ansi_len
 from arc.present.formatters import TextFormatter
@@ -24,8 +24,7 @@ def paragraphize(string: str) -> list[str]:
 class HelpFormatter(TextFormatter):
     _longest_intro: int = 0
 
-    def write_help(self, command: Command, ctx: AppContext):
-
+    def write_help(self, command: Command, ctx: Context):
         self.write_usage(command, ctx)
 
         if command.description:
@@ -34,7 +33,7 @@ class HelpFormatter(TextFormatter):
 
         command.update_param_descriptions()
 
-        self.write_params(command.visible_params.values())
+        self.write_params(command.visible_params)
 
         for section, body in command.parsed_docstring.items():
             if section in {"arguments", "description"}:
@@ -50,7 +49,7 @@ class HelpFormatter(TextFormatter):
 
     # TODO: usage doesn't properly take standalone commands
     # vs CLI into consideration
-    def write_usage(self, command: Command, ctx: AppContext):
+    def write_usage(self, command: Command, ctx: Context):
         if command.is_namespace():
             command_str = f"{command.name}{config.namespace_sep}<subcommand>"
             params_str = "[arguments ...]"
@@ -72,16 +71,14 @@ class HelpFormatter(TextFormatter):
     def _param_str(self, command: Command):
         params = []
         for param in (
-            param
-            for param in command.visible_params.values()
-            if not param.is_positional
+            param for param in command.visible_params if not param.is_positional
         ):
             params.append(format(param, "usage"))
 
         if len(params) > 0:
             params.append("[" + config.flag_prefix + "]")
 
-        for param in command.pos_params.values():
+        for param in command.pos_params:
             params.append(format(param, "usage"))
 
         return " ".join(params)
