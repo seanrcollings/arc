@@ -1,13 +1,16 @@
+from functools import cached_property
 import typing as t
 import sys
 import os
 
 from arc import errors, utils, logging
+from arc._command.param import FlagParam
 
 from arc.autoload import Autoload
 from arc import logging
 from arc._command import helpers, Command
 from arc.config import config as config_obj
+from arc.context import Context
 
 
 logger = logging.getArcLogger("cli")
@@ -22,7 +25,7 @@ class CLI(Command):
         config: dict[str, t.Any] = None,
         config_file: str = None,
         context: dict = None,
-        version: str = "¯\\_(ツ)_/¯",
+        version: str = None,
     ):
         """Creates a CLI object.
         Args:
@@ -53,6 +56,28 @@ class CLI(Command):
 
         self.version = version
         # self.install_command(Command("help", self.helper))
+
+    @cached_property
+    def params(self):
+        params = super().params
+        if self.version:
+
+            def _version_callback(value, ctx: Context, _param):
+                if value:
+                    print(self.version)
+                    ctx.exit()
+
+            params.append(
+                FlagParam(
+                    "version",
+                    bool,
+                    short="v",
+                    description="Displays the app's current version",
+                    callback=_version_callback,
+                )
+            )
+
+        return params
 
     @utils.timer("Running")
     def main(

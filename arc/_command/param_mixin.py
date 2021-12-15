@@ -8,7 +8,7 @@ from arc._command.param_builder import ParamBuilder
 from arc._command.param import FlagParam, Param
 
 
-def _help_callback(value, ctx, param):
+def _help_callback(value, ctx, _param):
     if value:
         print(ctx.command.get_help(ctx))
         ctx.exit()
