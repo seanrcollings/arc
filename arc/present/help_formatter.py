@@ -48,6 +48,8 @@ class HelpFormatter(TextFormatter):
     def write_heading(self, heading: str):
         super().write_heading(colorize(heading.upper(), effects.BOLD))
 
+    # TODO: usage doesn't properly take standalone commands
+    # vs CLI into consideration
     def write_usage(self, command: Command, ctx: AppContext):
         if command.is_namespace():
             command_str = f"{command.name}{config.namespace_sep}<subcommand>"

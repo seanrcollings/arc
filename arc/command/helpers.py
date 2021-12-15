@@ -1,13 +1,14 @@
 from __future__ import annotations
 import re
-from typing import TYPE_CHECKING
+import typing as t
 from arc.color import effects, fg
 from arc.config import config
 
 from arc import errors, utils
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from .command import Command
+    from .param import Param
 
 
 def find_similar_command(command: Command, namespace_list: list[str]) -> str | None:
@@ -110,3 +111,16 @@ namespace_seperated = re.compile(
 def get_command_namespace(string: str):
     if namespace_seperated.match(string):
         return string.split(config.namespace_sep)
+
+
+def find_possible_params(params: list[Param], missing: str) -> list[Param]:
+    filtered = []
+    if config.suggest_on_missing_argument and len(params) > 0:
+        distance, param = min(
+            ((utils.levenshtein(param.arg_alias, missing), param) for param in params),
+            key=lambda tup: tup[0],
+        )
+        if distance <= config.suggest_levenshtein_distance:
+            filtered.append(param)
+
+    return filtered

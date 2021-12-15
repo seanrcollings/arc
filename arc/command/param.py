@@ -111,7 +111,7 @@ class Param:
                 value = not self.default
             else:
                 raise errors.MissingArgError(
-                    f"No Value provided for argument {self.arg_alias} :("
+                    f"No value provided for required argument {colorize(self.cli_rep(), fg.YELLOW)}"
                 )
 
         return self.convert(value, None), extra
@@ -127,12 +127,6 @@ class Param:
             value = self.default
 
         return value
-
-    def get_arg(self, state: ExecutionState) -> Argument:
-        value = Selectors.select_value(self, state)
-        converted = self.convert(value, state)
-
-        return Argument(converted, self)
 
     def convert(self, value: Any, state):
         type_class: type[aliases.TypeProtocol] = aliases.Alias.resolve(self.type_info)

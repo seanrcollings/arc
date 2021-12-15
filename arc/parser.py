@@ -5,11 +5,14 @@ from typing import TypedDict, Union
 from dataclasses import dataclass
 import re
 import enum
+from arc.color import colorize, fg
+from arc.command import helpers
 
 from arc.context import AppContext
 from arc import errors, logging
 from arc.config import config
-from arc.utils import IDENT
+from arc.types.helpers import join_and, join_or
+from arc.utils import IDENT, levenshtein
 from arc.utils import symbol
 from arc.command.param import MISSING, Param
 
@@ -124,7 +127,7 @@ class Parser:
             if self.allow_extra:
                 self.extra.extend([token.value, value])
             else:
-                raise errors.ParserError(f"Unrecognized keyword: {token.value}")
+                raise self.non_existant_arg(token.value)
         else:
             self.parsed[param.arg_name] = value
 
@@ -146,7 +149,7 @@ class Parser:
 
                     self.extra.extend(extra)
                 else:
-                    raise errors.ParserError(f"Unrecognized keyword: {char}")
+                    raise self.non_existant_arg(token.value)
             else:
                 self.parsed[param.arg_name] = value
 
@@ -178,3 +181,18 @@ class Parser:
 
     def peek(self):
         return self.tokens[0] if self.tokens else None
+
+    def non_existant_arg(self, val: str):
+        styled = colorize(config.flag_prefix + val, fg.YELLOW)
+        message = f"Argument {styled} not recognized"
+
+        suggest_args = [
+            param.arg_alias for param in helpers.find_possible_params(self.params, val)
+        ]
+
+        if len(suggest_args) > 0:
+            message += (
+                f"\n\tPerhaps you meant {colorize(join_or(suggest_args), fg.YELLOW)}?"
+            )
+
+        return errors.MissingArgError(message)
