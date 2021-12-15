@@ -47,26 +47,42 @@ class HelpFormatter(TextFormatter):
     def write_heading(self, heading: str):
         super().write_heading(colorize(heading.upper(), effects.BOLD))
 
-    # TODO: usage doesn't properly take standalone commands
-    # vs CLI into consideration
     def write_usage(self, command: Command, ctx: Context):
-        if command.is_namespace():
-            command_str = f"{command.name}{config.namespace_sep}<subcommand>"
-            params_str = "[arguments ...]"
-        elif command is ctx.root.command:
-            command_str = "<command>"
-            params_str = "[arguments ...]"
-        else:
-            command_str = ctx.fullname
-            params_str = self._param_str(command)
+        from arc.cli import CLI
 
         with self.section("USAGE"):
-            self.write_text(
-                colored(
-                    f"{colorize(ctx.root.command.name, config.brand_color)} "
-                    f"{colorize(command_str, effects.UNDERLINE)} {params_str}",
+            if command.is_namespace():
+                command_str = f"{command.name}{config.namespace_sep}<subcommand>"
+                self.write_text(
+                    colored(
+                        f"{colorize(ctx.root.command.name, config.brand_color)} "
+                        f"{colorize(command_str, effects.UNDERLINE)} [ARGUMENTS ...]",
+                    )
                 )
-            )
+            elif isinstance(command, CLI):
+                self.write_text(
+                    colored(
+                        f"{colorize(ctx.root.command.name, config.brand_color)} "
+                        f"{colorize('<command>', effects.UNDERLINE)} [ARGUMENTS ...]",
+                    )
+                )
+            else:
+                command_str = ctx.fullname
+                params_str = self._param_str(command)
+
+                if ctx.command is ctx.root.command:
+                    self.write_text(
+                        colored(
+                            f"{colorize(command_str, config.brand_color)} {params_str}"
+                        )
+                    )
+                else:
+                    self.write_text(
+                        colored(
+                            f"{colorize(ctx.root.command.name, config.brand_color)} "
+                            f"{colorize(command_str, effects.UNDERLINE)} {params_str}"
+                        )
+                    )
 
     def _param_str(self, command: Command):
         params = []

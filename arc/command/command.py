@@ -5,7 +5,7 @@ import typing as t
 import shlex
 import sys
 
-from arc import errors, logging
+from arc import errors, logging, utils
 from arc.color import colorize, effects, fg
 from arc.command.param_builder import ParamBuilder
 from arc.context import Context
@@ -52,12 +52,11 @@ class Command(ParamMixin):
         fullname: str = None,
         **kwargs,
     ):
+
         try:
             try:
                 with self.create_ctx(fullname or self.name, **kwargs) as ctx:
                     args = t.cast(list[str], self.get_args(args))
-                    if not args and self.need_args():
-                        raise errors.UsageError("Missing required arguments", ctx)
 
                     self.parse_args(ctx, args)
                     return self.execute(ctx)
@@ -72,6 +71,7 @@ class Command(ParamMixin):
             sys.exit(e.code)
 
     def execute(self, ctx: Context):
+        utils.header("EXECUTION")
         if not self.callback:
             raise RuntimeError("No callback associated with this command to execute")
 

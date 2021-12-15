@@ -1,17 +1,21 @@
 import typing as t
 import sys
+import os
 
-from arc import errors, utils
+from arc import errors, utils, logging
 
 from arc.autoload import Autoload
-from arc.parser import Parsed
 from arc import logging
-from arc.command import helpers
-
-from arc.command import Command
-from arc.types import Param, VarKeyword
+from arc.command import helpers, Command
 from arc.config import config as config_obj
-from arc.types.var_types import VarPositional
+
+
+logger = logging.getArcLogger("cli")
+
+
+def _discover_name():
+    name = sys.argv[0]
+    return os.path.basename(name)
 
 
 class CLI(Command):
@@ -19,7 +23,7 @@ class CLI(Command):
 
     def __init__(
         self,
-        name: str = "cli",
+        name: str = None,
         config: dict[str, t.Any] = None,
         config_file: str = None,
         context: dict = None,
@@ -34,7 +38,7 @@ class CLI(Command):
         """
 
         super().__init__(
-            name,
+            name or _discover_name(),
             lambda: ...,
             context,
         )
@@ -55,25 +59,30 @@ class CLI(Command):
         self.version = version
         # self.install_command(Command("help", self.helper))
 
+    @utils.timer("Running")
     def main(
         self,
         args: t.Union[str, list[str]] = None,
         fullname: str = None,
         **kwargs,
     ):
+        utils.header("CLI")
         try:
             with self.create_ctx(fullname or self.name, **kwargs) as ctx:
                 args = t.cast(list[str], self.get_args(args))
                 if not args:
+                    logger.debug("No arguments present")
                     print(self.get_usage(ctx))
                     return
 
                 subcommand_name = args.pop(0)
                 command_namespace = helpers.get_command_namespace(subcommand_name)
                 if not command_namespace:
+                    logger.debug("%s is not a valid command namespace", subcommand_name)
                     args.append(subcommand_name)
                     return super().main(args)
 
+                logger.debug("Execution subcommand: %s", subcommand_name)
                 command_chain = helpers.find_command_chain(self, command_namespace)
                 return command_chain[-1](args, subcommand_name, parent=ctx)
         except errors.Exit as e:

@@ -101,7 +101,7 @@ class Alias:
                     return cls.aliases[parent]
 
         name = colorize(annotation.__name__, fg.YELLOW)
-        raise errors.MissingParamType(
+        raise errors.ArgumentError(
             f"{name} is not a valid type. "
             f"Please ensure that {name} conforms to the custom type protocol "
             f"or that there is a alias type registered for it: "

@@ -112,7 +112,9 @@ class Param:
                 value = not self.default
             else:
                 raise errors.MissingArgError(
-                    f"No value provided for required argument {colorize(self.cli_rep(), fg.YELLOW)}"
+                    "No value provided for required argument "
+                    + colorize(self.cli_rep(), fg.YELLOW),
+                    ctx,
                 )
 
         value = self.convert(value, ctx)

@@ -169,7 +169,9 @@ class Parser:
                 self.extra.append(token.value)
                 return
             else:
-                raise errors.UsageError("Too many positional arguments", self.ctx)
+                raise errors.UnrecognizedArgError(
+                    "Too many positional arguments", self.ctx
+                )
 
         param = self.pos_params[self.curr_pos]
         self.parsed[param.arg_name] = token.value
@@ -194,4 +196,4 @@ class Parser:
                 f"\n\tPerhaps you meant {colorize(join_or(suggest_args), fg.YELLOW)}?"
             )
 
-        return errors.UsageError(message, self.ctx)
+        return errors.UnrecognizedArgError(message, self.ctx)
