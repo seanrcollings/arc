@@ -79,7 +79,7 @@ class CLI(Command):
 
         return params
 
-    @utils.timer("Running")
+    @utils.timer("Running CLI")
     def main(
         self,
         args: t.Union[str, list[str]] = None,

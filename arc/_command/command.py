@@ -46,6 +46,7 @@ class Command(ParamMixin):
     def __call__(self, *args, **kwargs):
         return self.main(*args, **kwargs)
 
+    @utils.timer("Running Command")
     def main(
         self,
         args: t.Union[str, list[str]] = None,

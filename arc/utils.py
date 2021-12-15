@@ -5,7 +5,6 @@ import time
 from types import MethodType
 import typing as t
 import os
-import functools
 
 from arc import logging, typing as at
 from arc.color import fg, effects, colorize
@@ -39,28 +38,36 @@ def ansi_len(string: str):
     return len(ansi_clean(string))
 
 
+FuncT = t.TypeVar("FuncT", bound=t.Callable[..., t.Any])
+
+
 def timer(name):
     """Decorator for timing functions
     will only time if config.debug is set to True
     """
 
-    def wrapper(func):
+    def wrapper(func: FuncT) -> FuncT:
         @functools.wraps(func)
         def decorator(*args, **kwargs):
 
             start_time = time.time()
-            return_value = func(*args, **kwargs)
-            end_time = time.time()
-            logger.info(
-                "%sCompleted %s in %ss%s",
-                fg.GREEN,
-                name,
-                round(end_time - start_time, 5),
-                effects.CLEAR,
-            )
+            try:
+
+                return_value = func(*args, **kwargs)
+            except BaseException as e:
+                raise
+            finally:
+                end_time = time.time()
+                logger.info(
+                    "%sCompleted %s in %ss%s",
+                    fg.GREEN,
+                    name,
+                    round(end_time - start_time, 5),
+                    effects.CLEAR,
+                )
             return return_value
 
-        return decorator
+        return t.cast(FuncT, decorator)
 
     return wrapper
 
