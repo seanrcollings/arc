@@ -1,7 +1,6 @@
 from functools import cached_property
 import typing as t
 import sys
-import os
 
 from arc import errors, utils, logging
 from arc._command.param import FlagParam

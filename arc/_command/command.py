@@ -12,6 +12,7 @@ from arc.context import Context
 from arc.parser import Parser
 from arc.present.help_formatter import HelpFormatter
 from arc.config import config
+from arc.typing import ClassCommand
 from .param_mixin import ParamMixin
 
 
@@ -153,7 +154,7 @@ class Command(ParamMixin):
             Command: the subcommand created
         """
 
-        def decorator(wrapped: t.Union[t.Callable, Command]):
+        def decorator(wrapped: t.Union[t.Callable, Command, ClassCommand]):
             if isinstance(wrapped, Command):
                 wrapped = wrapped.callback
 

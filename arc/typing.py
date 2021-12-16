@@ -15,3 +15,10 @@ class TypeProtocol(t.Protocol):
 
 
 CompareReturn = t.Literal[-1, 0, 1]
+
+
+class ClassCommand(t.Protocol):
+    __name__: str
+
+    def handle(self) -> t.Any:
+        ...
