@@ -5,6 +5,7 @@ import typing as t
 from arc import errors, logging
 from arc.config import config
 from arc.types.params import as_special_param
+from arc import _command as command
 
 if t.TYPE_CHECKING:
     from arc._command import Command
@@ -74,8 +75,28 @@ class Context:
         """Creates a new context that is the child of the current context"""
         return type(self)(command, parent=self, fullname=command.name)
 
-    def execute(self, callback: t.Union[Command, t.Callable], *args, **kwargs):
-        return callback(*args, **kwargs)
+    def execute(self, callback: t.Union[Command, t.Callable], **kwargs):
+        """Can be called in two ways
+
+        1. if `callback` is a function / callable, all other kwargs
+        will simply be forwarded to the function.
+        2. if `callback` is a command, kwargs will be forwarded, but
+        arc will also fill in defaults.
+        """
+        if isinstance(callback, command.Command):
+            ctx = self.child_context(callback)
+            cmd = callback
+            callback = cmd.callback
+
+            for param in cmd.params:
+                if param.arg_name not in kwargs and param.expose:
+                    kwargs[param.arg_name] = param.convert(param.default, ctx)
+
+        else:
+            ctx = self
+
+        with ctx:
+            return callback(**kwargs)
 
     def close(self):
         logger.debug("Closing %s", self)

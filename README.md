@@ -2,27 +2,17 @@
 A tool for building declartive, and highly extendable CLI systems for Python 3.9
 
 # ARC Features
-- Command Line arguments using Python function arguments and type hints
-- Command Namespacing
-- Help Documentation Generation
-- User-extension via Dynamic namespace loading
+- Command line arguments bsed on python type hints
+- Arbitrary command nesting
+- Automatic `--help` documentation
+- Dynamic command loading at runtime
 
 # Docs
 - [Docs](http://arc.seanrcollings.com)
 - [Wiki](https://github.com/seanrcollings/arc/wiki)
 - [Changelog](https://github.com/seanrcollings/arc/wiki/Changelog)
 
-# Installation
 
-```
-$ pip install arc-cli
-```
-
-Clone for development
-```
-$ git clone https://github.com/seanrcollings/arc
-$ poetry install
-```
 
 
 # Quick Start
@@ -56,9 +46,23 @@ ARGUMENTS
     <name>
 ```
 Reference [getting started](https://github.com/seanrcollings/arc/wiki) for more info
+# Installation
+
+```
+$ pip install arc-cli
+```
+
+Clone for development
+```
+$ git clone https://github.com/seanrcollings/arc
+$ poetry install
+```
 
 # Tests
 Tests are written with `pytest`
 ```
 $ pytest
 ```
+
+# Attribution
+Much of arc's architecture is based on [click](https://click.palletsprojects.com/en/8.0.x/), though no code is lifted directly from click's source.

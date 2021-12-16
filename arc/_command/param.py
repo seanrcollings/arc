@@ -139,6 +139,9 @@ class Param:
         return value
 
     def convert(self, value: t.Any, ctx: Context):
+        if value is MISSING:
+            return None
+
         type_class: type[aliases.TypeProtocol] = aliases.Alias.resolve(self.type_info)
 
         try:

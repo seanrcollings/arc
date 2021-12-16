@@ -71,6 +71,8 @@ class Command(ParamMixin):
                 raise errors.Exit(1)
 
         except errors.Exit as e:
+            if config.mode == "development":
+                raise
             sys.exit(e.code)
 
     def execute(self, ctx: Context):

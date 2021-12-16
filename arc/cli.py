@@ -55,7 +55,6 @@ class CLI(Command):
             self.install_command(debug)
 
         self.version = version
-        # self.install_command(Command("help", self.helper))
 
     @cached_property
     def params(self):
