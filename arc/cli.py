@@ -34,6 +34,8 @@ class CLI(Command):
             version: Version string to display with `--version`
         """
 
+        self.version = version
+
         super().__init__(
             lambda: ...,
             name or utils.discover_name(),
@@ -52,8 +54,6 @@ class CLI(Command):
             from ._debug import debug  # pylint: disable=import-outside-toplevel
 
             self.install_command(debug)
-
-        self.version = version
 
     @cached_property
     def params(self):
@@ -110,7 +110,7 @@ class CLI(Command):
                 return command_chain[-1](args, subcommand_name, parent=ctx)
 
         except errors.Exit as e:
-            if config_obj.mode == "development":
+            if config_obj.mode == "development" and e.code != 0:
                 raise
             sys.exit(e.code)
 

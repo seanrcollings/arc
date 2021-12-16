@@ -108,6 +108,10 @@ class Parser:
         while self.tokens:
             curr = self.consume()
             if self.pos_only:
+                if curr.type is TokenType.KEYWORD:
+                    curr.value = f"{config.flag_prefix}{curr.value}"
+                elif curr.type is TokenType.SHORT_KEYWORD:
+                    curr.value = f"{config.short_flag_prefix}{curr.value}"
                 self.parse_value(curr)
             else:
                 parser_table[curr.type](curr)

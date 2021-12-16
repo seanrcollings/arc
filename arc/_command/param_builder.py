@@ -2,6 +2,7 @@ from __future__ import annotations
 from types import MappingProxyType
 from typing import Any, Callable, Optional, get_type_hints, TYPE_CHECKING
 import inspect
+import functools
 
 
 from arc import errors, logging
@@ -9,7 +10,7 @@ from arc.config import config
 from arc.color import colorize, fg
 from arc._command import param
 from arc.types.params import ParamInfo
-from arc.typing import ClassCommand
+from arc.typing import ClassCallback
 
 if TYPE_CHECKING:
     from arc._command.param import Param
@@ -132,7 +133,12 @@ class ParamBuilder:
         return should_negotiate_param_type
 
 
-def wrap_class_command(cls: type[ClassCommand]) -> Callable[..., Any]:
+def wrap_class_callback(cls: type[ClassCallback]) -> Callable[..., Any]:
+    """Function to wrap class callbacks in a function callback equivalent to:
+    1. Creating an instance of the class
+    2. Adding each argument as an attribute of the instance
+    3. calling `instance.handle()`
+    """
     sig = inspect.signature(cls)
     annotations = get_type_hints(cls, include_extras=True)
     defaults = {name: val for name, val in vars(cls).items() if name in annotations}
@@ -152,12 +158,17 @@ def wrap_class_command(cls: type[ClassCommand]) -> Callable[..., Any]:
         }
     )
 
+    def wrapper(**kwargs):
+        instance = cls()
+        for key, value in kwargs.items():
+            setattr(instance, key, value)
+        return instance.handle()
+
+    functools.update_wrapper(wrapper, cls)
     # inspect.signature() checks for a cached signature object
     # at __signature__. So we can cache it there
     # to generate the correct signature object
     # during the paramater building process
     cls.__signature__ = sig  # type: ignore
-
-    def wrapper(*args, **kwargs):
-        instance = cls(*args, **kwargs)
-        return instance.handle()
+    wrapper.__signature__ = sig  # type: ignore
+    return wrapper

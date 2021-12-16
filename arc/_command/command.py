@@ -4,15 +4,17 @@ from functools import cached_property
 import typing as t
 import shlex
 import sys
+import dataclasses
+import inspect
 
 from arc import errors, logging, utils
 from arc.color import colorize, effects, fg
-from arc._command.param_builder import ParamBuilder
+from arc._command.param_builder import ParamBuilder, wrap_class_callback
 from arc.context import Context
 from arc.parser import Parser
 from arc.present.help_formatter import HelpFormatter
 from arc.config import config
-from arc.typing import ClassCommand
+from arc.typing import ClassCallback
 from .param_mixin import ParamMixin
 
 
@@ -39,11 +41,17 @@ class Command(ParamMixin):
         self.doc = callback.__doc__
 
         if config.mode == "development":
+            # Constructs the params at instantiation.
+            # if there's something wrong with a param,
+            # this will raise an error. If we don't do this,
+            # the error woudln't be raised until executing
+            # the command, so it could easy to miss
             self.params
 
     def __repr__(self):
         return f"<{self.__class__.__name__} : {self.name}>"
 
+    # Command Execution ------------------------------------------------------------
     def __call__(self, *args, **kwargs):
         return self.main(*args, **kwargs)
 
@@ -72,7 +80,7 @@ class Command(ParamMixin):
                 raise errors.Exit(1)
 
         except errors.Exit as e:
-            if config.mode == "development":
+            if config.mode == "development" and e.code != 0:
                 raise
             sys.exit(e.code)
 
@@ -102,9 +110,6 @@ class Command(ParamMixin):
 
         return parser
 
-    def need_args(self):
-        return len(self.required_params) > 0
-
     def parse_args(self, ctx: Context, args: list[str]):
         parser = self.create_parser(ctx)
         parsed, extra = parser.parse(args)
@@ -128,7 +133,7 @@ class Command(ParamMixin):
             "parameters": {name: param.schema() for name, param in self.params.items()},
         }
 
-    ### Building Subcommands ###
+    # Subcommand Construction ------------------------------------------------------------
 
     def subcommand(
         self,
@@ -154,16 +159,29 @@ class Command(ParamMixin):
             Command: the subcommand created
         """
 
-        def decorator(wrapped: t.Union[t.Callable, Command, ClassCommand]):
-            if isinstance(wrapped, Command):
-                wrapped = wrapped.callback
+        def decorator(callback: t.Union[t.Callable, Command, type[ClassCallback]]):
+            # Should we allow this?
+            if isinstance(callback, Command):
+                callback = callback.callback
 
-            wrapped_name = wrapped.__name__
+            if isinstance(callback, type):
+                if isinstance(callback, ClassCallback):
+                    # inspect.signature() can potentially be a heavy operation.
+                    # wrapping the callback here, means that we would call it for
+                    # every class command.
+                    # TODO: Make this lazy like function commands
+                    callback = wrap_class_callback(callback)  # type: ignore
+                else:
+                    raise errors.CommandError(
+                        f"Command classes must have a {colorize('handle()', fg.YELLOW)} method"
+                    )
+
+            callback_name = callback.__name__
             if config.transform_snake_case:
-                wrapped_name = wrapped_name.replace("_", "-")
+                callback_name = callback_name.replace("_", "-")
 
-            command_name = self.handle_command_aliases(name or wrapped_name)
-            command = Command(wrapped, command_name, context or {}, description)
+            command_name = self.handle_command_aliases(name or callback_name)
+            command = Command(callback, command_name, context or {}, description)
             return self.install_command(command)
 
         return decorator
@@ -174,8 +192,12 @@ class Command(ParamMixin):
     def install_command(self, command: "Command"):
         """Installs a command object as a subcommand
         of the current object"""
+        # Commands created with @command do not have a name by default
+        # to faccilitate automatic name discovery. When they are added
+        # to a parent command, a name needs to be added
         if not command.name:
             command.name = command.callback.__name__
+
         self.subcommands[command.name] = command
         # command.executable.callback_store.register_callbacks(
         #     **self.executable.callback_store.inheritable_callbacks()
@@ -193,7 +215,7 @@ class Command(ParamMixin):
 
         return command
 
-    ### Helpers ###
+    # Helpers ------------------------------------------------------------
 
     def handle_command_aliases(
         self, command_name: t.Union[str, list[str], tuple[str, ...]]
@@ -214,7 +236,7 @@ class Command(ParamMixin):
 
         return self.callback in (command_builders.no_op, command_builders.helper)
 
-    ## Documentation Methods ---------------------------------------------------------
+    ## Documentation Helpers ---------------------------------------------------------
 
     def get_help(self, ctx: Context) -> str:
         formatter = HelpFormatter()
