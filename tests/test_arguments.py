@@ -166,7 +166,7 @@ class TestKebab:
         assert cli("two-words --first-name sean") == "sean"
         assert cli("two-words --first-name sean --other-arg hi") == "sean"
 
-        with pytest.raises(errors.CommandError):
+        with pytest.raises(errors.Exit):
             cli("two_words")
 
         with pytest.raises(errors.UsageError):
@@ -183,7 +183,7 @@ class TestKebab:
             assert cli("two_words --first_name sean") == "sean"
             assert cli("two_words --first_name sean --other_arg hi") == "sean"
 
-            with pytest.raises(errors.CommandError):
+            with pytest.raises(errors.Exit):
                 cli("two-words")
 
             with pytest.raises(errors.UsageError):

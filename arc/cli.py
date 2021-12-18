@@ -112,6 +112,7 @@ class CLI(Command):
         except errors.Exit as e:
             if config_obj.mode == "development" and e.code != 0:
                 raise
+
             sys.exit(e.code)
 
     def command(self, *args, **kwargs):
