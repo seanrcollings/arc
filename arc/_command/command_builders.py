@@ -56,7 +56,7 @@ def command(name: str = "", **kwargs) -> Callable[[Callable], Command]:
     ```py
     from arc import command
 
-    @command
+    @command()
     def hello():
         print('Hi there')
     ```

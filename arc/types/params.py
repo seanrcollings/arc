@@ -21,6 +21,7 @@ class ParamInfo:
 
 
 def Param(
+    *,
     name: str = None,
     short: str = None,
     default: Any = param.MISSING,
@@ -50,6 +51,7 @@ def Param(
 
 
 def Argument(
+    *,
     name: str = None,
     default: Any = param.MISSING,
     description: str = None,
@@ -77,6 +79,7 @@ def Argument(
 
 
 def Option(
+    *,
     name: str = None,
     short: str = None,
     default: Any = param.MISSING,
@@ -93,6 +96,7 @@ def Option(
 
 
 def Flag(
+    *,
     name: str = None,
     short: str = None,
     default: bool = False,

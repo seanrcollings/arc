@@ -93,7 +93,7 @@ class HelpFormatter(TextFormatter):
         ):
             params.append(format(param, "usage"))
 
-        if len(params) > 0:
+        if len(params) > 0 and len(command.pos_params) > 0:
             params.append("[" + config.flag_prefix + "]")
 
         for param in command.pos_params:
