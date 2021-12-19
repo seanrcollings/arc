@@ -4,9 +4,7 @@ import sys
 
 from arc import errors, utils, logging
 from arc._command.param import FlagParam
-
 from arc.autoload import Autoload
-from arc import logging
 from arc._command import helpers, Command
 from arc.config import config as config_obj
 from arc.context import Context
@@ -23,23 +21,28 @@ class CLI(Command):
         name: str = None,
         config: dict[str, t.Any] = None,
         config_file: str = None,
-        context: dict = None,
+        state: dict = None,
         version: str = None,
+        **ctx_dict,
     ):
-        """Creates a CLI object.
+        """
         Args:
             name: name of the CLI, will be used in the help command.
-            arcfile: arc config file to load. defaults to ./.arc
-            context: dictionary of key value pairs to pass to children as context
+            config: dictonary of configuration values
+            config_file: filename to load configuration information from
+            state: dictionary of key value pairs to pass to commands
             version: Version string to display with `--version`
+            ctx_dict: additional keyword arguments to pass to the execution
+            context
         """
 
         self.version = version
 
         super().__init__(
-            lambda: ...,
+            lambda: print("CLI stub function."),
             name or utils.discover_name(),
-            context,
+            state,
+            **ctx_dict,
         )
 
         if config:
@@ -86,7 +89,9 @@ class CLI(Command):
     ):
         utils.header("CLI")
         try:
-            with self.create_ctx(fullname or self.name, **kwargs) as ctx:
+            with self.create_ctx(
+                fullname or self.name, **(self.ctx_dict | kwargs)
+            ) as ctx:
                 args = t.cast(list[str], self.get_args(args))
                 if not args:
                     logger.debug("No arguments present")
@@ -100,14 +105,19 @@ class CLI(Command):
                     args.append(subcommand_name)
                     return super().main(args)
 
-                logger.debug("Execution subcommand: %s", subcommand_name)
+                logger.debug("Executing subcommand: %s", subcommand_name)
                 try:
                     command_chain = helpers.find_command_chain(self, command_namespace)
                 except errors.CommandNotFound as e:
                     print(str(e))
                     raise errors.Exit(1)
 
-                return command_chain[-1](args, subcommand_name, parent=ctx)
+                return command_chain[-1].main(
+                    args,
+                    subcommand_name,
+                    parent=ctx,
+                    command_chain=command_chain,
+                )
 
         except errors.Exit as e:
             if config_obj.mode == "development" and e.code != 0:
@@ -144,8 +154,8 @@ class CLI(Command):
         # pylint: disable=import-outside-toplevel
         from .autocomplete import autocomplete
 
-        autocomplete.context["cli"] = self
-        autocomplete.context["init"] = {"completions_for": completions_for or self.name}
+        autocomplete.state["cli"] = self
+        autocomplete.state["init"] = {"completions_for": completions_for or self.name}
         self.install_command(autocomplete)
 
     @utils.timer("Autoloading")

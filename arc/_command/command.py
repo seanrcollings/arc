@@ -4,8 +4,7 @@ from functools import cached_property
 import typing as t
 import shlex
 import sys
-import dataclasses
-import inspect
+
 
 from arc import errors, logging, utils
 from arc.color import colorize, effects, fg
@@ -29,16 +28,18 @@ class Command(ParamMixin):
         self,
         callback: t.Callable,
         name: str = "",
-        context: t.Optional[dict] = None,
+        state: t.Optional[dict] = None,
         description: t.Optional[str] = None,
+        **ctx_dict,
     ):
         self.callback = callback
         self.name = name
         self.subcommands: dict[str, Command] = {}
         self.subcommand_aliases: dict[str, str] = {}
-        self.context = context or {}
+        self.state = state or {}
         self._description = description
         self.doc = callback.__doc__
+        self.ctx_dict = ctx_dict
 
         if config.mode == "development":
             # Constructs the params at instantiation.
@@ -49,7 +50,7 @@ class Command(ParamMixin):
             self.params
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} : {self.name}>"
+        return f"{self.__class__.__name__}(name={self.name!r})"
 
     # Command Execution ------------------------------------------------------------
     def __call__(self, *args, **kwargs):
@@ -67,7 +68,9 @@ class Command(ParamMixin):
 
         try:
             try:
-                with self.create_ctx(fullname or self.name, **kwargs) as ctx:
+                with self.create_ctx(
+                    fullname or self.name, **(self.ctx_dict | kwargs)
+                ) as ctx:
                     args = t.cast(list[str], self.get_args(args))
 
                     self.parse_args(ctx, args)
@@ -126,7 +129,7 @@ class Command(ParamMixin):
             "name": self.name,
             "description": self.description,
             "doc": self.callback.__doc__,
-            "context": self.context,
+            "context": self.state,
             "subcommands": {
                 name: command.schema() for name, command in self.subcommands.items()
             },
@@ -139,7 +142,7 @@ class Command(ParamMixin):
         self,
         name: t.Union[str, list[str], tuple[str, ...]] = None,
         description: t.Optional[str] = None,
-        context: dict[str, t.Any] = None,
+        state: dict[str, t.Any] = None,
     ):
         """Create and install a subcommands
 
@@ -152,7 +155,7 @@ class Command(ParamMixin):
             description(Optional[str]): Description of the command's function. Can be used
             to generate documentation.
 
-            context (dict[str, Any], optional): Special data that will be
+            state (dict[str, Any], optional): Special data that will be
                 passed to this command (and any subcommands) at runtime. Defaults to None.
 
         Returns:
@@ -181,7 +184,7 @@ class Command(ParamMixin):
                 callback_name = callback_name.replace("_", "-")
 
             command_name = self.handle_command_aliases(name or callback_name)
-            command = Command(callback, command_name, context or {}, description)
+            command = Command(callback, command_name, state, description)
             return self.install_command(command)
 
         return decorator
@@ -234,7 +237,7 @@ class Command(ParamMixin):
     def is_namespace(self):
         from . import command_builders
 
-        return self.callback in (command_builders.no_op, command_builders.helper)
+        return self.callback is command_builders.helper
 
     ## Documentation Helpers ---------------------------------------------------------
 

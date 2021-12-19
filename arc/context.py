@@ -6,6 +6,7 @@ from arc import errors, logging
 from arc.config import config
 from arc.types.params import as_special_param
 from arc import _command as command
+from arc.types.state import State
 
 if t.TYPE_CHECKING:
     from arc._command import Command
@@ -35,13 +36,21 @@ class Context:
     __stack: list[Context] = []
     config = config
 
-    def __init__(self, command: Command, fullname: str, parent: Context = None):
+    def __init__(
+        self,
+        command: Command,
+        fullname: str,
+        command_chain: list[Command] = None,
+        parent: Context = None,
+    ):
         self.command = command
-        self.parent = parent
         self.fullname = fullname
+        self.command_chain = command_chain or []
+        self.parent = parent
 
         self.args: dict[str, t.Any] = {}
         self.extra: list[str] = []
+        self._state: t.Optional[State] = None
 
         # Keeps track of how many times this context has been pusehd onto the context
         # stack. When it reaches zero, ctx.close() will be called
@@ -71,6 +80,24 @@ class Context:
 
         return curr
 
+    @property
+    def state(self):
+        if self._state is None:
+            state: dict = {}
+            if self.command_chain:
+                for cmd in self.command_chain:
+                    state |= cmd.state
+
+                self._state = State(state)
+            else:
+                self._state = State(self.command.state)
+
+        return self._state
+
+    @state.setter
+    def state(self, state):
+        self._state = state
+
     def child_context(self, command: Command) -> Context:
         """Creates a new context that is the child of the current context"""
         return type(self)(command, parent=self, fullname=command.name)
@@ -80,11 +107,14 @@ class Context:
 
         1. if `callback` is a function / callable, all other kwargs
         will simply be forwarded to the function.
-        2. if `callback` is a command, kwargs will be forwarded, but
-        arc will also fill in defaults.
+        2. if `callback` is a command, kwargs will still be forwarded,
+        arc will fill in defaults, and the current execution's state
+        will be used initially
         """
         if isinstance(callback, command.Command):
             ctx = self.child_context(callback)
+            breakpoint()
+            ctx.state = self.state | ctx.state
             cmd = callback
             callback = cmd.callback
 
@@ -139,4 +169,5 @@ class Context:
 
     @classmethod
     def __convert__(cls, _value, _info, ctx: Context):
+        """Recieve access to the current ctx in commands"""
         return ctx
