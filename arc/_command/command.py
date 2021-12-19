@@ -108,7 +108,7 @@ class Command(ParamMixin):
 
     def create_parser(self, ctx: Context):
         parser = Parser(ctx)
-        for param in self.params:
+        for param in self.visible_params:
             parser.add_param(param)
 
         return parser

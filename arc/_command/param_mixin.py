@@ -52,12 +52,15 @@ class ParamMixin:
 
     @functools.cached_property
     def visible_params(self) -> list[Param]:
+        """Params that will be visible to the command line"""
         return [param for param in self.params if not param.hidden]
 
     @functools.cached_property
     def optional_params(self) -> list[Param]:
+        """Optional params have a default value"""
         return [param for param in self.params if param.optional]
 
     @functools.cached_property
     def required_params(self) -> list[Param]:
+        """Required params do not have a default value"""
         return [param for param in self.params if not param.optional]
