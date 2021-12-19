@@ -49,7 +49,7 @@ def Param(
     return ParamInfo(None, name, short, default, description)
 
 
-def PosParam(
+def Argument(
     name: str = None,
     default: Any = param.MISSING,
     description: str = None,
@@ -64,19 +64,19 @@ def PosParam(
     ```
 
     ```
-    $ python example.py command 2
+    $ python example.py test 2
     2
     ```
     """
     return ParamInfo(
-        param_cls=param.PositionalParam,
+        param_cls=param.Argument,
         name=name,
         default=default,
         description=description,
     )
 
 
-def KeyParam(
+def Option(
     name: str = None,
     short: str = None,
     default: Any = param.MISSING,
@@ -84,7 +84,7 @@ def KeyParam(
 ) -> Any:
     """A CLI parameter. Input will be passed in by keyword"""
     return ParamInfo(
-        param_cls=param.KeywordParam,
+        param_cls=param.Option,
         name=name,
         short=short,
         default=default,
@@ -92,16 +92,30 @@ def KeyParam(
     )
 
 
-def FlagParam(
+def Flag(
     name: str = None,
     short: str = None,
     default: bool = False,
     description: str = None,
 ) -> Any:
-    """A CLI parameter. Input will be passed in by
-    keyword, but a value is not neccessary"""
+    """A Flag represents a boolean value.
+
+    # Example
+    ```py
+    @cli.command()
+    def test(val: bool = Flag()):
+        print(val)
+    ```
+
+    ```
+    $ python example.py test
+    False
+    $ python example.py test --flag
+    True
+    ```
+    """
     return ParamInfo(
-        param_cls=param.FlagParam,
+        param_cls=param.Flag,
         name=name,
         short=short,
         default=default,
@@ -115,8 +129,13 @@ def SpecialParam(
     default: Any = param.MISSING,
     description: str = None,
 ) -> Any:
-    """Special Params do not select a value from user input.
-    As such, they're values must originate elsewhere, or be manually selected.
+    """Params marked as "Special" are not exposed to the command line
+    interface and cannot recieve user input. As such, they're values
+    are expected to come from elsewhere. This allows commands to recieve
+    their values like regular params, but still have them act in a particular
+    way.
+
+    It is primarly used for some builtin-types like `State` and `Context`.
     """
     return ParamInfo(
         param_cls=param.SpecialParam,
@@ -158,7 +177,7 @@ def __cls_deco_factory(param_cls: type[param.Param]):
     return decorator
 
 
-as_pos_param = __cls_deco_factory(param.PositionalParam)
-as_keyword_param = __cls_deco_factory(param.KeywordParam)
-as_flag_param = __cls_deco_factory(param.FlagParam)
+as_pos_param = __cls_deco_factory(param.Argument)
+as_keyword_param = __cls_deco_factory(param.Option)
+as_flag_param = __cls_deco_factory(param.Flag)
 as_special_param = __cls_deco_factory(param.SpecialParam)

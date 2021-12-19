@@ -78,7 +78,7 @@ class ParamBuilder:
     def negotiate_param_type(self, arg: inspect.Parameter, info: ParamInfo):
         if not info.param_cls:
             if arg.annotation is bool:
-                info.param_cls = param.FlagParam
+                info.param_cls = param.Flag
                 if info.default is param.MISSING:
                     info.default = False
 
@@ -90,9 +90,9 @@ class ParamBuilder:
                     "your function definition",
                 )
             elif arg.kind is arg.KEYWORD_ONLY:
-                info.param_cls = param.KeywordParam
+                info.param_cls = param.Option
             elif arg.kind is arg.POSITIONAL_OR_KEYWORD:
-                info.param_cls = param.PositionalParam
+                info.param_cls = param.Argument
 
     def param_type_override(self, arg: inspect.Parameter, info: ParamInfo):
         """Data types can contain info in a `__param_info__` class variable.

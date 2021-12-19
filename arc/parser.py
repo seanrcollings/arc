@@ -24,10 +24,6 @@ class TokenType(enum.Enum):
     SHORT_KEYWORD = 4
 
 
-## TODO:
-## Matches strip off -- or - from the start of each item
-## in pos_only mode these should be included
-
 # Note that this takes advantage of the fact that dictionaries
 # are ordered.
 matchers = {
@@ -119,47 +115,44 @@ class Parser:
         return self.parsed, self.extra
 
     def parse_keyword(self, token: Token):
-        if (next_token := self.peek()) and next_token.type == TokenType.VALUE:
-            value = self.consume().value
-        else:
-            value = MISSING
 
         param = self._long_names.get(token.value)
 
         if not param:
             if self.allow_extra:
-                self.extra.extend([token.value, value])
+                self.extra.append(token.value)
+                return
             else:
                 raise self.non_existant_arg(token.value)
+
+        if param.is_keyword and self.peek_type() == TokenType.VALUE:
+            value = self.consume().value
         else:
-            self.parsed[param.arg_name] = value
+            value = MISSING
+
+        self.parsed[param.arg_name] = value
 
     def parse_short_keyword(self, token: Token):
-        def process_single(char: str, flag: bool = False):
-            if flag:
-                value = MISSING
-            elif (next_token := self.peek()) and next_token.type == TokenType.VALUE:
+        def process_single(char: str):
+            param = self._short_names.get(char)
+            if not param:
+                if self.allow_extra:
+                    self.extra.append(char)
+                    return
+                else:
+                    raise self.non_existant_arg(token.value)
+
+            if param.is_keyword and self.peek_type() == TokenType.VALUE:
                 value = self.consume().value
             else:
                 value = MISSING
 
-            param = self._short_names.get(char)
-            if not param:
-                if self.allow_extra:
-                    extra = [char]
-                    if value is not MISSING:
-                        extra.append(value)  # type: ignore
-
-                    self.extra.extend(extra)
-                else:
-                    raise self.non_existant_arg(token.value)
-            else:
-                self.parsed[param.arg_name] = value
+            self.parsed[param.arg_name] = value
 
         if len(token.value) > 1:
             # Flags, cannot recieve a value
             for char in token.value:
-                process_single(char, flag=True)
+                process_single(char)
         else:
             # May recieve a value
             process_single(token.value)
@@ -187,9 +180,15 @@ class Parser:
     def peek(self):
         return self.tokens[0] if self.tokens else None
 
+    def peek_type(self) -> t.Optional[TokenType]:
+        next_token = self.peek()
+        if next_token:
+            return next_token.type
+        return None
+
     def non_existant_arg(self, val: str):
         styled = colorize(config.flag_prefix + val, fg.YELLOW)
-        message = f"Argument {styled} not recognized"
+        message = f"Option {styled} not recognized"
 
         suggest_args = [
             param.arg_alias for param in helpers.find_possible_params(self.params, val)

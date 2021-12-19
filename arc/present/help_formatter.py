@@ -33,7 +33,8 @@ class HelpFormatter(TextFormatter):
 
         command.update_param_descriptions()
 
-        self.write_params(command.visible_params)
+        self.write_params("ARGUMENTS", command.pos_params)
+        self.write_params("OPTIONS", command.flag_params + command.key_params)
 
         for section, body in command.parsed_docstring.items():
             if section in {"arguments", "description"}:
@@ -86,8 +87,9 @@ class HelpFormatter(TextFormatter):
 
     def _param_str(self, command: Command):
         params = []
-        for param in (
-            param for param in command.visible_params if not param.is_positional
+        for param in sorted(
+            command.key_params + command.flag_params,
+            key=lambda p: not p.optional,
         ):
             params.append(format(param, "usage"))
 
@@ -99,7 +101,7 @@ class HelpFormatter(TextFormatter):
 
         return " ".join(params)
 
-    def write_params(self, params: t.Collection[Param]):
+    def write_params(self, section: str, params: t.Collection[Param]):
         data = [
             (
                 format(param, "arguments"),
@@ -114,7 +116,7 @@ class HelpFormatter(TextFormatter):
         longest = ansi_len(max(data, key=lambda v: ansi_len(v[0]))[0]) + 2
         self._longest_intro = longest
 
-        with self.section("ARGUMENTS"):
+        with self.section(section):
             for name, desc in data:
 
                 self.write(

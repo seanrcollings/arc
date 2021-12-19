@@ -1,7 +1,7 @@
 import pytest
 from typing import Annotated
 from arc import CLI, errors, config
-from arc.types import VarPositional, VarKeyword, Param, PosParam, KeyParam, FlagParam
+from arc.types import VarPositional, VarKeyword, Param, Argument, Option, Flag
 
 
 class TestSimpleSyntax:
@@ -114,11 +114,50 @@ class TestSimpleSyntax:
         with pytest.raises(errors.UsageError):
             cli("key --val 2")
 
+    def test_flag(self, cli: CLI):
+        @cli.subcommand()
+        def fl(flag: bool):
+            return flag
+
+        assert not cli("fl")
+        assert cli("fl --flag") == True
+
+        with pytest.raises(errors.UnrecognizedArgError):
+            cli("fl --flag 1")
+
+    def test_flag_default(self, cli: CLI):
+        @cli.subcommand()
+        def fa(flag: bool = False):
+            return flag
+
+        @cli.subcommand()
+        def tr(flag: bool = True):
+            return flag
+
+        assert not cli("fa")
+        assert cli("fa --flag") == True
+
+        assert cli("tr") == True
+        assert not cli("tr --flag")
+
+    def test_flag_consume(self, cli: CLI):
+        """Flags should not consume their adjacent value"""
+
+        @cli.subcommand()
+        def test(val: int, flag: bool = Flag(short="f")):
+            return val, flag
+
+        assert cli("test 1") == (1, False)
+        assert cli("test 1 --flag") == (1, True)
+        assert cli("test --flag 1") == (1, True)
+        assert cli("test 1 -f") == (1, True)
+        assert cli("test -f 1") == (1, True)
+
 
 class TestParamSyntax:
     def test_name(self, cli: CLI):
         @cli.subcommand()
-        def na(*, name: str = KeyParam(name="long_name")):
+        def na(*, name: str = Option(name="long_name")):
             return name
 
         assert cli("na --long_name sean") == "sean"
@@ -128,7 +167,7 @@ class TestParamSyntax:
 
     def test_short_args(self, cli: CLI):
         @cli.subcommand()
-        def ar(name: str, flag: bool = FlagParam(short="f")):
+        def ar(name: str, flag: bool = Flag(short="f")):
             return name, flag
 
         assert cli("ar sean --flag") == ("sean", True)
@@ -137,24 +176,20 @@ class TestParamSyntax:
         with pytest.raises(errors.ArgumentError):
 
             @cli.subcommand()
-            def un(
-                arg1: bool = FlagParam(short="a"),
-                arg2: bool = FlagParam(short="a"),
+            def _(
+                arg1: bool = Flag(short="a"),
+                arg2: bool = Flag(short="a"),
             ):
                 ...
-
-            cli("un -a")
 
         with pytest.raises(errors.ArgumentError):
 
             @cli.subcommand()
-            def un(
-                arg1: bool = FlagParam(short="a"),
-                arg2: bool = FlagParam(short="a2"),
+            def _(
+                arg1: bool = Flag(short="a"),
+                arg2: bool = Flag(short="a2"),
             ):
                 ...
-
-            cli("un -a")
 
 
 class TestKebab:

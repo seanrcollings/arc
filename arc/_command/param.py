@@ -59,7 +59,7 @@ class Param:
             return self._format_arguments()
         else:
             raise ValueError(
-                "Invalid value for format spec, must be usage or arguments"
+                "Invalid value for format spec, must be: usage or arguments"
             )
 
     def _format_usage(self):
@@ -74,15 +74,15 @@ class Param:
 
     @property
     def is_keyword(self):
-        return isinstance(self, KeywordParam)
+        return isinstance(self, Option)
 
     @property
     def is_positional(self):
-        return isinstance(self, PositionalParam)
+        return isinstance(self, Argument)
 
     @property
     def is_flag(self):
-        return isinstance(self, FlagParam)
+        return isinstance(self, Flag)
 
     @property
     def is_special(self):
@@ -161,7 +161,7 @@ class Param:
         return self.arg_alias
 
 
-class PositionalParam(Param):
+class Argument(Param):
     def _format_usage(self):
         if self.optional:
             return f"[{self.arg_alias}]"
@@ -169,7 +169,7 @@ class PositionalParam(Param):
         return f"<{self.arg_alias}>"
 
     def _format_arguments(self):
-        return colored(colorize(f"<{self.arg_alias}>", config.brand_color))
+        return colored(colorize(f"{self.arg_alias}", config.brand_color))
 
     def cli_rep(self, short=False) -> str:
         return f"<{self.arg_alias}>"
@@ -193,15 +193,17 @@ class _KeywordFlagShared(Param):
 
         return colored(string)
 
-
-class KeywordParam(_KeywordFlagShared):
     def cli_rep(self, short=False) -> str:
         return (config.short_flag_prefix if short else config.flag_prefix) + (
             self.short if short and self.short else self.arg_alias
         )
 
 
-class FlagParam(_KeywordFlagShared):
+class Option(_KeywordFlagShared):
+    ...
+
+
+class Flag(_KeywordFlagShared):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.default not in {True, False, MISSING}:
@@ -211,11 +213,6 @@ class FlagParam(_KeywordFlagShared):
 
         if self.default is MISSING:
             self.default = False
-
-    def cli_rep(self, short=False) -> str:
-        return (config.short_flag_prefix if short else config.flag_prefix) + (
-            self.short if short and self.short else self.arg_alias
-        )
 
 
 class SpecialParam(Param):

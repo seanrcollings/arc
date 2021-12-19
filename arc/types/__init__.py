@@ -2,7 +2,7 @@
 .. include:: ../../wiki/Data-Types.md
 """
 from .helpers import TypeInfo, convert
-from .params import Param, PosParam, KeyParam, FlagParam, SpecialParam
+from .params import Param, Argument, Option, Flag, SpecialParam
 from .file import *
 from .range import Range
 from .var_types import VarPositional, VarKeyword

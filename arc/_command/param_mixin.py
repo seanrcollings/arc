@@ -3,9 +3,14 @@ Note that in development, all paramaters are insantiated, but
 in production only the command being executed parameters are
 created.
 """
+from __future__ import annotations
 import functools
-from arc._command.param_builder import ParamBuilder
-from arc._command.param import FlagParam, Param
+import typing as t
+
+if t.TYPE_CHECKING:
+    from arc._command.param_builder import ParamBuilder
+
+from arc._command.param import Flag, Param
 
 
 def _help_callback(value, ctx, _param):
@@ -22,7 +27,7 @@ class ParamMixin:
         params = self.builder(self.callback).build()  # type: ignore
         params.insert(
             0,
-            FlagParam(
+            Flag(
                 "help",
                 bool,
                 short="h",

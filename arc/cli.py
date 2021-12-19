@@ -3,7 +3,7 @@ import typing as t
 import sys
 
 from arc import errors, utils, logging
-from arc._command.param import FlagParam
+from arc._command.param import Flag
 from arc.autoload import Autoload
 from arc._command import helpers, Command
 from arc.config import config as config_obj
@@ -69,7 +69,7 @@ class CLI(Command):
                     ctx.exit()
 
             params.append(
-                FlagParam(
+                Flag(
                     "version",
                     bool,
                     short="v",

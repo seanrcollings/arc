@@ -1,7 +1,7 @@
 from typing import Annotated
 import pytest
 from arc import CLI, errors
-from arc.types import VarPositional, VarKeyword, Param, PosParam, KeyParam, FlagParam
+from arc.types import VarPositional, VarKeyword, Param, Argument, Option, Flag
 
 
 def test_basic(cli: CLI):
@@ -33,7 +33,7 @@ def test_default(cli: CLI):
 def test_short_args(cli: CLI):
     @cli.subcommand()
     class Test:
-        val: int = KeyParam(short="v")
+        val: int = Option(short="v")
 
         def handle(self):
             return self.val
