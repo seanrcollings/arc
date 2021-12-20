@@ -1,6 +1,6 @@
 from __future__ import annotations
 import typing as t
-from arc.types.params import as_special_param
+from arc.types.params import special
 from arc.utils import symbol
 
 MISSING = symbol("MISSING")
@@ -9,7 +9,7 @@ if t.TYPE_CHECKING:
     from arc.context import Context
 
 
-@as_special_param(default={})
+@special(default={})
 class State(dict):
     """State object, extends `dict`"""
 

@@ -4,7 +4,7 @@ import typing as t
 
 from arc import errors, logging
 from arc.config import config
-from arc.types.params import as_special_param
+from arc.types.params import special
 from arc import _command as command
 from arc.types.state import State
 
@@ -17,9 +17,13 @@ logger = logging.getArcLogger("ctx")
 T = t.TypeVar("T")
 
 
-@as_special_param(default=object())
+@special(default=object())
 class Context:
-    """Context holds all state relevant to command execution
+    """Context holds all state relevant to a command execution
+
+    The current context can be accessed with `Context.current()`. If
+    you want acces to it inside of a command, you can do so easily
+    by simply annotating an argument with this type.
 
     Attributes:
         command (Command): The command for this context
@@ -27,6 +31,8 @@ class Context:
         fullname (str, optional): The most descriptive name for this invocatio. Defaults to None.
         args (dict[str, typing.Any]): mapping of argument names to parsed values
         extra (list[str]): extra input that may not have been parsed
+        command_chain (list[str]): The chain of commands between the executing command and the
+        `CLI` root. If a command is executing standalone, this will always be empty
     """
 
     # Each time a command is invoked,

@@ -41,7 +41,7 @@ def Param(
     callback: t.Callable = None,
 ) -> t.Any:
     """A CLI Paramater. Automatically decides whether it is
-    a `positional`, `keyword`, or `flag` paramater.
+    a `positional`, `option` or `flag`
 
     # Example
     ```py
@@ -50,10 +50,10 @@ def Param(
         print(val, val2, flag)
     ```
     Each Param type will be determined as follows:
-    - `val`: Precedes the bare `*`.
-    - `val2`: Proceeds the bare `*`. Python considers this a "keyword only"
-        argument, and so does arc
-    - `flag`: Has a `bool` type
+    - `val`:  Positional argument because it precedes the bare `*`.
+    - `val2`: Option argument because  it proceeds the bare `*`.
+              Python considers this a "keyword only" argument, and so does arc
+    - `flag`: Flag argument because it has `bool` type
 
     ```
     $ python example.py test --val2 3 --flag -- 2
@@ -82,7 +82,7 @@ def Argument(
     # Example
     ```py
     @cli.command()
-    def test(val: int = PosParam()):
+    def test(val: int = Argument()):
         print(val)
     ```
 
@@ -108,7 +108,20 @@ def Option(
     description: str = None,
     callback: t.Callable = None,
 ) -> t.Any:
-    """A CLI parameter. Input will be passed in by keyword"""
+    """A (generally optional) keyword paramater.
+
+      # Example
+    ```py
+    @cli.command()
+    def test(val: int = Option()):
+        print(val)
+    ```
+
+    ```
+    $ python example.py test --val 2
+    2
+    ```
+    """
     return ParamInfo(
         param_cls=param.Option,
         arg_alias=name,
@@ -127,7 +140,7 @@ def Flag(
     description: str = None,
     callback: t.Callable = None,
 ) -> t.Any:
-    """A Flag represents a boolean value.
+    """An option that represents a boolean value.
 
     # Example
     ```py
@@ -209,7 +222,7 @@ def __cls_deco_factory(param_cls: type[param.Param]):
     return decorator
 
 
-as_pos_param = __cls_deco_factory(param.Argument)
-as_keyword_param = __cls_deco_factory(param.Option)
-as_flag_param = __cls_deco_factory(param.Flag)
-as_special_param = __cls_deco_factory(param.SpecialParam)
+argument = __cls_deco_factory(param.Argument)
+option = __cls_deco_factory(param.Option)
+flag = __cls_deco_factory(param.Flag)
+special = __cls_deco_factory(param.SpecialParam)

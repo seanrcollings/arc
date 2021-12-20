@@ -82,8 +82,8 @@ class ParamBuilder:
             elif arg.kind is arg.POSITIONAL_ONLY:
                 raise errors.ArgumentError(
                     "Positional only arguments are not allowed as arc "
-                    "passes all arguments by keyword internally"
-                    f"please remove the {colorize('/', fg.YELLOW)} from",
+                    "passes all arguments by keyword internally "
+                    f"please remove the {colorize('/', fg.YELLOW)} from "
                     "your function definition",
                 )
             elif arg.kind is arg.KEYWORD_ONLY:
