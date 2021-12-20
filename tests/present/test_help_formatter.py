@@ -1,10 +1,13 @@
 import pytest
-from arc.command.command import Command
-from arc.execution_state import ExecutionState
+from arc._command.command import Command
 from arc.config import config
-from arc import CLI
+from arc import CLI, command
 from arc.present.help_formatter import HelpFormatter
 from arc.types import Param
+from arc.context import Context
+
+# Because pytest is the program that is executing these tests, it will be the automatic name
+# for commands that do not specify an explicit name
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -14,69 +17,81 @@ def disable_ansi():
     config.ansi = True
 
 
-def gen_help(command: Command, state: ExecutionState = None, **kwargs):
-    f = HelpFormatter(**kwargs)
-    f.write_help(command, state)
-    return f
-
-
-def gen_state(parent: Command, *commands: Command):
-    state = ExecutionState.empty()
-    state.command_chain = [parent, *commands]
-    state.command_namespace = [command.name for command in commands]
-    return state
-
-
 def get_lines(string: str, from_line: int, to_line: int):
     return "\n".join(string.split("\n")[from_line:to_line])
 
 
-def test_basic(cli: CLI):
+def test_command():
+    @command()
+    def test(val: int = Param(description="Some cool value")):
+        """description"""
+        print(val)
+
+    # run so it generates it generates the command name
+    test("2")
+    assert (
+        test.get_help(test.create_ctx(test.name))
+        == """\
+USAGE
+    pytest [--help] [--] <val>
+
+DESCRIPTION
+    description
+
+ARGUMENTS
+    val  Some cool value
+
+OPTIONS
+    --help (-h)  Shows help documentation
+"""
+    )
+
+
+def test_cli(cli: CLI):
+    cli.version = "0.0.1"
+    del cli.params
+
     @cli.command()
-    def test():
+    def command():
         """description content
         second line
         """
 
-    f = gen_help(cli, width=80)
     assert (
-        f.value
+        cli.get_help(cli.create_ctx(cli.name))
         == """\
 USAGE
-    cli <command> [arguments ...]
+    test <command> [ARGUMENTS ...]
 
-DESCRIPTION
-    View specific help with "help <command-name>"
-
-ARGUMENTS
-    --help (-h)     display this help
-    --version (-v)  display application version
+OPTIONS
+    --help (-h)     Shows help documentation
+    --version (-v)  Displays the app's current version
 
 SUBCOMMANDS
     debug           debug utilties for an arc application
-    help            Displays information for a given command
-    test            description content
+    command         description content
 """
     )
 
-    state = gen_state(cli, test)
-    f = gen_help(test, state, width=80)
     assert (
-        f.value
+        command.get_help(cli.create_ctx(cli.name).child_context(command))
         == """\
 USAGE
-    cli test
+    test command [--help]
 
 DESCRIPTION
     description content second line
+
+OPTIONS
+    --help (-h)  Shows help documentation
 """
     )
 
 
 def test_docstring_parsing(cli: CLI):
     @cli.command()
-    def test(arg1: int = Param(description="overide"), arg2=Param()):
-        """This is the descriptions
+    def command(arg1: int = Param(description="overide"), arg2=Param()):
+        """This is the description
 
         This is a second paragraph
 
@@ -90,22 +105,23 @@ def test_docstring_parsing(cli: CLI):
         """
         ...
 
-    state = gen_state(cli, test)
-    f = gen_help(test, state, width=80)
     assert (
-        f.value
+        command.get_help(cli.create_ctx(cli.name).child_context(command))
         == """\
 USAGE
-    cli test <arg1> <arg2>
+    test command [--help] [--] <arg1> <arg2>
 
 DESCRIPTION
-    This is the descriptions
+    This is the description
 
     This is a second paragraph
 
 ARGUMENTS
-    <arg1>  overide
-    <arg2>  this is a argument description
+    arg1  overide
+    arg2  this is a argument description
+
+OPTIONS
+    --help (-h)  Shows help documentation
 
 EXAMPLES
     > example 1
@@ -116,24 +132,25 @@ EXAMPLES
 
 def test_preserve_paragraph(cli: CLI):
     @cli.command()
-    def test():
+    def command():
         """para 1
 
         para 2
         """
 
-    state = gen_state(cli, test)
-    f = gen_help(test, state, width=80)
     assert (
-        f.value
+        command.get_help(cli.create_ctx(cli.name).child_context(command))
         == """\
 USAGE
-    cli test
+    test command [--help]
 
 DESCRIPTION
     para 1
 
     para 2
+
+OPTIONS
+    --help (-h)  Shows help documentation
 """
     )
 
@@ -145,7 +162,7 @@ def test_arguments(cli: CLI):
         pos_opt: int = Param(description="positional optional", default=1),
         *,
         key_req: int = Param(description="key required", short="r"),
-        key_opt: int = Param(description="key required", default=1),
+        key_opt: int = Param(description="key optional", default=1),
         flag: bool = Param(
             description="""
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
@@ -158,25 +175,29 @@ def test_arguments(cli: CLI):
     ):
         ...
 
-    state = gen_state(cli, command)
-    f = gen_help(command, state, width=100)
-
+    # The text wrapping is not 100% consistent, so this isn't
+    # 1-to-1 with the actual execution
     assert (
-        f.value
+        command.get_help(cli.create_ctx(cli.name).child_context(command))
         == """\
 USAGE
-    cli command --key-req <...> [--key-opt <...>] [--flag] [--] <pos-req> [pos-opt]
+    test command [--key-opt <...>] [--help] [--flag] --key-req <...> [--]
+    <pos-req> [pos-opt]
 
 ARGUMENTS
-    <pos-req>       positional required
-    <pos-opt>       positional optional
+    pos-req  positional required
+    pos-opt  positional optional
+
+OPTIONS
+    --help (-h)     Shows help documentation
+    --flag          Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    Proin iaculis vel sapien sit amet facilisis. Phasellus
+                    purus velit, feugiat non posuere id, commodo a odio. Sed
+                    nibh tellus, fermentum ac gravida quis, commodo sed metus.
+                    Suspendisse sed dui nec lacus efficitur malesuada. Nullam
+                    euismod ante a eros consectetur faucibus.
     --key-req (-r)  key required
-    --key-opt       key required
-    --flag          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin iaculis vel
-                    sapien sit amet facilisis. Phasellus purus velit, feugiat non posuere id,
-                    commodo a odio. Sed nibh tellus, fermentum ac gravida quis, commodo sed metus.
-                    Suspendisse sed dui nec lacus efficitur malesuada. Nullam euismod ante a eros
-                    consectetur faucibus.
+    --key-opt       key optional
 """
     )
 
@@ -187,7 +208,7 @@ def test_argument_desc_precedence(cli: CLI):
     """
 
     @cli.command()
-    def test(arg1: int = Param(description="overide"), arg2=Param()):
+    def command(arg1: int = Param(description="overide"), arg2=Param()):
         """desc
 
         # Arguments
@@ -196,19 +217,20 @@ def test_argument_desc_precedence(cli: CLI):
         """
         ...
 
-    state = gen_state(cli, test)
-    f = gen_help(test, state, width=100)
     assert (
-        f.value
+        command.get_help(cli.create_ctx(cli.name).child_context(command))
         == """\
 USAGE
-    cli test <arg1> <arg2>
+    test command [--help] [--] <arg1> <arg2>
 
 DESCRIPTION
     desc
 
 ARGUMENTS
-    <arg1>  overide
-    <arg2>  does show
+    arg1  overide
+    arg2  does show
+
+OPTIONS
+    --help (-h)  Shows help documentation
 """
     )

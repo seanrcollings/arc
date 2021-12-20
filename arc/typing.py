@@ -15,3 +15,11 @@ class TypeProtocol(t.Protocol):
 
 
 CompareReturn = t.Literal[-1, 0, 1]
+
+
+@t.runtime_checkable
+class ClassCallback(t.Protocol):
+    __name__: str
+
+    def handle(self) -> t.Any:
+        ...

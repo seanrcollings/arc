@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 
 from arc import logging
-from arc.command import Command
+from arc._command import Command
 from arc.color import fg, effects
 from arc.errors import CommandError
 

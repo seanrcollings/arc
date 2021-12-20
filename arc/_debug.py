@@ -2,7 +2,6 @@ import os
 from pprint import pprint
 
 from arc import namespace, CLI
-from arc.types import Context
 from arc.config import config, Config
 from arc.types import aliases
 from arc.present import Table, Box
@@ -62,6 +61,6 @@ def arcfile():
 
 
 @debug.subcommand()
-def schema(ctx: Context):
+def schema(ctx):
     """Prints out a dictionary representation of the CLI"""
     pprint(ctx.state.root.schema())

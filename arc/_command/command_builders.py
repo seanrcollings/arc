@@ -3,34 +3,27 @@ from typing import Callable
 
 from arc import result, logging
 from arc.color import colorize, fg
-from arc.types import Context
 
-from arc.command.command import Command
+from arc._command.command import Command
+from arc.context import Context
 
 logger = logging.getArcLogger("build")
 
 
-def no_op(ctx: Context):
-
-    return result.Err(
-        f"{colorize(ctx.state.command_name, fg.YELLOW)} is not executable. "
-        f"Check {colorize('help ' + ctx.state.command_name, fg.ARC_BLUE)} for subcommands"
-    )
-
-
 def helper(ctx: Context):
-    logger.warning("%s is not executable.", colorize(ctx.state.command_name, fg.YELLOW))
-    return ctx.state.root(f"help {ctx.state.command_name}")
+    logger.error("%s is not executable.", colorize(ctx.fullname, fg.YELLOW))
+    print(ctx.command.get_help(ctx))
+    ctx.exit(1)
 
 
-def namespace(name: str, show_help: bool = True, **kwargs) -> Command:
+def namespace(name: str, **kwargs) -> Command:
     """Creates a non-executable Command namespace.
 
     Namespaces are autoloadable with `cli.autoload()`
 
     Args:
         name: name of the namespace / command
-        context: dict of context values to be used in this namespace and below
+        state: dict of context values to be used in this namespace and below
 
     Usage:
     ```py
@@ -45,12 +38,12 @@ def namespace(name: str, show_help: bool = True, **kwargs) -> Command:
     When installed into a CLI, the function could be executed with `ns:hello`
     but `ns` would not be a valid command
     """
-    c = Command(name, helper if show_help else no_op, **kwargs)
+    c = Command(helper, name, **kwargs)
     c.__autoload__ = True  # type: ignore
     return c
 
 
-def command(name: str = None, **kwargs) -> Callable[[Callable], Command]:
+def command(name: str = "", **kwargs) -> Callable[[Callable], Command]:
     """Creates an executable Command namespace.
 
     Autoloadable with `cli.autoload()`
@@ -63,7 +56,7 @@ def command(name: str = None, **kwargs) -> Callable[[Callable], Command]:
     ```py
     from arc import command
 
-    @command
+    @command()
     def hello():
         print('Hi there')
     ```
@@ -71,8 +64,8 @@ def command(name: str = None, **kwargs) -> Callable[[Callable], Command]:
     """
 
     def inner(function: Callable):
-        cmd_name = name or function.__name__
-        c = Command(cmd_name, function, **kwargs)
+        # cmd_name = name or function.__name__
+        c = Command(function, name, **kwargs)
         c.__autoload__ = True  # type: ignore
         return c
 

@@ -19,7 +19,7 @@ from arc import utils, result
 if TYPE_CHECKING:
     from arc.typing import Annotation
     from arc.types.aliases import TypeProtocol
-    from arc.execution_state import ExecutionState
+    from arc.context import Context
 
 
 T = TypeVar("T")
@@ -101,10 +101,10 @@ def convert(
     protocol: type[TypeProtocol],
     value: Any,
     info: TypeInfo,
-    state: ExecutionState,
+    ctx: Context,
 ):
     """Uses `protocol` to convert `value`"""
-    return utils.dispatch_args(protocol.__convert__, value, info, state)
+    return utils.dispatch_args(protocol.__convert__, value, info, ctx)
 
 
 def safe_issubclass(typ, classes: Union[type, tuple[type, ...]]):
@@ -163,25 +163,3 @@ def match(pattern: str, string: str) -> result.Result[None, str]:
         return result.Err(f"does not follow required format: {pattern}")
 
     return result.Ok()
-
-
-# def properties(*names: str, writeable=False) -> Callable[[T], T]:
-#     def inner(cls: T):
-#         for name in names:
-
-#             getter = lambda self, name=name: getattr(self, f"_{name}")
-
-#             if writeable:
-#                 setter: Union[Callable, None] = lambda self, value, name=name: setattr(
-#                     self, f"_{name}", value
-#                 )
-#             else:
-#                 setter = None
-
-#             prop = property(getter, setter)
-
-#             setattr(cls, name, prop)
-
-#         return cls
-
-#     return inner

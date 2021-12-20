@@ -1,33 +1,47 @@
 """Public API for hanlding paramater modification"""
 from __future__ import annotations
-from typing import Any, TypeVar
-from arc.command import param
+import typing as t
+from arc._command import param
 
 
 class ParamInfo:
     def __init__(
         self,
         param_cls: type[param.Param] = None,
-        name: str = None,
+        arg_alias: str = None,
         short: str = None,
-        default: Any = param.MISSING,
+        default: t.Any = param.MISSING,
         description: str = None,
+        callback: t.Callable = None,
     ):
         self.param_cls = param_cls
-        self.name = name
+        self.arg_alias = arg_alias
         self.short = short
         self.default = default
         self.description = description
+        self.callback = callback
+
+    def dict(self):
+        """Used to pass to `Param()` as **kwargs"""
+        return {
+            "arg_alias": self.arg_alias,
+            "short": self.short,
+            "default": self.default,
+            "description": self.description,
+            "callback": self.callback,
+        }
 
 
 def Param(
+    *,
     name: str = None,
     short: str = None,
-    default: Any = param.MISSING,
+    default: t.Any = param.MISSING,
     description: str = None,
-) -> Any:
+    callback: t.Callable = None,
+) -> t.Any:
     """A CLI Paramater. Automatically decides whether it is
-    a `positional`, `keyword`, or `flag` paramater.
+    a `positional`, `option` or `flag`
 
     # Example
     ```py
@@ -36,105 +50,155 @@ def Param(
         print(val, val2, flag)
     ```
     Each Param type will be determined as follows:
-    - `val`: Precedes the bare `*`.
-    - `val2`: Proceeds the bare `*`. Python considers this a "keyword only"
-        argument, and so does arc
-    - `flag`: Has a `bool` type
+    - `val`:  Positional argument because it precedes the bare `*`.
+    - `val2`: Option argument because  it proceeds the bare `*`.
+              Python considers this a "keyword only" argument, and so does arc
+    - `flag`: Flag argument because it has `bool` type
 
     ```
     $ python example.py test --val2 3 --flag -- 2
     2 3 True
     ```
     """
-    return ParamInfo(None, name, short, default, description)
+    return ParamInfo(
+        None,
+        arg_alias=name,
+        short=short,
+        default=default,
+        description=description,
+        callback=callback,
+    )
 
 
-def PosParam(
+def Argument(
+    *,
     name: str = None,
-    default: Any = param.MISSING,
+    default: t.Any = param.MISSING,
     description: str = None,
-) -> Any:
+    callback: t.Callable = None,
+) -> t.Any:
     """A CLI Paramater. Input will be passed in positionally.
 
     # Example
     ```py
     @cli.command()
-    def test(val: int = PosParam()):
+    def test(val: int = Argument()):
         print(val)
     ```
 
     ```
-    $ python example.py command 2
+    $ python example.py test 2
     2
     ```
     """
     return ParamInfo(
-        param_cls=param.PositionalParam,
-        name=name,
+        param_cls=param.Argument,
+        arg_alias=name,
         default=default,
         description=description,
+        callback=callback,
     )
 
 
-def KeyParam(
+def Option(
+    *,
     name: str = None,
     short: str = None,
-    default: Any = param.MISSING,
+    default: t.Any = param.MISSING,
     description: str = None,
-) -> Any:
-    """A CLI parameter. Input will be passed in by keyword"""
+    callback: t.Callable = None,
+) -> t.Any:
+    """A (generally optional) keyword paramater.
+
+      # Example
+    ```py
+    @cli.command()
+    def test(val: int = Option()):
+        print(val)
+    ```
+
+    ```
+    $ python example.py test --val 2
+    2
+    ```
+    """
     return ParamInfo(
-        param_cls=param.KeywordParam,
-        name=name,
+        param_cls=param.Option,
+        arg_alias=name,
         short=short,
         default=default,
         description=description,
+        callback=callback,
     )
 
 
-def FlagParam(
+def Flag(
+    *,
     name: str = None,
     short: str = None,
     default: bool = False,
     description: str = None,
-) -> Any:
-    """A CLI parameter. Input will be passed in by
-    keyword, but a value is not neccessary"""
+    callback: t.Callable = None,
+) -> t.Any:
+    """An option that represents a boolean value.
+
+    # Example
+    ```py
+    @cli.command()
+    def test(val: bool = Flag()):
+        print(val)
+    ```
+
+    ```
+    $ python example.py test
+    False
+    $ python example.py test --flag
+    True
+    ```
+    """
     return ParamInfo(
-        param_cls=param.FlagParam,
-        name=name,
+        param_cls=param.Flag,
+        arg_alias=name,
         short=short,
         default=default,
         description=description,
+        callback=callback,
     )
 
 
 def SpecialParam(
     name: str = None,
     short: str = None,
-    default: Any = param.MISSING,
+    default: t.Any = param.MISSING,
     description: str = None,
-) -> Any:
-    """Special Params do not select a value from user input.
-    As such, they're values must originate elsewhere, or be manually selected.
+    callback: t.Callable = None,
+) -> t.Any:
+    """Params marked as "Special" are not exposed to the command line
+    interface and cannot recieve user input. As such, they're values
+    are expected to come from elsewhere. This allows commands to recieve
+    their values like regular params, but still have them act in a particular
+    way.
+
+    It is primarly used for some builtin-types like `State` and `Context`.
     """
     return ParamInfo(
         param_cls=param.SpecialParam,
-        name=name,
+        arg_alias=name,
         short=short,
         default=default,
         description=description,
+        callback=callback,
     )
 
 
-T = TypeVar("T")
+T = t.TypeVar("T")
 
 
 def __cls_deco_factory(param_cls: type[param.Param]):
     def decorator(
         name: str = None,
         short: str = None,
-        default: Any = param.MISSING,
+        default: t.Any = param.MISSING,
         description: str = None,
         overwrite: bool = False,
     ):
@@ -144,7 +208,7 @@ def __cls_deco_factory(param_cls: type[param.Param]):
                 "__param_info__",
                 {
                     "param_cls": param_cls,
-                    "name": name,
+                    "arg_alias": name,
                     "short": short,
                     "default": default,
                     "description": description,
@@ -158,7 +222,7 @@ def __cls_deco_factory(param_cls: type[param.Param]):
     return decorator
 
 
-as_pos_param = __cls_deco_factory(param.PositionalParam)
-as_keyword_param = __cls_deco_factory(param.KeywordParam)
-as_flag_param = __cls_deco_factory(param.FlagParam)
-as_special_param = __cls_deco_factory(param.SpecialParam)
+argument = __cls_deco_factory(param.Argument)
+option = __cls_deco_factory(param.Option)
+flag = __cls_deco_factory(param.Flag)
+special = __cls_deco_factory(param.SpecialParam)

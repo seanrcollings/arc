@@ -2,7 +2,7 @@ from unittest import mock
 from pathlib import Path
 import pytest
 
-from arc import CLI, namespace
+from arc import CLI, namespace, errors
 from arc.errors import CommandError
 from arc._debug import debug
 
@@ -34,7 +34,7 @@ def test_execute(cli: CLI):
 
 
 def test_nonexistant_command(cli: CLI):
-    with pytest.raises(CommandError):
+    with pytest.raises(errors.Exit):
         cli("doesnotexist x=2")
 
 

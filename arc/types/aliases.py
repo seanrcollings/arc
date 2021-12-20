@@ -25,7 +25,7 @@ from arc.types.helpers import (
 from arc.typing import Annotation, TypeProtocol
 
 if t.TYPE_CHECKING:
-    from arc.execution_state import ExecutionState
+    from arc.context import Context
 
 
 logger = logging.getArcLogger("ali")
@@ -49,14 +49,14 @@ class Alias:
     g_convert: t.Callable
 
     @classmethod
-    def __convert__(cls, value, typ: TypeInfo, state: ExecutionState):
+    def __convert__(cls, value, typ: TypeInfo, ctx: Context):
         if cls.name:
             typ._name = cls.name
 
         if not typ.sub_types:
-            obj = utils.dispatch_args(cls.convert, value, typ, state)
+            obj = utils.dispatch_args(cls.convert, value, typ, ctx)
         else:
-            obj = utils.dispatch_args(cls.g_convert, value, typ, state)
+            obj = utils.dispatch_args(cls.g_convert, value, typ, ctx)
 
         # Alias types that have an associated "strict" type
         # will always return an instance of themselves, so all
@@ -101,7 +101,7 @@ class Alias:
                     return cls.aliases[parent]
 
         name = colorize(annotation.__name__, fg.YELLOW)
-        raise errors.MissingParamType(
+        raise errors.ArgumentError(
             f"{name} is not a valid type. "
             f"Please ensure that {name} conforms to the custom type protocol "
             f"or that there is a alias type registered for it: "
@@ -157,7 +157,7 @@ class _NumberBaseAlias(Alias):
         try:
             converted = cls(value)  # type: ignore
         except ValueError as e:
-            raise errors.ConversionError(value, str(e)) from e
+            raise errors.ConversionError(value, "invalid value", str(e)) from e
 
         return converted
 
@@ -238,13 +238,13 @@ class _CollectionAlias(Alias):
         return cls.alias_for(value.split(","))
 
     @classmethod
-    def g_convert(cls, value: str, typ: TypeInfo, state):
+    def g_convert(cls, value: str, typ: TypeInfo, ctx):
         lst = cls.convert(value)
         sub = typ.sub_types[0]
         sub_type = Alias.resolve(sub)
 
         try:
-            return cls.alias_for([sub_type.__convert__(v, sub, state) for v in lst])
+            return cls.alias_for([sub_type.__convert__(v, sub, ctx) for v in lst])
         except errors.ConversionError as e:
             raise errors.ConversionError(
                 value,
@@ -262,12 +262,12 @@ class SetAlias(set, _CollectionAlias, of=set):
 
 class TupleAlias(tuple, _CollectionAlias, of=tuple):
     @classmethod
-    def g_convert(cls, value: str, info: TypeInfo, state: ExecutionState):
+    def g_convert(cls, value: str, info: TypeInfo, ctx: Context):
         tup = cls.convert(value)
 
         # Arbitraryily sized tuples
         if cls.any_size(info):
-            return super().g_convert(value, info, state)
+            return super().g_convert(value, info, ctx)
 
         # Statically sized tuples
         if len(info.sub_types) != len(tup):
@@ -276,7 +276,7 @@ class TupleAlias(tuple, _CollectionAlias, of=tuple):
             )
 
         return tuple(
-            convert(Alias.resolve(item_type), item, item_type, state)
+            convert(Alias.resolve(item_type), item, item_type, ctx)
             for item_type, item in zip(info.sub_types, tup)
         )
 
@@ -290,16 +290,16 @@ class DictAlias(dict, Alias, of=dict):
     name = "dictionary"
 
     @classmethod
-    def convert(cls, value: str, info: TypeInfo, state):
+    def convert(cls, value: str, info: TypeInfo, ctx):
         dct = cls.alias_for(i.split("=") for i in value.split(","))
         if isinstance(info.origin, t._TypedDictMeta):  # type: ignore
-            return cls.__typed_dict_convert(dct, info, state)
+            return cls.__typed_dict_convert(dct, info, ctx)
 
         return dct
 
     @classmethod
-    def g_convert(cls, value, info: TypeInfo, state):
-        dct: dict = cls.convert(value, info, state)
+    def g_convert(cls, value, info: TypeInfo, ctx):
+        dct: dict = cls.convert(value, info, ctx)
         key_sub = info.sub_types[0]
         key_type = Alias.resolve(key_sub)
         value_sub = info.sub_types[1]
@@ -309,8 +309,8 @@ class DictAlias(dict, Alias, of=dict):
             return cls.alias_for(
                 [
                     (
-                        convert(key_type, k, key_sub, state),
-                        convert(value_type, v, value_sub, state),
+                        convert(key_type, k, key_sub, ctx),
+                        convert(value_type, v, value_sub, ctx),
                     )
                     for k, v in dct.items()
                 ]
@@ -324,7 +324,7 @@ class DictAlias(dict, Alias, of=dict):
             ) from e
 
     @classmethod
-    def __typed_dict_convert(cls, elements: dict[str, str], info: TypeInfo, state):
+    def __typed_dict_convert(cls, elements: dict[str, str], info: TypeInfo, ctx):
         hints = t.get_type_hints(info.origin, include_extras=True)
         for key, value in elements.items():
             if key not in hints:
@@ -336,7 +336,7 @@ class DictAlias(dict, Alias, of=dict):
 
             sub_type = Alias.resolve(hints[key])
             try:
-                elements[key] = convert(sub_type, value, info, state)
+                elements[key] = convert(sub_type, value, info, ctx)
             except errors.ConversionError as e:
                 raise errors.ConversionError(
                     value, f"{value} is not a valid value for key {key}", e
@@ -350,12 +350,12 @@ class DictAlias(dict, Alias, of=dict):
 
 class UnionAlias(Alias, of=t.Union):
     @classmethod
-    def g_convert(cls, value: t.Any, info: TypeInfo, state):
+    def g_convert(cls, value: t.Any, info: TypeInfo, ctx):
 
         for sub in info.sub_types:
             try:
                 type_cls = Alias.resolve(sub)
-                return convert(type_cls, value, sub, state)
+                return convert(type_cls, value, sub, ctx)
             except Exception:
                 ...
 

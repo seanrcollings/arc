@@ -1,7 +1,7 @@
 from __future__ import annotations
 import typing as t
 
-from arc.types.params import as_special_param
+from arc.types.params import special
 from arc.types.aliases import Alias
 from arc.types.helpers import TypeInfo
 from arc import utils
@@ -12,7 +12,7 @@ if t.TYPE_CHECKING:
 T = t.TypeVar("T")
 
 
-@as_special_param(default=[])
+@special(default=[])
 class VarPositional(list[T]):
     @classmethod
     def __convert__(cls, _value, info: TypeInfo, state: ExecutionState):
@@ -30,7 +30,7 @@ class VarPositional(list[T]):
         return values
 
 
-@as_special_param(default={})
+@special(default={})
 class VarKeyword(dict[str, T]):
     @classmethod
     def __convert__(cls, _value, info: TypeInfo, state: ExecutionState):
@@ -38,7 +38,7 @@ class VarKeyword(dict[str, T]):
         kwargs = {
             name: value
             for name, value in state.parsed["key_values"].items()
-            if name not in state.executable.key_params | state.executable.flag_params
+            if name not in state.executable.key_params + state.executable.flag_params
         }
         state.parsed["key_values"] = {
             name: value
