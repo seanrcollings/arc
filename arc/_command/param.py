@@ -175,7 +175,7 @@ class Argument(Param):
         return f"<{self.arg_alias}>"
 
 
-class _KeywordFlagShared(Param):
+class _OptionShared(Param):
     def _format_usage(self):
         string = f"{config.flag_prefix}{self.arg_alias}"
         if self.is_keyword:
@@ -199,11 +199,11 @@ class _KeywordFlagShared(Param):
         )
 
 
-class Option(_KeywordFlagShared):
+class Option(_OptionShared):
     ...
 
 
-class Flag(_KeywordFlagShared):
+class Flag(_OptionShared):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.default not in {True, False, MISSING}:

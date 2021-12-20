@@ -49,8 +49,8 @@ class ParamBuilder:
             # for the command line. However, this can be ignored
             # by declaring an explicit name in the ParamInfo
             # or by setting the config value to false
-            if config.transform_snake_case and not info.name:
-                info.name = arg.name.replace("_", "-")
+            if config.transform_snake_case and not info.arg_alias:
+                info.arg_alias = arg.name.replace("_", "-")
 
             should_negotiate_param_type = self.param_type_override(arg, info)
             if should_negotiate_param_type:
@@ -59,10 +59,7 @@ class ParamBuilder:
             param_obj = info.param_cls(
                 arg_name=arg.name,
                 annotation=arg.annotation,
-                arg_alias=info.name,
-                short=info.short,
-                default=info.default,
-                description=info.description,
+                **info.dict(),
             )
 
             params.append(param_obj)
