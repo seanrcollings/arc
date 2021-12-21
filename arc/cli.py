@@ -1,15 +1,16 @@
-import logging
-from typing import Annotated, Callable, Optional, Any
+from functools import cached_property
+import typing as t
+import sys
 
-from arc import utils
+from arc import errors, utils, logging
+from arc._command.param import Flag
 from arc.autoload import Autoload
-from arc.command.argument_parser import Parsed
-
-from arc.types.params import Meta, VarKeyword
-from arc.command import Command, Context
+from arc._command import helpers, Command
 from arc.config import config as config_obj
-from arc.run import find_command_chain, get_command_namespace, run
-from arc.execution_state import ExecutionState
+from arc.context import Context
+
+
+logger = logging.getArcLogger("cli")
 
 
 class CLI(Command):
@@ -17,27 +18,31 @@ class CLI(Command):
 
     def __init__(
         self,
-        name: str = "cli",
-        function: Callable = None,
-        config: dict[str, Any] = None,
+        name: str = None,
+        config: dict[str, t.Any] = None,
         config_file: str = None,
-        context: dict = None,
-        version: str = "¯\\_(ツ)_/¯",
+        state: dict = None,
+        version: str = None,
+        **ctx_dict,
     ):
-        """Creates a CLI object.
+        """
         Args:
             name: name of the CLI, will be used in the help command.
-            function: function that defines the CLI's default behavior.
-                Identical to calling `@cli.default()`.
-            arcfile: arc config file to load. defaults to ./.arc
-            context: dictionary of key value pairs to pass to children as context
+            config: dictonary of configuration values
+            config_file: filename to load configuration information from
+            state: dictionary of key value pairs to pass to commands
             version: Version string to display with `--version`
+            ctx_dict: additional keyword arguments to pass to the execution
+            context
         """
 
+        self.version = version
+
         super().__init__(
-            name,
-            self.missing_command,
-            context,
+            lambda: print("CLI stub function."),
+            name or utils.discover_name(),
+            state,
+            **ctx_dict,
         )
 
         if config:
@@ -45,27 +50,80 @@ class CLI(Command):
         if config_file:
             config_obj.from_file(config_file)
 
-        self.__logging_setup()
+        logging.root_setup()
         utils.header("INIT")
-        self.version = version
-        self.install_command(Command("help", self.helper))
-        self.default_action: Optional[Command] = (
-            self.default()(function) if function else None
-        )
 
-    # pylint: disable=arguments-differ
-    def __call__(  # type: ignore
+        if config_obj.mode == "development":
+            from ._debug import debug  # pylint: disable=import-outside-toplevel
+
+            self.install_command(debug)
+
+    @cached_property
+    def params(self):
+        params = super().params
+        if self.version:
+
+            def _version_callback(value, ctx: Context, _param):
+                if value:
+                    print(self.version)
+                    ctx.exit()
+
+            params.append(
+                Flag(
+                    "version",
+                    bool,
+                    short="v",
+                    description="Displays the app's current version",
+                    callback=_version_callback,
+                )
+            )
+
+        return params
+
+    @utils.timer("Running CLI")
+    def main(
         self,
-        execute: str = None,
-        handle_exception: bool = True,
-        check_result: bool = True,
+        args: t.Union[str, list[str]] = None,
+        fullname: str = None,
+        **kwargs,
     ):
-        return run(
-            self,
-            execute,
-            handle_exception=handle_exception,
-            check_result=check_result,
-        )
+        utils.header("CLI")
+        try:
+            with self.create_ctx(
+                fullname or self.name, **(self.ctx_dict | kwargs)
+            ) as ctx:
+                args = t.cast(list[str], self.get_args(args))
+                if not args:
+                    logger.debug("No arguments present")
+                    print(self.get_usage(ctx))
+                    return
+
+                subcommand_name = args.pop(0)
+                command_namespace = helpers.get_command_namespace(subcommand_name)
+                if not command_namespace:
+                    logger.debug("%s is not a valid command namespace", subcommand_name)
+                    args.append(subcommand_name)
+                    return super().main(args)
+
+                logger.debug("Executing subcommand: %s", subcommand_name)
+                try:
+                    command_chain = helpers.find_command_chain(self, command_namespace)
+                except errors.CommandNotFound as e:
+                    print(str(e))
+                    raise errors.Exit(1)
+
+                return command_chain[-1].main(
+                    args,
+                    subcommand_name,
+                    parent=ctx,
+                    command_chain=command_chain,
+                )
+
+        except errors.Exit as e:
+            if config_obj.mode == "development" and e.code != 0:
+                raise
+
+            sys.exit(e.code)
 
     def command(self, *args, **kwargs):
         """Alias for `Command.subcommand`
@@ -75,50 +133,14 @@ class CLI(Command):
         """
         return self.subcommand(*args, **kwargs)
 
-    def default(self, name=None, **kwargs):
-        """Define The CLI's default behavior
-        when not given a specific command. Has the same interface
-        as `Command.subcommand`
-        """
-
-        def decorator(wrapped):
-            if isinstance(wrapped, Command):
-                wrapped = wrapped.executable.wrapped
-
-            self.default_action = Command(
-                name or wrapped.__name__,
-                wrapped,
-                **kwargs,
-            )
-
-            return self.default_action
-
-        return decorator
-
-    # pylint: disable=redefined-builtin
-    def missing_command(
-        self,
-        _help: Annotated[bool, Meta(name="help", short="h")],
-        version: Annotated[bool, Meta(short="v")],
-        ctx: Context,
-        kwargs: VarKeyword,
-    ):
-        """View specific help with "help <command-name>"
-
-        # Arguments
-            help: shows this help
-            version: displays the version
-        """
-        if _help:
-            return self("help")
-        elif version:
-            print(self.name, self.version)
-            return
-        elif self.default_action:
-            ctx.state.command_chain += [self.default_action]
-            return self.default_action.run(ctx.state)
-
-        return self("help")
+    def schema(self):
+        return {
+            "name": self.name,
+            "version": self.version,
+            "subcommands": {
+                name: command.schema() for name, command in self.subcommands.items()
+            },
+        }
 
     def autocomplete(self, completions_for: str = None):
         """Enables autocompletion support for this CLI
@@ -132,8 +154,8 @@ class CLI(Command):
         # pylint: disable=import-outside-toplevel
         from .autocomplete import autocomplete
 
-        autocomplete.context["cli"] = self
-        autocomplete.context["init"] = {"completions_for": completions_for or self.name}
+        autocomplete.state["cli"] = self
+        autocomplete.state["init"] = {"completions_for": completions_for or self.name}
         self.install_command(autocomplete)
 
     @utils.timer("Autoloading")
@@ -141,45 +163,3 @@ class CLI(Command):
         """Attempts to autoload command objects
         into the CLI from the provided paths"""
         Autoload(paths, self).load()
-
-    def helper(self, command_name: Annotated[str, Meta(default="")]):
-        """Displays information for a given command
-        By default, shows help for the top-level command.
-        To see a specific command's information, provide
-        a command name (some:command:name)
-        """
-        parsed: Parsed = {"pos_values": [command_name], "key_values": {}}
-        namespace = get_command_namespace(parsed)
-        chain = find_command_chain(self, namespace)
-        state = ExecutionState(
-            user_input=[],
-            command_namespace=namespace,
-            command_chain=chain,
-            parsed=parsed,
-        )
-        print(state.command.doc(state))
-
-    def __logging_setup(self):
-        root = logging.getLogger("arc_logger")
-        if len(root.handlers) == 0:
-            level = config_obj.mode_map.get(config_obj.mode, logging.WARNING)
-            root.setLevel(level)
-            handler = logging.StreamHandler()
-            formatter = ArcFormatter()
-            handler.setFormatter(formatter)
-            root.addHandler(handler)
-
-
-class ArcFormatter(logging.Formatter):
-    def format(self, record: logging.LogRecord):
-        from arc.color import colorize, effects, fg
-
-        prefixes = {
-            logging.INFO: colorize("🛈 ", fg.BLUE),
-            logging.WARNING: colorize("WARNING", fg.YELLOW, effects.BOLD) + ": ",
-            logging.ERROR: colorize("ERROR", fg.RED, effects.BOLD) + ": ",
-        }
-
-        prefix = prefixes.get(record.levelno, "")
-        record.msg = prefix + str(record.msg)
-        return super().format(record)

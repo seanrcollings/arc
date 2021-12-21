@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Any, Callable, Generator
-import logging
+from arc import logging
 
 from arc.color import fg, colorize
 
@@ -8,7 +8,7 @@ from arc import errors
 from arc.result import Result
 from arc.callbacks.callbacks import CallbackTime
 
-logger = logging.getLogger("arc_logger")
+logger = logging.getArcLogger("clb")
 
 
 class CallbackStore:
