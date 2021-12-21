@@ -1,0 +1,15 @@
+- file: hello.py
+  exec: --help
+  out: hello_help
+- file: hello.py
+  exec: Joseph
+  out: hello_exec
+- file: docstring_example.py
+  exec: --help
+  out: docstring_example
+- file: arguments_documentation.py
+  exec: command1 --help
+  out: arguments_documentation1
+- file: arguments_documentation.py
+  exec: command2 --help
+  out: arguments_documentation2

@@ -2,7 +2,7 @@
 A tool for building declartive, and highly extendable CLI systems for Python 3.9
 
 # ARC Features
-- Command line arguments bsed on python type hints
+- Command line arguments based on python type hints
 - Arbitrary command nesting
 - Automatic `--help` documentation
 - Dynamic command loading at runtime
