@@ -3,6 +3,9 @@ from __future__ import annotations
 import typing as t
 from arc._command import param
 
+# TODO: expose nargs to the public interface
+# possible change it's name?
+
 
 class ParamInfo:
     def __init__(
@@ -13,6 +16,7 @@ class ParamInfo:
         default: t.Any = param.MISSING,
         description: str = None,
         callback: t.Callable = None,
+        action: param.ParamAction = None,
     ):
         self.param_cls = param_cls
         self.arg_alias = arg_alias
@@ -20,6 +24,7 @@ class ParamInfo:
         self.default = default
         self.description = description
         self.callback = callback
+        self.action = action
 
     def dict(self):
         """Used to pass to `Param()` as **kwargs"""
@@ -29,6 +34,7 @@ class ParamInfo:
             "default": self.default,
             "description": self.description,
             "callback": self.callback,
+            "action": self.action,
         }
 
 
@@ -163,6 +169,43 @@ def Flag(
         default=default,
         description=description,
         callback=callback,
+    )
+
+
+def Count(
+    *,
+    name: str = None,
+    short: str = None,
+    default: int = 0,
+    description: str = None,
+    callback: t.Callable = None,
+) -> t.Any:
+    """A Flag that counts it's number of apperances on the command line
+
+    # Example
+    ```py
+    @cli.command()
+    def test(val: int = Count(short="v")):
+        print(val)
+    ```
+
+    ```
+    $ python example.py test
+    0
+    $ python example.py test --val
+    1
+    $ python example.py test -vvvv
+    4
+    ```
+    """
+    return ParamInfo(
+        param_cls=param.Flag,
+        arg_alias=name,
+        short=short,
+        default=default,
+        description=description,
+        callback=callback,
+        action=param.ParamAction.COUNT,
     )
 
 

@@ -29,6 +29,7 @@ class ParamBuilder:
             arg._annotation = self.annotations.get(arg.name) or str
 
             if arg.kind in (arg.VAR_KEYWORD, arg.VAR_POSITIONAL):
+                # TODO: Update this error message when VarPos and VarKey get removed
                 raise errors.ArgumentError(
                     "Arc does not support *args and **kwargs. "
                     f"Please use their typed counterparts "

@@ -78,6 +78,9 @@ def test_bool(cli: CLI):
     assert cli("false-val")
     assert not cli("false-val --val")
 
+    with pytest.raises(errors.UnrecognizedArgError):
+        cli("true-val --val 2")
+
 
 class TestList:
     def test_standard(self, cli: CLI):
@@ -86,14 +89,14 @@ class TestList:
             return val
 
         assert cli("li 1") == ["1"]
-        assert cli("li 1,2,3,4") == ["1", "2", "3", "4"]
+        assert cli("li 1 2 3 4") == ["1", "2", "3", "4"]
 
     def test_generic(self, cli: CLI):
         @cli.subcommand()
         def li(val: list[int]):
             return val
 
-        assert cli("li 1,2,3") == [1, 2, 3]
+        assert cli("li 1 2 3") == [1, 2, 3]
 
         with pytest.raises(errors.ArgumentError):
             cli("li ainfe")
@@ -103,7 +106,7 @@ class TestList:
         def liu(val: list[Union[int, str]]):
             return val
 
-        assert cli("liu word,1") == ["word", 1]
+        assert cli("liu word 1") == ["word", 1]
 
 
 class TestTuple:
@@ -113,38 +116,50 @@ class TestTuple:
             return val
 
         assert cli("tu 1") == ("1",)
-        assert cli("tu 1,2") == ("1", "2")
+        assert cli("tu 1 2") == ("1", "2")
 
     def test_static_size(self, cli: CLI):
         @cli.subcommand()
         def tu(val: tuple[int]):
-            assert val == (1,)
+            return val
 
-        cli("tu 1")
+        assert cli("tu 1") == (1,)
 
-        with pytest.raises(errors.ArgumentError):
-            cli("tu 1,2")
+        with pytest.raises(errors.UnrecognizedArgError):
+            cli("tu 1 2")
+
+    def test_static_two(self, cli: CLI):
+        @cli.subcommand()
+        def tu(val: tuple[int, int], val2: tuple[int, int]):
+            return val, val2
+
+        assert cli("tu 1 2 3 4") == ((1, 2), (3, 4))
 
     def test_variable_size(self, cli: CLI):
         @cli.subcommand()
         def any_size(val: tuple[int, ...]):
-            for i in val:
-                assert isinstance(i, int)
+            return val
 
-        cli("any-size 1")
-        cli("any-size 1,2,3,4")
-        cli("any-size 1,2,3,4,5,6")
+        assert cli("any-size 1") == (1,)
+        assert cli("any-size 1 2 3 4") == (1, 2, 3, 4)
+        assert cli("any-size 1 2 3 4 5 6") == (1, 2, 3, 4, 5, 6)
 
 
-def test_set_generic(cli: CLI):
-    @cli.subcommand()
-    def se(val: set[int]):
-        return val
+class TestSet:
+    def test_standard(self, cli: CLI):
+        ...
 
-    assert cli("se 1") == {1}
+    def test_generic(self, cli: CLI):
+        @cli.subcommand()
+        def se(val: set[int]):
+            return val
 
-    with pytest.raises(errors.ArgumentError):
-        cli("se word")
+        assert cli("se 1") == {1}
+        assert cli("se 1 2 3") == {1, 2, 3}
+        assert cli("se 1 2 3 2 1") == {1, 2, 3}
+
+        with pytest.raises(errors.ArgumentError):
+            cli("se word")
 
 
 class TestDict:
@@ -222,8 +237,8 @@ class TestUnion:
         def un(val: list[Union[int, str]]):
             return val
 
-        assert cli("un 1,2,3,4") == [1, 2, 3, 4]
-        assert cli("un 1,string,2,string") == [1, "string", 2, "string"]
+        assert cli("un 1 2 3 4") == [1, 2, 3, 4]
+        assert cli("un 1 string 2 string") == [1, "string", 2, "string"]
 
         @cli.subcommand()
         def un2(val: Union[list[int], list[str]]):

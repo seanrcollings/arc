@@ -23,3 +23,6 @@ class ClassCallback(t.Protocol):
 
     def handle(self) -> t.Any:
         ...
+
+
+CollectionTypes = (list, set, tuple)

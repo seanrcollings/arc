@@ -33,7 +33,7 @@ def test_command():
         test.get_help(test.create_ctx(test.name))
         == """\
 USAGE
-    pytest [--help] [--] <val>
+    pytest [--help] [--] val
 
 DESCRIPTION
     description
@@ -109,7 +109,7 @@ def test_docstring_parsing(cli: CLI):
         command.get_help(cli.create_ctx(cli.name).child_context(command))
         == """\
 USAGE
-    test command [--help] [--] <arg1> <arg2>
+    test command [--help] [--] arg1 arg2
 
 DESCRIPTION
     This is the description
@@ -181,8 +181,8 @@ def test_arguments(cli: CLI):
         command.get_help(cli.create_ctx(cli.name).child_context(command))
         == """\
 USAGE
-    test command [--key-opt <...>] [--help] [--flag] --key-req <...> [--]
-    <pos-req> [pos-opt]
+    test command [--key-opt <...>] [--help] [--flag] --key-req <...> [--] pos-
+    req [pos-opt]
 
 ARGUMENTS
     pos-req  positional required
@@ -221,7 +221,7 @@ def test_argument_desc_precedence(cli: CLI):
         command.get_help(cli.create_ctx(cli.name).child_context(command))
         == """\
 USAGE
-    test command [--help] [--] <arg1> <arg2>
+    test command [--help] [--] arg1 arg2
 
 DESCRIPTION
     desc

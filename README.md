@@ -12,9 +12,6 @@ A tool for building declartive, and highly extendable CLI systems for Python 3.9
 - [Wiki](https://github.com/seanrcollings/arc/wiki)
 - [Changelog](https://github.com/seanrcollings/arc/wiki/Changelog)
 
-
-
-
 # Quick Start
 
 ```py
@@ -42,8 +39,10 @@ DESCRIPTION
     My first arc program!
 
 ARGUMENTS
+    name
+
+OPTIONS
     --help (-h)  Shows help documentation
-    <name>
 ```
 Reference [getting started](https://github.com/seanrcollings/arc/wiki) for more info
 # Installation

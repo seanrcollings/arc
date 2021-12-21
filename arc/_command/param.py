@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+import enum
 
 import typing as t
 
 from arc import errors, utils
 from arc.color import colorize, fg, colored
 from arc.config import config
+from arc.typing import CollectionTypes
 
 if t.TYPE_CHECKING:
     from arc.context import Context
@@ -15,6 +17,12 @@ if t.TYPE_CHECKING:
 # Used to represent an argument
 # with no default value
 MISSING = utils.symbol("MISSING")
+
+
+class ParamAction(enum.Enum):
+    STORE = enum.auto()
+    APPEND = enum.auto()
+    COUNT = enum.auto()
 
 
 class Param:
@@ -28,6 +36,8 @@ class Param:
         description: str = None,
         callback: t.Callable[[t.Any, Context, Param], t.Any] = None,
         expose: bool = True,
+        action: ParamAction = None,
+        nargs: int = None,
     ):
 
         self.type_info = TypeInfo.analyze(annotation)
@@ -36,8 +46,18 @@ class Param:
         self.short: t.Optional[str] = short
         self.default: t.Any = default
         self.description: t.Optional[str] = description
-        self.callback = callback
-        self.expose = expose
+        self.callback: t.Optional[t.Callable] = callback
+        self.expose: bool = expose
+
+        if nargs is None:
+            nargs = self._discover_nargs()
+
+        self.nargs: t.Optional[int] = nargs
+
+        if action is None:
+            action = self._discover_action()
+
+        self.action: ParamAction = action
 
         if self.short and len(self.short) > 1:
             raise errors.ArgumentError(
@@ -67,6 +87,22 @@ class Param:
 
     def _format_arguments(self):
         return ""
+
+    def _discover_action(self) -> ParamAction:
+        action = ParamAction.STORE
+        if safe_issubclass(self.type_info.origin, CollectionTypes):
+            action = ParamAction.APPEND
+
+        return action
+
+    def _discover_nargs(self) -> t.Optional[int]:
+        if (
+            safe_issubclass(self.type_info.origin, tuple)
+            and self.type_info.sub_types
+            and self.type_info.sub_types[-1].origin is not Ellipsis
+        ):
+            return len(self.type_info.sub_types)
+        return None
 
     @property
     def optional(self):
@@ -163,19 +199,29 @@ class Param:
 
 class Argument(Param):
     def _format_usage(self):
-        if self.optional:
-            return f"[{self.arg_alias}]"
+        if self.action is ParamAction.APPEND:
+            if self.nargs > 1:
+                string = f"<{self.arg_alias}1> ... <{self.arg_alias}{self.nargs}>"
+            elif self.nargs is None:
+                string = f"<{self.arg_alias}...>"
+            else:
+                string = self.arg_alias
+        else:
+            string = self.arg_alias
 
-        return f"<{self.arg_alias}>"
+        if self.optional:
+            return f"[{string}]"
+
+        return string
 
     def _format_arguments(self):
         return colored(colorize(f"{self.arg_alias}", config.brand_color))
 
     def cli_rep(self, short=False) -> str:
-        return f"<{self.arg_alias}>"
+        return f"{self.arg_alias}"
 
 
-class _OptionShared(Param):
+class _KeywordParam(Param):
     def _format_usage(self):
         string = f"{config.flag_prefix}{self.arg_alias}"
         if self.is_keyword:
@@ -199,17 +245,17 @@ class _OptionShared(Param):
         )
 
 
-class Option(_OptionShared):
+class Option(_KeywordParam):
     ...
 
 
-class Flag(_OptionShared):
+class Flag(_KeywordParam):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.default not in {True, False, MISSING}:
-            raise errors.ArgumentError(
-                "The default for a flag must be True, False, or not specified."
-            )
+        # if self.default not in {True, False, MISSING}:
+        #     raise errors.ArgumentError(
+        #         "The default for a flag must be True, False, or not specified."
+        #     )
 
         if self.default is MISSING:
             self.default = False
@@ -219,5 +265,5 @@ class SpecialParam(Param):
     ...
 
 
-from arc.types.helpers import TypeInfo, convert
+from arc.types.helpers import TypeInfo, convert, safe_issubclass
 from arc.types import aliases

@@ -2,10 +2,9 @@
 .. include:: ../../wiki/Data-Types.md
 """
 from .helpers import TypeInfo, convert
-from .params import Param, Argument, Option, Flag, SpecialParam
+from .params import Param, Argument, Option, Flag, SpecialParam, Count
 from .file import *
 from .range import Range
-from .var_types import VarPositional, VarKeyword
 from .aliases import Alias
 from .semver import SemVer
 from .state import State

@@ -234,8 +234,11 @@ class _CollectionAlias(Alias):
     alias_for: t.ClassVar[type]
 
     @classmethod
-    def convert(cls, value: str):
-        return cls.alias_for(value.split(","))
+    def convert(cls, value: t.Any):
+        if isinstance(value, str):
+            return cls.alias_for(value.split(","))
+        elif isinstance(value, list):
+            return cls.alias_for(value)
 
     @classmethod
     def g_convert(cls, value: str, typ: TypeInfo, ctx):
@@ -271,8 +274,10 @@ class TupleAlias(tuple, _CollectionAlias, of=tuple):
 
         # Statically sized tuples
         if len(info.sub_types) != len(tup):
+
             raise errors.ConversionError(
-                value, f"only {len(info.sub_types)} elements are allowed"
+                value,
+                f"accepts {len(info.sub_types)} arguments, but recieved {len(tup)}",
             )
 
         return tuple(

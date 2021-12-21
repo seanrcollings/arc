@@ -12,7 +12,7 @@ from arc.context import Context
 from arc.config import config
 from arc.types.helpers import join_or
 from arc.utils import IDENT, symbol
-from arc._command.param import MISSING, Param
+from arc._command.param import MISSING, Param, ParamAction
 
 logger = logging.getArcLogger("parse")
 
@@ -92,6 +92,18 @@ class Parser:
             if param.short:
                 self._short_names[param.short] = param
 
+    def handle_value(self, param: Param, value: str):
+        if param.action is ParamAction.STORE:
+            self.parsed[param.arg_name] = value
+        elif param.action is ParamAction.APPEND:
+            if value is not MISSING:
+                self.parsed.setdefault(param.arg_name, []).append(value)
+        elif param.action is ParamAction.COUNT:
+            if param.arg_name not in self.parsed:
+                self.parsed[param.arg_name] = 0
+
+            self.parsed[param.arg_name] += 1
+
     def parse(self, args: list[str]):
         utils.header("PARSING")
         self.tokens = Lexer(args).tokenize()
@@ -123,14 +135,14 @@ class Parser:
                 self.extra.append(token.value)
                 return
             else:
-                raise self.non_existant_arg(token.value)
+                raise self.non_existant_arg(token)
 
         if param.is_keyword and self.peek_type() == TokenType.VALUE:
             value = self.consume().value
         else:
             value = MISSING
 
-        self.parsed[param.arg_name] = value
+        self.handle_value(param, value)
 
     def parse_short_keyword(self, token: Token):
         def process_single(char: str):
@@ -140,14 +152,14 @@ class Parser:
                     self.extra.append(char)
                     return
                 else:
-                    raise self.non_existant_arg(token.value)
+                    raise self.non_existant_arg(token)
 
             if param.is_keyword and self.peek_type() == TokenType.VALUE:
                 value = self.consume().value
             else:
                 value = MISSING
 
-            self.parsed[param.arg_name] = value
+            self.handle_value(param, value)
 
         if len(token.value) > 1:
             # Flags, cannot recieve a value
@@ -171,8 +183,12 @@ class Parser:
                 )
 
         param = self.pos_params[self.curr_pos]
-        self.parsed[param.arg_name] = token.value
-        self.curr_pos += 1
+        self.handle_value(param, token.value)
+        if param.action is ParamAction.APPEND:
+            if len(self.parsed[param.arg_name]) == param.nargs:
+                self.curr_pos += 1
+        else:
+            self.curr_pos += 1
 
     def consume(self):
         return self.tokens.pop(0)
@@ -186,17 +202,24 @@ class Parser:
             return next_token.type
         return None
 
-    def non_existant_arg(self, val: str):
-        styled = colorize(config.flag_prefix + val, fg.YELLOW)
+    def non_existant_arg(self, token: Token):
+        prefix = (
+            config.short_flag_prefix
+            if token.type == TokenType.SHORT_KEYWORD
+            else config.flag_prefix
+        )
+
+        styled = colorize(prefix + token.value, fg.YELLOW)
         message = f"Option {styled} not recognized"
 
         suggest_args = [
-            param.arg_alias for param in helpers.find_possible_params(self.params, val)
+            param.arg_alias
+            for param in helpers.find_possible_params(self.params, token.value)
         ]
 
         if len(suggest_args) > 0:
             message += (
-                f"\n\tPerhaps you meant {colorize(join_or(suggest_args), fg.YELLOW)}?"
+                f"\nPerhaps you meant {colorize(join_or(suggest_args), fg.YELLOW)}?"
             )
 
         return errors.UnrecognizedArgError(message, self.ctx)
