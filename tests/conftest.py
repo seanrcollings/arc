@@ -1,13 +1,25 @@
+import logging
 import pytest
 
-from arc import CLI, logging
+from arc import CLI
 
-logger = logging.getArcLogger()
+logger = logging.getLogger("arc_logger")
 
 
 @pytest.fixture
 def cli():
-    cli = CLI(name="test", config_file="tests/.arc")
+    cli = CLI(config_file="tests/.arc")
     logger.setLevel(logging.CRITICAL)
+
+    @cli.subcommand()
+    def func1(x):
+        assert isinstance(x, str)
+        return x
+
+    @cli.subcommand()
+    @cli.subcommand("func2copy")
+    def func2(x: int):
+        assert isinstance(x, int)
+        return x
 
     return cli

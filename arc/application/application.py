@@ -9,7 +9,7 @@ from arc import CLI, color, __version__
 
 from .templates import templates
 
-cli = CLI("arc", version=__version__, config_file=".arc")
+cli = CLI("arc", version=__version__)
 
 #####  OPEN  #####
 class OpenEnum(enum.Enum):

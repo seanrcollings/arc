@@ -5,7 +5,7 @@ import functools
 from arc.result import Result
 
 if TYPE_CHECKING:
-    from arc._command import Command
+    from arc.command import Command
 
 CallbackTime = Literal["before", "around", "after"]
 
@@ -29,7 +29,7 @@ def callback(when: CallbackTime, **options):
     def wrapper(func):
         @functools.wraps(func)
         def handle_args(*args, **kwargs):
-            from arc._command import Command
+            from arc.command import Command
 
             if isinstance(args[0], Command):
                 return register_wrapper(when, func, **options)(args[0])

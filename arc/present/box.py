@@ -3,7 +3,7 @@ import re
 import shutil
 
 from arc import color
-from arc.utils import ansi_clean
+from arc.utils import clean
 from .data import justifications, Justification
 
 border_styles = {
@@ -57,7 +57,7 @@ class Box:
         border: Border = "regular",
         padding: Union[int, dict[str, int]] = 0,
         justify: Justification = "left",
-        color: color.Ansi = color.fg.WHITE,
+        color: color.Color = color.fg.WHITE,
     ):
         """
         Args:
@@ -79,7 +79,7 @@ class Box:
 
     def __str__(self):
         cleaned = list(
-            self.pad_line(ansi_clean(string)) for string in self.string.split("\n")
+            self.pad_line(clean(string)) for string in self.string.split("\n")
         )
         width = len(max(cleaned, key=len)) + 4
         term_width, _ = shutil.get_terminal_size()

@@ -1,14 +1,14 @@
-from functools import cached_property
 from typing import Union
+from arc.config import config
 
 
-class Ansi(str):
+class Color(str):
     """Color class, extends str"""
 
     ESCAPE = "\033["
 
-    def __new__(cls, content):
-        obj = str.__new__(cls, f"{cls.ESCAPE}{content}m")
+    def __new__(cls, content, extra="m"):
+        obj = str.__new__(cls, f"{cls.ESCAPE}{content}{extra}")
         return obj
 
     def __init__(self, code, *_args):
@@ -16,19 +16,17 @@ class Ansi(str):
         self.code = code
 
     def __str__(self):
-        from arc.config import config
-
-        if not config.ansi:
+        if not config.color:
             return ""
         return super().__str__()
 
     @property
     def bright(self):
-        return Ansi(self.code + 60)
+        return Color(self.code + 60)
 
 
-def _rgb(val: int, red: int = 0, green: int = 0, blue: int = 0) -> Ansi:
-    return Ansi(f"{val};2;{red};{green};{blue}")
+def _rgb(val: int, red: int = 0, green: int = 0, blue: int = 0) -> Color:
+    return Color(f"{val};2;{red};{green};{blue}")
 
 
 def _hex_to_rgb(hex_rep: Union[str, int]):
@@ -53,16 +51,16 @@ def _hex_to_rgb(hex_rep: Union[str, int]):
 # fmt: off
 class fg:
     """Foreground colors"""
-    BLACK    = Ansi(30)
-    RED      = Ansi(31)
-    GREEN    = Ansi(32)
-    YELLOW   = Ansi(33)
-    BLUE     = Ansi(34)
-    MAGENTA  = Ansi(35)
-    CYAN     = Ansi(36)
-    WHITE    = Ansi(37)
+    BLACK    = Color(30)
+    RED      = Color(31)
+    GREEN    = Color(32)
+    YELLOW   = Color(33)
+    BLUE     = Color(34)
+    MAGENTA  = Color(35)
+    CYAN     = Color(36)
+    WHITE    = Color(37)
     GREY     = BLACK.bright
-    ARC_BLUE = Ansi('38;2;59;192;240')
+    ARC_BLUE = Color('38;2;59;192;240')
 
     @staticmethod
     def rgb(red: int = 0, green: int = 0, blue: int = 0):
@@ -79,16 +77,16 @@ class fg:
 
 class bg:
     """Background colors"""
-    BLACK    = Ansi(40)
-    RED      = Ansi(41)
-    GREEN    = Ansi(42)
-    YELLOW   = Ansi(43)
-    BLUE     = Ansi(44)
-    MAGENTA  = Ansi(45)
-    CYAN     = Ansi(46)
-    WHITE    = Ansi(47)
+    BLACK    = Color(40)
+    RED      = Color(41)
+    GREEN    = Color(42)
+    YELLOW   = Color(43)
+    BLUE     = Color(44)
+    MAGENTA  = Color(45)
+    CYAN     = Color(46)
+    WHITE    = Color(47)
     GREY     = BLACK.bright
-    ARC_BLUE = Ansi('48;2;59;192;240')
+    ARC_BLUE = Color('48;2;59;192;240')
 
     @staticmethod
     def rgb(red: int = 0, green: int = 0, blue: int = 0):
@@ -105,31 +103,13 @@ class bg:
 
 class effects:
     """Other effects"""
-    CLEAR         = Ansi(0)
-    BOLD          = Ansi(1)
-    ITALIC        = Ansi(3)
-    UNDERLINE     = Ansi(4)
-    STRIKETHROUGH = Ansi(9)
+    CLEAR         = Color(0)
+    BOLD          = Color(1)
+    ITALIC        = Color(3)
+    UNDERLINE     = Color(4)
+    STRIKETHROUGH = Color(9)
 
 # fmt: on
-
-
-class colored(str):
-    """`str` subclass that does not consider escape
-    characters in things like length and formatting"""
-
-    @cached_property
-    def _cleaned(self):
-        from arc import utils
-
-        return utils.ansi_clean(self)
-
-    def __format__(self, spec: str):
-        formatted = format(self._cleaned, spec)
-        return formatted.replace(self._cleaned, self)
-
-    def split(self, *args, **kwargs):
-        return [colored(s) for s in super().split(*args, **kwargs)]
 
 
 def colorize(string: str, *codes: str, clear: bool = True):

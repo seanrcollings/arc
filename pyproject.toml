@@ -21,7 +21,7 @@ python = "^3.9"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
-mypy = "^0.910"
+mypy = "^0.800"
 pylint = "^2.7.0"
 pytest = "^6.2.4"
 pdoc = "^7.1.1"

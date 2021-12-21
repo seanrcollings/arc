@@ -4,7 +4,6 @@ import logging
 from pathlib import Path
 from typing import get_type_hints
 from arc import errors
-from arc.color import fg
 
 
 class ConfigBase:
@@ -80,6 +79,7 @@ class ConfigBase:
                 key, value = line.split("=")
                 parsed[key] = self.__convert_loaded_value(key, value)
         except Exception as e:
+            breakpoint()
             raise errors.ArcError(
                 "Config values must follow the form `name=value`"
             ) from e
@@ -105,11 +105,11 @@ class ConfigBase:
 
     def __convert_loaded_value(self, name: str, value: str):
         # pylint: disable=import-outside-toplevel
-        return value
+        from arc.types import type_store
 
-        # annotation = get_type_hints(self)[name]
-        # converter = type_store.get_converter(annotation)
-        # return converter(annotation).convert(value)
+        annotation = get_type_hints(self)[name]
+        converter = type_store.get_converter(annotation)
+        return converter(annotation).convert(value)
 
     def post_load(self):
         """Executed after a loading a config from file or from env
@@ -125,9 +125,12 @@ class Config(ConfigBase):
     ENV_PREFIX = "ARC_"
     namespace_sep: str = ":"
     """Character to seperate command names: `parent:child:granchild`"""
-    flag_prefix: str = "--"
+    arg_assignment: str = "="
+    """Character to seperate argument names from argument values
+    when parsing via keyword `name=value`"""
+    flag_denoter: str = "--"
     """Characters the proceed a flag argument: `--flag`"""
-    short_flag_prefix: str = "-"
+    short_flag_denoter: str = "-"
     """Characters that proceed a shortened flag `-f`"""
     mode: str = "production"
     """The current mode of the application, possible values:
@@ -152,14 +155,15 @@ class Config(ConfigBase):
     in a command docstring is anonymous
     """
 
-    transform_snake_case: bool = True
+    parse_argument_help: bool = False
+    """Wether or not to attempt to parse the argument
+    section of help documentation to provide better documentation"""
+
+    tranform_snake_case: bool = True
     """Transforms snake_case argument names to kebab-case. Defaults to True"""
 
-    ansi: bool = True
+    color: bool = True
     """Use Ansi-escape sequences. Defaults to true"""
-
-    brand_color: str = fg.ARC_BLUE
-    """Highlight color to use in help documentation"""
 
     mode_map = {
         "development": logging.DEBUG,
