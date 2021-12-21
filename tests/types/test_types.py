@@ -121,12 +121,19 @@ class TestTuple:
     def test_static_size(self, cli: CLI):
         @cli.subcommand()
         def tu(val: tuple[int]):
-            assert val == (1,)
+            return val
 
-        cli("tu 1")
+        assert cli("tu 1") == (1,)
 
-        with pytest.raises(errors.ArgumentError):
+        with pytest.raises(errors.UnrecognizedArgError):
             cli("tu 1 2")
+
+    def test_static_two(self, cli: CLI):
+        @cli.subcommand()
+        def tu(val: tuple[int, int], val2: tuple[int, int]):
+            return val, val2
+
+        assert cli("tu 1 2 3 4") == ((1, 2), (3, 4))
 
     def test_variable_size(self, cli: CLI):
         @cli.subcommand()

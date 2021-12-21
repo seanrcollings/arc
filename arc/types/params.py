@@ -3,6 +3,9 @@ from __future__ import annotations
 import typing as t
 from arc._command import param
 
+# TODO: expose nargs to the public interface
+# possible change it's name?
+
 
 class ParamInfo:
     def __init__(

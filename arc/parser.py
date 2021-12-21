@@ -184,7 +184,10 @@ class Parser:
 
         param = self.pos_params[self.curr_pos]
         self.handle_value(param, token.value)
-        if param.action is not ParamAction.APPEND:
+        if param.action is ParamAction.APPEND:
+            if len(self.parsed[param.arg_name]) == param.nargs:
+                self.curr_pos += 1
+        else:
             self.curr_pos += 1
 
     def consume(self):

@@ -37,6 +37,7 @@ class Param:
         callback: t.Callable[[t.Any, Context, Param], t.Any] = None,
         expose: bool = True,
         action: ParamAction = None,
+        nargs: int = None,
     ):
 
         self.type_info = TypeInfo.analyze(annotation)
@@ -47,6 +48,11 @@ class Param:
         self.description: t.Optional[str] = description
         self.callback: t.Optional[t.Callable] = callback
         self.expose: bool = expose
+
+        if nargs is None:
+            nargs = self._discover_nargs()
+
+        self.nargs: t.Optional[int] = nargs
 
         if action is None:
             action = self._discover_action()
@@ -88,6 +94,15 @@ class Param:
             action = ParamAction.APPEND
 
         return action
+
+    def _discover_nargs(self) -> t.Optional[int]:
+        if (
+            safe_issubclass(self.type_info.origin, tuple)
+            and self.type_info.sub_types
+            and self.type_info.sub_types[-1].origin is not Ellipsis
+        ):
+            return len(self.type_info.sub_types)
+        return None
 
     @property
     def optional(self):
@@ -184,11 +199,20 @@ class Param:
 
 class Argument(Param):
     def _format_usage(self):
-        suffix = "..." if self.action is ParamAction.APPEND else ""
-        if self.optional:
-            return f"[{self.arg_alias}{suffix}]"
+        if self.action is ParamAction.APPEND:
+            if self.nargs > 1:
+                string = f"<{self.arg_alias}1> ... <{self.arg_alias}{self.nargs}>"
+            elif self.nargs is None:
+                string = f"<{self.arg_alias}...>"
+            else:
+                string = self.arg_alias
+        else:
+            string = self.arg_alias
 
-        return f"<{self.arg_alias}{suffix}>"
+        if self.optional:
+            return f"[{string}]"
+
+        return string
 
     def _format_arguments(self):
         return colored(colorize(f"{self.arg_alias}", config.brand_color))
