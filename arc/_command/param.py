@@ -194,7 +194,7 @@ class Argument(Param):
         return colored(colorize(f"{self.arg_alias}", config.brand_color))
 
     def cli_rep(self, short=False) -> str:
-        return f"<{self.arg_alias}>"
+        return f"{self.arg_alias}"
 
 
 class _KeywordParam(Param):

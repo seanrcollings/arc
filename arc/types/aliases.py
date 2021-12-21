@@ -274,11 +274,11 @@ class TupleAlias(tuple, _CollectionAlias, of=tuple):
 
         # Statically sized tuples
         if len(info.sub_types) != len(tup):
-            if len(info.sub_types) == 1:
-                message = "only 1 element is allowed"
-            else:
-                message = f"only {len(info.sub_types)} elements are allowed"
-            raise errors.ConversionError(value, message)
+
+            raise errors.ConversionError(
+                value,
+                f"accepts {len(info.sub_types)} arguments, but recieved {len(tup)}",
+            )
 
         return tuple(
             convert(Alias.resolve(item_type), item, item_type, ctx)
