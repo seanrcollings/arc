@@ -45,8 +45,7 @@ For example these two commands:
 ```
 Will produce near-identical output:
 ```console
---8<-- "examples/outputs/arguments_documentation1"
---8<-- "examples/outputs/arguments_documentation2"
+--8<-- "examples/outputs/arguments_documentation"
 ```
 
 Which to use is really up to personal preference, however I prefer to place documentation in the docstring because I think it cleans up the function definition.

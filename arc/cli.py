@@ -71,7 +71,6 @@ class CLI(Command):
             params.append(
                 Flag(
                     "version",
-                    bool,
                     short="v",
                     description="Displays the app's current version",
                     callback=_version_callback,

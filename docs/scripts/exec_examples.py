@@ -1,3 +1,4 @@
+import typing as t
 import sys
 from pathlib import Path
 import importlib
@@ -7,8 +8,8 @@ import contextlib
 import io
 from dataclasses import dataclass
 
-import yaml
 from arc import errors, utils
+import yaml
 
 
 PARENT = Path(__file__).parent
@@ -20,13 +21,13 @@ OUTPUT_DIR = EXAMPLE_DIR / "outputs"
 class ExecConfig:
     file: str
     """The file to attempt to load"""
-    out: str
+    out: t.Optional[str] = None
     """The name of the output file"""
     exit_code: int = 0
     """The expected exit code (if SystemExit is raised)"""
     error_allowed: bool = False
     """Stops errors from termintation execution"""
-    exec: str = ""
+    exec: t.Union[list[str], str] = ""
     """String to execute the file with. Placed into `argv`"""
 
 
@@ -40,31 +41,46 @@ def init():
 def exec_examples(config: list[ExecConfig]):
 
     sys.path.append(str(EXAMPLE_DIR))
+    module = None
     for entry in config:
-        with contextlib.redirect_stdout(io.StringIO()) as f:
-            path = EXAMPLE_DIR / entry.file
-            sys.path.append(str(path.parent))
+        path = EXAMPLE_DIR / entry.file
+        sys.path.append(str(path.parent))
 
-            args = [entry.file]
-            if entry.exec:
-                args.extend(shlex.split(entry.exec))
+        execs = entry.exec
+        if isinstance(execs, str):
+            execs = [execs]
+        try:
+            with contextlib.redirect_stdout(io.StringIO()) as f:
+                for execute in execs:
 
-            sys.argv = args
-            try:
-                importlib.import_module(path.stem)
-            except SystemExit as e:
-                if e.code != entry.exit_code:
-                    raise
-            except Exception:
-                if not entry.error_allowed:
-                    raise
+                    f.write(f"$ python {entry.file} {execute}\n")
 
-            sys.path.pop()
+                    args = [entry.file]
+                    if execute:
+                        args.extend(shlex.split(execute))
 
-        output = f"$ python {entry.file} {entry.exec}\n" + utils.ansi_clean(
-            f.getvalue()
-        )
-        outfile = OUTPUT_DIR / entry.out
+                    sys.argv = args
+
+                    if module:
+                        module = importlib.reload(module)
+                    else:
+                        module = importlib.import_module(path.stem)
+
+                    f.write("\n")
+
+        except SystemExit as e:
+            if e.code != entry.exit_code:
+                print(f.getvalue())
+                raise
+        except Exception:
+            if not entry.error_allowed:
+                raise
+
+        module = None
+
+        sys.path.pop()
+        output = utils.ansi_clean(f.getvalue())
+        outfile = OUTPUT_DIR / (entry.out or path.stem)
         outfile.touch()
         outfile.write_text(output)
 

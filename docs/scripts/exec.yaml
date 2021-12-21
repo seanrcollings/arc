@@ -8,8 +8,23 @@
   exec: --help
   out: docstring_example
 - file: arguments_documentation.py
-  exec: command1 --help
-  out: arguments_documentation1
-- file: arguments_documentation.py
-  exec: command2 --help
-  out: arguments_documentation2
+  exec: [command1 --help, command2 --help]
+  out: arguments_documentation
+- file: paramater_argument.py
+  exec: Joseph Joestar
+  out: paramater_argument
+- file: paramater_option.py
+  exec: --firstname Joesph --lastname Joestar
+  out: paramater_option
+- file: paramater_flag.py
+  exec: [Joseph, Joseph --reverse]
+  out: paramater_flag
+- file: paramater_count.py
+  exec: [Joseph, Joseph --repeat, Joseph --repeat --repeat]
+  out: paramater_count
+- file: list_argument.py
+  exec: ["", "Jonathen Joseph Jotaro"]
+- file: list_option.py
+  exec: ["", "--names Josuke --names Giorno --names Joylene"]
+- file: sum.py
+  exec: 1 2 3 4 5 6 7 8 9
