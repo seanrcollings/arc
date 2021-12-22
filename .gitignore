@@ -14,3 +14,4 @@ manage.py
 .venv
 .envrc
 docs/examples/outputs
+docs/site
