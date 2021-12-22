@@ -43,3 +43,6 @@
 - file: custom_type.py
   exec: ["2", string]
   exit_code: 1
+- file: hello_world.py
+- file: cli_demo.py
+  exec: [c1, c2, --help]

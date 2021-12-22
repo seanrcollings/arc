@@ -29,10 +29,11 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Features: features.md
-  - Type Hints: type-hints.md
   - Usage:
+      - Intro: usage/intro.md
       - Command Paramaters: usage/command-parameters.md
       - Paramater Types: usage/parameter-types.md
+      - Using the CLI: usage/cli.md
       - Documentation Generation: usage/documentation-generation.md
       - Colored Output: usage/colored-output.md
       - Command Autoloading: usage/command-autoloading.md
