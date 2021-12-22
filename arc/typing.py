@@ -26,3 +26,12 @@ class ClassCallback(t.Protocol):
 
 
 CollectionTypes = (list, set, tuple)
+
+
+class Suggestions(t.TypedDict, total=False):
+    levenshtein_distance: int
+    suggest_arguments: bool
+    suggest_commands: bool
+
+
+Env = t.Literal["development", "production"]

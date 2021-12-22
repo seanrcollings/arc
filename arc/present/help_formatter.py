@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as t
 import textwrap
-from arc import logging
+from arc import constants, logging
 from arc.color import colored, colorize, fg, effects
 from arc.config import config
 from arc.context import Context
@@ -53,7 +53,7 @@ class HelpFormatter(TextFormatter):
 
         with self.section("USAGE"):
             if command.is_namespace():
-                command_str = f"{command.name}{config.namespace_sep}<subcommand>"
+                command_str = f"{command.name}{constants.NAMESPACE_SEP}<subcommand>"
                 self.write_text(
                     colored(
                         f"{colorize(ctx.root.command.name, config.brand_color)} "
@@ -94,7 +94,7 @@ class HelpFormatter(TextFormatter):
             params.append(format(param, "usage"))
 
         if len(params) > 0 and len(command.pos_params) > 0:
-            params.append("[" + config.flag_prefix + "]")
+            params.append("[" + constants.FLAG_PREFIX + "]")
 
         for param in command.pos_params:
             params.append(format(param, "usage"))

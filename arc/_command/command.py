@@ -41,13 +41,14 @@ class Command(ParamMixin):
         self.doc = callback.__doc__
         self.ctx_dict = ctx_dict
 
-        if config.mode == "development":
-            # Constructs the params at instantiation.
-            # if there's something wrong with a param,
-            # this will raise an error. If we don't do this,
-            # the error woudln't be raised until executing
-            # the command, so it could easy to miss
-            self.params
+        # TODO: get this lazy-evaluating again
+        # if Context.environment == "development":
+        # Constructs the params at instantiation.
+        # if there's something wrong with a param,
+        # this will raise an error. If we don't do this,
+        # the error woudln't be raised until executing
+        # the command, so it could easy to miss
+        self.params
 
     def __repr__(self):
         return f"{self.__class__.__name__}(name={self.name!r})"
@@ -63,27 +64,27 @@ class Command(ParamMixin):
         fullname: str = None,
         **kwargs,
     ):
+        ctx_dict = self.ctx_dict | kwargs
+
         if not self.name:
             self.name = utils.discover_name()
 
         try:
             try:
-                with self.create_ctx(
-                    fullname or self.name, **(self.ctx_dict | kwargs)
-                ) as ctx:
+                with self.create_ctx(fullname or self.name, **ctx_dict) as ctx:
                     args = t.cast(list[str], self.get_args(args))
 
                     self.parse_args(ctx, args)
                     return self.execute(ctx)
             except errors.ArcError as e:
-                if config.mode == "development":
+                if Context.environment == "development":
                     raise
 
                 print(str(e))
                 raise errors.Exit(1)
 
         except errors.Exit as e:
-            if config.mode == "development" and e.code != 0:
+            if Context.environment == "development" and e.code != 0:
                 raise
             sys.exit(e.code)
 

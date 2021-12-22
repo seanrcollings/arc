@@ -5,7 +5,7 @@ import enum
 
 import typing as t
 
-from arc import errors, utils
+from arc import errors, utils, constants
 from arc.color import colorize, fg, colored
 from arc.config import config
 from arc.typing import CollectionTypes
@@ -223,7 +223,7 @@ class Argument(Param):
 
 class _KeywordParam(Param):
     def _format_usage(self):
-        string = f"{config.flag_prefix}{self.arg_alias}"
+        string = f"{constants.FLAG_PREFIX}{self.arg_alias}"
         if self.is_keyword:
             string += " <...>"
 
@@ -233,14 +233,16 @@ class _KeywordParam(Param):
         return string
 
     def _format_arguments(self):
-        string = colorize(f"{config.flag_prefix}{self.arg_alias}", config.brand_color)
+        string = colorize(
+            f"{constants.FLAG_PREFIX}{self.arg_alias}", config.brand_color
+        )
         if self.short:
-            string += colorize(f" ({config.short_flag_prefix}{self.short})", fg.GREY)
+            string += colorize(f" ({constants.SHORT_FLAG_PREFIX}{self.short})", fg.GREY)
 
         return colored(string)
 
     def cli_rep(self, short=False) -> str:
-        return (config.short_flag_prefix if short else config.flag_prefix) + (
+        return (constants.SHORT_FLAG_PREFIX if short else constants.FLAG_PREFIX) + (
             self.short if short and self.short else self.arg_alias
         )
 

@@ -123,29 +123,6 @@ class Config(ConfigBase):
     so the configuration file is not required by default"""
 
     ENV_PREFIX = "ARC_"
-    namespace_sep: str = ":"
-    """Character to seperate command names: `parent:child:granchild`"""
-    flag_prefix: str = "--"
-    """Characters the proceed a flag argument: `--flag`"""
-    short_flag_prefix: str = "-"
-    """Characters that proceed a shortened flag `-f`"""
-    mode: str = "production"
-    """The current mode of the application, possible values:
-    - production
-    - development
-    - test
-    """
-    suggest_on_missing_argument: bool = True
-    """Wether or not to provide suggestions for possible misspellings
-    when an argument is not found"""
-
-    suggest_on_missing_command: bool = True
-    """Wether or not to provide suggestions for possible misspellings
-    when a command is not found"""
-
-    suggest_levenshtein_distance: int = 2
-    """The max Levenshtein distance between input and a
-    possible correction to trigger a suggestion """
 
     default_section_name: str = "description"
     """The name to use by default if the first section
@@ -153,19 +130,12 @@ class Config(ConfigBase):
     """
 
     transform_snake_case: bool = True
-    """Transforms snake_case argument names to kebab-case. Defaults to True"""
 
     ansi: bool = True
     """Use Ansi-escape sequences. Defaults to true"""
 
     brand_color: str = fg.ARC_BLUE
     """Highlight color to use in help documentation"""
-
-    mode_map = {
-        "development": logging.DEBUG,
-        "production": logging.WARNING,
-        "test": logging.ERROR,
-    }
 
 
 config = Config()

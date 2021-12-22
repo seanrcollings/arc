@@ -5,11 +5,10 @@ import re
 import enum
 
 
-from arc import errors, logging, utils
+from arc import errors, logging, utils, constants
 from arc.color import colorize, fg
 from arc._command import helpers
 from arc.context import Context
-from arc.config import config
 from arc.types.helpers import join_or
 from arc.utils import IDENT, symbol
 from arc._command.param import MISSING, Param, ParamAction
@@ -27,9 +26,9 @@ class TokenType(enum.Enum):
 # Note that this takes advantage of the fact that dictionaries
 # are ordered.
 matchers = {
-    TokenType.KEYWORD: re.compile(fr"^{config.flag_prefix}({IDENT})$"),
-    TokenType.SHORT_KEYWORD: re.compile(fr"^{config.short_flag_prefix}([a-zA-Z]+)$"),
-    TokenType.POS_ONLY: re.compile(fr"^({config.flag_prefix})$"),
+    TokenType.KEYWORD: re.compile(fr"^{constants.FLAG_PREFIX}({IDENT})$"),
+    TokenType.SHORT_KEYWORD: re.compile(fr"^{constants.SHORT_FLAG_PREFIX}([a-zA-Z]+)$"),
+    TokenType.POS_ONLY: re.compile(fr"^({constants.FLAG_PREFIX})$"),
     TokenType.VALUE: re.compile(r"^(.+)$"),
 }
 
@@ -117,9 +116,9 @@ class Parser:
             curr = self.consume()
             if self.pos_only:
                 if curr.type is TokenType.KEYWORD:
-                    curr.value = f"{config.flag_prefix}{curr.value}"
+                    curr.value = f"{constants.FLAG_PREFIX}{curr.value}"
                 elif curr.type is TokenType.SHORT_KEYWORD:
-                    curr.value = f"{config.short_flag_prefix}{curr.value}"
+                    curr.value = f"{constants.SHORT_FLAG_PREFIX}{curr.value}"
                 self.parse_value(curr)
             else:
                 parser_table[curr.type](curr)
@@ -204,22 +203,27 @@ class Parser:
 
     def non_existant_arg(self, token: Token):
         prefix = (
-            config.short_flag_prefix
+            constants.SHORT_FLAG_PREFIX
             if token.type == TokenType.SHORT_KEYWORD
-            else config.flag_prefix
+            else constants.FLAG_PREFIX
         )
 
         styled = colorize(prefix + token.value, fg.YELLOW)
         message = f"Option {styled} not recognized"
 
-        suggest_args = [
-            param.arg_alias
-            for param in helpers.find_possible_params(self.params, token.value)
-        ]
+        if self.ctx.suggestions["suggest_arguments"]:
+            suggest_args = [
+                param.arg_alias
+                for param in helpers.find_possible_params(
+                    self.params,
+                    token.value,
+                    self.ctx.suggestions["levenshtein_distance"],
+                )
+            ]
 
-        if len(suggest_args) > 0:
-            message += (
-                f"\nPerhaps you meant {colorize(join_or(suggest_args), fg.YELLOW)}?"
-            )
+            if len(suggest_args) > 0:
+                message += (
+                    f"\nPerhaps you meant {colorize(join_or(suggest_args), fg.YELLOW)}?"
+                )
 
         return errors.UnrecognizedArgError(message, self.ctx)

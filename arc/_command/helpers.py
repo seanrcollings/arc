@@ -4,35 +4,12 @@ import typing as t
 from arc.color import effects, fg
 from arc.config import config
 
-from arc import errors, utils
+from arc import errors, utils, constants
+from arc.context import Context
 
 if t.TYPE_CHECKING:
     from .command import Command
     from .param import Param
-
-
-def find_similar_command(command: Command, namespace_list: list[str]) -> str | None:
-    """Finds commands in the command tree that resemble `namespace_list`
-    Compares each of their full-qualified names to the provided name with
-    the levenshtein algorithm. If it's similar enough (with respect to)
-    `config.suggest_levenshtein_distance`, that command_name will be returned
-    """
-    if config.suggest_on_missing_command:
-        namespace_str = config.namespace_sep.join(namespace_list)
-        command_names = get_all_command_names(command)
-
-        distance, command_name = min(
-            (
-                (utils.levenshtein(namespace_str, command_name), command_name)
-                for command_name in command_names
-            ),
-            key=lambda tup: tup[0],
-        )
-
-        if distance <= config.suggest_levenshtein_distance:
-            return command_name
-
-    return None
 
 
 def get_all_commands(
@@ -53,9 +30,9 @@ def get_all_commands(
     if root:
         current_name = ""
     else:
-        current_name = config.namespace_sep.join(
+        current_name = constants.NAMESPACE_SEP.join(
             (parent_namespace, command.name)
-        ).lstrip(config.namespace_sep)
+        ).lstrip(constants.NAMESPACE_SEP)
 
     commands = [(command, current_name)]
 
@@ -70,7 +47,9 @@ def get_all_command_names(*args, **kwargs) -> list[str]:
     return list(name for command, name in get_all_commands(*args, **kwargs))
 
 
-def find_command_chain(command: Command, command_namespace: list[str]) -> list[Command]:
+def find_command_chain(
+    command: Command, command_namespace: list[str], ctx: Context
+) -> list[Command]:
     """Walks down the subcommand tree using the proveded list of `command_namespace`.
     As it traverses the tree, it merges each levels context together, which will result
     in the final context to pass to the command in the end.
@@ -94,7 +73,12 @@ def find_command_chain(command: Command, command_namespace: list[str]) -> list[C
                 f"{':'.join(command_namespace)}{effects.CLEAR} not found. "
                 f"Check {fg.BLUE}--help{effects.CLEAR} for available commands"
             )
-            if possible_command := find_similar_command(command, command_namespace):
+
+            if ctx.suggestions["suggest_commands"] and (
+                possible_command := find_similar_command(
+                    command, command_namespace, ctx.suggestions["levenshtein_distance"]
+                )
+            ):
                 message += f"\n\tPerhaps you meant {fg.YELLOW}{possible_command}{effects.CLEAR}?"
 
             raise errors.CommandNotFound(message)
@@ -102,25 +86,54 @@ def find_command_chain(command: Command, command_namespace: list[str]) -> list[C
     return command_chain
 
 
+def find_similar_command(
+    command: Command, namespace_list: list[str], distance: int
+) -> str | None:
+    """Finds commands in the command tree that resemble `namespace_list`
+    Compares each of their full-qualified names to the provided name with
+    the levenshtein algorithm. If it's similar enough (with respect to)
+    `config.suggest_levenshtein_distance`, that command_name will be returned
+    """
+
+    namespace_str = constants.NAMESPACE_SEP.join(namespace_list)
+    command_names = get_all_command_names(command)
+
+    cur_dis, command_name = min(
+        (
+            (utils.levenshtein(namespace_str, command_name), command_name)
+            for command_name in command_names
+        ),
+        key=lambda tup: tup[0],
+    )
+
+    if cur_dis <= distance:
+        return command_name
+
+    return None
+
+
 namespace_seperated = re.compile(
-    fr"\A\b((?:(?:{utils.IDENT}{config.namespace_sep})+"
+    fr"\A\b((?:(?:{utils.IDENT}{constants.NAMESPACE_SEP})+"
     fr"{utils.IDENT})|{utils.IDENT}:?)$"
 )
 
 
 def get_command_namespace(string: str):
     if namespace_seperated.match(string):
-        return string.split(config.namespace_sep)
+        return string.split(constants.NAMESPACE_SEP)
 
 
-def find_possible_params(params: list[Param], missing: str) -> list[Param]:
+# TODO: this will only ever return one possibility
+def find_possible_params(
+    params: list[Param], missing: str, distance: int
+) -> list[Param]:
     filtered = []
-    if config.suggest_on_missing_argument and len(params) > 0:
-        distance, param = min(
+    if len(params) > 0:
+        cur_dis, param = min(
             ((utils.levenshtein(param.arg_alias, missing), param) for param in params),
             key=lambda tup: tup[0],
         )
-        if distance <= config.suggest_levenshtein_distance:
+        if cur_dis <= distance:
             filtered.append(param)
 
     return filtered

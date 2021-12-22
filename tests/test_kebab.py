@@ -10,7 +10,7 @@ def test_transform(cli: CLI):
     assert cli("two-words --first-name sean") == "sean"
     assert cli("two-words --first-name sean --other-arg hi") == "sean"
 
-    with pytest.raises(errors.Exit):
+    with pytest.raises(errors.CommandNotFound):
         cli("two_words")
 
     with pytest.raises(errors.UsageError):
@@ -28,7 +28,7 @@ def test_disable_transform(cli: CLI):
         assert cli("two_words --first_name sean") == "sean"
         assert cli("two_words --first_name sean --other_arg hi") == "sean"
 
-        with pytest.raises(errors.Exit):
+        with pytest.raises(errors.CommandNotFound):
             cli("two-words")
 
         with pytest.raises(errors.UsageError):

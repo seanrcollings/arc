@@ -2,11 +2,12 @@ from __future__ import annotations
 import contextlib
 import typing as t
 
-from arc import errors, logging
+from arc import errors, logging, typing as at
 from arc.config import config
 from arc.types.params import special
 from arc import _command as command
 from arc.types.state import State
+from arc.typing import Suggestions
 
 if t.TYPE_CHECKING:
     from arc._command import Command
@@ -15,6 +16,12 @@ logger = logging.getArcLogger("ctx")
 
 
 T = t.TypeVar("T")
+
+default_sug: Suggestions = {
+    "levenshtein_distance": 2,
+    "suggest_arguments": True,
+    "suggest_commands": True,
+}
 
 
 @special(default=object())
@@ -48,11 +55,21 @@ class Context:
         fullname: str,
         command_chain: list[Command] = None,
         parent: Context = None,
+        suggestions: Suggestions = None,
+        env: at.Env = None,
     ):
         self.command = command
         self.fullname = fullname
         self.command_chain = command_chain or []
         self.parent = parent
+        self.env: t.Optional[at.Env] = env
+        if env:
+            logging.root_setup(env)
+
+        if suggestions is not None:
+            self.suggestions = default_sug | suggestions
+        else:
+            self.suggestions = default_sug
 
         self.args: dict[str, t.Any] = {}
         self.extra: list[str] = []
@@ -172,6 +189,17 @@ class Context:
             raise RuntimeError("No contexts exist")
 
         return cls.__stack[-1]
+
+    @classmethod
+    @property
+    def environment(cls) -> at.Env:
+        curr = cls.current()
+        while not curr.env:
+            if not curr.parent:
+                return "production"
+            curr = curr.parent
+
+        return curr.env
 
     @classmethod
     def __convert__(cls, _value, _info, ctx: Context):

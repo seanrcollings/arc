@@ -7,7 +7,7 @@ logger = logging.getArcLogger()
 
 @pytest.fixture
 def cli():
-    cli = CLI(name="test", config_file="tests/.arc")
+    cli = CLI(name="test", env="development")
     logger.setLevel(logging.CRITICAL)
 
     return cli

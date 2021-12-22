@@ -1,6 +1,6 @@
 import logging
 from arc.color import colorize, effects, bg
-from arc.config import config
+import arc.typing as at
 
 
 DEBUG = logging.DEBUG
@@ -13,15 +13,22 @@ CRITICAL = logging.CRITICAL
 _root = logging.getLogger("arc")
 _app_root = logging.getLogger("arc.app")
 
+mode_map = {
+    "development": DEBUG,
+    "production": WARNING,
+    "test": ERROR,
+}
 
-def root_setup():
+
+def root_setup(mode: at.Env):
     if len(_root.handlers) == 0:
-        level = config.mode_map.get(config.mode, logging.WARNING)
-        _root.setLevel(level)
         handler = logging.StreamHandler()
         formatter = ArcFormatter("%(levelname)s%(name)s %(message)s")
         handler.setFormatter(formatter)
         _root.addHandler(handler)
+
+    level = mode_map.get(mode, WARNING)
+    _root.setLevel(level)
 
 
 # Uses camelCase to follow the convetions of the logging module

@@ -34,7 +34,7 @@ def test_execute(cli: CLI):
 
 
 def test_nonexistant_command(cli: CLI):
-    with pytest.raises(errors.Exit):
+    with pytest.raises(errors.CommandNotFound):
         cli("doesnotexist x=2")
 
 

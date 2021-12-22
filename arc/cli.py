@@ -2,11 +2,10 @@ from functools import cached_property
 import typing as t
 import sys
 
-from arc import errors, utils, logging
+from arc import errors, utils, logging, typing as at
 from arc._command.param import Flag
 from arc.autoload import Autoload
 from arc._command import helpers, Command
-from arc.config import config as config_obj
 from arc.context import Context
 
 
@@ -19,24 +18,25 @@ class CLI(Command):
     def __init__(
         self,
         name: str = None,
-        config: dict[str, t.Any] = None,
-        config_file: str = None,
         state: dict = None,
         version: str = None,
+        env: at.Env = "production",
         **ctx_dict,
     ):
         """
         Args:
             name: name of the CLI, will be used in the help command.
-            config: dictonary of configuration values
-            config_file: filename to load configuration information from
             state: dictionary of key value pairs to pass to commands
             version: Version string to display with `--version`
+            mode: Mode of the application. `development` or `production`
             ctx_dict: additional keyword arguments to pass to the execution
             context
         """
 
         self.version = version
+        ctx_dict["env"] = env
+        logging.root_setup(env)
+        utils.header("INIT")
 
         super().__init__(
             lambda: print("CLI stub function."),
@@ -45,15 +45,7 @@ class CLI(Command):
             **ctx_dict,
         )
 
-        if config:
-            config_obj.set_values(config)
-        if config_file:
-            config_obj.from_file(config_file)
-
-        logging.root_setup()
-        utils.header("INIT")
-
-        if config_obj.mode == "development":
+        if env == "development":
             from ._debug import debug  # pylint: disable=import-outside-toplevel
 
             self.install_command(debug)
@@ -87,10 +79,8 @@ class CLI(Command):
         **kwargs,
     ):
         utils.header("CLI")
-        try:
-            with self.create_ctx(
-                fullname or self.name, **(self.ctx_dict | kwargs)
-            ) as ctx:
+        with self.create_ctx(fullname or self.name, **(self.ctx_dict | kwargs)) as ctx:
+            try:
                 args = t.cast(list[str], self.get_args(args))
                 if not args:
                     logger.debug("No arguments present")
@@ -105,9 +95,15 @@ class CLI(Command):
                     return super().main(args)
 
                 logger.debug("Executing subcommand: %s", subcommand_name)
+
                 try:
-                    command_chain = helpers.find_command_chain(self, command_namespace)
+                    command_chain = helpers.find_command_chain(
+                        self, command_namespace, ctx
+                    )
                 except errors.CommandNotFound as e:
+                    if Context.environment == "development":
+                        raise
+
                     print(str(e))
                     raise errors.Exit(1)
 
@@ -118,11 +114,8 @@ class CLI(Command):
                     command_chain=command_chain,
                 )
 
-        except errors.Exit as e:
-            if config_obj.mode == "development" and e.code != 0:
-                raise
-
-            sys.exit(e.code)
+            except errors.Exit as e:
+                sys.exit(e.code)
 
     def command(self, *args, **kwargs):
         """Alias for `Command.subcommand`

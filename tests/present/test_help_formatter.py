@@ -88,6 +88,30 @@ OPTIONS
     )
 
 
+def test_namespace(cli: CLI):
+    debug = cli.subcommands["debug"]
+    assert (
+        debug.get_help(cli.create_ctx(cli.name).child_context(debug))
+        == """\
+USAGE
+    test debug:<subcommand> [ARGUMENTS ...]
+
+DESCRIPTION
+    debug utilties for an arc application
+
+OPTIONS
+    --help (-h)  Shows help documentation
+
+SUBCOMMANDS
+    config       Displays information about the current config of the arc app
+    aliases      Displays information aboubt the currently accessible type
+                 aliases
+    arcfile      Prints the contents of the .arc file in the CWD
+    schema       Prints out a dictionary representation of the CLI
+"""
+    )
+
+
 def test_docstring_parsing(cli: CLI):
     @cli.command()
     def command(arg1: int = Param(description="overide"), arg2=Param()):
