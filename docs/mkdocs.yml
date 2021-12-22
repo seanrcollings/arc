@@ -1,0 +1,39 @@
+site_name: arc
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: blue
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+
+repo_url: https://github.com/seanrcollings/arc
+repo_name: seanrcollings/arc
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      use_pygments: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+nav:
+  - Home: index.md
+  - Features: features.md
+  - Type Hints: type-hints.md
+  - Usage:
+      - Command Paramaters: usage/command-parameters.md
+      - Paramater Types: usage/parameter-types.md
+      - Documentation Generation: usage/documentation-generation.md
+      - Colored Output: usage/colored-output.md
+      - Command Autoloading: usage/command-autoloading.md
+      - Command State: usage/command-state.md

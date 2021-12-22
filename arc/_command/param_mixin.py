@@ -29,7 +29,6 @@ class ParamMixin:
             0,
             Flag(
                 "help",
-                bool,
                 short="h",
                 description="Shows help documentation",
                 callback=_help_callback,
