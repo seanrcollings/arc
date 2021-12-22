@@ -28,3 +28,18 @@
   exec: ["", "--names Josuke --names Giorno --names Joylene"]
 - file: sum.py
   exec: 1 2 3 4 5 6 7 8 9
+- file: set_argument.py
+  exec: 1 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4
+- file: dict_argument.py
+  exec: one=1,two=2,three=3
+- file: union_argument.py
+  exec: ["5", "hello"]
+- file: literal_argument.py
+  exec: [foo, "1", "other"]
+  exit_code: 1
+- file: paint.py
+  exec: [red, blue]
+  exit_code: 1
+- file: custom_type.py
+  exec: ["2", string]
+  exit_code: 1

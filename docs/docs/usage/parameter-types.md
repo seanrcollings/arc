@@ -51,31 +51,16 @@ Collections can be sub-typed so that each item will be converted to the proper t
 --8<-- "examples/outputs/sum"
 ```
 
-
 `set`
 
 Similar to `list`, but will filter out any non-unique elements.
 
-```py
-import arc
-
-@arc.command()
-def main(vals: set):
-    print("Unique values:")
-    print("\n".join(vals))
-
-main()
+```py title="set_argument.py"
+--8<-- "examples/set_argument.py"
 ```
+```console
+--8<-- "examples/outputs/set_argument"
 ```
-$ python example.py 1 1 1 2 2 2 3 3 3 4 5
-Unique values:
-1
-2
-3
-4
-5
-```
-
 
 `tuple`
 
@@ -86,81 +71,43 @@ According to PEP 484:
 - `tuple[int, ...]` represents an arbitrarily sized tuple of integers. This will be functionality the same as `list[int]`
 - `tuple[int, int]` represents a size-two tuple of integers.
 
-
-
 `dict`
 
 Allows a list of comma-seperated key-value pairs. Can be typed generically on both keys and values.
-```py
-from arc import CLI
-cli = CLI()
-
-@cli.subcommand()
-def dict_type(numbers: dict[str, int]):
-    print(type(numbers))
-    print(numbers)
-
-cli()
+```py title="dict_argument.py"
+--8<-- "examples/dict_argument.py"
 ```
-```
-$ python example.py dict-type one=1,two=2,three=3
-<class 'dict'>
-{'one': 1, 'two': 2, 'three': 3}
+```console
+--8<-- "examples/outputs/dict_argument"
 ```
 
 
 `typing.Union`
 
 Allows the input to be multiple different types.
-```py
-from typing import Union
-from arc import CLI
-cli = CLI()
-
-@cli.subcommand()
-def union_type(number: Union[int, str]):
-    print(type(number))
-
-cli()
+```py title="union_argument.py"
+--8<-- "examples/union_argument.py"
+```
+```console
+--8<-- "examples/outputs/union_argument"
 ```
 
-```
-$ python example.py union-type 5
-<class 'int'>
-
-$ python example.py union-type somestring
-<class 'str'>
-```
 arc will attempt to coerce the input into each type, from left to right. The first to succeed will be passed along to the command.
 
+!!! warning
+    Currently *arc's* behavior with collections in union types is not defined. As such, it is not reccomended that you give an argument a type similar to `typing.Union[list, ...]`
 
 `typing.Literal`
 
 Enforces that the input must be a specific sub-set of values
-```py
-from typing import Literal
-from arc import CLI
-cli = CLI()
-
-@cli.subcommand()
-def literal_type(word: Literal['foo', 'bar', 1]):
-    print(value, type(value))
-
-cli()
+```py title="literal_argument.py"
+--8<-- "examples/literal_argument.py"
 ```
+```console
+--8<-- "examples/outputs/literal_argument"
 ```
-$ python example.py literal-type foo
-foo <class 'str'>
-
-
-$ python example.py literal-type 1
-1 <class 'int'>
-
-$ python example.py literal-type other
-Invalid value for word: ainfeianf must be foo, bar or baz
-```
-> **Note**: Arc compares the input to the string-ified version of each value in the Literal. So for the second example above, the comparison that succedded was `"1" == "1"` not `1 == 1`.
-
+!!! note
+    *arc* compares the input to the string-ified version of each value in the Literal. So for the second example above, the comparison that succedded was `"1" == "1"` not `1 == 1`.
 
 `typing.TypedDict`
 
@@ -174,37 +121,11 @@ Path won't perform any validation checks to assert that the input is a valid pat
 `enum.Enum`
 
 Similar to `typing.Literal`, restricts the input to a specific sub-set of values
-```py
-from enum import Enum
-from arc import CLI
-
-cli = CLI()
-
-class Color(Enum):
-    RED = "red"
-    YELLOW = "yellow"
-    GREEN = "green"
-
-@cli.command()
-def paint(color: Color):
-    if color == Color.RED:
-        print("You painted the walls the bloodiest of reds")
-    elif color == Color.YELLOW:
-        print("You painted the walls the most fabulous yellow")
-    else:
-        print("You painted the walls the deepest of greens")
-
-cli()
+```py title="paint.py"
+--8<-- "examples/paint.py"
 ```
-Since red is a defined value on the `Color` enumeration, it is a valid argument value
-```
-$ python example.py paint red
-You painted the walls the bloodiest of reds
-```
-Any other value will be considered invalid
-```
-$ python example.py paint blue
-ERROR: Argument color must be one of: red, yellow, or green, but was blue.
+```console
+--8<-- "examples/outputs/paint"
 ```
 
 `ipaddress.IPv4Address`
@@ -215,11 +136,11 @@ Uses `ipaddress.IPv4Address(v)` for conversion, so anything valid there is valid
 
 Same as above
 
-## *arc* Types
+## Arc Types
 *arc* provides a variety of additional types exported from the `arc.types` module:
 
 ???+ warning
-    Most custom *arc* types are usable as a valid *arc* paramater type and as a typical Python class. For example, you can create a `SemVar` object easily like so: `SemVer.parse('1.2.3')`. In some particular instances, a type can *only* be used as a argument type and not as a valid constructor. These types will be denoted with `🛇` following the type name.
+    Most custom *arc* types are usable as a valid *arc* parameter type and as a typical Python class. For example, you can create a `SemVar` object easily like so: `SemVer.parse('1.2.3')`. In some particular instances, a type can *only* be used as a argument type and not as a valid constructor. These types will be denoted with `🛇` following the type name.
 
 `Context`
 
@@ -280,7 +201,8 @@ Parses the strings input using `urllib.parse.urlparse`
 `Url` that asserts the scheme to be `postgresql` or `postgres`
 
 ### Number Types
-> Note for any types that simply change the base of the input (like `Binary` or `Hex`), it is essentially equivelant to `int(v, base=<base>)`.
+???+ note
+    For any types that simply change the base of the input (like `Binary` or `Hex`), it is essentially equivelant to `int(v, base=<base>)`.
 
 `Binary`
 
@@ -340,76 +262,47 @@ Enforces that the string can only be a single character long
 ## Custom Types
 When implementing your own types, you can make them compatible with arc by implementing the `__convert__()` class method. Arc will call this with the input from the command line, and you are expected to parse the input and return an instance of the type.
 
-```py
-from arc import CLI, errors
-
-cli = CLI()
-
-
-class CustomType:
-    def __init__(self, val: int):
-        self.val = val
-
-    def __str__(self):
-        return f"CustomType(val={self.val})"
-
-    @classmethod
-    def __convert__(cls, value: str):
-        if value.isnumeric():
-            return cls(int(value))
-        else:
-            raise errors.ConversionError(value, "must be an integer")
-
-@cli.command()
-def command(foo: CustomType):
-    print(foo)
-
-cli()
+```py title="custom_type.py"
+--8<-- "examples/custom_type.py"
 ```
+```console
+--8<-- "examples/outputs/custom_type"
+```
+
 Some notes about custom types:
+
 - In additon to `value`, you can also add the following arguments to the signature (in the given order, but the names don't need to match):
   - `info`: Description of the provided type. Instance of `arc.types.TypeInfo`
   - `ctx`: The current execution context. Instance of `arc.context.Context`
 
-- Any type that implements the `__exit__()` method will be treated as a context manager resouces and will be closed using that `__exit__()` method after the command completes it's execution.
-
-```
-$ python example.py command 2
-CustomType(val=2)
-$ python example.py command not-a-number
-Invalid value for foo: must be an integer
-```
+- Any type that implements `__enter__() ` and `__exit__()`, will be treated like a context manager. The manager will be opened before the command executes, and closed afterwards.
 
 ### Type Aliases
-Type aliases are the way in which arc implements support for builtin and standard lib Python types, but can also be used for any type. You can use type aliases to provide support fo any third party library types. For example, supporting numpy arrays
+Type aliases are the way in which *arc* implements support for builtin and standard library Python types, but can also be used for any type. You can use type aliases to provide support fo any third party library types. For example, supporting numpy arrays
 ```py
-from arc import CLI
+import arc
 from arc.types import Alias
-# Requires numpy to be installed
 import numpy as np
 
 # Inherits from Alias. The 'of' parameter declares what types(s) this
 # alias handles (can be a single type or tuple of types).
-# Reads like a sentence: "NDArray is the Alias of np.ndarray"
-class NDArray(Alias, of=np.ndarry):
+# Reads like a sentence: "NDArrayAlias is the Alias of np.ndarray"
+class NDArrayAlias(Alias, of=np.ndarry):
 
     @classmethod
     def __convert__(cls, value: str):
-        return np.array(value.split(","))
+        return np.ndarray(value.split(","))
 
 
-cli = CLI()
-
-
-@cli.command()
-def command(array: np.ndarray):
+@arc.command()
+def main(array: np.ndarray):
     print(repr(array))
 
 
-cli()
+main()
 ```
-```
-$ python example.py command x,y,z
+```console
+$ python example.py x,y,z
 array(['x', 'y', 'z'], dtype='<U1')
 ```
 All other principles about custom types hold for alias types.

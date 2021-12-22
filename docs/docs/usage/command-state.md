@@ -1,6 +1,6 @@
-`arc.types.State` is arc's primary way for sharing global data all throughout your application.
+`arc.types.State` is *arc's* primary way for sharing global data all throughout your application.
 
-State is a dictionary of key-value pairs that you pass when creating the CLI, a namespace, or subcommand. arc knows what argument to map the state to by specifying the type of the argument to be `State`
+State is a dictionary of key-value pairs that you pass when creating the CLI, a namespace, or subcommand. *arc* knows what argument to map the state to by specifying the type of the argument to be `State`
 ```py
 from arc import CLI, State
 

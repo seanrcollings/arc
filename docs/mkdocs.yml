@@ -24,3 +24,16 @@ markdown_extensions:
   - pymdownx.superfences
   - admonition
   - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+nav:
+  - Home: index.md
+  - Features: features.md
+  - Type Hints: type-hints.md
+  - Usage:
+      - Command Paramaters: usage/command-parameters.md
+      - Paramater Types: usage/parameter-types.md
+      - Documentation Generation: usage/documentation-generation.md
+      - Colored Output: usage/colored-output.md
+      - Command Autoloading: usage/command-autoloading.md
+      - Command State: usage/command-state.md
