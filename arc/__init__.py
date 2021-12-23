@@ -9,4 +9,4 @@ from arc.errors import ExecutionError, ValidationError, ConversionError
 from arc.result import Err, Ok, Result
 from arc.types import *
 
-__version__ = "5.0.0"
+__version__ = "6.0.0"
