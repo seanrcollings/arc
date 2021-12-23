@@ -30,8 +30,6 @@ PyYAML = "^6.0"
 types-PyYAML = "^6.0.1"
 
 
-[tool.poetry.scripts]
-arc = "arc.application:cli"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

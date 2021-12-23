@@ -116,7 +116,7 @@ def test_docstring_parsing(cli: CLI):
         This is a second paragraph
 
         # Arguments
-        arg2: this is a argument description
+        arg2: Start: this is a argument description
 
         # Examples
         \b
@@ -140,7 +140,7 @@ DESCRIPTION
 
 ARGUMENTS
     arg1  overide
-    arg2  this is a argument description
+    arg2  Start: this is a argument description
 
 OPTIONS
     --help (-h)  Shows help documentation

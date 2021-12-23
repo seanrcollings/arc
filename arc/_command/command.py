@@ -310,7 +310,7 @@ class Command(ParamMixin):
 
         for line in arguments.splitlines():
             if regex.match(line):
-                param, first_line = line.split(":")
+                param, first_line = line.split(":", maxsplit=1)
                 current_param = param
                 parsed[current_param] = first_line.strip()
             elif current_param:
