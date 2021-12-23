@@ -1,10 +1,12 @@
 import functools
+import io
 import re
 import sys
 import time
 from types import MethodType
 import typing as t
 import os
+import builtins
 
 from arc import logging, typing as at
 from arc.color import fg, effects, colorize
@@ -188,3 +190,19 @@ def iscontextmanager(obj: t.Any):
 def discover_name():
     name = sys.argv[0]
     return os.path.basename(name)
+
+
+class IoWrapper(io.StringIO):
+    """Wraps an IO object to handle colored text.
+    If the output looks to be a terminal, ansi-escape sequences will be allowed.
+    If it does not look like a terminal,  ansi-escape sequences will be removed.
+    """
+
+    def __init__(self, wrapped: t.TextIO):
+        self.wrapped = wrapped
+
+    def write(self, message: str):
+        if not self.wrapped.isatty():
+            message = ansi_clean(message)
+
+        self.wrapped.write(message)

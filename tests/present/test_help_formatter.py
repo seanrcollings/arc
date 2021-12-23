@@ -1,20 +1,14 @@
+import sys
 import pytest
+import io
 from arc._command.command import Command
-from arc.config import config
-from arc import CLI, command
+from arc import CLI, command, utils
 from arc.present.help_formatter import HelpFormatter
 from arc.types import Param
 from arc.context import Context
 
 # Because pytest is the program that is executing these tests, it will be the automatic name
 # for commands that do not specify an explicit name
-
-
-@pytest.fixture(scope="module", autouse=True)
-def disable_ansi():
-    config.ansi = False
-    yield
-    config.ansi = True
 
 
 def get_lines(string: str, from_line: int, to_line: int):
@@ -30,7 +24,7 @@ def test_command():
     # run so it generates it generates the command name
     test("2")
     assert (
-        test.get_help(test.create_ctx(test.name))
+        utils.ansi_clean(test.get_help(test.create_ctx(test.name)))
         == """\
 USAGE
     pytest [--help] [--] val
@@ -58,7 +52,7 @@ def test_cli(cli: CLI):
         """
 
     assert (
-        cli.get_help(cli.create_ctx(cli.name))
+        utils.ansi_clean(cli.get_help(cli.create_ctx(cli.name)))
         == """\
 USAGE
     test <command> [ARGUMENTS ...]
@@ -74,7 +68,9 @@ SUBCOMMANDS
     )
 
     assert (
-        command.get_help(cli.create_ctx(cli.name).child_context(command))
+        utils.ansi_clean(
+            command.get_help(cli.create_ctx(cli.name).child_context(command))
+        )
         == """\
 USAGE
     test command [--help]
@@ -91,7 +87,7 @@ OPTIONS
 def test_namespace(cli: CLI):
     debug = cli.subcommands["debug"]
     assert (
-        debug.get_help(cli.create_ctx(cli.name).child_context(debug))
+        utils.ansi_clean(debug.get_help(cli.create_ctx(cli.name).child_context(debug)))
         == """\
 USAGE
     test debug:<subcommand> [ARGUMENTS ...]
@@ -130,7 +126,9 @@ def test_docstring_parsing(cli: CLI):
         ...
 
     assert (
-        command.get_help(cli.create_ctx(cli.name).child_context(command))
+        utils.ansi_clean(
+            command.get_help(cli.create_ctx(cli.name).child_context(command))
+        )
         == """\
 USAGE
     test command [--help] [--] arg1 arg2
@@ -163,7 +161,9 @@ def test_preserve_paragraph(cli: CLI):
         """
 
     assert (
-        command.get_help(cli.create_ctx(cli.name).child_context(command))
+        utils.ansi_clean(
+            command.get_help(cli.create_ctx(cli.name).child_context(command))
+        )
         == """\
 USAGE
     test command [--help]
@@ -202,7 +202,9 @@ def test_arguments(cli: CLI):
     # The text wrapping is not 100% consistent, so this isn't
     # 1-to-1 with the actual execution
     assert (
-        command.get_help(cli.create_ctx(cli.name).child_context(command))
+        utils.ansi_clean(
+            command.get_help(cli.create_ctx(cli.name).child_context(command))
+        )
         == """\
 USAGE
     test command [--key-opt <...>] [--help] [--flag] --key-req <...> [--] pos-
@@ -215,11 +217,10 @@ ARGUMENTS
 OPTIONS
     --help (-h)     Shows help documentation
     --flag          Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                    Proin iaculis vel sapien sit amet facilisis. Phasellus
-                    purus velit, feugiat non posuere id, commodo a odio. Sed
-                    nibh tellus, fermentum ac gravida quis, commodo sed metus.
-                    Suspendisse sed dui nec lacus efficitur malesuada. Nullam
-                    euismod ante a eros consectetur faucibus.
+                    Proin iaculis vel sapien sit amet facilisis. Phasellus purus velit, feugiat non
+                    posuere id, commodo a odio. Sed nibh tellus, fermentum ac gravida quis, commodo
+                    sed metus. Suspendisse sed dui nec lacus efficitur malesuada. Nullam euismod
+                    ante a eros consectetur faucibus.
     --key-req (-r)  key required
     --key-opt       key optional
 """
@@ -242,7 +243,9 @@ def test_argument_desc_precedence(cli: CLI):
         ...
 
     assert (
-        command.get_help(cli.create_ctx(cli.name).child_context(command))
+        utils.ansi_clean(
+            command.get_help(cli.create_ctx(cli.name).child_context(command))
+        )
         == """\
 USAGE
     test command [--help] [--] arg1 arg2

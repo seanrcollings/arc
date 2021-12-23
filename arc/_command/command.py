@@ -1,4 +1,5 @@
 from __future__ import annotations
+import contextlib
 import re
 from functools import cached_property
 import typing as t
@@ -55,7 +56,8 @@ class Command(ParamMixin):
 
     # Command Execution ------------------------------------------------------------
     def __call__(self, *args, **kwargs):
-        return self.main(*args, **kwargs)
+        with contextlib.redirect_stdout(utils.IoWrapper(sys.stdout)):
+            return self.main(*args, **kwargs)
 
     @utils.timer("Running Command")
     def main(

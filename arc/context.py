@@ -1,5 +1,6 @@
 from __future__ import annotations
 import contextlib
+import sys
 import typing as t
 
 from arc import errors, logging, typing as at
@@ -8,6 +9,7 @@ from arc.types.params import special
 from arc import _command as command
 from arc.types.state import State
 from arc.typing import Suggestions
+from arc.utils import IoWrapper
 
 if t.TYPE_CHECKING:
     from arc._command import Command
@@ -136,7 +138,6 @@ class Context:
         """
         if isinstance(callback, command.Command):
             ctx = self.child_context(callback)
-            breakpoint()
             ctx.state = self.state | ctx.state
             cmd = callback
             callback = cmd.callback

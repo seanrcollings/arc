@@ -1,6 +1,7 @@
 from typing_extensions import TypedDict, get_args
 import pytest
 from arc import CLI, namespace, errors
+from arc.context import Context
 from arc.types import State
 
 
@@ -77,3 +78,16 @@ def test_override(scli: CLI):
 
     with pytest.raises(errors.UnrecognizedArgError):
         scli("override --state 2")
+
+
+def test_state_retained(scli: CLI):
+    @scli.subcommand()
+    def c1(ctx: Context, state: State):
+        state.val = 2
+        return ctx.execute(c2)
+
+    @scli.subcommand()
+    def c2(state: State):
+        return state
+
+    assert scli("c1").val == 2

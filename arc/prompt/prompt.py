@@ -141,7 +141,7 @@ class Prompt:
 
     def act(self, message: str, **kwargs):
         """Display an action message to the user"""
-        self.beautify(message, fg.BLUE.bright, **kwargs)
+        self.beautify(message, fg.BRIGHT_BLUE, **kwargs)
 
     def warn(self, message: str, **kwargs):
         """Display a warning message to the user"""

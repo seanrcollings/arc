@@ -1,5 +1,11 @@
 Spice up your script's output with some color! Implements both the basic ANSI-16 color scheme, and rgb
 
+!!! note
+    When `stdout` does not look like a terminal, *arc* will
+    **automagically** remove the color escape codes, so no need for you to
+    worry about anything!
+
+
 ## `arc.color.fg`
 Contains the code for coloring text elements.
 
@@ -13,9 +19,14 @@ Contains the code for coloring text elements.
 - `MAGENTA`
 - `CYAN`
 - `WHITE`
+- `BRIGHT_RED`
+- `BRIGHT_GREEN`
+- `BRIGHT_YELLOW`
+- `BRIGHT_BLUE`
+- `BRIGHT_MAGENTA`
+- `BRIGHT_CYAN`
+- `BRIGHT_WHITE`
 - `ARC_BLUE`
-
-The brighter alternatives to each color is accessed through the `bright` attribute on each color. i.e. `fg.BLUE.bright`
 
 ### `fg.rgb(red: int, green: int, blue: int)`
 Used to create any text color in the full RGB specturm. Each paramater's values range from [0, 255]
@@ -36,9 +47,15 @@ Contains the code for coloring the background of elements.
 - `MAGENTA`
 - `CYAN`
 - `WHITE`
+- `BRIGHT_RED`
+- `BRIGHT_GREEN`
+- `BRIGHT_YELLOW`
+- `BRIGHT_BLUE`
+- `BRIGHT_MAGENTA`
+- `BRIGHT_CYAN`
+- `BRIGHT_WHITE`
 - `ARC_BLUE`
 
-The brighter alternatives to each color is accessed through the `bright` attribute on each color. i.e. `bg.BLUE.bright`
 
 ### `bg.rgb(red: int, green: int, blue: int)`
 Used to create any background color in the full RGB specturm. Each paramater's values range from [0, 255]

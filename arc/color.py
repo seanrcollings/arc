@@ -15,17 +15,6 @@ class Ansi(str):
         super().__init__()
         self.code = code
 
-    def __str__(self):
-        from arc.config import config
-
-        if not config.ansi:
-            return ""
-        return super().__str__()
-
-    @property
-    def bright(self):
-        return Ansi(self.code + 60)
-
 
 def _rgb(val: int, red: int = 0, green: int = 0, blue: int = 0) -> Ansi:
     return Ansi(f"{val};2;{red};{green};{blue}")
@@ -53,16 +42,23 @@ def _hex_to_rgb(hex_rep: Union[str, int]):
 # fmt: off
 class fg:
     """Foreground colors"""
-    BLACK    = Ansi(30)
-    RED      = Ansi(31)
-    GREEN    = Ansi(32)
-    YELLOW   = Ansi(33)
-    BLUE     = Ansi(34)
-    MAGENTA  = Ansi(35)
-    CYAN     = Ansi(36)
-    WHITE    = Ansi(37)
-    GREY     = BLACK.bright
-    ARC_BLUE = Ansi('38;2;59;192;240')
+    BLACK          = Ansi(30)
+    RED            = Ansi(31)
+    GREEN          = Ansi(32)
+    YELLOW         = Ansi(33)
+    BLUE           = Ansi(34)
+    MAGENTA        = Ansi(35)
+    CYAN           = Ansi(36)
+    WHITE          = Ansi(37)
+    GREY           = Ansi(90)
+    BRIGHT_RED     = Ansi(91)
+    BRIGHT_GREEN   = Ansi(92)
+    BRIGHT_YELLOW  = Ansi(93)
+    BRIGHT_BLUE    = Ansi(94)
+    BRIGHT_MAGENTA = Ansi(95)
+    BRIGHT_CYAN    = Ansi(96)
+    BRIGHT_WHITE   = Ansi(97)
+    ARC_BLUE       = Ansi('38;2;59;192;240')
 
     @staticmethod
     def rgb(red: int = 0, green: int = 0, blue: int = 0):
@@ -79,16 +75,23 @@ class fg:
 
 class bg:
     """Background colors"""
-    BLACK    = Ansi(40)
-    RED      = Ansi(41)
-    GREEN    = Ansi(42)
-    YELLOW   = Ansi(43)
-    BLUE     = Ansi(44)
-    MAGENTA  = Ansi(45)
-    CYAN     = Ansi(46)
-    WHITE    = Ansi(47)
-    GREY     = BLACK.bright
-    ARC_BLUE = Ansi('48;2;59;192;240')
+    BLACK          = Ansi(40)
+    RED            = Ansi(41)
+    GREEN          = Ansi(42)
+    YELLOW         = Ansi(43)
+    BLUE           = Ansi(44)
+    MAGENTA        = Ansi(45)
+    CYAN           = Ansi(46)
+    WHITE          = Ansi(47)
+    GREY           = Ansi(100)
+    BRIGHT_RED     = Ansi(101)
+    BRIGHT_GREEN   = Ansi(102)
+    BRIGHT_YELLOW  = Ansi(103)
+    BRIGHT_BLUE    = Ansi(104)
+    BRIGHT_MAGENTA = Ansi(105)
+    BRIGHT_CYAN    = Ansi(106)
+    BRIGHT_WHITE   = Ansi(107)
+    ARC_BLUE       = Ansi('48;2;59;192;240')
 
     @staticmethod
     def rgb(red: int = 0, green: int = 0, blue: int = 0):

@@ -119,7 +119,7 @@ class RectangleLoader(BarLoader):
 
 class Pacman(Loader):
     FULL = "-"
-    EMPTY = f"{fg.BLACK.bright} o {effects.CLEAR}"
+    EMPTY = f"{fg.GREY} o {effects.CLEAR}"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

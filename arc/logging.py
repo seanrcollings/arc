@@ -1,6 +1,9 @@
 import logging
+import sys
+import typing as t
 from arc.color import colorize, effects, bg
 import arc.typing as at
+from arc import utils
 
 
 DEBUG = logging.DEBUG
@@ -22,7 +25,7 @@ mode_map = {
 
 def root_setup(mode: at.Env):
     if len(_root.handlers) == 0:
-        handler = logging.StreamHandler()
+        handler = ArcStreamHandler()
         formatter = ArcFormatter("%(levelname)s%(name)s %(message)s")
         handler.setFormatter(formatter)
         _root.addHandler(handler)
@@ -56,7 +59,7 @@ class ArcFormatter(logging.Formatter):
         INFO: bg.ARC_BLUE,
         WARNING: bg.rgb(204, 195, 63),
         ERROR: bg.RED,
-        CRITICAL: bg.RED.bright,
+        CRITICAL: bg.BRIGHT_RED,
     }
 
     def format(self, record: logging.LogRecord):
@@ -68,3 +71,11 @@ class ArcFormatter(logging.Formatter):
         )
         record.name = colorize(f"{record.name:^13}", bg.GREY)
         return super().format(record)
+
+
+class ArcStreamHandler(logging.StreamHandler):
+    def __init__(self, stream: t.TextIO = None):
+        if not stream:
+            stream = sys.stderr
+
+        super().__init__(utils.IoWrapper(stream))
