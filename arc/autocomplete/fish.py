@@ -3,13 +3,10 @@ from typing import Union
 from pathlib import Path
 from arc import types
 from arc.config import config
-from arc.command import Command, helpers
-from arc.execution_state import ExecutionState
+from arc._command import Command, helpers
 
 COMPLETE = "complete -c"
 SEEN_SUBCOMMAND = "__fish_seen_subcommand_from"
-
-# TODO: stip out use of ParsingMethod
 
 
 class FishCompletion:
@@ -126,21 +123,22 @@ def command_completions(
 
 
 def argument_completions(completions: FishCompletion, command: Command, cmd_name: str):
-    completions.comment(f"{cmd_name} Arguments")
-    for arg in command.executable.params.values():
+    ...
+    # completions.comment(f"{cmd_name} Arguments")
+    # for arg in command.executable.params.values():
 
-        if arg.hidden or arg.is_positional:
-            continue
+    #     if arg.hidden or arg.is_positional:
+    #         continue
 
-        else:
-            completions.seen_subcommand(cmd_name).long(arg.arg_alias)
-            if arg.short:
-                completions.short(arg.short)
+    #     else:
+    #         completions.seen_subcommand(cmd_name).long(arg.arg_alias)
+    #         if arg.short:
+    #             completions.short(arg.short)
 
-        completions.description(f"{types.type_store.get_display_name(arg.annotation)}")
-        if types.safe_issubclass(arg.annotation, Path):
-            completions.force_files()
-        else:
-            completions.no_files()
+    #     completions.description(f"{types.type_store.get_display_name(arg.annotation)}")
+    #     if types.safe_issubclass(arg.annotation, Path):
+    #         completions.force_files()
+    #     else:
+    #         completions.no_files()
 
-        completions.flush()
+    #     completions.flush()

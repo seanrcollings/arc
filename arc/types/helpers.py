@@ -1,40 +1,117 @@
-from typing import Union, GenericAlias, Sequence, _AnnotatedAlias  # type: ignore
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import (
+    Optional,
+    Sequence,
+    Union,
+    Any,
+    get_origin,
+    Annotated,
+    get_args,
+    Generic,
+    TypeVar,
+    TYPE_CHECKING,
+)
+import re
+
+from arc import utils, result
+
+if TYPE_CHECKING:
+    from arc.typing import Annotation
+    from arc.types.aliases import TypeProtocol
+    from arc.context import Context
 
 
-def is_annotated(annotation) -> bool:
-    return isinstance(annotation, _AnnotatedAlias)
+T = TypeVar("T")
 
 
-def unwrap(annotation) -> type:
-    """Handles unwrapping `GenericTypes`, `SpecialForms`, etc...
-    To retrive the inner origin type.
+@dataclass
+class TypeInfo(Generic[T]):
+    base: Annotation
+    origin: type[T]
+    sub_types: tuple[TypeInfo, ...]
+    annotations: tuple[Any, ...]
+    _name: Optional[str] = None
 
-    For Example:
+    @property
+    def name(self) -> str:
+        if self._name:
+            return self._name
+        elif name := getattr(self.origin, "name", None):
+            return name
+        elif name := getattr(self.origin, "__name__", None):
+            return name
 
-    - `list[int] -> list`
-    - `Union[int, str] -> Union`
-    - `File[File.Read] -> File`
-    - `list -> list`
+        return str(self.origin)
+
+    @classmethod
+    def analyze(cls, annotation) -> TypeInfo:
+        base = annotation
+        origin = get_origin(annotation) or annotation
+        annotated_args: tuple = tuple()
+
+        if origin is Annotated:
+            args = get_args(annotation)
+            annotation = args[0]
+            origin = get_origin(annotation) or annotation
+            annotated_args = args[1:]
+
+        sub_types = tuple(cls.analyze(arg) for arg in get_args(annotation))
+
+        return cls(
+            base=base,
+            origin=origin,
+            sub_types=sub_types,
+            annotations=annotated_args,
+        )
+
+
+def validate(cls):
+    """Class decorator to mark a class as validatable.
+    On instantiation any method who's name follows
+    the form `-?validate.+` will be executed. Note that this
+    includes protected methods, but not private ones
     """
-    if origin := getattr(annotation, "__origin__", None):
-        return origin
-    else:
-        return annotation
+    if not hasattr(cls, "__init__"):
+        return cls
+
+    cls_init = cls.__init__
+
+    validators = list(
+        v
+        for n in dir(cls)
+        if n.strip("_").startswith("validate") and callable(v := getattr(cls, n))
+    )
+
+    def init(instance, *args, **kwargs):
+        if cls_init is object.__init__:
+            cls_init(instance)
+        else:
+            cls_init(instance, *args, **kwargs)
+
+        for validator in validators:
+            validator(instance)
+
+    cls.__init__ = init
+
+    return cls
 
 
-def safe_issubclass(cls, classes: Union[type, tuple[type, ...]]) -> bool:
-    """Safe wrapper around issubclass for
-    generic types like Union
-    """
-    cls = unwrap(cls)
+def convert(
+    protocol: type[TypeProtocol],
+    value: Any,
+    info: TypeInfo,
+    ctx: Context,
+):
+    """Uses `protocol` to convert `value`"""
+    return utils.dispatch_args(protocol.__convert__, value, info, ctx)
+
+
+def safe_issubclass(typ, classes: Union[type, tuple[type, ...]]):
     try:
-        return issubclass(cls, classes)
+        return issubclass(typ, classes)
     except TypeError:
         return False
-
-
-def is_alias(alias):
-    return isinstance(alias, GenericAlias) or getattr(alias, "__origin__", False)
 
 
 def joiner(values: Sequence, join_str: str = ", ", last_str: str = ", "):
@@ -81,8 +158,8 @@ def join_and(values: Sequence) -> str:
     return joiner(values, last_str=" and ")
 
 
-class UnwrapHelper:
-    @classmethod
-    def is_origin(cls, other: type):
-        other = unwrap(other)
-        return cls is other
+def match(pattern: str, string: str) -> result.Result[None, str]:
+    if not re.match(pattern, string):
+        return result.Err(f"does not follow required format: {pattern}")
+
+    return result.Ok()

@@ -1,0 +1,48 @@
+- file: hello.py
+  exec: --help
+  out: hello_help
+- file: hello.py
+  exec: Joseph
+  out: hello_exec
+- file: docstring_example.py
+  exec: --help
+  out: docstring_example
+- file: arguments_documentation.py
+  exec: [command1 --help, command2 --help]
+  out: arguments_documentation
+- file: paramater_argument.py
+  exec: Joseph Joestar
+  out: paramater_argument
+- file: paramater_option.py
+  exec: --firstname Joesph --lastname Joestar
+  out: paramater_option
+- file: paramater_flag.py
+  exec: [Joseph, Joseph --reverse]
+  out: paramater_flag
+- file: paramater_count.py
+  exec: [Joseph, Joseph --repeat, Joseph --repeat --repeat]
+  out: paramater_count
+- file: list_argument.py
+  exec: ["", "Jonathen Joseph Jotaro"]
+- file: list_option.py
+  exec: ["", "--names Josuke --names Giorno --names Joylene"]
+- file: sum.py
+  exec: 1 2 3 4 5 6 7 8 9
+- file: set_argument.py
+  exec: 1 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4
+- file: dict_argument.py
+  exec: one=1,two=2,three=3
+- file: union_argument.py
+  exec: ["5", "hello"]
+- file: literal_argument.py
+  exec: [foo, "1", "other"]
+  exit_code: 1
+- file: paint.py
+  exec: [red, blue]
+  exit_code: 1
+- file: custom_type.py
+  exec: ["2", string]
+  exit_code: 1
+- file: hello_world.py
+- file: cli_demo.py
+  exec: [c1, c2, --help]

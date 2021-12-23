@@ -13,3 +13,5 @@ manage.py
 !requirements.txt
 .venv
 .envrc
+docs/examples/outputs
+docs/site

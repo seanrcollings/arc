@@ -1,168 +1,271 @@
-"""Defines types relevant to Param Definition / Creation"""
+"""Public API for hanlding paramater modification"""
 from __future__ import annotations
-from typing import (
-    Annotated,
-    Optional,
-    Any,
-    MutableSequence,
-    Callable,
-    TextIO,
-    TypeVar,
-    get_args,
-    TYPE_CHECKING,
-)
-import enum
-from dataclasses import dataclass, field
-from arc.execution_state import ExecutionState
+import typing as t
+from arc._command import param
 
-from arc.utils import symbol
-from arc.types.type_store import convert
-
-if TYPE_CHECKING:
-    from arc.command.param import Param
-
-# Represents a missing value
-# Used to represent an arguments
-# with no default value
-MISSING = symbol("MISSING")
-T = TypeVar("T")
+# TODO: expose nargs to the public interface
+# possible change it's name?
 
 
-@dataclass
-class Meta:
-    """Represents meta-data about an argument
+class ParamInfo:
+    def __init__(
+        self,
+        param_cls: type[param.Param] = None,
+        arg_alias: str = None,
+        short: str = None,
+        default: t.Any = param.MISSING,
+        description: str = None,
+        callback: t.Callable = None,
+        action: param.ParamAction = None,
+    ):
+        self.param_cls = param_cls
+        self.arg_alias = arg_alias
+        self.short = short
+        self.default = default
+        self.description = description
+        self.callback = callback
+        self.action = action
 
-    Args:
-        name (str): The name that will be used on the command line for this argument
-        type (ParamType): The type of the argument. `ParamType.POS` or `ParamType.KEY`
-            are the most common
-        short (str): The single-character short name to refer to this argument
-            on the command line
-        hidden (bool): whether or not this paramater is exposed to the command line
-        default (Any): Value to pass if no value is given on the command line
-        hooks (Callable): sequence of callable objects
+    def dict(self):
+        """Used to pass to `Param()` as **kwargs"""
+        return {
+            "arg_alias": self.arg_alias,
+            "short": self.short,
+            "default": self.default,
+            "description": self.description,
+            "callback": self.callback,
+            "action": self.action,
+        }
 
-    Usage:
 
+def Param(
+    *,
+    name: str = None,
+    short: str = None,
+    default: t.Any = param.MISSING,
+    description: str = None,
+    callback: t.Callable = None,
+) -> t.Any:
+    """A CLI Paramater. Automatically decides whether it is
+    a `positional`, `option` or `flag`
+
+    # Example
     ```py
-    @cli.subcommand()
-    def command(val: Annotated[int, Meta(short='v')]):
-        ...
+    @cli.command()
+    def test(val: int = Param(), *, val2: int = Param(), flag: bool = Param()):
+        print(val, val2, flag)
+    ```
+    Each Param type will be determined as follows:
+    - `val`:  Positional argument because it precedes the bare `*`.
+    - `val2`: Option argument because  it proceeds the bare `*`.
+              Python considers this a "keyword only" argument, and so does arc
+    - `flag`: Flag argument because it has `bool` type
+
+    ```
+    $ python example.py test --val2 3 --flag -- 2
+    2 3 True
     ```
     """
-
-    name: Optional[str] = None
-    type: Optional[ParamType] = None
-    short: Optional[str] = None
-    hidden: bool = False
-    default: Any = MISSING
-    hooks: MutableSequence[Callable[[Any, Param, ExecutionState], Any]] = field(
-        default_factory=list
+    return ParamInfo(
+        None,
+        arg_alias=name,
+        short=short,
+        default=default,
+        description=description,
+        callback=callback,
     )
 
 
-def meta(**kwargs):
-    """Wraps a given type with meta-data. Any
-    refernce to that type will carry the same
-    meta-data
+def Argument(
+    *,
+    name: str = None,
+    default: t.Any = param.MISSING,
+    description: str = None,
+    callback: t.Callable = None,
+) -> t.Any:
+    """A CLI Paramater. Input will be passed in positionally.
 
+    # Example
     ```py
-    @meta(short="s")
-    class Shoe:
-        ...
+    @cli.command()
+    def test(val: int = Argument()):
+        print(val)
+    ```
 
-    # Both of these command's 'shoe' argument will have the short-name of "s"
-    @cli.subcommand()
-    def command(shoe: Shoe):
-        ...
-
-    @cli.subcommand()
-    def other_command(shoe: Shoe):
-        ...
+    ```
+    $ python example.py test 2
+    2
     ```
     """
+    return ParamInfo(
+        param_cls=param.Argument,
+        arg_alias=name,
+        default=default,
+        description=description,
+        callback=callback,
+    )
 
-    def inner(cls: type):
-        return Annotated[cls, Meta(**kwargs)]
 
-    return inner
+def Option(
+    *,
+    name: str = None,
+    short: str = None,
+    default: t.Any = param.MISSING,
+    description: str = None,
+    callback: t.Callable = None,
+) -> t.Any:
+    """A (generally optional) keyword paramater.
 
+      # Example
+    ```py
+    @cli.command()
+    def test(val: int = Option()):
+        print(val)
+    ```
 
-class ParamType(enum.Enum):
-    """All the types that a Paramater can be
-
-    - `POS` is given to regular arguments to a function
-    - `KEY` is given to keyword-only arguments of a function
-    - `FLAG` is given to arguments with a `bool` annotation
-    - `SPECIAL` isn't given to any arguments by default, but
-        can be used to explicitly mark a a special type. Internally,
-        arc uses this to mark `Context`, `VarPositional `, and `VarKeyword`
+    ```
+    $ python example.py test --val 2
+    2
+    ```
     """
-
-    POS = "positional"
-    KEY = "keyword"
-    FLAG = "flag"
-    SPECIAL = "special"
-
-
-class _VarPositional(list[T]):
-    @staticmethod
-    def positional_hook(_default: list, param: Param, state: ExecutionState):
-        assert state.parsed
-        values = state.parsed["pos_args"]
-        state.parsed["pos_args"] = []
-
-        if (args := get_args(param.annotation)) and not isinstance(args[0], TypeVar):
-            values = [convert(value, args[0], param.arg_alias) for value in values]
-
-        return values
+    return ParamInfo(
+        param_cls=param.Option,
+        arg_alias=name,
+        short=short,
+        default=default,
+        description=description,
+        callback=callback,
+    )
 
 
-class _VarKeyword(dict[str, T]):
-    @staticmethod
-    def keyword_hook(_default: dict, param: Param, state: ExecutionState):
-        assert state.parsed
-        values = state.parsed["options"]
-        state.parsed["options"] = {}
+def Flag(
+    *,
+    name: str = None,
+    short: str = None,
+    default: bool = False,
+    description: str = None,
+    callback: t.Callable = None,
+) -> t.Any:
+    """An option that represents a boolean value.
 
-        if (args := get_args(param.annotation)) and not isinstance(args[0], TypeVar):
-            values = {key: convert(val, args[0], key) for key, val in values.items()}
+    # Example
+    ```py
+    @cli.command()
+    def test(val: bool = Flag()):
+        print(val)
+    ```
 
-        return values
-
-
-VarPositional = Annotated[
-    _VarPositional[T],
-    Meta(
-        hidden=True,
-        type=ParamType.SPECIAL,
-        default=[],
-        hooks=[_VarPositional.positional_hook],
-    ),
-]
-
-
-VarKeyword = Annotated[
-    _VarKeyword[T],
-    Meta(
-        hidden=True,
-        type=ParamType.SPECIAL,
-        default={},
-        hooks=[_VarKeyword.keyword_hook],
-    ),
-]
-
-
-def _open_file(mode: str):
-    def inner(val, _param, _state):
-        with open(val, mode) as file:
-            yield file
-
-    return inner
+    ```
+    $ python example.py test
+    False
+    $ python example.py test --flag
+    True
+    ```
+    """
+    return ParamInfo(
+        param_cls=param.Flag,
+        arg_alias=name,
+        short=short,
+        default=default,
+        description=description,
+        callback=callback,
+    )
 
 
-class File:
-    Read = Annotated[TextIO, Meta(hooks=[_open_file("r")])]
-    Write = Annotated[TextIO, Meta(hooks=[_open_file("w")])]
-    Append = Annotated[TextIO, Meta(hooks=[_open_file("a")])]
-    ReadWrite = Annotated[TextIO, Meta(hooks=[_open_file("r+")])]
+def Count(
+    *,
+    name: str = None,
+    short: str = None,
+    default: int = 0,
+    description: str = None,
+    callback: t.Callable = None,
+) -> t.Any:
+    """A Flag that counts it's number of apperances on the command line
+
+    # Example
+    ```py
+    @cli.command()
+    def test(val: int = Count(short="v")):
+        print(val)
+    ```
+
+    ```
+    $ python example.py test
+    0
+    $ python example.py test --val
+    1
+    $ python example.py test -vvvv
+    4
+    ```
+    """
+    return ParamInfo(
+        param_cls=param.Flag,
+        arg_alias=name,
+        short=short,
+        default=default,
+        description=description,
+        callback=callback,
+        action=param.ParamAction.COUNT,
+    )
+
+
+def SpecialParam(
+    name: str = None,
+    short: str = None,
+    default: t.Any = param.MISSING,
+    description: str = None,
+    callback: t.Callable = None,
+) -> t.Any:
+    """Params marked as "Special" are not exposed to the command line
+    interface and cannot recieve user input. As such, they're values
+    are expected to come from elsewhere. This allows commands to recieve
+    their values like regular params, but still have them act in a particular
+    way.
+
+    It is primarly used for some builtin-types like `State` and `Context`.
+    """
+    return ParamInfo(
+        param_cls=param.SpecialParam,
+        arg_alias=name,
+        short=short,
+        default=default,
+        description=description,
+        callback=callback,
+    )
+
+
+T = t.TypeVar("T")
+
+
+def __cls_deco_factory(param_cls: type[param.Param]):
+    def decorator(
+        name: str = None,
+        short: str = None,
+        default: t.Any = param.MISSING,
+        description: str = None,
+        overwrite: bool = False,
+    ):
+        def inner(cls: T) -> T:
+            setattr(
+                cls,
+                "__param_info__",
+                {
+                    "param_cls": param_cls,
+                    "arg_alias": name,
+                    "short": short,
+                    "default": default,
+                    "description": description,
+                    "overwrite": overwrite,
+                },
+            )
+            return cls
+
+        return inner
+
+    return decorator
+
+
+argument = __cls_deco_factory(param.Argument)
+option = __cls_deco_factory(param.Option)
+flag = __cls_deco_factory(param.Flag)
+special = __cls_deco_factory(param.SpecialParam)

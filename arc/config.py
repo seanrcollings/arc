@@ -4,6 +4,8 @@ import logging
 from pathlib import Path
 from typing import get_type_hints
 from arc import errors
+import arc.typing as at
+from arc.color import fg
 
 
 class ConfigBase:
@@ -79,7 +81,6 @@ class ConfigBase:
                 key, value = line.split("=")
                 parsed[key] = self.__convert_loaded_value(key, value)
         except Exception as e:
-            breakpoint()
             raise errors.ArcError(
                 "Config values must follow the form `name=value`"
             ) from e
@@ -105,11 +106,11 @@ class ConfigBase:
 
     def __convert_loaded_value(self, name: str, value: str):
         # pylint: disable=import-outside-toplevel
-        from arc.types import type_store
+        return value
 
-        annotation = get_type_hints(self)[name]
-        converter = type_store.get_converter(annotation)
-        return converter(annotation).convert(value)
+        # annotation = get_type_hints(self)[name]
+        # converter = type_store.get_converter(annotation)
+        # return converter(annotation).convert(value)
 
     def post_load(self):
         """Executed after a loading a config from file or from env
@@ -123,53 +124,19 @@ class Config(ConfigBase):
     so the configuration file is not required by default"""
 
     ENV_PREFIX = "ARC_"
-    namespace_sep: str = ":"
-    """Character to seperate command names: `parent:child:granchild`"""
-    arg_assignment: str = "="
-    """Character to seperate argument names from argument values
-    when parsing via keyword `name=value`"""
-    flag_denoter: str = "--"
-    """Characters the proceed a flag argument: `--flag`"""
-    short_flag_denoter: str = "-"
-    """Characters that proceed a shortened flag `-f`"""
-    mode: str = "production"
-    """The current mode of the application, possible values:
-    - production
-    - development
-    - test
-    """
-    suggest_on_missing_argument: bool = True
-    """Wether or not to provide suggestions for possible misspellings
-    when an argument is not found"""
 
-    suggest_on_missing_command: bool = True
-    """Wether or not to provide suggestions for possible misspellings
-    when a command is not found"""
-
-    suggest_levenshtein_distance: int = 2
-    """The max Levenshtein distance between input and a
-    possible correction to trigger a suggestion """
+    environment: at.Env = "production"
 
     default_section_name: str = "description"
     """The name to use by default if the first section
     in a command docstring is anonymous
     """
 
-    parse_argument_help: bool = False
-    """Wether or not to attempt to parse the argument
-    section of help documentation to provide better documentation"""
+    transform_snake_case: bool = True
+    """Transform `snake_case` to `kebab-case`"""
 
-    tranform_snake_case: bool = True
-    """Transforms snake_case argument names to kebab-case. Defaults to True"""
-
-    color: bool = True
-    """Use Ansi-escape sequences. Defaults to true"""
-
-    mode_map = {
-        "development": logging.DEBUG,
-        "production": logging.WARNING,
-        "test": logging.ERROR,
-    }
+    brand_color: str = fg.ARC_BLUE
+    """Highlight color to use in help documentation"""
 
 
 config = Config()
