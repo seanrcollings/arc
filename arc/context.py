@@ -58,15 +58,11 @@ class Context:
         command_chain: list[Command] = None,
         parent: Context = None,
         suggestions: Suggestions = None,
-        env: at.Env = None,
     ):
         self.command = command
         self.fullname = fullname
         self.command_chain = command_chain or []
         self.parent = parent
-        self.env: t.Optional[at.Env] = env
-        if env:
-            logging.root_setup(env)
 
         if suggestions is not None:
             self.suggestions = default_sug | suggestions
@@ -136,6 +132,7 @@ class Context:
         arc will fill in defaults, and the current execution's state
         will be used initially
         """
+
         if isinstance(callback, command.Command):
             ctx = self.child_context(callback)
             ctx.state = self.state | ctx.state
@@ -190,17 +187,6 @@ class Context:
             raise RuntimeError("No contexts exist")
 
         return cls.__stack[-1]
-
-    @classmethod
-    @property
-    def environment(cls) -> at.Env:
-        curr = cls.current()
-        while not curr.env:
-            if not curr.parent:
-                return "production"
-            curr = curr.parent
-
-        return curr.env
 
     @classmethod
     def __convert__(cls, _value, _info, ctx: Context):

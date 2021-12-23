@@ -3,6 +3,7 @@ import typing as t
 import sys
 
 from arc import errors, utils, logging, typing as at
+from arc.config import config
 from arc._command.param import Flag
 from arc.autoload import Autoload
 from arc._command import helpers, Command
@@ -28,13 +29,13 @@ class CLI(Command):
             name: name of the CLI, will be used in the help command.
             state: dictionary of key value pairs to pass to commands
             version: Version string to display with `--version`
-            mode: Mode of the application. `development` or `production`
+            env: Environment of the application. `development` or `production`
             ctx_dict: additional keyword arguments to pass to the execution
             context
         """
 
+        config.environment = env
         self.version = version
-        ctx_dict["env"] = env
         logging.root_setup(env)
         utils.header("INIT")
 
@@ -101,7 +102,7 @@ class CLI(Command):
                         self, command_namespace, ctx
                     )
                 except errors.CommandNotFound as e:
-                    if Context.environment == "development":
+                    if config.environment == "development":
                         raise
 
                     print(str(e))

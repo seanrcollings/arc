@@ -42,14 +42,13 @@ class Command(ParamMixin):
         self.doc = callback.__doc__
         self.ctx_dict = ctx_dict
 
-        # TODO: get this lazy-evaluating again
-        # if Context.environment == "development":
-        # Constructs the params at instantiation.
-        # if there's something wrong with a param,
-        # this will raise an error. If we don't do this,
-        # the error woudln't be raised until executing
-        # the command, so it could easy to miss
-        self.params
+        if config.environment == "development":
+            # Constructs the params at instantiation.
+            # if there's something wrong with a param,
+            # this will raise an error. If we don't do this,
+            # the error woudln't be raised until executing
+            # the command, so it could easy to miss
+            self.params
 
     def __repr__(self):
         return f"{self.__class__.__name__}(name={self.name!r})"
@@ -71,24 +70,24 @@ class Command(ParamMixin):
         if not self.name:
             self.name = utils.discover_name()
 
-        try:
+        with self.create_ctx(fullname or self.name, **ctx_dict) as ctx:
             try:
-                with self.create_ctx(fullname or self.name, **ctx_dict) as ctx:
+                try:
                     args = t.cast(list[str], self.get_args(args))
 
                     self.parse_args(ctx, args)
                     return self.execute(ctx)
-            except errors.ArcError as e:
-                if Context.environment == "development":
+                except errors.ArcError as e:
+                    if config.environment == "development":
+                        raise
+
+                    print(str(e))
+                    raise errors.Exit(1)
+
+            except errors.Exit as e:
+                if config.environment == "development" and e.code != 0:
                     raise
-
-                print(str(e))
-                raise errors.Exit(1)
-
-        except errors.Exit as e:
-            if Context.environment == "development" and e.code != 0:
-                raise
-            sys.exit(e.code)
+                sys.exit(e.code)
 
     def execute(self, ctx: Context):
         utils.header("EXECUTION")

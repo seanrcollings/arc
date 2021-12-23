@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 from typing import get_type_hints
 from arc import errors
+import arc.typing as at
 from arc.color import fg
 
 
@@ -124,15 +125,15 @@ class Config(ConfigBase):
 
     ENV_PREFIX = "ARC_"
 
+    environment: at.Env = "production"
+
     default_section_name: str = "description"
     """The name to use by default if the first section
     in a command docstring is anonymous
     """
 
     transform_snake_case: bool = True
-
-    ansi: bool = True
-    """Use Ansi-escape sequences. Defaults to true"""
+    """Transform `snake_case` to `kebab-case`"""
 
     brand_color: str = fg.ARC_BLUE
     """Highlight color to use in help documentation"""
