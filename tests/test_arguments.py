@@ -27,6 +27,14 @@ class TestSimpleSyntax:
         assert cli("pos") == 1
         assert cli("pos 2") == 2
 
+    def test_default_none(self, cli: CLI):
+        @cli.subcommand()
+        def non(val: int = None):
+            return val
+
+        assert cli("non") == None
+        assert cli("non 1") == 1
+
     def test_star_args(self, cli: CLI):
 
         with pytest.raises(errors.ArgumentError):

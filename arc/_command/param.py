@@ -18,6 +18,8 @@ if t.TYPE_CHECKING:
 # with no default value
 MISSING = utils.symbol("MISSING")
 
+NO_CONVERT = (None, t.Any)
+
 
 class ParamAction(enum.Enum):
     STORE = enum.auto()
@@ -153,7 +155,9 @@ class Param:
                     ctx,
                 )
 
-        value = self.convert(value, ctx)
+        if value not in NO_CONVERT and self.type_info.origin not in NO_CONVERT:
+            value = self.convert(value, ctx)
+
         if self.callback:
             value = self.callback(value, ctx, self)
 

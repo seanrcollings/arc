@@ -1,4 +1,4 @@
-from typing import Annotated, Literal, Union, TypedDict
+from typing import Annotated, Literal, Union, TypedDict, Any
 from pathlib import Path
 import enum
 import pytest
@@ -291,3 +291,12 @@ def test_range(cli: CLI):
             return int(range)
 
         cli("ra 10")
+
+
+@pytest.mark.parametrize("val", ["string", 1, 2, 100000, 1.3, 200])
+def test_any(cli: CLI, val):
+    @cli.command()
+    def an(val: Any):
+        return val
+
+    assert cli(f"an {val}") == str(val)
