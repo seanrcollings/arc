@@ -38,3 +38,4 @@ nav:
       - Colored Output: usage/colored-output.md
       - Command Autoloading: usage/command-autoloading.md
       - Command State: usage/command-state.md
+  - Changelog: changelog.md
