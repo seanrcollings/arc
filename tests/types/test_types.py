@@ -1,4 +1,4 @@
-from typing import Annotated, Literal, Union, TypedDict, Any
+from typing import Annotated, Literal, Union, TypedDict, Any, Optional
 from pathlib import Path
 import enum
 import pytest
@@ -6,6 +6,22 @@ import pytest
 from arc import errors
 from arc.types import File, Range
 from arc import CLI
+
+
+def test_optional(cli: CLI):
+    @cli.subcommand()
+    def non(val: Optional[int]):
+        return val
+
+    @cli.subcommand()
+    def non2(val: Optional[list[int]]):
+        return val
+
+    assert cli("non") == None
+    assert cli("non 1") == 1
+
+    assert cli("non2") == None
+    assert cli("non2 1 2 3") == [1, 2, 3]
 
 
 @pytest.mark.parametrize(
@@ -89,6 +105,7 @@ class TestList:
             return val
 
         assert cli("li 1") == ["1"]
+        # assert cli("li 1,2,3,4") == ["1", "2", "3", "4"]
         assert cli("li 1 2 3 4") == ["1", "2", "3", "4"]
 
     def test_generic(self, cli: CLI):

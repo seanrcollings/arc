@@ -10,8 +10,8 @@ from arc.color import colorize, fg
 from arc._command import helpers
 from arc.context import Context
 from arc.types.helpers import join_or
-from arc.utils import IDENT, symbol
-from arc._command.param import MISSING, Param, ParamAction
+from arc.utils import IDENT
+from arc._command.param import Param, ParamAction
 
 logger = logging.getArcLogger("parse")
 
@@ -41,7 +41,7 @@ class Token:
 
 class Parsed(TypedDict):
     pos_values: list[str]
-    key_values: dict[str, Union[str, symbol]]
+    key_values: dict[str, Union[str, constants.MissingType]]
 
 
 class Lexer:
@@ -95,7 +95,7 @@ class Parser:
         if param.action is ParamAction.STORE:
             self.parsed[param.arg_name] = value
         elif param.action is ParamAction.APPEND:
-            if value is not MISSING:
+            if value is not constants.MISSING:
                 self.parsed.setdefault(param.arg_name, []).append(value)
         elif param.action is ParamAction.COUNT:
             if param.arg_name not in self.parsed:
@@ -139,7 +139,7 @@ class Parser:
         if param.is_keyword and self.peek_type() == TokenType.VALUE:
             value = self.consume().value
         else:
-            value = MISSING
+            value = constants.MISSING
 
         self.handle_value(param, value)
 
@@ -156,7 +156,7 @@ class Parser:
             if param.is_keyword and self.peek_type() == TokenType.VALUE:
                 value = self.consume().value
             else:
-                value = MISSING
+                value = constants.MISSING
 
             self.handle_value(param, value)
 

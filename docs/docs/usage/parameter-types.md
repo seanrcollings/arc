@@ -113,6 +113,15 @@ Enforces that the input must be a specific sub-set of values
 
 Constrains a dictionary input to a specific subset of keys and specific value types.
 
+`typing.Optional`
+Indicates an optional parameter with a default of `None`. The following are functionality equivalent
+```py title="optional_argument.py"
+--8<-- "examples/optional_argument.py"
+```
+```console
+--8<-- "examples/outputs/optional_argument"
+```
+
 
 `pathlib.Path`
 

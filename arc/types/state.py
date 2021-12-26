@@ -1,9 +1,7 @@
 from __future__ import annotations
 import typing as t
 from arc.types.params import special
-from arc.utils import symbol
 
-MISSING = symbol("MISSING")
 
 if t.TYPE_CHECKING:
     from arc.context import Context
@@ -30,7 +28,7 @@ class State(dict):
 
     @classmethod
     def __convert__(cls, _value, _info, ctx: Context):
-        # The account for State subclassing we create a new
+        # To account for State subclassing we create a new
         # State object with cls(), then set that, as the
         # context's state object
         state = cls(ctx.state)

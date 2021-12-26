@@ -6,7 +6,6 @@ import time
 from types import MethodType
 import typing as t
 import os
-import builtins
 
 from arc import logging, typing as at
 from arc.color import fg, effects, colorize
@@ -72,44 +71,6 @@ def timer(name):
         return t.cast(FuncT, decorator)
 
     return wrapper
-
-
-# TODO: get rid of this
-class symbol:
-    __symbols__: dict[str, "symbol"] = {}
-
-    def __new__(cls, name, *args, **kwargs):
-        if name in cls.__symbols__:
-            return cls.__symbols__[name]
-
-        obj = super().__new__(cls, *args, **kwargs)  # type: ignore
-        cls.__symbols__[name] = obj
-        return obj
-
-    def __init__(self, name):
-        self.__name = name
-
-    def __str__(self):
-        return self.__name
-
-    def __repr__(self):
-        return f"<symbol : {self.__name}>"
-
-    def __hash__(self):
-        return hash(self.__name)
-
-    def __eq__(self, other):
-        return self is other
-
-    def __copy__(self):
-        return self
-
-    def __deepcopy__(self, memo):
-        return self
-
-    @property
-    def name(self):
-        return self.__name
 
 
 # https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
@@ -181,10 +142,6 @@ def cmp(a, b) -> at.CompareReturn:
 def partition(item: t.Any, n: int):
     """Partion `item` into a list of elements `n` long"""
     return [item[index : index + n] for index in range(0, len(item), n)]
-
-
-def iscontextmanager(obj: t.Any):
-    return hasattr(obj, "__enter__") and hasattr(obj, "__exit__")
 
 
 def discover_name():

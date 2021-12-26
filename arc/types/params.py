@@ -2,9 +2,7 @@
 from __future__ import annotations
 import typing as t
 from arc._command import param
-
-# TODO: expose nargs to the public interface
-# possible change it's name?
+from arc import constants
 
 
 class ParamInfo:
@@ -13,7 +11,7 @@ class ParamInfo:
         param_cls: type[param.Param] = None,
         arg_alias: str = None,
         short: str = None,
-        default: t.Any = param.MISSING,
+        default: t.Any = constants.MISSING,
         description: str = None,
         callback: t.Callable = None,
         action: param.ParamAction = None,
@@ -42,7 +40,7 @@ def Param(
     *,
     name: str = None,
     short: str = None,
-    default: t.Any = param.MISSING,
+    default: t.Any = constants.MISSING,
     description: str = None,
     callback: t.Callable = None,
 ) -> t.Any:
@@ -79,7 +77,7 @@ def Param(
 def Argument(
     *,
     name: str = None,
-    default: t.Any = param.MISSING,
+    default: t.Any = constants.MISSING,
     description: str = None,
     callback: t.Callable = None,
 ) -> t.Any:
@@ -110,7 +108,7 @@ def Option(
     *,
     name: str = None,
     short: str = None,
-    default: t.Any = param.MISSING,
+    default: t.Any = constants.MISSING,
     description: str = None,
     callback: t.Callable = None,
 ) -> t.Any:
@@ -212,7 +210,7 @@ def Count(
 def SpecialParam(
     name: str = None,
     short: str = None,
-    default: t.Any = param.MISSING,
+    default: t.Any = constants.MISSING,
     description: str = None,
     callback: t.Callable = None,
 ) -> t.Any:
@@ -241,7 +239,7 @@ def __cls_deco_factory(param_cls: type[param.Param]):
     def decorator(
         name: str = None,
         short: str = None,
-        default: t.Any = param.MISSING,
+        default: t.Any = constants.MISSING,
         description: str = None,
         overwrite: bool = False,
     ):

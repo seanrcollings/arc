@@ -5,10 +5,11 @@ import enum
 
 import typing as t
 
-from arc import errors, utils, constants
+from arc import errors, constants
 from arc.color import colorize, fg, colored
 from arc.config import config
 from arc.typing import CollectionTypes
+
 
 if t.TYPE_CHECKING:
     from arc.context import Context
@@ -16,7 +17,7 @@ if t.TYPE_CHECKING:
 # Represents a missing value
 # Used to represent an argument
 # with no default value
-MISSING = utils.symbol("MISSING")
+
 
 NO_CONVERT = (None, t.Any)
 
@@ -34,7 +35,7 @@ class Param:
         annotation: type,
         arg_alias: str = None,
         short: str = None,
-        default: t.Any = MISSING,
+        default: t.Any = constants.MISSING,
         description: str = None,
         callback: t.Callable[[t.Any, Context, Param], t.Any] = None,
         expose: bool = True,
@@ -42,28 +43,26 @@ class Param:
         nargs: int = None,
     ):
 
-        self.type_info = TypeInfo.analyze(annotation)
+        self.type_info = helpers.TypeInfo.analyze(annotation)
+        self.default: t.Any = default
+
+        if self.type_info.is_optional_type():
+            self.type_info = self.type_info.sub_types[0]
+            if self.default is constants.MISSING:
+                self.default = None
+
         self.arg_name: str = arg_name
         self.arg_alias: str = arg_alias if arg_alias else arg_name
         self.short: t.Optional[str] = short
-        self.default: t.Any = default
         self.description: t.Optional[str] = description
         self.callback: t.Optional[t.Callable] = callback
         self.expose: bool = expose
-
-        if nargs is None:
-            nargs = self._discover_nargs()
-
-        self.nargs: t.Optional[int] = nargs
-
-        if action is None:
-            action = self._discover_action()
-
-        self.action: ParamAction = action
+        self.nargs: t.Optional[int] = nargs or self._discover_nargs()
+        self.action: ParamAction = action or self._discover_action()
 
         if self.short and len(self.short) > 1:
             raise errors.ArgumentError(
-                f"Argument {self.arg_name}'s shortened name is longer than 1 character"
+                f"Parameter {self.arg_name}'s shortened name is longer than 1 character"
             )
 
     def __repr__(self):
@@ -92,14 +91,15 @@ class Param:
 
     def _discover_action(self) -> ParamAction:
         action = ParamAction.STORE
-        if safe_issubclass(self.type_info.origin, CollectionTypes):
+
+        if helpers.safe_issubclass(self.type_info.origin, CollectionTypes):
             action = ParamAction.APPEND
 
         return action
 
     def _discover_nargs(self) -> t.Optional[int]:
         if (
-            safe_issubclass(self.type_info.origin, tuple)
+            helpers.safe_issubclass(self.type_info.origin, tuple)
             and self.type_info.sub_types
             and self.type_info.sub_types[-1].origin is not Ellipsis
         ):
@@ -108,7 +108,7 @@ class Param:
 
     @property
     def optional(self):
-        return self.default is not MISSING
+        return self.default is not constants.MISSING
 
     @property
     def is_keyword(self):
@@ -145,7 +145,7 @@ class Param:
     def process_parse_result(self, ctx: Context, args: dict):
         value = self.consume_value(ctx, args)
 
-        if value is MISSING:
+        if value is constants.MISSING:
             if self.is_flag:
                 value = not self.default
             else:
@@ -161,7 +161,7 @@ class Param:
         if self.callback:
             value = self.callback(value, ctx, self)
 
-        if utils.iscontextmanager(value) and not value is ctx:
+        if helpers.iscontextmanager(value) and not value is ctx:
             value = ctx.resource(value)
 
         return value
@@ -179,13 +179,13 @@ class Param:
         return value
 
     def convert(self, value: t.Any, ctx: Context):
-        if value is MISSING:
+        if value is constants.MISSING:
             return None
 
         type_class: type[aliases.TypeProtocol] = aliases.Alias.resolve(self.type_info)
 
         try:
-            converted = convert(type_class, value, self.type_info, ctx)
+            converted = helpers.convert(type_class, value, self.type_info, ctx)
         except errors.ConversionError as e:
             message = str(e)
             if e.source:
@@ -204,10 +204,10 @@ class Param:
 class Argument(Param):
     def _format_usage(self):
         if self.action is ParamAction.APPEND:
-            if self.nargs > 1:
-                string = f"<{self.arg_alias}1> ... <{self.arg_alias}{self.nargs}>"
-            elif self.nargs is None:
+            if self.nargs is None:
                 string = f"<{self.arg_alias}...>"
+            elif self.nargs > 1:
+                string = f"<{self.arg_alias}1> ... <{self.arg_alias}{self.nargs}>"
             else:
                 string = self.arg_alias
         else:
@@ -265,7 +265,7 @@ class Flag(_KeywordParam):
         #         "The default for a flag must be True, False, or not specified."
         #     )
 
-        if self.default is MISSING:
+        if self.default is constants.MISSING:
             self.default = False
 
 
@@ -273,5 +273,4 @@ class SpecialParam(Param):
     ...
 
 
-from arc.types.helpers import TypeInfo, convert, safe_issubclass
-from arc.types import aliases
+from arc.types import aliases, helpers

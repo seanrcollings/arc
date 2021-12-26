@@ -5,7 +5,7 @@ import inspect
 import functools
 
 
-from arc import errors, logging
+from arc import errors, logging, constants
 from arc.config import config
 from arc.color import colorize, fg
 from arc._command import param
@@ -36,7 +36,7 @@ class ParamBuilder:
                 info = ParamInfo(
                     default=arg.default
                     if arg.default is not arg.empty
-                    else param.MISSING,
+                    else constants.MISSING,
                 )
 
             # By default, snake_case args are transformed to kebab-case
@@ -70,7 +70,7 @@ class ParamBuilder:
         if not info.param_cls:
             if arg.annotation is bool:
                 info.param_cls = param.Flag
-                if info.default is param.MISSING:
+                if info.default is constants.MISSING:
                     info.default = False
 
             elif arg.kind is arg.POSITIONAL_ONLY:
@@ -92,9 +92,9 @@ class ParamBuilder:
         overide any user-declared values of `info`.
 
         if it is True, the user properties will overwrite the type properties
-        when the user properties are not `None` or `param.MISSING`
+        when the user properties are not `None` or `constants.MISSING`
         """
-        default_values = (param.MISSING, None)
+        default_values = (constants.MISSING, None)
         type_param_info: Optional[dict[str, Any]] = getattr(
             arg.annotation, "__param_info__", None
         )

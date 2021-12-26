@@ -1,5 +1,5 @@
 import pytest
-from typing import Annotated
+import typing as t
 from arc import CLI, errors, config
 from arc.types import Option, Flag
 from arc.types.params import Count
@@ -32,8 +32,15 @@ class TestSimpleSyntax:
         def non(val: int = None):
             return val
 
+        @cli.subcommand()
+        def non2(val: list[int] = None):
+            return val
+
         assert cli("non") == None
         assert cli("non 1") == 1
+
+        assert cli("non2") == None
+        assert cli("non2 1 2 3") == [1, 2, 3]
 
     def test_star_args(self, cli: CLI):
 

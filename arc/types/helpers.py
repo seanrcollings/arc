@@ -35,14 +35,20 @@ class TypeInfo(Generic[T]):
 
     @property
     def name(self) -> str:
-        if self._name:
-            return self._name
-        elif name := getattr(self.origin, "name", None):
-            return name
-        elif name := getattr(self.origin, "__name__", None):
-            return name
+        return (
+            self._name
+            or getattr(self.origin, "name", None)
+            or getattr(self.origin, "__name__", None)
+            or str(self.origin)
+        )
 
-        return str(self.origin)
+    def is_optional_type(self) -> bool:
+        """The type is `Optional[T]`"""
+        return (
+            self.origin is Union
+            and len(self.sub_types) == 2
+            and self.sub_types[-1].base is type(None)
+        )
 
     @classmethod
     def analyze(cls, annotation) -> TypeInfo:
@@ -107,11 +113,15 @@ def convert(
     return utils.dispatch_args(protocol.__convert__, value, info, ctx)
 
 
-def safe_issubclass(typ, classes: Union[type, tuple[type, ...]]):
+def safe_issubclass(typ, classes: Union[type, tuple[type, ...]]) -> bool:
     try:
         return issubclass(typ, classes)
     except TypeError:
         return False
+
+
+def iscontextmanager(obj: Any) -> bool:
+    return hasattr(obj, "__enter__") and hasattr(obj, "__exit__")
 
 
 def joiner(values: Sequence, join_str: str = ", ", last_str: str = ", "):
