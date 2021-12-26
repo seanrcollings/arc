@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import typing as t
 import sys
 from pathlib import Path
@@ -8,9 +9,9 @@ import contextlib
 import io
 from dataclasses import dataclass
 
-from arc import errors, utils
 import yaml
 
+from arc import errors, utils
 
 PARENT = Path(__file__).parent
 EXAMPLE_DIR = PARENT.parent / "examples"
