@@ -33,11 +33,11 @@ class TestImpl:
         DirectoryPath = path.strictpath(directory=True)
         assert DirectoryPath("arc") == path.DirectoryPath("arc")
 
-        MatchPath = path.strictpath(matches=r"^/home/sean/.+")
-        assert MatchPath("arc") == pathlib.Path("arc")
+        InHomeDir = path.strictpath(matches=rf"^{pathlib.Path.home()}.+")
+        assert InHomeDir("arc") == pathlib.Path("arc")
 
         with pytest.raises(ValueError):
-            MatchPath("/tmp")
+            InHomeDir("/tmp")
 
 
 def test_usage(cli: CLI):
