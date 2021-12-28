@@ -29,7 +29,7 @@ Contains the code for coloring text elements.
 - `ARC_BLUE`
 
 ### `fg.rgb(red: int, green: int, blue: int)`
-Used to create any text color in the full RGB specturm. Each paramater's values range from [0, 255]
+Used to create any text color in the full RGB specturm. Each parameter's values range from [0, 255]
 
 ### `fg.hex(hex_code: str | int)`
 Used to create a color using a hex code instead of the RGB values. Can be passed the hex code as a string (`'#fff'`, `'#333'`) or as a number using Python's hex shorthand (`0xfff`, `0x333`)
@@ -58,7 +58,7 @@ Contains the code for coloring the background of elements.
 
 
 ### `bg.rgb(red: int, green: int, blue: int)`
-Used to create any background color in the full RGB specturm. Each paramater's values range from [0, 255]
+Used to create any background color in the full RGB specturm. Each parameter's values range from [0, 255]
 
 ### `bg.hex(hex_code: str | int)`
 Used to create a color using a hex code instead of the RGB values. Can be passed the hex code as a string (`'#fff'`, `'#333'`) or as a number using Python's hex shorthand (`0xfff`, `0x333`)

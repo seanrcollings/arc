@@ -38,7 +38,7 @@ class Alias:
     """Parent class for all aliases. Stores references to all
     known alias types and handles resolving them. Additionally,
     it provides a convenience wrapper for alias types by implementing
-    a custom `cls.__convert__()` that calls `cls.convert()` for non-paramaterized
+    a custom `cls.__convert__()` that calls `cls.convert()` for non-parameterized
     types and `cls.g_convert()` for generic types.
     """
 

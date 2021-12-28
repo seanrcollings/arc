@@ -94,7 +94,7 @@ class Command(ParamMixin):
                     if config.environment == "development":
                         raise
 
-                    logger.error(str(e))
+                    print(str(e))
                     raise errors.Exit(1)
 
             except errors.Exit as e:
@@ -319,7 +319,7 @@ class Command(ParamMixin):
 
     def update_param_descriptions(self):
         """Parses the function docstring, then updates
-        paramaters with the associated description in the arguments section
+        parameters with the associated description in the arguments section
         if the param does not have a description already.
         """
         descriptions = self._parsed_argument_section

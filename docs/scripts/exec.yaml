@@ -10,18 +10,18 @@
 - file: arguments_documentation.py
   exec: [command1 --help, command2 --help]
   out: arguments_documentation
-- file: paramater_argument.py
+- file: parameter_argument.py
   exec: Joseph Joestar
-  out: paramater_argument
-- file: paramater_option.py
+  out: parameter_argument
+- file: parameter_option.py
   exec: --firstname Joesph --lastname Joestar
-  out: paramater_option
-- file: paramater_flag.py
+  out: parameter_option
+- file: parameter_flag.py
   exec: [Joseph, Joseph --reverse]
-  out: paramater_flag
-- file: paramater_count.py
+  out: parameter_flag
+- file: parameter_count.py
   exec: [Joseph, Joseph --repeat, Joseph --repeat --repeat]
-  out: paramater_count
+  out: parameter_count
 - file: list_argument.py
   exec: ["", "Jonathen Joseph Jotaro"]
 - file: list_option.py

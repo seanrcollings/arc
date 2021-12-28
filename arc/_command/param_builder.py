@@ -159,7 +159,7 @@ def wrap_class_callback(cls: type[ClassCallback]) -> Callable[..., Any]:
     # inspect.signature() checks for a cached signature object
     # at __signature__. So we can cache it there
     # to generate the correct signature object
-    # during the paramater building process
+    # during the parameter building process
     cls.__signature__ = sig  # type: ignore
     wrapper.__signature__ = sig  # type: ignore
     return wrapper
