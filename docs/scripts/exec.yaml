@@ -48,3 +48,4 @@
   exec: [c1, c2, --help]
 - file: optional_argument.py
   exec: [c1, c1 1, c2, c2 2]
+- file: callback_example.py

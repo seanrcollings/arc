@@ -36,6 +36,7 @@ nav:
       - Using the CLI: usage/cli.md
       - Documentation Generation: usage/documentation-generation.md
       - Colored Output: usage/colored-output.md
+      - Callbacks: usage/callbacks.md
       - Command Autoloading: usage/command-autoloading.md
       - Command State: usage/command-state.md
   - Changelog: changelog.md
