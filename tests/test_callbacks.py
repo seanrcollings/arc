@@ -122,3 +122,16 @@ def test_missing_yield(cli: CLI):
 
     with pytest.raises(errors.CallbackError):
         cli("command")
+
+
+def test_callback_alias(cli: CLI):
+    @cli.callback()
+    def cb(_args, ctx):
+        raise CallbackException(ctx)
+
+    @cli.command()
+    def command():
+        ...
+
+    with pytest.raises(CallbackException):
+        cli("command")

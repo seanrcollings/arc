@@ -141,7 +141,7 @@ class Context:
             ctx = self.child_context(callback)
             ctx.state = self.state | ctx.state
             cmd = callback
-            callback = cmd.callback
+            callback = cmd._callback
 
             for param in cmd.params:
                 if param.arg_name not in kwargs and param.expose:

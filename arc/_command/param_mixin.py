@@ -24,7 +24,7 @@ class ParamMixin:
 
     @functools.cached_property
     def params(self) -> list[Param]:
-        params = self.builder(self.callback).build()  # type: ignore
+        params = self.builder(self._callback).build()  # type: ignore
         params.insert(
             0,
             Flag(

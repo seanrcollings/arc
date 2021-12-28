@@ -7,7 +7,6 @@ import shlex
 import sys
 
 from arc import errors, logging, utils
-from arc.callback import Callback
 from arc.color import colorize, effects, fg
 from arc._command.param_builder import ParamBuilder, wrap_class_callback
 from arc.context import Context
@@ -15,6 +14,7 @@ from arc.parser import Parser
 from arc.present.help_formatter import HelpFormatter
 from arc.config import config
 from arc.typing import ClassCallback
+from arc import callback as acb
 from .param_mixin import ParamMixin
 
 
@@ -33,7 +33,7 @@ class Command(ParamMixin):
         description: t.Optional[str] = None,
         **ctx_dict,
     ):
-        self.callback = callback
+        self._callback = callback
         self.name = name
         self.subcommands: dict[str, Command] = {}
         self.subcommand_aliases: dict[str, str] = {}
@@ -41,7 +41,7 @@ class Command(ParamMixin):
         self._description = description
         self.doc = callback.__doc__
         self.ctx_dict = ctx_dict
-        self.callbacks: set[Callback] = set()
+        self.callbacks: set[acb.Callback] = set()
 
         if config.environment == "development":
             # Constructs the params at instantiation.
@@ -58,7 +58,7 @@ class Command(ParamMixin):
         return {
             "name": self.name,
             "description": self.description,
-            "doc": self.callback.__doc__,
+            "doc": self._callback.__doc__,
             "context": self.state,
             "subcommands": {
                 name: command.schema() for name, command in self.subcommands.items()
@@ -104,10 +104,10 @@ class Command(ParamMixin):
 
     def execute(self, ctx: Context):
         utils.header("EXECUTION")
-        if not self.callback:
+        if not self._callback:
             raise RuntimeError("No callback associated with this command to execute")
 
-        return ctx.execute(self.callback, **ctx.args)
+        return ctx.execute(self._callback, **ctx.args)
 
     def get_args(self, args: t.Union[str, list[str]] = None):
         if isinstance(args, str):
@@ -168,7 +168,7 @@ class Command(ParamMixin):
         def decorator(callback: t.Union[t.Callable, Command, type[ClassCallback]]):
             # Should we allow this?
             if isinstance(callback, Command):
-                callback = callback.callback
+                callback = callback._callback
 
             if isinstance(callback, type):
                 if isinstance(callback, ClassCallback):
@@ -202,7 +202,7 @@ class Command(ParamMixin):
         # to faccilitate automatic name discovery. When they are added
         # to a parent command, a name needs to be added
         if not command.name:
-            command.name = command.callback.__name__
+            command.name = command._callback.__name__
 
         self.subcommands[command.name] = command
         command.callbacks = self.inheritable_callbacks()
@@ -238,7 +238,7 @@ class Command(ParamMixin):
     def is_namespace(self):
         from . import command_builders
 
-        return self.callback is command_builders.helper
+        return self._callback is command_builders.helper
 
     ## Documentation Helpers ---------------------------------------------------------
 
@@ -331,6 +331,18 @@ class Command(ParamMixin):
                 param.description = descriptions.get(param.arg_name)
 
     # Callbacks ------------------------------------------------------
+    def callback(
+        self, callback: acb.CallbackFunc = None, *, inherit: bool = True
+    ) -> t.Callable[[acb.CallbackFunc], acb.Callback]:
+        def inner(callback: acb.CallbackFunc) -> acb.Callback:
+            cb = acb.create(inherit=inherit)(callback)
+            self.callbacks.add(cb)
+            return cb
+
+        if callback:
+            return inner(callback)  # type: ignore
+
+        return inner
 
     def inheritable_callbacks(self):
         return {callback for callback in self.callbacks if callback.inherit}
