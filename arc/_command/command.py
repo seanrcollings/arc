@@ -6,8 +6,8 @@ import typing as t
 import shlex
 import sys
 
-
 from arc import errors, logging, utils
+from arc.callback import Callback
 from arc.color import colorize, effects, fg
 from arc._command.param_builder import ParamBuilder, wrap_class_callback
 from arc.context import Context
@@ -41,6 +41,7 @@ class Command(ParamMixin):
         self._description = description
         self.doc = callback.__doc__
         self.ctx_dict = ctx_dict
+        self.callbacks: set[Callback] = set()
 
         if config.environment == "development":
             # Constructs the params at instantiation.
@@ -52,6 +53,18 @@ class Command(ParamMixin):
 
     def __repr__(self):
         return f"{self.__class__.__name__}(name={self.name!r})"
+
+    def schema(self):
+        return {
+            "name": self.name,
+            "description": self.description,
+            "doc": self.callback.__doc__,
+            "context": self.state,
+            "subcommands": {
+                name: command.schema() for name, command in self.subcommands.items()
+            },
+            "parameters": {name: param.schema() for name, param in self.params.items()},
+        }
 
     # Command Execution ------------------------------------------------------------
     def __call__(self, *args, **kwargs):
@@ -81,7 +94,7 @@ class Command(ParamMixin):
                     if config.environment == "development":
                         raise
 
-                    print(str(e))
+                    logger.error(str(e))
                     raise errors.Exit(1)
 
             except errors.Exit as e:
@@ -125,18 +138,6 @@ class Command(ParamMixin):
             value = param.process_parse_result(ctx, parsed)
             if param.expose:
                 ctx.args[param.arg_name] = value
-
-    def schema(self):
-        return {
-            "name": self.name,
-            "description": self.description,
-            "doc": self.callback.__doc__,
-            "context": self.state,
-            "subcommands": {
-                name: command.schema() for name, command in self.subcommands.items()
-            },
-            "parameters": {name: param.schema() for name, param in self.params.items()},
-        }
 
     # Subcommand Construction ------------------------------------------------------------
 
@@ -204,9 +205,7 @@ class Command(ParamMixin):
             command.name = command.callback.__name__
 
         self.subcommands[command.name] = command
-        # command.executable.callback_store.register_callbacks(
-        #     **self.executable.callback_store.inheritable_callbacks()
-        # )
+        command.callbacks = self.inheritable_callbacks()
 
         logger.debug(
             "Registered %s%s%s command to %s%s%s",
@@ -330,3 +329,8 @@ class Command(ParamMixin):
         for param in self.params:
             if not param.description:
                 param.description = descriptions.get(param.arg_name)
+
+    # Callbacks ------------------------------------------------------
+
+    def inheritable_callbacks(self):
+        return {callback for callback in self.callbacks if callback.inherit}

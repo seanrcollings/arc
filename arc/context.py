@@ -1,15 +1,15 @@
 from __future__ import annotations
 import contextlib
-import sys
 import typing as t
 
 from arc import errors, logging, typing as at
+from arc.callback import CallbackStack
+from arc.color import colorize, fg
 from arc.config import config
 from arc.types.params import special
-from arc import _command as command
+from arc import _command
 from arc.types.state import State
-from arc.typing import Suggestions
-from arc.utils import IoWrapper
+
 
 if t.TYPE_CHECKING:
     from arc._command import Command
@@ -19,7 +19,7 @@ logger = logging.getArcLogger("ctx")
 
 T = t.TypeVar("T")
 
-default_sug: Suggestions = {
+default_sug: at.Suggestions = {
     "levenshtein_distance": 2,
     "suggest_arguments": True,
     "suggest_commands": True,
@@ -57,7 +57,7 @@ class Context:
         fullname: str,
         command_chain: list[Command] = None,
         parent: Context = None,
-        suggestions: Suggestions = None,
+        suggestions: at.Suggestions = None,
     ):
         self.command = command
         self.fullname = fullname
@@ -71,7 +71,11 @@ class Context:
 
         self.args: dict[str, t.Any] = {}
         self.extra: list[str] = []
+        self.callback_stack = CallbackStack()
         self._state: t.Optional[State] = None
+
+        # The result of the most recent execution
+        self.result: t.Any = None
 
         # Keeps track of how many times this context has been pusehd onto the context
         # stack. When it reaches zero, ctx.close() will be called
@@ -133,7 +137,7 @@ class Context:
         will be used initially
         """
 
-        if isinstance(callback, command.Command):
+        if isinstance(callback, _command.Command):
             ctx = self.child_context(callback)
             ctx.state = self.state | ctx.state
             cmd = callback
@@ -147,7 +151,20 @@ class Context:
             ctx = self
 
         with ctx:
-            return callback(**kwargs)
+            cb_stack = CallbackStack()
+            for cb in ctx.command.callbacks:
+                try:
+                    cb_stack.add(cb.func(kwargs, ctx))  # type: ignore
+                except AttributeError as e:
+                    raise errors.CallbackError(
+                        f"{colorize(str(cb.func.__name__), fg.YELLOW)} is not a "  # type: ignore
+                        "valid callback. "
+                        f"Perhaps you missed a {colorize('yield', fg.ARC_BLUE)}?"
+                    ) from e
+
+            with cb_stack:
+                ctx.result = callback(**kwargs)
+                return ctx.result
 
     def close(self):
         logger.debug("Closing %s", self)
