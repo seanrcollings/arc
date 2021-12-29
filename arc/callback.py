@@ -22,6 +22,7 @@ class Callback:
         return command
 
     def remove(self, command: Command) -> Command:
+        """Removes the callback from the decorated `command`"""
         command.callbacks.remove(self)
         return command
 
@@ -29,6 +30,8 @@ class Callback:
 def create(
     func: CallbackFunc = None, *, inherit: bool = True
 ) -> t.Callable[[CallbackFunc], Callback]:
+    """Decorator that transforms the decorated function into a callback"""
+
     def inner(func: CallbackFunc):
         return Callback(
             name=func.__name__,
@@ -43,6 +46,8 @@ def create(
 
 
 def remove(*callbacks: Callback) -> t.Callable[[Command], Command]:
+    """Decorator that removes all `*callbacks` from the decorated `command`"""
+
     def inner(command: Command) -> Command:
         for cb in callbacks:
             cb.remove(command)

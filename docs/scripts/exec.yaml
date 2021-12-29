@@ -49,3 +49,8 @@
 - file: optional_argument.py
   exec: [c1, c1 1, c2, c2 2]
 - file: callback_example.py
+- file: callback_create.py
+- file: callback_inherit.py
+  exec: [c2, c1, c1:sub]
+- file: callback_inherit2.py
+  exec: [c2, c1, c1:sub]
