@@ -1,4 +1,4 @@
-"""Public API for hanlding paramater modification"""
+"""Public API for hanlding parameter modification"""
 from __future__ import annotations
 import typing as t
 from arc._command import param
@@ -112,7 +112,7 @@ def Option(
     description: str = None,
     callback: t.Callable = None,
 ) -> t.Any:
-    """A (generally optional) keyword paramater.
+    """A (generally optional) keyword parameter.
 
       # Example
     ```py

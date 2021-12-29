@@ -1,6 +1,8 @@
 site_name: arc
 theme:
   name: material
+  features:
+    - navigation.instant
   palette:
     - scheme: default
       primary: blue
@@ -26,6 +28,9 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.tabbed:
       alternate_style: true
+  - toc:
+      permalink: true
+
 nav:
   - Home: index.md
   - Features: features.md
@@ -36,6 +41,7 @@ nav:
       - Using the CLI: usage/cli.md
       - Documentation Generation: usage/documentation-generation.md
       - Colored Output: usage/colored-output.md
+      - Callbacks: usage/callbacks.md
       - Command Autoloading: usage/command-autoloading.md
       - Command State: usage/command-state.md
   - Changelog: changelog.md

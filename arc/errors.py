@@ -29,6 +29,10 @@ class ArgumentError(ArcError):
     """Raised when an error occurs to the scope of a single argument"""
 
 
+class CallbackError(ArcError):
+    ...
+
+
 class InvalidParamaterError(ArgumentError):
     def __init__(self, message: str, param: Param, ctx: Context):
         arg = color.colorize(param.cli_rep(), color.fg.ARC_BLUE)

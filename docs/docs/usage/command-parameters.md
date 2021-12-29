@@ -1,16 +1,16 @@
 In *arc*, command-line parameters are defined using Python function arguments. *arc* has several kinds of parameters. Each corresponds with different input syntax and different declaration syntax.
 
 ## `arc.Argument`
-`Argument` paramaters are passed in positionally.
+`Argument` parameters are passed in positionally.
 
 ### Example
 ```py
---8<-- "examples/paramater_argument.py"
+--8<-- "examples/parameter_argument.py"
 ```
 
 ### Usage
 ```console
---8<-- "examples/outputs/paramater_argument"
+--8<-- "examples/outputs/parameter_argument"
 ```
 
 ### Notes
@@ -29,12 +29,12 @@ Options are (usually optional) parameters that are identified by keyword.
 ### Example
 
 ```py
---8<-- "examples/paramater_option.py"
+--8<-- "examples/parameter_option.py"
 ```
 
 ### Usage
 ```console
---8<-- "examples/outputs/paramater_option"
+--8<-- "examples/outputs/parameter_option"
 ```
 
 ### Notes
@@ -54,11 +54,11 @@ Flags are similar to `Option` parameters as they are referenced by name, but the
 
 ### Example
 ```py
---8<-- "examples/paramater_flag.py"
+--8<-- "examples/parameter_flag.py"
 ```
 ### Usage
 ```console
---8<-- "examples/outputs/paramater_flag"
+--8<-- "examples/outputs/parameter_flag"
 ```
 
 ### Notes
@@ -76,11 +76,11 @@ Flags are similar to `Option` parameters as they are referenced by name, but the
 `Count` is a special kind of flag that instead of representing a boolean values, counts how many times it is referred to.
 ### Example
 ```py
---8<-- "examples/paramater_count.py"
+--8<-- "examples/parameter_count.py"
 ```
 ### Usage
 ```console
---8<-- "examples/outputs/paramater_count"
+--8<-- "examples/outputs/parameter_count"
 ```
 ### Arguments to `arc.Count()`
 - `name: str`: The name that will be used the the param on the command line
@@ -91,7 +91,7 @@ Flags are similar to `Option` parameters as they are referenced by name, but the
 
 
 ## Parameter Shorthand
-If you've read any other arc documentation, you may have noticed them use paramaters without using `Argument`, `Option`, and `Flag`. For convenience, arc allows a shorthand for parameters. For example, we can simplify this command:
+If you've read any other arc documentation, you may have noticed them use parameters without using `Argument`, `Option`, and `Flag`. For convenience, arc allows a shorthand for parameters. For example, we can simplify this command:
 ```py
 import arc
 

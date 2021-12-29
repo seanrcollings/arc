@@ -1,5 +1,5 @@
 """Mixin for param properties and functions
-Note that in development, all paramaters are insantiated, but
+Note that in development, all parameters are insantiated, but
 in production only the command being executed parameters are
 created.
 """
@@ -24,7 +24,7 @@ class ParamMixin:
 
     @functools.cached_property
     def params(self) -> list[Param]:
-        params = self.builder(self.callback).build()  # type: ignore
+        params = self.builder(self._callback).build()  # type: ignore
         params.insert(
             0,
             Flag(

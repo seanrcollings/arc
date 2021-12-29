@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Callable
 
-from arc import result, logging
+from arc import logging
 from arc.color import colorize, fg
 
 from arc._command.command import Command
