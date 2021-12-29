@@ -3,6 +3,7 @@ import typing as t
 import sys
 
 from arc import errors, utils, logging, typing as at
+from arc.color import colorize, fg
 from arc.config import config
 from arc._command.param import Flag
 from arc.autoload import Autoload
@@ -141,6 +142,14 @@ class CLI(Command):
             del self.params
         except AttributeError:
             ...
+
+        if config.environment == "development":
+            self.params
+            if len(self.pos_params) > 0:
+                raise errors.ArgumentError(
+                    f"{colorize('@cli.options', fg.YELLOW)} does not allow Argument parameters. "
+                    "All arguments must be Option or Flag parameters"
+                )
 
         return self
 
