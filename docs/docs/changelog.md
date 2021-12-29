@@ -1,6 +1,11 @@
 ## `6.2.0`
 
 - Added [global cli options](./usage/cli.md#global-options)
+- Changed the implementation for gathering `State` so now it's consistent across commands, `cli.options` and callbacks
+
+## `6.1.0`
+
+- Added [command callbacks](./usage/callbacks.md)
 
 ## `6.0.1`
 

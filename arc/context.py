@@ -76,7 +76,7 @@ class Context:
         self.args: dict[str, t.Any] = {}
         self.extra: list[str] = []
         self.callback_stack = CallbackStack()
-        self._state: t.Optional[State] = None
+        self.state: State = self.create_state()
 
         # The result of the most recent execution
         self.result: t.Any = None
@@ -109,26 +109,18 @@ class Context:
 
         return curr
 
-    @property
-    def state(self):
-        if self._state is None:
-            state: dict = {}
-            if self.command_chain:
-                for cmd in self.command_chain:
-                    state |= cmd.state
+    def create_state(self) -> State:
+        state: State = State()
+        if self.command_chain:
+            for cmd in self.command_chain:
+                state.update(cmd.state)
+        else:
+            state = State(self.command.state)
 
-                self._state = State(state)
-            else:
-                self._state = State(self.command.state)
+        if self.parent and self.parent.state:
+            state = self.parent.state | state
 
-            if self.parent and self.parent.state:
-                self._state = self.parent.state | self._state
-
-        return self._state
-
-    @state.setter
-    def state(self, state):
-        self._state = state
+        return state
 
     def child_context(self, command: Command) -> Context:
         """Creates a new context that is the child of the current context"""

@@ -90,3 +90,24 @@ def test_state_retained(scli: CLI):
         return state
 
     assert scli("c1").val == 2
+
+
+def test_state_persitance(scli: CLI):
+    class CustomState(State):
+        ...
+
+    @scli.options
+    def options(state: CustomState):
+        state.o_val = 1
+
+    @scli.callback()
+    def callback(_args, ctx):
+        ctx.state.ca_val = 1
+        yield
+
+    @scli.subcommand()
+    def c1(state: CustomState):
+        state.co_val = 1
+        return state
+
+    assert scli("c1") == CustomState(o_val=1, ca_val=1, co_val=1, test=1)
