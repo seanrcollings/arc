@@ -55,7 +55,7 @@ def test_cli(cli: CLI):
         utils.ansi_clean(cli.get_help(cli.create_ctx(cli.name)))
         == """\
 USAGE
-    test <command> [ARGUMENTS ...]
+    test [OPTIONS] <command> [ARGUMENTS ...]
 
 OPTIONS
     --help (-h)     Shows help documentation

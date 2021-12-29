@@ -13,11 +13,24 @@ class TestSimpleSyntax:
 
         assert cli("pos 2") == 2
 
+        assert cli("pos -- -2") == -2
+
         with pytest.raises(errors.UsageError):
             cli("pos")
 
         with pytest.raises(errors.ArgumentError):
             cli("pos not-a-number")
+
+        with pytest.raises(errors.UnrecognizedArgError):
+            cli("pos --val 2")
+
+    def test_pos_only(self, cli: CLI):
+        @cli.subcommand()
+        def pos(name: str):
+            return name
+
+        assert cli("pos sean") == "sean"
+        assert cli("pos -- --sean") == "--sean"
 
     def test_default_pos(self, cli: CLI):
         @cli.subcommand()

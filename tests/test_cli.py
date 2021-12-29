@@ -2,12 +2,11 @@ from unittest import mock
 from pathlib import Path
 import pytest
 
-from arc import CLI, namespace, errors
+from arc import CLI, namespace, errors, Context
 from arc.errors import CommandError
-from arc._debug import debug
 
 
-def test_install_group(cli: CLI):
+def test_namespace_install(cli: CLI):
     g1 = namespace("g1")
     cli.install_command(g1)
     assert g1 in cli.subcommands.values()
@@ -20,17 +19,15 @@ def test_install_group(cli: CLI):
 def test_execute(cli: CLI):
     @cli.subcommand()
     def func1(x):
-        assert isinstance(x, str)
         return x
 
     @cli.subcommand()
     @cli.subcommand("func2copy")
     def func2(x: int):
-        assert isinstance(x, int)
         return x
 
-    cli("func1 2")
-    cli("func2 2")
+    assert cli("func1 2") == "2"
+    assert cli("func2 2") == 2
 
 
 def test_nonexistant_command(cli: CLI):
@@ -46,12 +43,6 @@ class TestAutoload:
         cli.autoload(str(self.root / "arc/_debug.py"))
         assert "debug" in cli.subcommands
 
-    # def test_autoload_dir(self, cli: CLI):
-    #     cli.autoload(str(self.root / "arc/builtin"))
-    #     assert "debug" in cli.subcommands
-    #     assert "files" in cli.subcommands
-    #     assert "https" in cli.subcommands
-
     def test_autoload_error(self, cli: CLI):
         with pytest.raises(CommandError):
             cli.autoload(str(self.root / "arc/_debug.py"))
@@ -62,4 +53,32 @@ def test_command_alias(cli: CLI):
     def name1():
         return True
 
+    assert cli("name1")
     assert cli("name2")
+
+
+class OptionCalled(Exception):
+    def __init__(self, *args):
+        self.args = args
+
+
+class TestCLIOptions:
+    def test_options(self, cli: CLI):
+        @cli.options
+        def options(*, flag: bool, name: str, ctx: Context):
+            ctx.state.args = (flag, name)
+
+        @cli.command()
+        def command(ctx: Context):
+            return ctx
+
+        assert cli("--flag --name Sean command").state.args == (True, "Sean")
+
+        assert cli("--name Sean command").state.args == (False, "Sean")
+
+    def test_no_pos(self, cli: CLI):
+        with pytest.raises(errors.ArgumentError):
+
+            @cli.options
+            def options(val: int):
+                ...

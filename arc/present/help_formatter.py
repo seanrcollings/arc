@@ -63,7 +63,7 @@ class HelpFormatter(TextFormatter):
             elif isinstance(command, CLI):
                 self.write_text(
                     colored(
-                        f"{colorize(ctx.root.command.name, config.brand_color)} "
+                        f"{colorize(ctx.root.command.name, config.brand_color)} [OPTIONS] "
                         f"{colorize('<command>', effects.UNDERLINE)} [ARGUMENTS ...]",
                     )
                 )

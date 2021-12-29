@@ -37,11 +37,7 @@ matchers = {
 class Token:
     value: str
     type: TokenType
-
-
-class Parsed(TypedDict):
-    pos_values: list[str]
-    key_values: dict[str, Union[str, constants.MissingType]]
+    raw: str
 
 
 class Lexer:
@@ -55,16 +51,16 @@ class Lexer:
             for name, regex in matchers.items():
                 if match := regex.match(curr):
                     logger.debug("Matched %s -> %s", curr, name)
-                    self.add_token(match, name)
+                    self.add_token(curr, match, name)
                     break
             else:
                 raise ValueError(f"Could not tokenize {curr}")
 
         return self.tokens
 
-    def add_token(self, match: re.Match, kind: TokenType):
+    def add_token(self, string: str, match: re.Match, kind: TokenType):
         value: str = match.groups()[0]
-        self.tokens.append(Token(value, kind))
+        self.tokens.append(Token(value, kind, string))
 
 
 class Parser:
@@ -81,6 +77,12 @@ class Parser:
         self.curr_pos: int = 0
         self._long_names: dict[str, Param] = {}
         self._short_names: dict[str, Param] = {}
+        self.parser_table = {
+            TokenType.KEYWORD: self.parse_keyword,
+            TokenType.SHORT_KEYWORD: self.parse_short_keyword,
+            TokenType.POS_ONLY: self.parse_pos_only,
+            TokenType.VALUE: self.parse_value,
+        }
 
     def add_param(self, param: Param):
         self.params.append(param)
@@ -106,32 +108,26 @@ class Parser:
     def parse(self, args: list[str]):
         utils.header("PARSING")
         self.tokens = Lexer(args).tokenize()
-        parser_table = {
-            TokenType.KEYWORD: self.parse_keyword,
-            TokenType.SHORT_KEYWORD: self.parse_short_keyword,
-            TokenType.POS_ONLY: self.parse_pos_only,
-            TokenType.VALUE: self.parse_value,
-        }
+
         while self.tokens:
             curr = self.consume()
-            if self.pos_only:
-                if curr.type is TokenType.KEYWORD:
-                    curr.value = f"{constants.FLAG_PREFIX}{curr.value}"
-                elif curr.type is TokenType.SHORT_KEYWORD:
-                    curr.value = f"{constants.SHORT_FLAG_PREFIX}{curr.value}"
-                self.parse_value(curr)
-            else:
-                parser_table[curr.type](curr)
+            self.handle_token(curr)
 
         return self.parsed, self.extra
 
-    def parse_keyword(self, token: Token):
+    def handle_token(self, token: Token):
+        if self.pos_only:
+            token.value = token.raw
+            self.parse_value(token)
+        else:
+            self.parser_table[token.type](token)
 
+    def parse_keyword(self, token: Token):
         param = self._long_names.get(token.value)
 
         if not param:
             if self.allow_extra:
-                self.extra.append(token.value)
+                self.extra.append(constants.FLAG_PREFIX + token.value)
                 return
             else:
                 raise self.non_existant_arg(token)
@@ -148,7 +144,7 @@ class Parser:
             param = self._short_names.get(char)
             if not param:
                 if self.allow_extra:
-                    self.extra.append(char)
+                    self.extra.append(constants.SHORT_FLAG_PREFIX + char)
                     return
                 else:
                     raise self.non_existant_arg(token)
@@ -202,13 +198,7 @@ class Parser:
         return None
 
     def non_existant_arg(self, token: Token):
-        prefix = (
-            constants.SHORT_FLAG_PREFIX
-            if token.type == TokenType.SHORT_KEYWORD
-            else constants.FLAG_PREFIX
-        )
-
-        styled = colorize(prefix + token.value, fg.YELLOW)
+        styled = colorize(token.raw, fg.YELLOW)
         message = f"Option {styled} not recognized"
 
         if self.ctx.suggestions["suggest_arguments"]:
@@ -227,3 +217,25 @@ class Parser:
                 )
 
         return errors.UnrecognizedArgError(message, self.ctx)
+
+
+class CLIOptionsParser(Parser):
+    """Parser sub class used for global CLI options
+    to that the inital CLI parse doesn't eat things like
+    comand-specific `--help`.
+    The first time we encounter a `TokenType.VALUE` to parse, the parser
+    will exit with all additional data in `extra`
+    """
+
+    class CommandNameEncountered(errors.ArcError):
+        ...
+
+    def parse(self, args: list[str]):
+        try:
+            return super().parse(args)
+        except CLIOptionsParser.CommandNameEncountered:
+            return self.parsed, self.extra
+
+    def parse_value(self, token: Token):
+        self.extra = [token.value] + [token.raw for token in self.tokens]
+        raise CLIOptionsParser.CommandNameEncountered()
