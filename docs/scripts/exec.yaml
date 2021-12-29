@@ -65,3 +65,5 @@
 - file: namespace_example.py
   exec: [n1, n2]
   exit_code: 1
+- file: cli_options.py
+  exec: [command, --verbose command]

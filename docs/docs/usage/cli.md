@@ -80,4 +80,15 @@ The following is an example of how to (mostly) emulate what namespace does.
 
 
 ## Global Options
-TODO
+When using `#!python arc.CLI()`, each command handles it's own parameters. As such, they don't allow us to add parameters to the application as a whole.
+
+We can solve this problem with `#!python @cli.options`. This is similar to how `#!python @cli.command()` works, but for the entire app, rather than an individual command.
+Additionally, arguments aren't allowed, only options or flags
+
+```py title="cli_options.py"
+--8<-- "examples/cli_options.py"
+```
+
+```console
+--8<-- "examples/outputs/cli_options"
+```

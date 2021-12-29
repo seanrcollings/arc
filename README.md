@@ -41,7 +41,7 @@ ARGUMENTS
 OPTIONS
     --help (-h)  Shows help documentation
 ```
-Reference [getting started](https://github.com/seanrcollings/arc/wiki) for more info
+
 # Installation
 
 ```
