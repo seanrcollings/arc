@@ -117,10 +117,7 @@ class Parser:
 
     def handle_token(self, token: Token):
         if self.pos_only:
-            if token.type is TokenType.KEYWORD:
-                token.value = f"{constants.FLAG_PREFIX}{token.value}"
-            elif token.type is TokenType.SHORT_KEYWORD:
-                token.value = f"{constants.SHORT_FLAG_PREFIX}{token.value}"
+            token.value = token.raw
             self.parse_value(token)
         else:
             self.parser_table[token.type](token)
@@ -201,13 +198,7 @@ class Parser:
         return None
 
     def non_existant_arg(self, token: Token):
-        prefix = (
-            constants.SHORT_FLAG_PREFIX
-            if token.type == TokenType.SHORT_KEYWORD
-            else constants.FLAG_PREFIX
-        )
-
-        styled = colorize(prefix + token.value, fg.YELLOW)
+        styled = colorize(token.raw, fg.YELLOW)
         message = f"Option {styled} not recognized"
 
         if self.ctx.suggestions["suggest_arguments"]:
@@ -231,7 +222,10 @@ class Parser:
 class CLIOptionsParser(Parser):
     """Parser sub class used for global CLI options
     to that the inital CLI parse doesn't eat things like
-    comand-specific `--help`"""
+    comand-specific `--help`.
+    The first time we encounter a `TokenType.VALUE` to parse, the parser
+    will exit with all additional data in `extra`
+    """
 
     class CommandNameEncountered(errors.ArcError):
         ...

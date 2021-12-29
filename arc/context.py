@@ -117,6 +117,9 @@ class Context:
             else:
                 self._state = State(self.command.state)
 
+            if self.parent and self.parent.state:
+                self._state = self.parent.state | self._state
+
         return self._state
 
     @state.setter
