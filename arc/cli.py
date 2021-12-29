@@ -8,6 +8,7 @@ from arc._command.param import Flag
 from arc.autoload import Autoload
 from arc._command import helpers, Command
 from arc.context import Context
+from arc.parser import CLIOptionsParser
 
 
 logger = logging.getArcLogger("cli")
@@ -15,6 +16,8 @@ logger = logging.getArcLogger("cli")
 
 class CLI(Command):
     """Core class for arc"""
+
+    parser = CLIOptionsParser
 
     def __init__(
         self,
@@ -40,7 +43,7 @@ class CLI(Command):
         utils.header("INIT")
 
         super().__init__(
-            lambda: print("CLI stub function."),
+            lambda: ...,
             name or utils.discover_name(),
             state,
             **ctx_dict,
@@ -82,7 +85,11 @@ class CLI(Command):
         utils.header("CLI")
         with self.create_ctx(fullname or self.name, **(self.ctx_dict | kwargs)) as ctx:
             try:
-                args = t.cast(list[str], self.get_args(args))
+                args = self.get_args(args)
+                self.parse_args(ctx, args, allow_extra=True)
+                self.execute(ctx)
+                args = t.cast(list[str], ctx.extra)
+
                 if not args:
                     logger.debug("No arguments present")
                     print(self.get_usage(ctx))
@@ -91,9 +98,7 @@ class CLI(Command):
                 subcommand_name = args.pop(0)
                 command_namespace = helpers.get_command_namespace(subcommand_name)
                 if not command_namespace:
-                    logger.debug("%s is not a valid command namespace", subcommand_name)
-                    args.append(subcommand_name)
-                    return super().main(args)
+                    raise errors.CommandNotFound("No command name provided", ctx)
 
                 logger.debug("Executing subcommand: %s", subcommand_name)
 
@@ -125,6 +130,19 @@ class CLI(Command):
             Command: The subcommand's command object
         """
         return self.subcommand(*args, **kwargs)
+
+    def options(self, callback: t.Callable) -> Command:
+        self._callback = callback
+        # In certain circumstances, params
+        # may have already been consructed
+        # we can del them to cause them to
+        # rebuild
+        try:
+            del self.params
+        except AttributeError:
+            ...
+
+        return self
 
     def schema(self):
         return {
