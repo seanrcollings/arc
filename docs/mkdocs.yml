@@ -49,4 +49,5 @@ nav:
       - arc.cli: reference/cli.md
       - arc.color: reference/color.md
       - arc.command: reference/command.md
+      - arc.context: reference/context.md
   - Changelog: changelog.md

@@ -1,3 +1,6 @@
+## `6.2.0`
+
+- Added [global cli options](./usage/cli.md#global-options)
 
 ## `6.0.1`
 

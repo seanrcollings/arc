@@ -106,8 +106,11 @@ class CLI(Command):
         fullname: str = None,
         **kwargs,
     ):
+        kwargs = self.ctx_dict | kwargs
+        kwargs["execute_callbacks"] = False
+
         utils.header("CLI")
-        with self.create_ctx(fullname or self.name, **(self.ctx_dict | kwargs)) as ctx:
+        with self.create_ctx(fullname or self.name, **kwargs) as ctx:
             try:
                 args = self.get_args(args)
                 self.parse_args(ctx, args, allow_extra=True)

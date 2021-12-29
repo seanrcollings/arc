@@ -36,12 +36,14 @@ class Context:
 
     Attributes:
         command (Command): The command for this context
-        parent (Context, optional): The parent Context. Defaults to None.
-        fullname (str, optional): The most descriptive name for this invocatio. Defaults to None.
+        parent (Context, optional): The parent Context.
+        fullname (str, optional): The most descriptive name for this invocation.
         args (dict[str, typing.Any]): mapping of argument names to parsed values
         extra (list[str]): extra input that may not have been parsed
         command_chain (list[str]): The chain of commands between the executing command and the
-        `CLI` root. If a command is executing standalone, this will always be empty
+            `CLI` root. If a command is executing standalone, this will always be empty
+        execute_callbacks (bool): whether or not to execute command callbacks
+            when executing the command
     """
 
     # Each time a command is invoked,
@@ -58,11 +60,13 @@ class Context:
         command_chain: list[Command] = None,
         parent: Context = None,
         suggestions: at.Suggestions = None,
+        execute_callbacks: bool = True,
     ):
         self.command = command
         self.fullname = fullname
         self.command_chain = command_chain or []
         self.parent = parent
+        self.execute_callbacks = execute_callbacks
 
         if suggestions is not None:
             self.suggestions = default_sug | suggestions
@@ -155,15 +159,16 @@ class Context:
 
         with ctx:
             cb_stack = CallbackStack()
-            for cb in ctx.command.callbacks:
-                try:
-                    cb_stack.add(cb.func(kwargs, ctx))  # type: ignore
-                except AttributeError as e:
-                    raise errors.CallbackError(
-                        f"{colorize(str(cb.func.__name__), fg.YELLOW)} is not a "  # type: ignore
-                        "valid callback. "
-                        f"Perhaps you missed a {colorize('yield', fg.ARC_BLUE)}?"
-                    ) from e
+            if self.execute_callbacks:
+                for cb in ctx.command.callbacks:
+                    try:
+                        cb_stack.add(cb.func(kwargs, ctx))  # type: ignore
+                    except AttributeError as e:
+                        colored = colorize(str(cb.func.__name__), fg.YELLOW)  # type: ignore
+                        raise errors.CallbackError(
+                            f"{colored} is not a valid callback. "
+                            f"Perhaps you missed a {colorize('yield', fg.ARC_BLUE)}?"
+                        ) from e
 
             with cb_stack:
                 ctx.result = callback(**kwargs)

@@ -135,3 +135,17 @@ def test_callback_alias(cli: CLI):
 
     with pytest.raises(CallbackException):
         cli("command")
+
+
+def test_no_callback_with_options(cli: CLI):
+    @cli.callback()
+    def callback(_args, ctx: Context):
+        ctx.state.setdefault("call_count", 0)
+        ctx.state.call_count += 1
+        yield
+
+    @cli.command()
+    def command(ctx: Context):
+        return ctx
+
+    assert cli("command").state.call_count == 1
