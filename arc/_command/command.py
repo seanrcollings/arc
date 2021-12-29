@@ -63,7 +63,7 @@ class Command(ParamMixin):
             "subcommands": {
                 name: command.schema() for name, command in self.subcommands.items()
             },
-            "parameters": {name: param.schema() for name, param in self.params.items()},
+            "parameters": {param.arg_alias: param.schema() for param in self.params},
         }
 
     # Command Execution ------------------------------------------------------------

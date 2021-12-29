@@ -5,7 +5,7 @@ import pytest
 
 from arc import errors
 from arc.types import File, Range
-from arc import CLI
+from arc import CLI, Context
 
 
 def test_optional(cli: CLI):
@@ -317,3 +317,11 @@ def test_any(cli: CLI, val):
         return val
 
     assert cli(f"an {val}") == str(val)
+
+
+def test_context(cli: CLI):
+    @cli.command()
+    def ct(ctx: Context):
+        return ctx
+
+    assert isinstance(cli("ct"), Context)

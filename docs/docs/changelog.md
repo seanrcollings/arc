@@ -1,3 +1,8 @@
+## `6.2.1`
+
+- Fixed command debug utilites
+
+
 ## `6.2.0`
 
 - Added [global cli options](./usage/cli.md#global-options)
