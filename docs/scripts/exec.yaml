@@ -1,3 +1,8 @@
+- file: cli_demo.py
+  # There's some weird bug with c1 --help output not getting captured properly
+  # if it's lower in the list. Possibl look into later?
+  exec: [c1 --help, c2 --help]
+  out: cli_demo_help
 - file: arguments_documentation.py
   exec: [command1 --help, command2 --help]
 - file: hello.py
@@ -44,7 +49,7 @@
   exit_code: 1
 - file: hello_world.py
 - file: cli_demo.py
-  exec: [c1, c2, --help]
+  exec: [--help, c1, c2]
 - file: optional_argument.py
   exec: [c1, c1 1, c2, c2 2]
 - file: callback_example.py
@@ -53,3 +58,10 @@
   exec: [c2, c1, c1:sub]
 - file: callback_inherit2.py
   exec: [c2, c1, c1:sub]
+- file: cli_main.py
+  exec: [--help, command, ns:sub]
+- file: cli_subcommands.py
+  exec: [command, command:sub, command:sub:sub2]
+- file: namespace_example.py
+  exec: [n1, n2]
+  exit_code: 1

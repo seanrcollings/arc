@@ -50,9 +50,11 @@ def exec_examples(config: list[ExecConfig]):
         execs = entry.exec
         if isinstance(execs, str):
             execs = [execs]
-        with contextlib.redirect_stdout(io.StringIO()) as f:
-            for execute in execs:
-                try:
+
+        string = io.StringIO()
+        for execute in execs:
+            try:
+                with contextlib.redirect_stdout(string) as f:
 
                     f.write(f"$ python {entry.file} {execute}\n")
 
@@ -69,13 +71,12 @@ def exec_examples(config: list[ExecConfig]):
 
                     f.write("\n")
 
-                except SystemExit as e:
-                    if e.code != entry.exit_code:
-                        print(f.getvalue())
-                        raise
-                except Exception:
-                    if not entry.error_allowed:
-                        raise
+            except SystemExit as e:
+                if e.code != entry.exit_code:
+                    print(f.getvalue())
+            except Exception:
+                if not entry.error_allowed:
+                    raise
 
         module = None
 
