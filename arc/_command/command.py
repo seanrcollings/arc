@@ -24,6 +24,7 @@ DEFAULT_SECTION: str = config.default_section_name
 
 class Command(ParamMixin):
     builder = ParamBuilder
+    parser = Parser
 
     def __init__(
         self,
@@ -39,7 +40,6 @@ class Command(ParamMixin):
         self.subcommand_aliases: dict[str, str] = {}
         self.state = state or {}
         self._description = description
-        self.doc = callback.__doc__
         self.ctx_dict = ctx_dict
         self.callbacks: set[acb.Callback] = set()
 
@@ -109,7 +109,7 @@ class Command(ParamMixin):
 
         return ctx.execute(self._callback, **ctx.args)
 
-    def get_args(self, args: t.Union[str, list[str]] = None):
+    def get_args(self, args: t.Union[str, list[str]] = None) -> list[str]:
         if isinstance(args, str):
             args = shlex.split(args)
         elif args is None:
@@ -121,15 +121,15 @@ class Command(ParamMixin):
         ctx = Context(self, fullname=fullname, **kwargs)
         return ctx
 
-    def create_parser(self, ctx: Context):
-        parser = Parser(ctx)
+    def create_parser(self, ctx: Context, **kwargs):
+        parser = self.parser(ctx, **kwargs)
         for param in self.visible_params:
             parser.add_param(param)
 
         return parser
 
-    def parse_args(self, ctx: Context, args: list[str]):
-        parser = self.create_parser(ctx)
+    def parse_args(self, ctx: Context, args: list[str], **kwargs):
+        parser = self.create_parser(ctx, **kwargs)
         parsed, extra = parser.parse(args)
 
         ctx.extra = extra
@@ -147,7 +147,7 @@ class Command(ParamMixin):
         description: t.Optional[str] = None,
         state: dict[str, t.Any] = None,
     ):
-        """Create and install a subcommands
+        """Decorator used to tranform a function into a subcommand of `self`
 
         Args:
             name (Union[str, list[str], tuple[str, ...]], optional): The name to reference
@@ -155,8 +155,8 @@ class Command(ParamMixin):
                 the first in the list will be treated as the "true" name, and the others
                 will be treated as aliases. If no value is provided, `function.__name__` is used
 
-            description(Optional[str]): Description of the command's function. Can be used
-            to generate documentation.
+            description (Optional[str]): Description of the command's function. Will be used
+                 in the `--help` documentation
 
             state (dict[str, Any], optional): Special data that will be
                 passed to this command (and any subcommands) at runtime. Defaults to None.
@@ -236,7 +236,7 @@ class Command(ParamMixin):
         return name
 
     def is_namespace(self):
-        from . import command_builders
+        from .. import command_builders
 
         return self._callback is command_builders.helper
 
@@ -287,6 +287,10 @@ class Command(ParamMixin):
                 parsed[current_section] += line + "\n"
 
         return parsed
+
+    @property
+    def doc(self):
+        return self._callback.__doc__
 
     @property
     def description(self) -> t.Optional[str]:

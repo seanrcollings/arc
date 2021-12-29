@@ -3,18 +3,45 @@ import typing as t
 import sys
 
 from arc import errors, utils, logging, typing as at
+from arc.color import colorize, fg
 from arc.config import config
 from arc._command.param import Flag
 from arc.autoload import Autoload
 from arc._command import helpers, Command
 from arc.context import Context
+from arc.parser import CLIOptionsParser
 
 
 logger = logging.getArcLogger("cli")
 
 
 class CLI(Command):
-    """Core class for arc"""
+    """Class for creating multi-command CLI applications
+
+
+    ## Example
+    ```py
+    import arc
+
+    cli = arc.CLI()
+
+
+    @cli.command()
+    def c1():
+        print("the first command")
+
+
+    @cli.command()
+    def c2():
+        print("The second command")
+
+
+    cli()
+
+    ```
+    """
+
+    parser = CLIOptionsParser
 
     def __init__(
         self,
@@ -26,12 +53,12 @@ class CLI(Command):
     ):
         """
         Args:
-            name: name of the CLI, will be used in the help command.
+            name: name of the CLI, will be used in the help command. If one is not provided,
+                a name will be automatically discovered based on file name.
             state: dictionary of key value pairs to pass to commands
             version: Version string to display with `--version`
             env: Environment of the application. `development` or `production`
-            ctx_dict: additional keyword arguments to pass to the execution
-            context
+            ctx_dict: additional keyword arguments to pass to the execution context
         """
 
         config.environment = env
@@ -40,7 +67,7 @@ class CLI(Command):
         utils.header("INIT")
 
         super().__init__(
-            lambda: print("CLI stub function."),
+            lambda: ...,
             name or utils.discover_name(),
             state,
             **ctx_dict,
@@ -79,10 +106,17 @@ class CLI(Command):
         fullname: str = None,
         **kwargs,
     ):
+        kwargs = self.ctx_dict | kwargs
+        kwargs["execute_callbacks"] = False
+
         utils.header("CLI")
-        with self.create_ctx(fullname or self.name, **(self.ctx_dict | kwargs)) as ctx:
+        with self.create_ctx(fullname or self.name, **kwargs) as ctx:
             try:
-                args = t.cast(list[str], self.get_args(args))
+                args = self.get_args(args)
+                self.parse_args(ctx, args, allow_extra=True)
+                self.execute(ctx)
+                args = t.cast(list[str], ctx.extra)
+
                 if not args:
                     logger.debug("No arguments present")
                     print(self.get_usage(ctx))
@@ -91,9 +125,7 @@ class CLI(Command):
                 subcommand_name = args.pop(0)
                 command_namespace = helpers.get_command_namespace(subcommand_name)
                 if not command_namespace:
-                    logger.debug("%s is not a valid command namespace", subcommand_name)
-                    args.append(subcommand_name)
-                    return super().main(args)
+                    raise errors.CommandNotFound("No command name provided", ctx)
 
                 logger.debug("Executing subcommand: %s", subcommand_name)
 
@@ -125,6 +157,27 @@ class CLI(Command):
             Command: The subcommand's command object
         """
         return self.subcommand(*args, **kwargs)
+
+    def options(self, callback: t.Callable) -> Command:
+        self._callback = callback
+        # In certain circumstances, params
+        # may have already been consructed
+        # we can del them to cause them to
+        # rebuild
+        try:
+            del self.params
+        except AttributeError:
+            ...
+
+        if config.environment == "development":
+            self.params
+            if len(self.pos_params) > 0:
+                raise errors.ArgumentError(
+                    f"{colorize('@cli.options', fg.YELLOW)} does not allow Argument parameters. "
+                    "All arguments must be Option or Flag parameters"
+                )
+
+        return self
 
     def schema(self):
         return {
