@@ -1,3 +1,5 @@
+- file: arguments_documentation.py
+  exec: [command1 --help, command2 --help]
 - file: hello.py
   exec: --help
   out: hello_help
@@ -7,9 +9,6 @@
 - file: docstring_example.py
   exec: --help
   out: docstring_example
-- file: arguments_documentation.py
-  exec: [command1 --help, command2 --help]
-  out: arguments_documentation
 - file: parameter_argument.py
   exec: Joseph Joestar
   out: parameter_argument

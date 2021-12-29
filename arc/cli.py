@@ -14,7 +14,30 @@ logger = logging.getArcLogger("cli")
 
 
 class CLI(Command):
-    """Core class for arc"""
+    """Class for creating multi-command CLI applications
+
+
+    ## Example
+    ```py
+    import arc
+
+    cli = arc.CLI()
+
+
+    @cli.command()
+    def c1():
+        print("the first command")
+
+
+    @cli.command()
+    def c2():
+        print("The second command")
+
+
+    cli()
+
+    ```
+    """
 
     def __init__(
         self,
@@ -26,12 +49,12 @@ class CLI(Command):
     ):
         """
         Args:
-            name: name of the CLI, will be used in the help command.
+            name: name of the CLI, will be used in the help command. If one is not provided,
+                a name will be automatically discovered based on file name.
             state: dictionary of key value pairs to pass to commands
             version: Version string to display with `--version`
             env: Environment of the application. `development` or `production`
-            ctx_dict: additional keyword arguments to pass to the execution
-            context
+            ctx_dict: additional keyword arguments to pass to the execution context
         """
 
         config.environment = env

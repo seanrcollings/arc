@@ -147,7 +147,7 @@ class Command(ParamMixin):
         description: t.Optional[str] = None,
         state: dict[str, t.Any] = None,
     ):
-        """Create and install a subcommands
+        """Decorator used to tranform a function into a subcommand of `self`
 
         Args:
             name (Union[str, list[str], tuple[str, ...]], optional): The name to reference
@@ -155,8 +155,8 @@ class Command(ParamMixin):
                 the first in the list will be treated as the "true" name, and the others
                 will be treated as aliases. If no value is provided, `function.__name__` is used
 
-            description(Optional[str]): Description of the command's function. Can be used
-            to generate documentation.
+            description (Optional[str]): Description of the command's function. Will be used
+                 in the `--help` documentation
 
             state (dict[str, Any], optional): Special data that will be
                 passed to this command (and any subcommands) at runtime. Defaults to None.
@@ -236,7 +236,7 @@ class Command(ParamMixin):
         return name
 
     def is_namespace(self):
-        from . import command_builders
+        from .. import command_builders
 
         return self._callback is command_builders.helper
 

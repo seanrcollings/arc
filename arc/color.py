@@ -140,7 +140,7 @@ def colorize(string: str, *codes: str, clear: bool = True):
 
     Args:
         string (str): String to colorize
-        *codes (Color): colors / effects to apply to the string
+        *codes (Ansi): colors / effects to apply to the string
         clear (bool): Whether or not to append `effects.CLEAR`
             to the end of the string which will prevent any
             subsequent strings from recieving the styles. Defaults

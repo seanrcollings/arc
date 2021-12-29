@@ -1,1 +1,7 @@
-Info on using the CLI object
+## Example
+
+## Subcommands
+
+## Multiple Files
+
+## Global Options
