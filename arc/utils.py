@@ -163,3 +163,9 @@ class IoWrapper(io.StringIO):
             message = ansi_clean(message)
 
         self.wrapped.write(message)
+
+    def flush(self):
+        self.wrapped.flush()
+
+    def __getattr__(self, attr: str):
+        return getattr(self.wrapped, attr)
