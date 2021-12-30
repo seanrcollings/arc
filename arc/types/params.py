@@ -16,6 +16,7 @@ class ParamInfo:
         callback: t.Callable = None,
         action: param.ParamAction = None,
         prompt: str = None,
+        envvar: str = None,
     ):
         self.param_cls = param_cls
         self.arg_alias = arg_alias
@@ -25,6 +26,7 @@ class ParamInfo:
         self.callback = callback
         self.action = action
         self.prompt = prompt
+        self.envvar = envvar
 
     def dict(self):
         """Used to pass to `Param()` as **kwargs"""
@@ -36,6 +38,7 @@ class ParamInfo:
             "callback": self.callback,
             "action": self.action,
             "prompt": self.prompt,
+            "envvar": self.envvar,
         }
 
 
@@ -47,6 +50,7 @@ def Param(
     description: str = None,
     callback: t.Callable = None,
     prompt: str = None,
+    envvar: str = None,
 ) -> t.Any:
     """A CLI Paramater. Automatically decides whether it is
     a `positional`, `option` or `flag`
@@ -76,6 +80,7 @@ def Param(
         description=description,
         callback=callback,
         prompt=prompt,
+        envvar=envvar,
     )
 
 

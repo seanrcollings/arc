@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import enum
+import os
 
 import typing as t
 
@@ -44,6 +45,7 @@ class Param:
         action: ParamAction = None,
         nargs: int = None,
         prompt: str = None,
+        envvar: str = None,
     ):
 
         self.type_info = helpers.TypeInfo.analyze(annotation)
@@ -63,6 +65,7 @@ class Param:
         self.nargs: t.Optional[int] = nargs or self._discover_nargs()
         self.action: ParamAction = action or self._discover_action()
         self.prompt: t.Optional[str] = prompt
+        self.envvar: t.Optional[str] = envvar
 
         if self.short and len(self.short) > 1:
             raise errors.ArgumentError(
@@ -170,17 +173,17 @@ class Param:
 
         return value
 
-    ## TODO:
-    ## Add other possible sources  if absent on the command line
-    ## Env, config, prompt, ...
     def consume_value(self, _ctx: Context, args: dict):
         value = args.get(self.arg_name, constants.MISSING)
 
-        if value is constants.MISSING:
-            value = self.default
+        if self.envvar and value is constants.MISSING:
+            value = os.getenv(self.envvar) or constants.MISSING
 
         if self.prompt and value is constants.MISSING:
             value = prompter.input(self.prompt) or constants.MISSING
+
+        if value is constants.MISSING:
+            value = self.default
 
         return value
 
