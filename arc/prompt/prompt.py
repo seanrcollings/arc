@@ -13,20 +13,21 @@ class Prompt:
     """Core class to the `prompt` package.
 
     Usage:
-        ```py
-        prompt = Prompt()
-        question = MultipleChoiceQuestion(["Chocolate", "Vanilla", "Strawberry"])
-        prompt.ask(question, "What's you favorite ice cream flavor?")
-        ```
-        Would result in a prompt like:
-        ```
-        What's you favorite ice cream flavor?
-        [0] Chocolate
-        [1] Vanilla
-        [2] Strawberry
 
-        >
-        ```
+    ```py
+    prompt = Prompt()
+    question = MultipleChoiceQuestion(["Chocolate", "Vanilla", "Strawberry"])
+    prompt.ask(question, "What's you favorite ice cream flavor?")
+    ```
+    Would result in a prompt like:
+    ```
+    What's you favorite ice cream flavor?
+    [0] Chocolate
+    [1] Vanilla
+    [2] Strawberry
+
+    >
+    ```
     """
 
     def __init__(
@@ -108,18 +109,26 @@ class Prompt:
         question = ConfirmQuestion(*args, **kwargs)
         return self.ask(question)
 
-    def input(self, *args, **kwargs) -> str:
-        """Gather input from the user_input
+    def input(
+        self,
+        desc: str,
+        empty: bool = True,
+        sensitive: bool = False,
+        multi_line: bool = False,
+    ) -> str:
+        """Gather input from stdin
 
         Is an alias for the `InputQuestion` type
 
         Args:
             desc (str): Message to display to the user
+            empty (bool): Whether an empty imput should be allowed
+            sensitive (bool): If The data is sensitive, input won't be echoed to the command line
 
         Returns:
             str: The user's input
         """
-        question = InputQuestion(*args, **kwargs)
+        question = InputQuestion(desc, empty, sensitive, multi_line)
         return self.ask(question)
 
     def beautify(self, message: str, color: str = "", emoji: str = "", **kwargs):

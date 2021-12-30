@@ -5,7 +5,7 @@ import enum
 
 import typing as t
 
-from arc import errors, constants
+from arc import errors, constants, prompt
 from arc.color import colorize, fg, colored
 from arc.config import config
 from arc.typing import CollectionTypes
@@ -20,6 +20,8 @@ if t.TYPE_CHECKING:
 
 
 NO_CONVERT = (None, t.Any)
+
+prompter = prompt.Prompt()
 
 
 class ParamAction(enum.Enum):
@@ -41,6 +43,7 @@ class Param:
         expose: bool = True,
         action: ParamAction = None,
         nargs: int = None,
+        prompt: str = None,
     ):
 
         self.type_info = helpers.TypeInfo.analyze(annotation)
@@ -59,6 +62,7 @@ class Param:
         self.expose: bool = expose
         self.nargs: t.Optional[int] = nargs or self._discover_nargs()
         self.action: ParamAction = action or self._discover_action()
+        self.prompt: t.Optional[str] = prompt
 
         if self.short and len(self.short) > 1:
             raise errors.ArgumentError(
@@ -170,11 +174,13 @@ class Param:
     ## Add other possible sources  if absent on the command line
     ## Env, config, prompt, ...
     def consume_value(self, _ctx: Context, args: dict):
-        value = args.get(self.arg_name)
-        if value is not None:
-            args.pop(self.arg_name)
-        else:
+        value = args.get(self.arg_name, constants.MISSING)
+
+        if value is constants.MISSING:
             value = self.default
+
+        if self.prompt and value is constants.MISSING:
+            value = prompter.input(self.prompt) or constants.MISSING
 
         return value
 
