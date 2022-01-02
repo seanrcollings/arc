@@ -1,14 +1,15 @@
 from __future__ import annotations
 import contextlib
 import typing as t
+import os
 
 from arc import errors, logging, typing as at
 from arc.callback import CallbackStack
 from arc.color import colorize, fg
 from arc.config import config
-from arc.types.params import special
 from arc import _command
 from arc.types.state import State
+from arc.prompt import Prompt
 
 
 if t.TYPE_CHECKING:
@@ -25,8 +26,9 @@ default_sug: at.Suggestions = {
     "suggest_commands": True,
 }
 
+default_prompt = Prompt("> ")
 
-@special(default=object())
+
 class Context:
     """Context holds all state relevant to a command execution
 
@@ -44,7 +46,13 @@ class Context:
             `CLI` root. If a command is executing standalone, this will always be empty
         execute_callbacks (bool): whether or not to execute command callbacks
             when executing the command
+        env_prefix: (str, optional): A prefix to use when selecting values from environmental
+            variables. Will be combined with the name specified for a parameter.
+        prompt: (arc.prompt.Prompt, optional): A prompt object will be used when prompting
+            for parameter values.
     """
+
+    __param_info__ = {"default": object()}
 
     # Each time a command is invoked,
     # an instance of Context is pushed onto
@@ -61,12 +69,16 @@ class Context:
         parent: Context = None,
         suggestions: at.Suggestions = None,
         execute_callbacks: bool = True,
+        env_prefix: str = "",
+        prompt: Prompt = None,
     ):
         self.command = command
         self.fullname = fullname
         self.command_chain = command_chain or []
         self.parent = parent
         self.execute_callbacks = execute_callbacks
+        self.env_prefix = env_prefix
+        self.prompt = prompt or default_prompt
 
         if suggestions is not None:
             self.suggestions = default_sug | suggestions
@@ -186,6 +198,18 @@ class Context:
     def exit(self, code: int = 0) -> t.NoReturn:
         """Exits the app with code `code`"""
         raise errors.Exit(code)
+
+    @t.overload
+    def getenv(self, name: str) -> str | None:
+        """Retreives an environment variable,
+        prefixing it with `self.env_prefix`"""
+
+    @t.overload
+    def getenv(self, name: str, default: T) -> str | T:
+        ...
+
+    def getenv(self, name: str, default: T = None):
+        return os.getenv(self.env_prefix + name, default)
 
     @classmethod
     def push(cls, ctx: Context) -> None:

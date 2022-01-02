@@ -1,8 +1,7 @@
 import pytest
 import typing as t
 from arc import CLI, errors, config
-from arc.types import Option, Flag
-from arc.types.params import Count
+from arc.params import Count, Option, Flag
 
 
 class TestSimpleSyntax:

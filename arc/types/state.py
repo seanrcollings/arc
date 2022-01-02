@@ -1,15 +1,15 @@
 from __future__ import annotations
 import typing as t
-from arc.types.params import special
 
 
 if t.TYPE_CHECKING:
     from arc.context import Context
 
 
-@special(default={})
 class State(dict):
     """State object, extends `dict`"""
+
+    __param_info__: dict = {"default": {}}
 
     def __repr__(self):
         return f"{self.__class__.__name__}({super().__repr__()})"

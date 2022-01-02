@@ -90,6 +90,8 @@ def Argument(
     default: t.Any = constants.MISSING,
     description: str = None,
     callback: t.Callable = None,
+    prompt: str = None,
+    envvar: str = None,
 ) -> t.Any:
     """A CLI Paramater. Input will be passed in positionally.
 
@@ -111,6 +113,8 @@ def Argument(
         default=default,
         description=description,
         callback=callback,
+        prompt=prompt,
+        envvar=envvar,
     )
 
 
@@ -121,6 +125,8 @@ def Option(
     default: t.Any = constants.MISSING,
     description: str = None,
     callback: t.Callable = None,
+    prompt: str = None,
+    envvar: str = None,
 ) -> t.Any:
     """A (generally optional) keyword parameter.
 
@@ -143,6 +149,8 @@ def Option(
         default=default,
         description=description,
         callback=callback,
+        prompt=prompt,
+        envvar=envvar,
     )
 
 
@@ -223,6 +231,8 @@ def SpecialParam(
     default: t.Any = constants.MISSING,
     description: str = None,
     callback: t.Callable = None,
+    prompt: str = None,
+    envvar: str = None,
 ) -> t.Any:
     """Params marked as "Special" are not exposed to the command line
     interface and cannot recieve user input. As such, they're values
@@ -239,6 +249,8 @@ def SpecialParam(
         default=default,
         description=description,
         callback=callback,
+        prompt=prompt,
+        envvar=envvar,
     )
 
 

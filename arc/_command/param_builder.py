@@ -9,7 +9,7 @@ from arc import errors, logging, constants
 from arc.config import config
 from arc.color import colorize, fg
 from arc._command import param
-from arc.types.params import ParamInfo
+from arc.params import ParamInfo
 from arc.typing import ClassCallback
 
 if TYPE_CHECKING:

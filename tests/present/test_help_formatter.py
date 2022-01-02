@@ -1,10 +1,7 @@
-import sys
-import pytest
-import io
 from arc._command.command import Command
 from arc import CLI, command, utils
 from arc.present.help_formatter import HelpFormatter
-from arc.types import Param
+from arc import Param
 from arc.context import Context
 
 # Because pytest is the program that is executing these tests, it will be the automatic name

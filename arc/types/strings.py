@@ -1,7 +1,7 @@
 import typing as t
 from arc.types import aliases
 
-__all__ = ["strictstr", "Char"]
+__all__ = ["strictstr", "Char", "Password"]
 
 
 def strictstr(
@@ -26,3 +26,8 @@ def strictstr(
 
 Char = strictstr(name="Char", min_length=1, max_length=1)
 """String than can only be length 1"""
+
+
+class Password(str):
+    def __repr__(self):
+        return "*" * len(self)
