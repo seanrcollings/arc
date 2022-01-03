@@ -1,9 +1,8 @@
 from __future__ import annotations
 import re
 import typing as t
-from arc.color import effects, fg
-from arc.config import config
 
+from arc.color import effects, fg
 from arc import errors, utils, constants
 from arc.context import Context
 
