@@ -1,13 +1,14 @@
 from __future__ import annotations
 import contextlib
-import typing as t
 import os
+import typing as t
 
 from arc import errors, logging, typing as at
 from arc.callback import CallbackStack
 from arc.color import colorize, fg
 from arc.config import config
 from arc import _command
+from arc.params import special
 from arc.types.state import State
 from arc.prompt import Prompt
 
@@ -29,6 +30,7 @@ default_sug: at.Suggestions = {
 default_prompt = Prompt("> ")
 
 
+@special(default=object())
 class Context:
     """Context holds all state relevant to a command execution
 
@@ -52,14 +54,13 @@ class Context:
             for parameter values.
     """
 
-    __param_info__ = {"default": object()}
-
     # Each time a command is invoked,
     # an instance of Context is pushed onto
     # this stack. When execution completes, the
     # context will be popped off the stack
     __stack: list[Context] = []
     config = config
+    _meta: dict[str, t.Any] = {}
 
     def __init__(
         self,
@@ -77,8 +78,10 @@ class Context:
         self.command_chain = command_chain or []
         self.parent = parent
         self.execute_callbacks = execute_callbacks
-        self.env_prefix = env_prefix
-        self.prompt = prompt or default_prompt
+        if "prompt" not in self.meta:
+            self.meta["prompt"] = prompt or default_prompt
+        if "env_prefix" not in self.meta:
+            self.meta["env_prefix"] = env_prefix
 
         if suggestions is not None:
             self.suggestions = default_sug | suggestions
@@ -120,6 +123,21 @@ class Context:
             curr = curr.parent
 
         return curr
+
+    @property
+    def meta(self):
+        """Meta is an object that is
+        shared globally by all `Context` instances
+        """
+        return self._meta
+
+    @property
+    def prompt(self) -> Prompt:
+        return self.meta["prompt"]
+
+    @property
+    def env_prefix(self) -> str:
+        return self.meta["env_prefix"]
 
     def create_state(self) -> State:
         state: State = State()
@@ -199,16 +217,7 @@ class Context:
         """Exits the app with code `code`"""
         raise errors.Exit(code)
 
-    @t.overload
-    def getenv(self, name: str) -> str | None:
-        """Retreives an environment variable,
-        prefixing it with `self.env_prefix`"""
-
-    @t.overload
-    def getenv(self, name: str, default: T) -> str | T:
-        ...
-
-    def getenv(self, name: str, default: T = None):
+    def getenv(self, name: str, default):
         return os.getenv(self.env_prefix + name, default)
 
     @classmethod

@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import enum
+import os
 import typing as t
 
 from arc import errors, constants
 from arc.color import colorize, fg, colored
 from arc.config import config
 from arc.typing import CollectionTypes
-from arc.types.strings import Password
 
 
 if t.TYPE_CHECKING:
@@ -317,4 +317,4 @@ class SpecialParam(Param):
     ...
 
 
-from arc.types import aliases, helpers
+from arc.types import aliases, helpers, Password
