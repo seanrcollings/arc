@@ -68,7 +68,10 @@ class Command(ParamMixin):
 
     # Command Execution ------------------------------------------------------------
     def __call__(self, *args, **kwargs):
-        with contextlib.redirect_stdout(utils.IoWrapper(sys.stdout)):
+        if not isinstance(sys.stdout, utils.IoWrapper):
+            with contextlib.redirect_stdout(utils.IoWrapper(sys.stdout)):
+                return self.main(*args, **kwargs)
+        else:
             return self.main(*args, **kwargs)
 
     @utils.timer("Running Command")
