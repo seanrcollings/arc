@@ -2,10 +2,11 @@ from functools import cached_property
 import typing as t
 import sys
 
-from arc import errors, utils, logging, typing as at
+from arc import constants, errors, utils, logging, typing as at
+from arc.autocompletions import Completion, CompletionInfo, completions, get_completions
 from arc.color import colorize, fg
 from arc.config import config
-from arc._command.param import Flag
+from arc._command.param import Flag, Option
 from arc.autoload import Autoload
 from arc._command import helpers, Command
 from arc.context import Context
@@ -78,6 +79,25 @@ class CLI(Command):
 
             self.install_command(debug)
 
+    def __completions__(self, info: CompletionInfo):
+        # with open("out", "w+") as f:
+        #     f.write(f"{info.words}\n{info.current}")
+
+        if (
+            len(info.words) in (1, 2)
+            and info.current != ""
+            and not info.current.startswith(constants.SHORT_FLAG_PREFIX)
+        ):
+            return [
+                Completion(fullname, description=command.short_description or "")
+                for command, fullname in helpers.get_all_commands(self)
+            ]
+        elif len(info.words) > 2:
+            command = self.subcommands["command"]
+            return get_completions(command, info)
+
+        return super().__completions__(info)
+
     @cached_property
     def params(self):
         params = super().params
@@ -94,8 +114,25 @@ class CLI(Command):
                     short="v",
                     description="Displays the app's current version",
                     callback=_version_callback,
+                    expose=False,
                 )
             )
+
+        def _autocomplete_callback(value: str, ctx: Context, _param):
+            if value:
+                completions(value, ctx)
+                ctx.exit()
+
+        params.append(
+            Option(
+                "autocomplete",
+                annotation=str,
+                description="Generates auto completions for the CLI",
+                callback=_autocomplete_callback,
+                default=None,
+                expose=False,
+            )
+        )
 
         return params
 

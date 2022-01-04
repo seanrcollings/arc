@@ -44,7 +44,11 @@ class ParamMixin:
 
     @functools.cached_property
     def key_params(self) -> list[Param]:
-        return [param for param in self.params if param.is_keyword]
+        return self.flag_params + self.option_params
+
+    @functools.cached_property
+    def option_params(self) -> list[Param]:
+        return [param for param in self.params if param.is_option]
 
     @functools.cached_property
     def flag_params(self) -> list[Param]:

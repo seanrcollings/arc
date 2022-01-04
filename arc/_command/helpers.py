@@ -85,6 +85,14 @@ def find_command_chain(
     return command_chain
 
 
+def get_command(command: Command, name: str, ctx) -> t.Optional[Command]:
+    namespace = get_command_namespace(name)
+    if namespace and (commands := find_command_chain(command, namespace, ctx)):
+        return commands[-1]
+
+    return None
+
+
 def find_similar_command(
     command: Command, namespace_list: list[str], distance: int
 ) -> str | None:

@@ -6,7 +6,7 @@ import typing as t
 import shlex
 import sys
 
-from arc import errors, logging, utils
+from arc import constants, errors, logging, utils
 from arc.color import colorize, effects, fg
 from arc._command.param_builder import ParamBuilder, wrap_class_callback
 from arc.context import Context
@@ -16,6 +16,7 @@ from arc.config import config
 from arc.typing import ClassCallback
 from arc import callback as acb
 from .param_mixin import ParamMixin
+from arc.autocompletions import CompletionInfo, Completion
 
 
 logger = logging.getArcLogger("command")
@@ -53,6 +54,15 @@ class Command(ParamMixin):
 
     def __repr__(self):
         return f"{self.__class__.__name__}(name={self.name!r})"
+
+    def __completions__(self, info: CompletionInfo):
+        if info.current.startswith(constants.SHORT_FLAG_PREFIX):
+            return [
+                Completion(param.cli_rep(), description=param.description or "")
+                for param in self.key_params
+            ]
+
+        return []
 
     def schema(self):
         return {

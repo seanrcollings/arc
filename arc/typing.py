@@ -1,4 +1,8 @@
+from __future__ import annotations
 import typing as t
+
+if t.TYPE_CHECKING:
+    from arc.autocompletions import CompletionInfo, Completion
 
 Annotation = t.Union[t._SpecialForm, type]
 
@@ -36,3 +40,8 @@ class Suggestions(t.TypedDict, total=False):
 
 Env = t.Literal["development", "production"]
 CallbackTime = t.Literal["before", "around", "after"]
+
+
+class CompletionProtocol(t.Protocol):
+    def __completions__(self, info: CompletionInfo) -> list[Completion] | Completion:
+        ...

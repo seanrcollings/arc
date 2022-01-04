@@ -34,7 +34,7 @@ class HelpFormatter(TextFormatter):
         command.update_param_descriptions()
 
         self.write_params("ARGUMENTS", command.pos_params)
-        self.write_params("OPTIONS", command.flag_params + command.key_params)
+        self.write_params("OPTIONS", command.key_params)
 
         for section, body in command.parsed_docstring.items():
             if section in {"arguments", "description"}:
@@ -88,7 +88,7 @@ class HelpFormatter(TextFormatter):
     def _param_str(self, command: Command):
         params = []
         for param in sorted(
-            command.key_params + command.flag_params,
+            command.key_params,
             key=lambda p: not p.optional,
         ):
             params.append(format(param, "usage"))

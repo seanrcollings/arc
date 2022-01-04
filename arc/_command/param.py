@@ -124,7 +124,7 @@ class Param:
         return self.default is not constants.MISSING
 
     @property
-    def is_keyword(self):
+    def is_option(self):
         return isinstance(self, Option)
 
     @property
@@ -272,7 +272,7 @@ class Argument(Param):
 class _KeywordParam(Param):
     def _format_usage(self):
         string = f"{constants.FLAG_PREFIX}{self.arg_alias}"
-        if self.is_keyword:
+        if self.is_option:
             string += " <...>"
 
         if self.optional:

@@ -88,7 +88,7 @@ class Parser:
         self.params.append(param)
         if param.is_positional:
             self.pos_params.append(param)
-        if param.is_keyword or param.is_flag:
+        if param.is_option or param.is_flag:
             self._long_names[param.arg_alias] = param
             if param.short:
                 self._short_names[param.short] = param
@@ -132,7 +132,7 @@ class Parser:
             else:
                 raise self.non_existant_arg(token)
 
-        if param.is_keyword and self.peek_type() == TokenType.VALUE:
+        if param.is_option and self.peek_type() == TokenType.VALUE:
             value = self.consume().value
         else:
             value = constants.MISSING
@@ -149,7 +149,7 @@ class Parser:
                 else:
                     raise self.non_existant_arg(token)
 
-            if param.is_keyword and self.peek_type() == TokenType.VALUE:
+            if param.is_option and self.peek_type() == TokenType.VALUE:
                 value = self.consume().value
             else:
                 value = constants.MISSING

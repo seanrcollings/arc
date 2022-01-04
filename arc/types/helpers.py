@@ -15,11 +15,13 @@ from typing import (
 import re
 
 from arc import utils, result
+from arc.typing import CompletionProtocol
 
 if TYPE_CHECKING:
     from arc.typing import Annotation
     from arc.types.aliases import TypeProtocol
     from arc.context import Context
+    from arc.autocompletions import CompletionInfo, Completion
 
 
 T = TypeVar("T")
