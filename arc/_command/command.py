@@ -13,10 +13,12 @@ from arc.context import Context
 from arc.parser import Parser
 from arc.present.help_formatter import HelpFormatter
 from arc.config import config
+from arc.types.aliases import Alias
 from arc.typing import ClassCallback
 from arc import callback as acb
+from arc.autocompletions import CompletionInfo, Completion, get_completions
 from .param_mixin import ParamMixin
-from arc.autocompletions import CompletionInfo, Completion
+from . import helpers
 
 
 logger = logging.getArcLogger("command")
@@ -61,6 +63,14 @@ class Command(ParamMixin):
                 Completion(param.cli_rep(), description=param.description or "")
                 for param in self.key_params
             ]
+        else:
+            param = helpers.find_relevant_param(self, info)
+            if param:
+                # TODO: Add a custom completions function to each Param()
+                # that will take precedence over the type's completions
+                cls = Alias.resolve(param.type_info.origin)
+                if hasattr(cls, "__completions__"):
+                    return get_completions(cls, info)  # type: ignore
 
         return []
 

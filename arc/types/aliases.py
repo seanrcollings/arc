@@ -11,6 +11,7 @@ import dataclasses
 import _io  # type: ignore
 
 from arc import errors, logging, utils
+from arc.autocompletions import Completion, CompletionInfo, CompletionType
 from arc.color import colorize, fg
 from arc.types.helpers import (
     TypeInfo,
@@ -422,6 +423,10 @@ class IOAlias(Alias, of=(_io._IOBase, t.IO)):
             return {"mode": arg}
         if dataclasses.is_dataclass(arg):
             return dataclasses.asdict(arg)
+
+    @classmethod
+    def __completions__(cls, info: CompletionInfo):
+        return Completion(info.current, CompletionType.FILE)
 
 
 class _Address(Alias):

@@ -1,22 +1,8 @@
-import os
-import sys
-import contextlib
 import io
-
 import pytest
+
 from arc import CLI, Argument, Option, errors, Context
-
-
-@contextlib.contextmanager
-def environ(**env: str):
-    copy = os.environ.copy()
-    os.environ.clear()
-    os.environ.update(env)
-    try:
-        yield
-    finally:
-        os.environ.clear()
-        os.environ.update(copy)
+from tests.utils import environ
 
 
 class TestEnv:

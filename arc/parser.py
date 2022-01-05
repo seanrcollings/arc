@@ -1,5 +1,4 @@
 import typing as t
-from typing import TypedDict, Union
 from dataclasses import dataclass
 import re
 import enum
@@ -7,13 +6,28 @@ import enum
 
 from arc import errors, logging, utils, constants
 from arc.color import colorize, fg
-from arc._command import helpers
 from arc.context import Context
 from arc.types.helpers import join_or
 from arc.utils import IDENT
 from arc._command.param import Param, ParamAction
 
 logger = logging.getArcLogger("parse")
+
+
+# TODO: this will only ever return one possibility
+def find_possible_params(
+    params: list[Param], missing: str, distance: int
+) -> list[Param]:
+    filtered = []
+    if len(params) > 0:
+        cur_dis, param = min(
+            ((utils.levenshtein(param.arg_alias, missing), param) for param in params),
+            key=lambda tup: tup[0],
+        )
+        if cur_dis <= distance:
+            filtered.append(param)
+
+    return filtered
 
 
 class TokenType(enum.Enum):
@@ -66,8 +80,8 @@ class Lexer:
 class Parser:
     tokens: list[Token]
 
-    def __init__(self, ctx: Context, allow_extra: bool = False):
-        self.ctx = ctx
+    def __init__(self, ctx: Context = None, allow_extra: bool = False):
+        self.ctx: t.Optional[Context] = ctx
         self.allow_extra = allow_extra
         self.parsed: dict[str, t.Any] = {}
         self.extra: list[str] = []
@@ -201,10 +215,10 @@ class Parser:
         styled = colorize(token.raw, fg.YELLOW)
         message = f"Option {styled} not recognized"
 
-        if self.ctx.suggestions["suggest_arguments"]:
+        if self.ctx and self.ctx.suggestions["suggest_arguments"]:
             suggest_args = [
                 param.arg_alias
-                for param in helpers.find_possible_params(
+                for param in find_possible_params(
                     self.params,
                     token.value,
                     self.ctx.suggestions["levenshtein_distance"],

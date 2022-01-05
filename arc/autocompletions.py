@@ -22,7 +22,10 @@ def completions(shell: str, ctx: Context):
     if info.empty():
         print(completions.source())
     else:
-        print(completions.complete())
+        comps = completions.complete()
+        with open("out", "w+") as f:
+            f.write(comps)
+        print(comps)
 
 
 def get_completions(obj: CompletionProtocol, info: CompletionInfo) -> list[Completion]:
@@ -37,6 +40,7 @@ def get_completions(obj: CompletionProtocol, info: CompletionInfo) -> list[Compl
 class CompletionInfo:
     words: list[str]
     current: str
+    cli: bool = False
 
     def empty(self):
         return not self.words and not self.current
@@ -66,7 +70,6 @@ class Completion:
 class ShellCompletion:
     template: t.ClassVar[str]
     name: t.ClassVar[str]
-    supported_types: t.ClassVar[t.Optional[set[CompletionType]]] = None
 
     def __init__(self, ctx: Context, info: CompletionInfo):
         self.ctx = ctx
@@ -88,18 +91,6 @@ class ShellCompletion:
 
     def format_completion(self, comp: Completion) -> str:
         return ""
-
-    @classmethod
-    def _check_completion_type(cls, comp: Completion):
-        if cls.supported_types is None:
-            return
-
-        if comp.type not in cls.supported_types:
-            logger.warning(
-                "%s not supported by %s completions",
-                comp.type,
-                cls.name,
-            )
 
 
 class BashCompletion(ShellCompletion):
@@ -130,7 +121,6 @@ complete -F _{name}_completions {name}
 
 class FishCompletion(ShellCompletion):
     name = "fish"
-    supported_types = {CompletionType.PLAIN}
     template = """\
 function _{name}_completions
     set -l completions (env COMP_WORDS=(commandline -cp) COMP_CURRENT=(commandline -t) python manage.py --autocomplete fish)
@@ -138,11 +128,11 @@ function _{name}_completions
     for comp in $completions
         set -l parsed (string split '|' $comp)
         set -l type $parsed[1]
-        set data $parsed[2]
+        set -l data $parsed[2]
 
         switch $type
-            # case file
-            #     __fish_complete_path $data
+            case file
+                __fish_complete_path $data
             # case dir
             #     __fish_complete_directories $data
             case plain
@@ -163,8 +153,11 @@ complete -f -c {name} -a "(_cli_completions)";
         return "\n".join([self.format_completion(comp) for comp in comps])
 
     def format_completion(self, comp: Completion) -> str:
-        self._check_completion_type(comp)
-        return f"{comp.type.value}|{comp.value}\t{comp.description}"
+        string = f"{comp.type.value}|{comp.value}"
+        if comp.description:
+            string += f"\t{comp.description}"
+
+        return string
 
 
 shells = {"bash": BashCompletion, "fish": FishCompletion}

@@ -5,10 +5,12 @@ import typing as t
 from arc.color import effects, fg
 from arc import errors, utils, constants
 from arc.context import Context
+from arc.parser import Parser
 
 if t.TYPE_CHECKING:
     from .command import Command
     from .param import Param
+    from arc.autocompletions import CompletionInfo
 
 
 def get_all_commands(
@@ -130,17 +132,23 @@ def get_command_namespace(string: str):
         return string.split(constants.NAMESPACE_SEP)
 
 
-# TODO: this will only ever return one possibility
-def find_possible_params(
-    params: list[Param], missing: str, distance: int
-) -> list[Param]:
-    filtered = []
-    if len(params) > 0:
-        cur_dis, param = min(
-            ((utils.levenshtein(param.arg_alias, missing), param) for param in params),
-            key=lambda tup: tup[0],
-        )
-        if cur_dis <= distance:
-            filtered.append(param)
+def find_relevant_param(command: Command, info: CompletionInfo) -> t.Optional[Param]:
+    # parser = Parser(allow_extra=True)
+    # for param in command.visible_params:
+    #     parser.add_param(param)
+    # args, extra = parser.parse(info.words[2 if info.cli else 1 :])
+    # print(args, extra)
 
-    return filtered
+    word = info.words[-2]
+    if info.current == "":
+        word = info.words[-1]
+
+    if word.startswith(constants.FLAG_PREFIX):
+        name = word.lstrip(constants.FLAG_PREFIX)
+        for param in command.visible_params:
+            if param.arg_alias == name:
+                if param.is_option:
+                    return param
+                break
+
+    return None
