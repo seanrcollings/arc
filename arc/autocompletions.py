@@ -40,7 +40,6 @@ def get_completions(obj: CompletionProtocol, info: CompletionInfo) -> list[Compl
 class CompletionInfo:
     words: list[str]
     current: str
-    cli: bool = False
 
     def empty(self):
         return not self.words and not self.current

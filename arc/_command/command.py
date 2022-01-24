@@ -58,7 +58,9 @@ class Command(ParamMixin):
         return f"{self.__class__.__name__}(name={self.name!r})"
 
     def __completions__(self, info: CompletionInfo):
-        if info.current.startswith(constants.SHORT_FLAG_PREFIX):
+        if info.current.startswith(constants.SHORT_FLAG_PREFIX) and (
+            constants.FLAG_PREFIX not in info.words
+        ):
             return [
                 Completion(param.cli_rep(), description=param.description or "")
                 for param in self.key_params

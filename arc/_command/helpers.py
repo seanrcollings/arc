@@ -133,22 +133,21 @@ def get_command_namespace(string: str):
 
 
 def find_relevant_param(command: Command, info: CompletionInfo) -> t.Optional[Param]:
-    # parser = Parser(allow_extra=True)
-    # for param in command.visible_params:
-    #     parser.add_param(param)
-    # args, extra = parser.parse(info.words[2 if info.cli else 1 :])
-    # print(args, extra)
+    parser = Parser(allow_extra=True)
+    for param in command.visible_params:
+        parser.add_param(param)
 
-    word = info.words[-2]
+    parsed, _extra = parser.parse(info.words[1:])
+
     if info.current == "":
-        word = info.words[-1]
+        pos_count = len(
+            [param for param in command.pos_params if param.arg_alias in parsed]
+        )
+        return command.pos_params[pos_count]
 
-    if word.startswith(constants.FLAG_PREFIX):
-        name = word.lstrip(constants.FLAG_PREFIX)
-        for param in command.visible_params:
-            if param.arg_alias == name:
-                if param.is_option:
-                    return param
-                break
+    name, _value = parsed.popitem()
+    for param in command.visible_params:
+        if param.arg_alias == name:
+            return param
 
     return None

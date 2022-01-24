@@ -2,7 +2,7 @@ import typing as t
 from dataclasses import dataclass
 import re
 import enum
-
+from collections import OrderedDict
 
 from arc import errors, logging, utils, constants
 from arc.color import colorize, fg
@@ -83,7 +83,7 @@ class Parser:
     def __init__(self, ctx: Context = None, allow_extra: bool = False):
         self.ctx: t.Optional[Context] = ctx
         self.allow_extra = allow_extra
-        self.parsed: dict[str, t.Any] = {}
+        self.parsed: OrderedDict[str, t.Any] = OrderedDict()
         self.extra: list[str] = []
         self.pos_only = False
         self.params: list[Param] = []
@@ -119,7 +119,7 @@ class Parser:
 
             self.parsed[param.arg_name] += 1
 
-    def parse(self, args: list[str]):
+    def parse(self, args: list[str]) -> tuple[OrderedDict[str, t.Any], list[t.Any]]:
         utils.header("PARSING")
         self.tokens = Lexer(args).tokenize()
 

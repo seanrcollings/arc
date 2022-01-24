@@ -80,8 +80,6 @@ class CLI(Command):
             self.install_command(debug)
 
     def __completions__(self, info: CompletionInfo):
-        info.cli = True
-
         # Completes Command names
         if len(info.words) == 1 and not info.current.startswith(
             constants.SHORT_FLAG_PREFIX
@@ -90,16 +88,16 @@ class CLI(Command):
                 Completion(fullname, description=command.short_description or "")
                 for command, fullname in helpers.get_all_commands(self)[1:]
             ]
-
         # Finds the current command and delegates completions to it
-        elif len(info.words) > 2:
-            command_name = info.words[1]
+        elif len(info.words) >= 2:
+            command_name = info.words.pop(1)
             for command, fullname in helpers.get_all_commands(self):
                 if fullname == command_name:
                     return get_completions(command, info)
 
+        return []
         # Completes Global Options
-        return super().__completions__(info)
+        # return super().__completions__(info)
 
     @cached_property
     def params(self):
