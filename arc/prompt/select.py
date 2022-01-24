@@ -92,6 +92,11 @@ class State:
         self.initial_set = False
 
 
+ARROW_UP = "\x1b[A"
+ARROW_DOWN = "\x1b[B"
+ESCAPE = "\x1b"
+
+
 class SelectionMenu:
     selected = State()
 
@@ -108,18 +113,31 @@ class SelectionMenu:
         self._first_render = True
 
     def __call__(self) -> tuple[int, SupportsStr]:
-        self.render()
-        return self.run()
+        with Cursor.hide():
+            self.render()
+            return self.run()
 
     def run(self):
-        with Cursor.hide():
-            while (char := getch()) != "\r":
-                if char == "w":
-                    self.selected = max(0, self.selected - 1)
-                elif char == "s":
-                    self.selected = min(len(self.items) - 1, self.selected + 1)
+        while True:
+            seq = getch()
+            if seq == "\r":
+                break
+
+            if seq == ESCAPE:
+                seq += getch()  # [
+                seq += getch()  # Some Character
+                self.check_sequence(seq)
+                seq = ""
+            else:
+                seq = ""
 
         return self.selected, self.items[self.selected]
+
+    def check_sequence(self, seq: str):
+        if seq == ARROW_UP:
+            self.selected = max(0, self.selected - 1)
+        elif seq == ARROW_DOWN:
+            self.selected = min(len(self.items) - 1, self.selected + 1)
 
     def update(self, new, old):
         return new != old
