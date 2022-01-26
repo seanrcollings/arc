@@ -94,11 +94,11 @@ class State:
         return getattr(instance, self.private_name)
 
     def __set__(self, instance, value):
-        if not self.initial_set and instance.update(
+        if not self.initial_set and instance.should_update(
             getattr(instance, self.private_name), value
         ):
             setattr(instance, self.private_name, value)
-            instance.render()
+            instance.queue_update(self)
         else:
             setattr(instance, self.private_name, value)
 

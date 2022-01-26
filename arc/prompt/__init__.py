@@ -1,6 +1,7 @@
 """Provides classes to ask the users questions, and recieve back their answers"""
 from .prompt import Prompt
 from .questions import *
+from .select import SelectionMenu, select
 
 
 def confirm(message: str, *args, **kwargs) -> bool:
