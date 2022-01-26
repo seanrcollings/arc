@@ -8,6 +8,7 @@ import typing as t
 from arc import errors, constants
 from arc.color import colorize, fg, colored
 from arc.config import config
+from arc.prompt.select import select
 from arc.typing import CollectionTypes
 
 
@@ -208,6 +209,20 @@ class Param:
         sensitive = False
         if self.type_info.origin is Password:
             sensitive = True
+
+        if (
+            helpers.safe_issubclass(self.type_info.origin, enum.Enum)
+            or self.type_info.origin is t.Literal
+        ):
+            if self.type_info.origin is t.Literal:
+                values = list(tp.base for tp in self.type_info.sub_types)
+            else:
+                values = list(
+                    m.value for m in self.type_info.origin.__members__.values()
+                )
+
+            print(self.prompt)
+            return select(values, highlight_color=ctx.config.brand_color)[1]
 
         return (
             ctx.prompt.input(prompt, empty=empty, sensitive=sensitive)

@@ -6,6 +6,9 @@ from arc.color import colorize, fg
 from arc.prompt.helpers import ARROW_DOWN, ARROW_UP, ESCAPE, Cursor, State, getch
 import arc.typing as at
 
+# TODO: remove 'q' as the quit character, and use Ctrl+C instead (or Ctrl+D)
+# Could the prompt be expanded to accept something like SelectMenu for Question type?
+
 
 class Widget(ABC):
     hide_cursor = False
