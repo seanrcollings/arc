@@ -36,3 +36,8 @@ class Suggestions(t.TypedDict, total=False):
 
 Env = t.Literal["development", "production"]
 CallbackTime = t.Literal["before", "around", "after"]
+
+
+class SupportsStr(t.Protocol):
+    def __str__(self) -> str:
+        ...
