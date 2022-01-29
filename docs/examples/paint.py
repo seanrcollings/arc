@@ -1,5 +1,6 @@
 from enum import Enum
 import arc
+from arc.params import Param
 
 
 class Color(Enum):
@@ -9,7 +10,7 @@ class Color(Enum):
 
 
 @arc.command()
-def paint(color: Color):
+def paint(color: Color = Param(prompt="What color do you want to paint?")):
     if color == Color.RED:
         print("You painted the walls the bloodiest of reds")
     elif color == Color.YELLOW:

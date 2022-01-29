@@ -64,6 +64,7 @@ class TextFormatter:
         if self._buffer:
             self.write("\n")
 
+    # TODO: This is not handling colored text properly :(
     def wrap_text(
         self,
         text: t.Union[str, list[str]],

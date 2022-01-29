@@ -1,7 +1,6 @@
 from __future__ import annotations
 import typing as t
-from arc.types.params import special
-
+from arc.params import special
 
 if t.TYPE_CHECKING:
     from arc.context import Context

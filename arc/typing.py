@@ -13,6 +13,10 @@ class TypeProtocol(t.Protocol):
     def __convert__(cls, value, *args):
         ...
 
+    # @classmethod
+    # def __prompt__(cls, ctx, param):
+    #     ...
+
 
 CompareReturn = t.Literal[-1, 0, 1]
 
@@ -36,3 +40,8 @@ class Suggestions(t.TypedDict, total=False):
 
 Env = t.Literal["development", "production"]
 CallbackTime = t.Literal["before", "around", "after"]
+
+
+class SupportsStr(t.Protocol):
+    def __str__(self) -> str:
+        ...

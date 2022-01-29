@@ -15,6 +15,8 @@ class ParamInfo:
         description: str = None,
         callback: t.Callable = None,
         action: param.ParamAction = None,
+        prompt: str = None,
+        envvar: str = None,
     ):
         self.param_cls = param_cls
         self.arg_alias = arg_alias
@@ -23,6 +25,8 @@ class ParamInfo:
         self.description = description
         self.callback = callback
         self.action = action
+        self.prompt = prompt
+        self.envvar = envvar
 
     def dict(self):
         """Used to pass to `Param()` as **kwargs"""
@@ -33,6 +37,8 @@ class ParamInfo:
             "description": self.description,
             "callback": self.callback,
             "action": self.action,
+            "prompt": self.prompt,
+            "envvar": self.envvar,
         }
 
 
@@ -43,6 +49,8 @@ def Param(
     default: t.Any = constants.MISSING,
     description: str = None,
     callback: t.Callable = None,
+    prompt: str = None,
+    envvar: str = None,
 ) -> t.Any:
     """A CLI Paramater. Automatically decides whether it is
     a `positional`, `option` or `flag`
@@ -71,6 +79,8 @@ def Param(
         default=default,
         description=description,
         callback=callback,
+        prompt=prompt,
+        envvar=envvar,
     )
 
 
@@ -80,6 +90,8 @@ def Argument(
     default: t.Any = constants.MISSING,
     description: str = None,
     callback: t.Callable = None,
+    prompt: str = None,
+    envvar: str = None,
 ) -> t.Any:
     """A CLI Paramater. Input will be passed in positionally.
 
@@ -101,6 +113,8 @@ def Argument(
         default=default,
         description=description,
         callback=callback,
+        prompt=prompt,
+        envvar=envvar,
     )
 
 
@@ -111,6 +125,8 @@ def Option(
     default: t.Any = constants.MISSING,
     description: str = None,
     callback: t.Callable = None,
+    prompt: str = None,
+    envvar: str = None,
 ) -> t.Any:
     """A (generally optional) keyword parameter.
 
@@ -133,6 +149,8 @@ def Option(
         default=default,
         description=description,
         callback=callback,
+        prompt=prompt,
+        envvar=envvar,
     )
 
 
@@ -213,6 +231,8 @@ def SpecialParam(
     default: t.Any = constants.MISSING,
     description: str = None,
     callback: t.Callable = None,
+    prompt: str = None,
+    envvar: str = None,
 ) -> t.Any:
     """Params marked as "Special" are not exposed to the command line
     interface and cannot recieve user input. As such, they're values
@@ -229,6 +249,8 @@ def SpecialParam(
         default=default,
         description=description,
         callback=callback,
+        prompt=prompt,
+        envvar=envvar,
     )
 
 

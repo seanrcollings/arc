@@ -2,32 +2,32 @@ When Possible, *arc* uses builtin and standard library data types for arguments.
 
 ## Standard Libary Types
 
-`str`
+`#!python str`
 
-This is considered the default type is no type is specified. `str(v)` is used which, in most cases, will be comparable to no change
+This is considered the default type is no type is specified. `#!python str(v)` is used which, in most cases, will be comparable to no change
 
-`int`
+`#!python int`
 
-arc uses `int(v)` to convert the value. Note that decimal input (`1.4`) will result in an error, not a narrowing operation.
+arc uses `#!python int(v)` to convert the value. Note that decimal input (`1.4`) will result in an error, not a narrowing operation.
 
-`float`
+`#!python float`
 
-Likewise, arc uses `float(v)`. Ingeter values will be converted to a float (`2 -> 2.0`)
+Likewise, arc uses `#!python float(v)`. Ingeter values will be converted to a float (`2 -> 2.0`)
 
-`bool`
+`#!python bool`
 
 Used to denote a `Flag`
 
-`bytes`
+`#!python bytes`
 
-Converted using `v.encode()`
+Converted using `#!python v.encode()`
 
 ### Collection Types
 
-`list`
+`#!python list`
 
-Collection types (`list`, `set`, `tuple`) can be used to gather multiple values into a single parameter.
-When used as a positional parameter `list` acts similarly to `*args`
+Collection types (`#!python list`, `#!python set`, `#!python tuple`) can be used to gather multiple values into a single parameter.
+When used as a positional parameter `#!python list` acts similarly to `#!python *args`
 ```py title="list_argument.py"
 --8<-- "examples/list_argument.py"
 ```
@@ -51,7 +51,7 @@ Collections can be sub-typed so that each item will be converted to the proper t
 --8<-- "examples/outputs/sum"
 ```
 
-`set`
+`#!python set`
 
 Similar to `list`, but will filter out any non-unique elements.
 
@@ -62,16 +62,17 @@ Similar to `list`, but will filter out any non-unique elements.
 --8<-- "examples/outputs/set_argument"
 ```
 
-`tuple`
+`#!python tuple`
 
 Similar to `list`, but with some additional functionality.
 
 According to PEP 484:
-- `tuple` represents an arbitrarily sized tuple of any type. This will functionally the same as `list`
-- `tuple[int, ...]` represents an arbitrarily sized tuple of integers. This will be functionality the same as `list[int]`
-- `tuple[int, int]` represents a size-two tuple of integers.
 
-`dict`
+- `#!python tuple` represents an arbitrarily sized tuple of any type. In *arc*, this will behave the same as `#!python list`
+- `#!python tuple[int, ...]` represents an arbitrarily sized tuple of integers. In *arc*, this will behave the same as `#!python list[int]`
+- `#!python tuple[int, int]` represents a size-two tuple of integers. In *arc*, this behavior is unique to `#!python tuple` as the parameter will only select 2 values from input.
+
+`#!python dict`
 
 Allows a list of comma-seperated key-value pairs. Can be typed generically on both keys and values.
 ```py title="dict_argument.py"
@@ -82,7 +83,7 @@ Allows a list of comma-seperated key-value pairs. Can be typed generically on bo
 ```
 
 
-`typing.Union`
+`#!python typing.Union`
 
 Allows the input to be multiple different types.
 ```py title="union_argument.py"
@@ -95,9 +96,9 @@ Allows the input to be multiple different types.
 arc will attempt to coerce the input into each type, from left to right. The first to succeed will be passed along to the command.
 
 !!! warning
-    Currently *arc's* behavior with collections in union types is not defined. As such, it is not reccomended that you give an argument a type similar to `typing.Union[list, ...]`
+    Currently *arc's* behavior with collections in union types is not defined. As such, it is not reccomended that you give an argument a type similar to `#!python typing.Union[list, ...]`
 
-`typing.Literal`
+`#!python typing.Literal`
 
 Enforces that the input must be a specific sub-set of values
 ```py title="literal_argument.py"
@@ -109,11 +110,12 @@ Enforces that the input must be a specific sub-set of values
 !!! note
     *arc* compares the input to the string-ified version of each value in the Literal. So for the second example above, the comparison that succedded was `"1" == "1"` not `1 == 1`.
 
-`typing.TypedDict`
+`#!python typing.TypedDict`
 
 Constrains a dictionary input to a specific subset of keys and specific value types.
 
-`typing.Optional`
+`#!python typing.Optional`
+
 Indicates an optional parameter with a default of `None`. The following are functionality equivalent
 ```py title="optional_argument.py"
 --8<-- "examples/optional_argument.py"
@@ -123,13 +125,13 @@ Indicates an optional parameter with a default of `None`. The following are func
 ```
 
 
-`pathlib.Path`
+`#!python pathlib.Path`
 
 Path won't perform any validation checks to assert that the input is a valid path, but it just offers the convenience of working with path objects rather than strings. Check the `ValidPath` custom type for additional validations
 
-`enum.Enum`
+`#!python enum.Enum`
 
-Similar to `typing.Literal`, restricts the input to a specific sub-set of values
+Similar to `#!python typing.Literal`, restricts the input to a specific sub-set of values
 ```py title="paint.py"
 --8<-- "examples/paint.py"
 ```
@@ -137,19 +139,19 @@ Similar to `typing.Literal`, restricts the input to a specific sub-set of values
 --8<-- "examples/outputs/paint"
 ```
 
-`ipaddress.IPv4Address`
+`#!python ipaddress.IPv4Address`
 
-Uses `ipaddress.IPv4Address(v)` for conversion, so anything valid there is valid here.
+Uses `#!python ipaddress.IPv4Address(v)` for conversion, so anything valid there is valid here.
 
-`ipaddress.IPv6Address`
+`#!python ipaddress.IPv6Address`
 
 Same as above
 
 ## Arc Types
-*arc* provides a variety of additional types exported from the `arc.types` module:
+*arc* provides a variety of additional types exported from the `#!python arc.types` module:
 
 ???+ warning
-    Most custom *arc* types are usable as a valid *arc* parameter type and as a typical Python class. For example, you can create a `SemVar` object easily like so: `SemVer.parse('1.2.3')`. In some particular instances, a type can *only* be used as a argument type and not as a valid constructor. These types will be denoted with `🛇` following the type name.
+    Most custom *arc* types are usable as a valid *arc* parameter type and as a typical Python class. For example, you can create a `SemVar` object easily like so: `#!python SemVer.parse('1.2.3')`. In some particular instances, a type can *only* be used as a argument type and not as a valid constructor. These types will be denoted with `🛇` following the type name.
 
 `Context`
 
@@ -179,7 +181,7 @@ TODO
 
 `ValidPath`
 
-Subclass of `pathlib.Path` but asserts that the provided path actually exists
+Subclass of `#!python pathlib.Path` but asserts that the provided path actually exists
 
 
 `FilePath`
@@ -195,11 +197,11 @@ Subclass of `ValidPath` but assets that the path both exists and is a directory
 
 `IpAddress` 🛇
 
-Can be either `IPv4Address` or `IPv6Address`. Equivelant to `typing.Union[IPv4Address, IPv6Address]`
+Can be either `IPv4Address` or `IPv6Address`. Equivelant to `#!python typing.Union[IPv4Address, IPv6Address]`
 
 `Url`
 
-Parses the strings input using `urllib.parse.urlparse`
+Parses the strings input using `#!python urllib.parse.urlparse`
 
 `HttpUrl`
 
@@ -269,7 +271,7 @@ Enforces that the string can only be a single character long
 
 
 ## Custom Types
-When implementing your own types, you can make them compatible with arc by implementing the `__convert__()` class method. Arc will call this with the input from the command line, and you are expected to parse the input and return an instance of the type.
+When implementing your own types, you can make them compatible with arc by implementing the `#!python __convert__()` class method. Arc will call this with the input from the command line, and you are expected to parse the input and return an instance of the type.
 
 ```py title="custom_type.py"
 --8<-- "examples/custom_type.py"
@@ -281,10 +283,11 @@ When implementing your own types, you can make them compatible with arc by imple
 Some notes about custom types:
 
 - In additon to `value`, you can also add the following arguments to the signature (in the given order, but the names don't need to match):
-  - `info`: Description of the provided type. Instance of `arc.types.TypeInfo`
-  - `ctx`: The current execution context. Instance of `arc.context.Context`
+  - `info`: Description of the provided type. Instance of `#!python arc.types.TypeInfo`
+  - `ctx`: The current execution context. Instance of `#!python arc.context.Context`
 
-- Any type that implements `__enter__() ` and `__exit__()`, will be treated like a context manager. The manager will be opened before the command executes, and closed afterwards.
+???+ tip
+    Any type that implements `#!python __enter__() ` and `#!python __exit__()`, will be treated like a context manager. The manager will be opened before the command executes, and closed afterwards.
 
 ### Type Aliases
 Type aliases are the way in which *arc* implements support for builtin and standard library Python types, but can also be used for any type. You can use type aliases to provide support fo any third party library types. For example, supporting numpy arrays
@@ -316,7 +319,7 @@ array(['x', 'y', 'z'], dtype='<U1')
 ```
 All other principles about custom types hold for alias types.
 
-Note that this is a simplified example, a more complete implementation would support the use of generics using `numpy.typing`
+Note that this is a simplified example, a more complete implementation would support the use of generics using `#!python numpy.typing`
 ### Generic Types
 TODO
 

@@ -1,7 +1,7 @@
 from typing import Annotated
 import pytest
 from arc import CLI, errors
-from arc.types import Param, Argument, Option, Flag
+from arc import Param, Argument, Option, Flag
 
 
 def test_basic(cli: CLI):

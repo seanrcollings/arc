@@ -67,3 +67,5 @@
   exit_code: 1
 - file: cli_options.py
   exec: [command, --verbose command]
+- file: from_env.py
+  exec: ["", "10"]

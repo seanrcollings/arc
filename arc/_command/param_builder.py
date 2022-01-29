@@ -9,7 +9,7 @@ from arc import errors, logging, constants
 from arc.config import config
 from arc.color import colorize, fg
 from arc._command import param
-from arc.types.params import ParamInfo
+from arc.params import ParamInfo
 from arc.typing import ClassCallback
 
 if TYPE_CHECKING:
@@ -124,6 +124,7 @@ class ParamBuilder:
         return should_negotiate_param_type
 
 
+# TODO: Change the semantics of class-full defaults
 def wrap_class_callback(cls: type[ClassCallback]) -> Callable[..., Any]:
     """Function to wrap class callbacks in a function callback equivalent to:
     1. Creating an instance of the class

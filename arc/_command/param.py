@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import enum
-
 import typing as t
 
 from arc import errors, constants
 from arc.color import colorize, fg, colored
 from arc.config import config
+from arc.prompt import select
 from arc.typing import CollectionTypes
 
 
@@ -19,13 +19,21 @@ if t.TYPE_CHECKING:
 # with no default value
 
 
-NO_CONVERT = (None, t.Any)
+NO_CONVERT = (None, t.Any, bool)
 
 
 class ParamAction(enum.Enum):
+    """Represents the way in which the parser should handle this particular param"""
+
     STORE = enum.auto()
+    """Store the value recieved from the command line.
+    If the value is found multiple times, subsequent
+    ones will overwrite previous ones"""
     APPEND = enum.auto()
+    """Append each value from the command line to a list"""
     COUNT = enum.auto()
+    """Count the number of time the argument is referenced ont he command line.
+    Is here for use with `arc.types.Count()`"""
 
 
 class Param:
@@ -41,24 +49,46 @@ class Param:
         expose: bool = True,
         action: ParamAction = None,
         nargs: int = None,
+        prompt: str = None,
+        envvar: str = None,
     ):
 
         self.type_info = helpers.TypeInfo.analyze(annotation)
         self.default: t.Any = default
-
-        if self.type_info.is_optional_type():
-            self.type_info = self.type_info.sub_types[0]
-            if self.default is constants.MISSING:
-                self.default = None
-
         self.arg_name: str = arg_name
         self.arg_alias: str = arg_alias if arg_alias else arg_name
         self.short: t.Optional[str] = short
         self.description: t.Optional[str] = description
         self.callback: t.Optional[t.Callable] = callback
         self.expose: bool = expose
-        self.nargs: t.Optional[int] = nargs or self._discover_nargs()
-        self.action: ParamAction = action or self._discover_action()
+        self.prompt: t.Optional[str] = prompt
+        self.envvar: t.Optional[str] = envvar
+
+        if self.type_info.is_optional_type():
+            self.type_info = self.type_info.sub_types[0]
+            if self.default is constants.MISSING:
+                self.default = None
+
+        self.action: ParamAction
+
+        if action:
+            self.action = action
+        elif helpers.safe_issubclass(self.type_info.origin, CollectionTypes):
+            self.action = ParamAction.APPEND
+        else:
+            self.action = ParamAction.STORE
+
+        self.nargs: t.Optional[int]
+        if nargs:
+            self.nargs = nargs
+        elif (
+            helpers.safe_issubclass(self.type_info.origin, tuple)
+            and self.type_info.sub_types
+            and self.type_info.sub_types[-1].origin is not Ellipsis
+        ):
+            self.nargs = len(self.type_info.sub_types)
+        else:
+            self.nargs = None
 
         if self.short and len(self.short) > 1:
             raise errors.ArgumentError(
@@ -88,23 +118,6 @@ class Param:
 
     def _format_arguments(self):
         return ""
-
-    def _discover_action(self) -> ParamAction:
-        action = ParamAction.STORE
-
-        if helpers.safe_issubclass(self.type_info.origin, CollectionTypes):
-            action = ParamAction.APPEND
-
-        return action
-
-    def _discover_nargs(self) -> t.Optional[int]:
-        if (
-            helpers.safe_issubclass(self.type_info.origin, tuple)
-            and self.type_info.sub_types
-            and self.type_info.sub_types[-1].origin is not Ellipsis
-        ):
-            return len(self.type_info.sub_types)
-        return None
 
     @property
     def optional(self):
@@ -143,17 +156,14 @@ class Param:
         }
 
     def process_parse_result(self, ctx: Context, args: dict):
-        value = self.consume_value(ctx, args)
+        value = self.get_value(ctx, args)
 
         if value is constants.MISSING:
-            if self.is_flag:
-                value = not self.default
-            else:
-                raise errors.MissingArgError(
-                    "No value provided for required argument "
-                    + colorize(self.cli_rep(), fg.YELLOW),
-                    ctx,
-                )
+            raise errors.MissingArgError(
+                "No value provided for required argument "
+                + colorize(self.cli_rep(), fg.YELLOW),
+                ctx,
+            )
 
         if value not in NO_CONVERT and self.type_info.origin not in NO_CONVERT:
             value = self.convert(value, ctx)
@@ -166,17 +176,47 @@ class Param:
 
         return value
 
-    ## TODO:
-    ## Add other possible sources  if absent on the command line
-    ## Env, config, prompt, ...
-    def consume_value(self, _ctx: Context, args: dict):
-        value = args.get(self.arg_name)
-        if value is not None:
-            args.pop(self.arg_name)
-        else:
-            value = self.default
+    def get_value(self, ctx: Context, args: dict):
+        """Retreives the value for this parameter. There are multiple
+        possible sources for the variable with the following priorities:
+
+        1. Directly from the command line
+        2. An environment variable
+        3. User input from `stdin`
+        4. Default for the argument
+        """
+        value = args.get(self.arg_name, constants.MISSING)
+
+        if self.envvar and value is constants.MISSING:
+            value = ctx.getenv(self.envvar, constants.MISSING)
+
+        if self.prompt and value is constants.MISSING:
+            value = self.get_prompt_value(ctx)
+
+        if value is constants.MISSING:
+            value = self.get_default_value(ctx, args)
 
         return value
+
+    def get_prompt_value(self, ctx: Context) -> str | constants.MissingType:
+        type_class: type[aliases.TypeProtocol] = aliases.Alias.resolve(self.type_info)
+        if hasattr(type_class, "__prompt__"):
+            return type_class.__prompt__(ctx, self)  # type: ignore
+
+        return helpers.input_prompt(ctx, self)
+
+    def get_default_value(self, _ctx: Context, args: dict) -> t.Any:
+        value = self.default
+
+        if self.is_flag and self.arg_name in args:
+            value = not value
+
+        return value
+
+    def get_prompt_string(self):
+        if self.default is not constants.MISSING:
+            return self.prompt + colorize(f"({self.default})", fg.GREY)
+        return self.prompt
 
     def convert(self, value: t.Any, ctx: Context):
         if value is constants.MISSING:
@@ -273,4 +313,4 @@ class SpecialParam(Param):
     ...
 
 
-from arc.types import aliases, helpers
+from arc.types import aliases, helpers, Password
