@@ -124,6 +124,7 @@ class ParamBuilder:
         return should_negotiate_param_type
 
 
+# TODO: Change the semantics of class-full defaults
 def wrap_class_callback(cls: type[ClassCallback]) -> Callable[..., Any]:
     """Function to wrap class callbacks in a function callback equivalent to:
     1. Creating an instance of the class

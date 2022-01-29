@@ -15,6 +15,7 @@ theme:
         icon: material/weather-night
         name: Switch to light mode
 plugins:
+  - search
   - mkdocstrings:
       watch: [../arc]
 repo_url: https://github.com/seanrcollings/arc
@@ -49,5 +50,4 @@ nav:
       - arc.cli: reference/cli.md
       - arc.color: reference/color.md
       - arc.command: reference/command.md
-      - arc.context: reference/context.md
   - Changelog: changelog.md

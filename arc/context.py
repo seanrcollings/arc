@@ -27,7 +27,7 @@ default_sug: at.Suggestions = {
     "suggest_commands": True,
 }
 
-default_prompt = Prompt("> ")
+default_prompt = Prompt(" ")
 
 
 @special(default=object())

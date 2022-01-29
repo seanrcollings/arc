@@ -199,38 +199,11 @@ class Param:
         return value
 
     def get_prompt_value(self, ctx: Context) -> str | constants.MissingType:
-        empty = self.default is not constants.MISSING
-        if empty:
-            prompt = self.prompt + colorize(f"({self.default})", fg.GREY)
-        else:
-            prompt = self.prompt
+        type_class: type[aliases.TypeProtocol] = aliases.Alias.resolve(self.type_info)
+        if hasattr(type_class, "__prompt__"):
+            return type_class.__prompt__(ctx, self)  # type: ignore
 
-        sensitive = False
-        if self.type_info.origin is Password:
-            sensitive = True
-
-        if (
-            helpers.safe_issubclass(self.type_info.origin, enum.Enum)
-            or self.type_info.origin is t.Literal
-        ):
-            if self.type_info.origin is t.Literal:
-                values = list(str(tp.base) for tp in self.type_info.sub_types)
-            else:
-                values = list(
-                    str(m.value) for m in self.type_info.origin.__members__.values()
-                )
-
-            print(self.prompt)
-            res = select(values, highlight_color=ctx.config.brand_color)
-            if res is None:
-                return constants.MISSING
-
-            return res[1]
-
-        return (
-            ctx.prompt.input(prompt, empty=empty, sensitive=sensitive)
-            or constants.MISSING
-        )
+        return helpers.input_prompt(ctx, self)
 
     def get_default_value(self, _ctx: Context, args: dict) -> t.Any:
         value = self.default
@@ -239,6 +212,11 @@ class Param:
             value = not value
 
         return value
+
+    def get_prompt_string(self):
+        if self.default is not constants.MISSING:
+            return self.prompt + colorize(f"({self.default})", fg.GREY)
+        return self.prompt
 
     def convert(self, value: t.Any, ctx: Context):
         if value is constants.MISSING:
