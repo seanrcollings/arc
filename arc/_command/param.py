@@ -2,13 +2,12 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import enum
-import os
 import typing as t
 
 from arc import errors, constants
 from arc.color import colorize, fg, colored
 from arc.config import config
-from arc.prompt.select import select
+from arc.prompt import select
 from arc.typing import CollectionTypes
 
 
