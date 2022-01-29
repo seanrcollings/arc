@@ -1,4 +1,3 @@
-import contextlib
 from typing import Literal
 import sys
 import tty
@@ -108,3 +107,4 @@ class State:
 ARROW_UP = "\x1b[A"
 ARROW_DOWN = "\x1b[B"
 ESCAPE = "\x1b"
+CTRL_C = "\x03"

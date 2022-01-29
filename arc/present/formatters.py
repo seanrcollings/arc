@@ -64,6 +64,7 @@ class TextFormatter:
         if self._buffer:
             self.write("\n")
 
+    # TODO: This is not handling colored text properly :(
     def wrap_text(
         self,
         text: t.Union[str, list[str]],
@@ -99,6 +100,7 @@ class TextFormatter:
                 )
             else:
                 width = width + (len(para) - ansi_len(para))
+                breakpoint()
                 wrapper.width = width
                 wrapped += wrapper.fill(para) + paragraph_seperator
 

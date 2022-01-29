@@ -3,10 +3,18 @@ import typing as t
 
 from black import sys
 from arc.color import colorize, fg
-from arc.prompt.helpers import ARROW_DOWN, ARROW_UP, ESCAPE, Cursor, State, getch
+from arc.present.formatters import TextFormatter
+from arc.prompt.helpers import (
+    ARROW_DOWN,
+    ARROW_UP,
+    CTRL_C,
+    ESCAPE,
+    Cursor,
+    State,
+    getch,
+)
 import arc.typing as at
 
-# TODO: remove 'q' as the quit character, and use Ctrl+C instead (or Ctrl+D)
 # Could the prompt be expanded to accept something like SelectMenu for Question type?
 
 
@@ -56,13 +64,6 @@ class Widget(ABC):
         self._prev_buffer = self._buffer
         self._buffer = []
 
-    def write(self, text: at.SupportsStr, line: bool = True):
-        text = str(text)
-        if line:
-            self._buffer.append(text)
-        else:
-            self._buffer[-1] += text
-
     def exit(self, return_value=None):
         self.should_exit = True
         self.return_value = return_value
@@ -78,6 +79,7 @@ class Widget(ABC):
 
 class SelectionMenu(Widget):
     hide_cursor = True
+    tab_distance = "   "
     selected = State()
 
     def __init__(
@@ -102,7 +104,7 @@ class SelectionMenu(Widget):
             seq = ""
         elif seq == "\r":
             self.exit((self.selected, self.items[self.selected]))
-        elif seq == "q":
+        elif seq == CTRL_C:
             self.exit()
         elif seq.isnumeric():
             val = int(seq) - 1
@@ -117,13 +119,18 @@ class SelectionMenu(Widget):
         elif seq == ARROW_DOWN:
             self.selected = min(len(self.items) - 1, self.selected + 1)
 
+    def write(self, text: at.SupportsStr):
+        text = str(text).replace("\n", f"\n{self.tab_distance}").split("\n")
+        self._buffer.extend(text)
+
     def render(self):
         for idx, item in enumerate(self.items):
             if idx == self.selected:
+                # self.write(f" {self.char} {item}")
                 self.write(colorize(f" {self.char} {item}", self.highlight_color))
             else:
-                self.write(colorize(f"   {item}", fg.GREY))
-        self.write("press q to quit")
+                # self.write(f"{self.tab_distance}{item}")
+                self.write(colorize(f"{self.tab_distance}{item}", fg.GREY))
 
 
 T = t.TypeVar("T")
