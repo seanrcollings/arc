@@ -1,10 +1,11 @@
 import os
-import sys
 import contextlib
 import io
+import typing as t
 
 import pytest
 from arc import CLI, Argument, Option, errors, Context
+from arc.prompt.helpers import ARROW_DOWN
 
 
 @contextlib.contextmanager
@@ -90,6 +91,20 @@ class TestPrompt:
 
         monkeypatch.setattr("sys.stdin", io.StringIO("\n"))
         assert cli("pr") == 10
+
+    # Can't test because StringIO cannot be converted to 'raw' mode
+    # def test_select_prompt(self, cli: CLI, monkeypatch: pytest.MonkeyPatch):
+    #     @cli.command()
+    #     def pr(val: t.Literal["a", 1] = Argument(prompt="Val")):
+    #         return val
+
+    #     assert cli("pr a") == "a"
+    #     assert cli("pr 1") == 1
+
+    #     monkeypatch.setattr("sys.stdin", io.StringIO("\n"))
+    #     assert cli("pr") == "a"
+    #     monkeypatch.setattr("sys.stdin", io.StringIO(f"{ARROW_DOWN}\n"))
+    #     assert cli("pr") == 1
 
 
 def test_precedence(cli: CLI, monkeypatch: pytest.MonkeyPatch):

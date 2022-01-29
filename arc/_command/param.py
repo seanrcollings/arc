@@ -215,14 +215,18 @@ class Param:
             or self.type_info.origin is t.Literal
         ):
             if self.type_info.origin is t.Literal:
-                values = list(tp.base for tp in self.type_info.sub_types)
+                values = list(str(tp.base) for tp in self.type_info.sub_types)
             else:
                 values = list(
-                    m.value for m in self.type_info.origin.__members__.values()
+                    str(m.value) for m in self.type_info.origin.__members__.values()
                 )
 
             print(self.prompt)
-            return select(values, highlight_color=ctx.config.brand_color)[1]
+            res = select(values, highlight_color=ctx.config.brand_color)
+            if res is None:
+                return constants.MISSING
+
+            return res[1]
 
         return (
             ctx.prompt.input(prompt, empty=empty, sensitive=sensitive)

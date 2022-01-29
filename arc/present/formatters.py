@@ -100,7 +100,6 @@ class TextFormatter:
                 )
             else:
                 width = width + (len(para) - ansi_len(para))
-                breakpoint()
                 wrapper.width = width
                 wrapped += wrapper.fill(para) + paragraph_seperator
 
