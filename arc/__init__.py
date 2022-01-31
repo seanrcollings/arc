@@ -11,4 +11,4 @@ from arc.context import Context
 from arc.types import *
 from arc.params import Param, Option, Flag, Argument, Count
 
-__version__ = "6.3.0b1"
+__version__ = "6.3.0b2"

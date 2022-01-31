@@ -82,9 +82,6 @@ class State:
     public_name: str
     private_name: str
 
-    def __init__(self) -> None:
-        self.initial_set = True
-
     def __set_name__(self, owner, name):
         self.public_name = name
         self.private_name = "_" + name
@@ -93,15 +90,11 @@ class State:
         return getattr(instance, self.private_name)
 
     def __set__(self, instance, value):
-        if not self.initial_set and instance.should_update(
-            getattr(instance, self.private_name), value
-        ):
+        if instance.should_update(getattr(instance, self.private_name, None), value):
             setattr(instance, self.private_name, value)
             instance.queue_update(self)
         else:
             setattr(instance, self.private_name, value)
-
-        self.initial_set = False
 
 
 ARROW_UP = "\x1b[A"
