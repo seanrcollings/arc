@@ -4,7 +4,7 @@ import os
 import typing as t
 
 from arc import errors, logging, typing as at
-from arc.callback import CallbackStack
+from arc.callback import Callback, CallbackStack
 from arc.color import colorize, fg
 from arc.config import config
 from arc import _command
@@ -75,7 +75,7 @@ class Context:
     ):
         self.command = command
         self.fullname = fullname
-        self.command_chain = command_chain or []
+        self.command_chain = command_chain or [command]
         self.parent = parent
         self.execute_callbacks = execute_callbacks
         if "prompt" not in self.meta:
@@ -156,6 +156,30 @@ class Context:
         """Creates a new context that is the child of the current context"""
         return type(self)(command, parent=self, fullname=command.name)
 
+    def create_callback_stack(self, args) -> CallbackStack:
+        cb_stack = CallbackStack()
+        # Place all the callback in a dictionary so we can preserve order,
+        # but also remove repeats and removed_callbacks
+        cb_dict: dict[Callback, None] = {}
+        if self.execute_callbacks:
+            for command in self.command_chain:
+                for cb in command.inheritable_callbacks():
+                    cb_dict[cb] = None
+
+                for cb in command.removed_callbacks:
+                    cb_dict.pop(cb, None)
+
+            for cb in cb_dict:
+                try:
+                    cb_stack.add(cb.func(args, self))  # type: ignore
+                except AttributeError as e:
+                    colored = colorize(str(cb.func.__name__), fg.YELLOW)  # type: ignore
+                    raise errors.CallbackError(
+                        f"{colored} is not a valid callback. "
+                        f"Perhaps you missed a {colorize('yield', fg.ARC_BLUE)}?"
+                    ) from e
+        return cb_stack
+
     def execute(self, callback: t.Union[Command, t.Callable], **kwargs):
         """Can be called in two ways
 
@@ -179,22 +203,9 @@ class Context:
         else:
             ctx = self
 
-        with ctx:
-            cb_stack = CallbackStack()
-            if self.execute_callbacks:
-                for cb in ctx.command.callbacks:
-                    try:
-                        cb_stack.add(cb.func(kwargs, ctx))  # type: ignore
-                    except AttributeError as e:
-                        colored = colorize(str(cb.func.__name__), fg.YELLOW)  # type: ignore
-                        raise errors.CallbackError(
-                            f"{colored} is not a valid callback. "
-                            f"Perhaps you missed a {colorize('yield', fg.ARC_BLUE)}?"
-                        ) from e
-
-            with cb_stack:
-                ctx.result = callback(**kwargs)
-                return ctx.result
+        with ctx, ctx.create_callback_stack(kwargs):
+            ctx.result = callback(**kwargs)
+            return ctx.result
 
     def close(self):
         logger.debug("Closing %s", self)
