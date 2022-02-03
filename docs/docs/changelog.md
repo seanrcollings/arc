@@ -1,6 +1,7 @@
 ## `6.3.0`
 
 - Added the ability to gather input from environment variables or by prompting the user directly.
+- Added `prompt.select()` for a more elegant selection menu
 
 ## `6.2.2`
 

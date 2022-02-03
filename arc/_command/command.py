@@ -44,7 +44,8 @@ class Command(ParamMixin):
         self.state = state or {}
         self._description = description
         self.ctx_dict = ctx_dict
-        self.callbacks: set[acb.Callback] = set()
+        self.callbacks: list[acb.Callback] = []
+        self.removed_callbacks: list[acb.Callback] = []
 
         if config.environment == "development":
             # Constructs the params at instantiation.
@@ -230,7 +231,7 @@ class Command(ParamMixin):
             command.name = command._callback.__name__
 
         self.subcommands[command.name] = command
-        command.callbacks = self.inheritable_callbacks()
+        # command.callbacks = self.inheritable_callbacks()
 
         logger.debug(
             "Registered %s%s%s command to %s%s%s",
@@ -365,7 +366,7 @@ class Command(ParamMixin):
     ) -> t.Callable[[acb.CallbackFunc], acb.Callback]:
         def inner(callback: acb.CallbackFunc) -> acb.Callback:
             cb = acb.create(inherit=inherit)(callback)
-            self.callbacks.add(cb)
+            self.callbacks.append(cb)
             return cb
 
         if callback:
@@ -374,4 +375,4 @@ class Command(ParamMixin):
         return inner
 
     def inheritable_callbacks(self):
-        return {callback for callback in self.callbacks if callback.inherit}
+        return (callback for callback in self.callbacks if callback.inherit)

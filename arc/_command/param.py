@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import enum
-import os
 import typing as t
 
 from arc import errors, constants
 from arc.color import colorize, fg, colored
 from arc.config import config
+from arc.prompt import select
 from arc.typing import CollectionTypes
 
 
@@ -37,6 +37,46 @@ class ParamAction(enum.Enum):
 
 
 class Param:
+    """Represents a Command-Line Paramater
+
+    Properties:
+        arg_name (str): The canonical name of the function argument. It is used to pass
+            the recieved value to the function.
+
+        annotation (type): the type of the function argument.
+
+        arg_alias (str, optional): A name to use for the paramater on the command line.
+            By default, this will be the same as arg_name, but kebab-case
+
+        short (str, optional): A single-length string to be used as a shortened
+            version of flag / option parameters. `--help -> -h`. May be removed from
+            the parent class in the future
+
+        default (t.Any, optional): The default value for the parameter. If no default
+            is given, the param is required. Defaults to `constants.MISSING`.
+
+        description (str, optional): Description of the param, may be used in `--help` docs.
+            Defaults to None.
+
+        callback (t.Callable[[t.Any, Context, Param], t.Any], optional): A callable object
+        that will be called with the value obtained for this parameter. Defaults to None.
+
+        expose (bool, optional): Wether or not this param actually gets passed to the function.
+            Defaults to True.
+
+        action (ParamAction, optional): See ParamAction docs for behavior. Defaults to None.
+
+        nargs (int, optional): Determines the number of arguments consumed when action
+            is `ParamAction.APPEND`. Defaults to None.
+
+        prompt (str, optional): A string used as a prompt when requesting input for
+            a param that isn't provided on the command line. If none is provided, the
+            user will not be prompted for input. Defaults to None.
+
+        envvar (str, optional): An enviroment variable the command may recieve it's value
+            from, if one is not provided on the command line. Defaults to None.
+    """
+
     def __init__(
         self,
         arg_name: str,
@@ -199,20 +239,11 @@ class Param:
         return value
 
     def get_prompt_value(self, ctx: Context) -> str | constants.MissingType:
-        empty = self.default is not constants.MISSING
-        if empty:
-            prompt = self.prompt + colorize(f"({self.default})", fg.GREY)
-        else:
-            prompt = self.prompt
+        type_class: type[aliases.TypeProtocol] = aliases.Alias.resolve(self.type_info)
+        if hasattr(type_class, "__prompt__"):
+            return type_class.__prompt__(ctx, self)  # type: ignore
 
-        sensitive = False
-        if self.type_info.origin is Password:
-            sensitive = True
-
-        return (
-            ctx.prompt.input(prompt, empty=empty, sensitive=sensitive)
-            or constants.MISSING
-        )
+        return helpers.input_prompt(ctx, self)
 
     def get_default_value(self, _ctx: Context, args: dict) -> t.Any:
         value = self.default
@@ -221,6 +252,11 @@ class Param:
             value = not value
 
         return value
+
+    def get_prompt_string(self):
+        if self.default is not constants.MISSING:
+            return self.prompt + colorize(f"({self.default})", fg.GREY)
+        return self.prompt
 
     def convert(self, value: t.Any, ctx: Context):
         if value is constants.MISSING:

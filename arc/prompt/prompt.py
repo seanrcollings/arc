@@ -16,8 +16,11 @@ class Prompt:
 
     ```py
     prompt = Prompt()
-    question = MultipleChoiceQuestion(["Chocolate", "Vanilla", "Strawberry"])
-    prompt.ask(question, "What's you favorite ice cream flavor?")
+    question = MultipleChoiceQuestion(
+        "What's you favorite ice cream flavor?",
+        ["Chocolate", "Vanilla", "Strawberry"]
+    )
+    prompt.ask(question)
     ```
     Would result in a prompt like:
     ```

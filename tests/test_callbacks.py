@@ -1,5 +1,6 @@
 import pytest
 from arc import CLI, Context, errors, callback
+import arc
 
 
 class CallbackException(Exception):
@@ -69,47 +70,6 @@ def test_final(cli: CLI):
         cli("test2")
 
 
-def test_inheritance(cli: CLI):
-    @callback.create()
-    def cb(_args, ctx):
-        raise CallbackException(ctx)
-
-    @callback.create(inherit=False)
-    def cb2(_args, ctx):
-        raise CallbackException(ctx)
-
-    @cb
-    @cb2
-    @cli.subcommand()
-    def command():
-        ...
-
-    @command.subcommand()
-    def sub1():
-        ...
-
-    assert cb in sub1.callbacks
-    assert cb2 not in sub1.callbacks
-    with pytest.raises(CallbackException):
-        cli("command:sub1")
-
-    @callback.remove(cb)
-    @command.subcommand()
-    def sub2():
-        ...
-
-    assert cb not in sub2.callbacks
-    cli("command:sub2")
-
-    @cb.remove
-    @command.subcommand()
-    def sub3():
-        ...
-
-    assert cb not in sub3.callbacks
-    cli("command:sub3")
-
-
 def test_missing_yield(cli: CLI):
     @callback.create()
     def cb(_args, ctx):
@@ -149,3 +109,94 @@ def test_no_callback_with_options(cli: CLI):
         return ctx
 
     assert cli("command").state.call_count == 1
+
+
+def test_post_creation_registration(cli: CLI):
+    @cli.command()
+    def command():
+        ...
+
+    @cli.callback()
+    def callback(_args, ctx: Context):
+        raise CallbackException(ctx)
+
+    with pytest.raises(CallbackException):
+        cli("command")
+
+
+def test_preserve_callbacks(cli: CLI):
+    @arc.command()
+    def command():
+        ...
+
+    @command.callback()
+    def cb1(args, ctx):
+        ...
+
+    cli.install_command(command)
+    assert cb1 in command.callbacks
+
+
+def test_callback_order(cli: CLI):
+    cli.state = {"cb_order": []}
+
+    @cli.callback()
+    def cb1(_args, ctx):
+        ctx.state["cb_order"].append("cb1")
+        yield
+
+    @cli.callback()
+    def cb2(args, ctx):
+        ctx.state["cb_order"].append("cb2")
+        yield
+
+    @cli.command()
+    def command(ctx: Context):
+        return ctx.state
+
+    assert cli("command") == {"cb_order": ["cb1", "cb2"]}
+
+
+def test_single_command():
+    @arc.command()
+    def command():
+        ...
+
+    @command.callback()
+    def cb(args, ctx):
+        raise CallbackException(ctx)
+
+    with pytest.raises(CallbackException):
+        command("")
+
+
+def test_remove_callback(cli: CLI):
+    @cli.callback()
+    def cb(args, ctx):
+        raise CallbackException(ctx)
+
+    @cli.command()
+    def c1():
+        ...
+
+    @c1.subcommand()
+    def sub1():
+        ...
+
+    @cb.remove
+    @cli.command()
+    def c2():
+        ...
+
+    @c2.subcommand()
+    def sub2():
+        ...
+
+    with pytest.raises(CallbackException):
+        cli("c1")
+
+    with pytest.raises(CallbackException):
+        cli("c1:sub1")
+
+    cli("c2")
+    cli("c2:sub2")

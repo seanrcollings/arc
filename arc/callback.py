@@ -18,12 +18,12 @@ class Callback:
     inherit: bool = True
 
     def __call__(self, command: Command) -> Command:
-        command.callbacks.add(self)
+        command.callbacks.append(self)
         return command
 
     def remove(self, command: Command) -> Command:
         """Removes the callback from the decorated `command`"""
-        command.callbacks.remove(self)
+        command.removed_callbacks.append(self)
         return command
 
 
@@ -67,7 +67,7 @@ class CallbackStack:
         self.__stack = []
 
     def add(self, gen: t.Generator[None, t.Any, None]):
-        gen.send(None)  # Advance it to the first yield
+        next(gen)  # Advance it to the first yield
         self.__stack.append(gen)
 
     def __enter__(self):
@@ -79,7 +79,7 @@ class CallbackStack:
                 if exc_value:
                     gen.throw(exc_type, exc_value, trace)
                 else:
-                    gen.send(None)
+                    next(gen)
             except StopIteration:
                 ...
 

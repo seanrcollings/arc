@@ -20,6 +20,7 @@ from arc.types.helpers import (
     match,
     safe_issubclass,
     convert,
+    select_prompt,
     validate,
 )
 
@@ -382,6 +383,12 @@ class LiteralAlias(Alias, of=t.Literal):
             value, f"must be {join_or(list(sub.base for sub in info.sub_types))}"
         )
 
+    @classmethod
+    def __prompt__(cls, ctx, param):
+        return select_prompt(
+            list(str(tp.base) for tp in param.type_info.sub_types), ctx, param
+        )
+
 
 # Stdlib types ---------------------------------------------------------------------------------
 
@@ -399,6 +406,14 @@ class EnumAlias(Alias, of=enum.Enum):
                 value,
                 f"must be {join_or([m.value for m in info.origin.__members__.values()])}",
             ) from e
+
+    @classmethod
+    def __prompt__(cls, ctx, param):
+        return select_prompt(
+            list(str(m.value) for m in param.type_info.origin.__members__.values()),
+            ctx,
+            param,
+        )
 
 
 class PathAlias(Alias, of=pathlib.Path):
