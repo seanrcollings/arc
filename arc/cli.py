@@ -94,6 +94,7 @@ class CLI(Command):
                     short="v",
                     description="Displays the app's current version",
                     callback=_version_callback,
+                    expose=False,
                 )
             )
 

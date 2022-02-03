@@ -37,6 +37,46 @@ class ParamAction(enum.Enum):
 
 
 class Param:
+    """Represents a Command-Line Paramater
+
+    Properties:
+        arg_name (str): The canonical name of the function argument. It is used to pass
+            the recieved value to the function.
+
+        annotation (type): the type of the function argument.
+
+        arg_alias (str, optional): A name to use for the paramater on the command line.
+            By default, this will be the same as arg_name, but kebab-case
+
+        short (str, optional): A single-length string to be used as a shortened
+            version of flag / option parameters. `--help -> -h`. May be removed from
+            the parent class in the future
+
+        default (t.Any, optional): The default value for the parameter. If no default
+            is given, the param is required. Defaults to `constants.MISSING`.
+
+        description (str, optional): Description of the param, may be used in `--help` docs.
+            Defaults to None.
+
+        callback (t.Callable[[t.Any, Context, Param], t.Any], optional): A callable object
+        that will be called with the value obtained for this parameter. Defaults to None.
+
+        expose (bool, optional): Wether or not this param actually gets passed to the function.
+            Defaults to True.
+
+        action (ParamAction, optional): See ParamAction docs for behavior. Defaults to None.
+
+        nargs (int, optional): Determines the number of arguments consumed when action
+            is `ParamAction.APPEND`. Defaults to None.
+
+        prompt (str, optional): A string used as a prompt when requesting input for
+            a param that isn't provided on the command line. If none is provided, the
+            user will not be prompted for input. Defaults to None.
+
+        envvar (str, optional): An enviroment variable the command may recieve it's value
+            from, if one is not provided on the command line. Defaults to None.
+    """
+
     def __init__(
         self,
         arg_name: str,
