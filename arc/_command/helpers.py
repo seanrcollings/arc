@@ -130,24 +130,3 @@ namespace_seperated = re.compile(
 def get_command_namespace(string: str):
     if namespace_seperated.match(string):
         return string.split(constants.NAMESPACE_SEP)
-
-
-def find_relevant_param(command: Command, info: CompletionInfo) -> t.Optional[Param]:
-    parser = Parser(allow_extra=True)
-    for param in command.visible_params:
-        parser.add_param(param)
-
-    parsed, _extra = parser.parse(info.words[1:])
-
-    if info.current == "":
-        pos_count = len(
-            [param for param in command.pos_params if param.arg_alias in parsed]
-        )
-        return command.pos_params[pos_count]
-
-    name, _value = parsed.popitem()
-    for param in command.visible_params:
-        if param.arg_alias == name:
-            return param
-
-    return None

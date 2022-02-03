@@ -23,8 +23,8 @@ def completions(shell: str, ctx: Context):
         print(completions.source())
     else:
         comps = completions.complete()
-        with open("out", "w+") as f:
-            f.write(comps)
+        # with open("out", "w+") as f:
+        #     f.write(comps)
         print(comps)
 
 
@@ -98,7 +98,7 @@ class BashCompletion(ShellCompletion):
 _{name}_completions() {{
     local completions;
 
-    completions=$(env COMP_WORDS=${{COMP_WORDS[*]}} COMP_CURRENT=${{COMP_CWORD}} {name} --autocomplete bash)
+    completions=$(env COMP_WORDS=${{COMP_POINT}} COMP_CURRENT=${{COMP_CWORD}} python manage.py --autocomplete bash)
 
     for comp in $completions; do
         COMPREPLY+=($comp)
@@ -144,7 +144,7 @@ function _{name}_completions
 
 end
 
-complete -f -c {name} -a "(_cli_completions)";
+complete -f -c {name} -a "(_{name}_completions)";
 """
 
     def complete(self) -> str:

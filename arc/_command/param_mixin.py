@@ -7,10 +7,12 @@ from __future__ import annotations
 import functools
 import typing as t
 
+from arc.autocompletions import completions
+
 if t.TYPE_CHECKING:
     from arc._command.param_builder import ParamBuilder
 
-from arc._command.param import Flag, Param
+from arc._command.param import Flag, Param, Option
 
 
 def _help_callback(value, ctx, _param):
@@ -21,6 +23,7 @@ def _help_callback(value, ctx, _param):
 
 class ParamMixin:
     builder: type[ParamBuilder]
+    _autocomplete: bool
 
     @functools.cached_property
     def params(self) -> list[Param]:
@@ -35,6 +38,24 @@ class ParamMixin:
                 expose=False,
             ),
         )
+
+        if self._autocomplete:
+
+            def _autocomplete_callback(value: str, ctx, _param):
+                if value:
+                    completions(value, ctx)
+                    ctx.exit()
+
+            params.append(
+                Option(
+                    "autocomplete",
+                    annotation=str,
+                    description="Generates auto completions for the CLI",
+                    callback=_autocomplete_callback,
+                    default=None,
+                    expose=False,
+                )
+            )
 
         return params
 
@@ -72,3 +93,12 @@ class ParamMixin:
     def required_params(self) -> list[Param]:
         """Required params do not have a default value"""
         return [param for param in self.params if not param.optional]
+
+    def get_param(self, name: str, visible: bool = True) -> t.Optional[Param]:
+        for param in self.params:
+            if name in (param.arg_alias, param.arg_name):
+                if visible and param.hidden:
+                    return None
+                return param
+
+        return None

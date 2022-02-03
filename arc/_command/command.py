@@ -19,6 +19,7 @@ from arc import callback as acb
 from arc.autocompletions import CompletionInfo, Completion, get_completions
 from .param_mixin import ParamMixin
 from . import helpers
+from arc._command import param_mixin
 
 
 logger = logging.getArcLogger("command")
@@ -46,6 +47,7 @@ class Command(ParamMixin):
         self.ctx_dict = ctx_dict
         self.callbacks: list[acb.Callback] = []
         self.removed_callbacks: list[acb.Callback] = []
+        self._autocomplete = False
 
         if config.environment == "development":
             # Constructs the params at instantiation.
@@ -59,6 +61,7 @@ class Command(ParamMixin):
         return f"{self.__class__.__name__}(name={self.name!r})"
 
     def __completions__(self, info: CompletionInfo):
+        print(info)
         if info.current.startswith(constants.SHORT_FLAG_PREFIX) and (
             constants.FLAG_PREFIX not in info.words
         ):
@@ -66,16 +69,25 @@ class Command(ParamMixin):
                 Completion(param.cli_rep(), description=param.description or "")
                 for param in self.key_params
             ]
+
         else:
-            param = helpers.find_relevant_param(self, info)
-            if param:
-                # TODO: Add a custom completions function to each Param()
-                # that will take precedence over the type's completions
-                cls = Alias.resolve(param.type_info.origin)
-                if hasattr(cls, "__completions__"):
-                    return get_completions(cls, info)  # type: ignore
+            param_name = info.words[-1 if info.current == "" else -2]
+
+            if param_name.startswith(constants.SHORT_FLAG_PREFIX):
+                param_name = param_name.lstrip(constants.SHORT_FLAG_PREFIX)
+                param = self.get_param(param_name)
+
+                if param:
+                    # TODO: parameter types define what completions are available
+                    # Return the completions for param's type
+                    breakpoint()
 
         return []
+
+    def autocomplete(self):
+        self._autocomplete = True
+        if config.environment == "development":
+            del self.params
 
     def schema(self):
         return {

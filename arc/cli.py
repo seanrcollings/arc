@@ -119,22 +119,6 @@ class CLI(Command):
                 )
             )
 
-        def _autocomplete_callback(value: str, ctx: Context, _param):
-            if value:
-                completions(value, ctx)
-                ctx.exit()
-
-        params.append(
-            Option(
-                "autocomplete",
-                annotation=str,
-                description="Generates auto completions for the CLI",
-                callback=_autocomplete_callback,
-                default=None,
-                expose=False,
-            )
-        )
-
         return params
 
     @utils.timer("Running CLI")
