@@ -18,8 +18,6 @@ from arc.typing import ClassCallback
 from arc import callback as acb
 from arc.autocompletions import CompletionInfo, Completion, get_completions
 from .param_mixin import ParamMixin
-from . import helpers
-from arc._command import param_mixin
 
 
 logger = logging.getArcLogger("command")
@@ -62,7 +60,7 @@ class Command(ParamMixin):
 
     def __completions__(self, info: CompletionInfo):
         if info.current.startswith(constants.SHORT_FLAG_PREFIX) and (
-            constants.FLAG_PREFIX not in info.words
+            constants.FLAG_PREFIX not in info.words[0:-1]
         ):
             return [
                 Completion(param.cli_rep(), description=param.description or "")
@@ -85,14 +83,21 @@ class Command(ParamMixin):
 
                 pos_arg_count = 0
                 for word in reversed(info.words[1:]):
-                    if word.startswith(constants.SHORT_FLAG_PREFIX):
+                    if (
+                        word.startswith(constants.SHORT_FLAG_PREFIX)
+                        and word != constants.FLAG_PREFIX
+                    ):
                         break
                     pos_arg_count += 1
 
-                param = self.pos_params[pos_arg_count]
-                cls = Alias.resolve(param.type_info.origin)
-                if hasattr(cls, "__completions__"):
-                    return get_completions(cls, info)  # type: ignore
+                if info.current != "" and pos_arg_count > 0:
+                    pos_arg_count -= 1
+
+                if pos_arg_count < len(self.pos_params):
+                    param = self.pos_params[pos_arg_count]
+                    cls = Alias.resolve(param.type_info.origin)
+                    if hasattr(cls, "__completions__"):
+                        return get_completions(cls, info)  # type: ignore
 
         return []
 

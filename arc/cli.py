@@ -3,7 +3,7 @@ import typing as t
 import sys
 
 from arc import constants, errors, utils, logging, typing as at
-from arc.autocompletions import Completion, CompletionInfo, completions, get_completions
+from arc.autocompletions import Completion, CompletionInfo, get_completions
 from arc.color import colorize, fg
 from arc.config import config
 from arc._command.param import Flag, Option

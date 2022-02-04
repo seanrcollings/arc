@@ -17,10 +17,6 @@ logger = logging.getArcLogger("comp")
 
 def completions(shell: str, ctx: Context):
     info = CompletionInfo.from_env()
-    # with open("info", "w+") as f:
-    #     f.write(str(info.words))
-    #     f.write(info.current)
-
     completions: ShellCompletion = shells[shell](ctx, info)
     return completions.source() if info.empty() else completions.complete()
 
@@ -74,8 +70,10 @@ class ShellCompletion:
 
     @property
     def completion_vars(self) -> dict:
+        name = self.command.name or utils.discover_name().replace(".", "_")
         return {
-            "name": (self.command.name or utils.discover_name()).replace(".", "_"),
+            "name": name,
+            "func_name": f"{name}_completions".replace("-", "_"),
         }
 
     def source(self) -> str:
@@ -92,10 +90,11 @@ class ShellCompletion:
 class BashCompletion(ShellCompletion):
     name = "bash"
     template = """\
-_{name}_completions() {{
+{func_name}() {{
     local completions;
 
-    completions=$(env COMP_WORDS=${{COMP_POINT}} COMP_CURRENT=${{COMP_CWORD}} python manage.py --autocomplete bash)
+    completions=$(env COMP_WORDS=${{COMP_LINE}} COMP_CURRENT=${{COMP_WORDS[$COMP_CWORD]}} python manage.py --autocomplete bash)
+    echo 'env COMP_WORDS=${{COMP_LINE}} COMP_CURRENT=${{COMP_WORDS[$COMP_CWORD]}} python manage.py --autocomplete bash' > info
 
     for comp in $completions; do
         COMPREPLY+=($comp)
@@ -104,21 +103,50 @@ _{name}_completions() {{
     return 0
 }}
 
-complete -F _{name}_completions {name}
+complete -F {func_name} {name}
 """
 
     def complete(self) -> str:
-        comps = [Completion(str(v), CompletionType.PLAIN) for v in range(10)]
+        comps = get_completions(self.command, self.info)
+        with open("info", "w+") as f:
+            f.write(str(comps))
+            f.write("\n")
+            f.write(str(self.info))
         return " ".join([self.format_completion(comp) for comp in comps])
 
     def format_completion(self, comp: Completion) -> str:
-        return f"{comp.type.value}|{comp.value}"
+        return f"{comp.value}"
+
+
+# class ZshCompletion(BashCompletion):
+#     name = "zsh"
+#     template = """\
+# #compdef {func_name} {name}
+
+# function {func_name} {{
+#     local completions;
+#     completions=$(env COMP_WORDS=${{COMP_POINT}} COMP_CURRENT=${{COMP_CWORD}} python manage.py --autocomplete zsh)
+
+#     for comp in $completions; do
+
+#     done
+
+#     return 0
+# }}
+# """
+
+#     def format_completion(self, comp: Completion) -> str:
+#         string = f"{comp.type.value}|{comp.value}"
+#         if comp.description:
+#             string += f"[{comp.description}]"
+
+#         return string
 
 
 class FishCompletion(ShellCompletion):
     name = "fish"
     template = """\
-function _{name}_completions
+function {func_name}
     set -l completions (env COMP_WORDS=(commandline -cp) COMP_CURRENT=(commandline -t) python manage.py --autocomplete fish)
 
     for comp in $completions
@@ -141,7 +169,7 @@ function _{name}_completions
 
 end
 
-complete -f -c {name} -a "(_{name}_completions)";
+complete -f -c {name} -a "({func_name})";
 """
 
     def complete(self) -> str:
