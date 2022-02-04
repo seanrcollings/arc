@@ -61,7 +61,6 @@ class Command(ParamMixin):
         return f"{self.__class__.__name__}(name={self.name!r})"
 
     def __completions__(self, info: CompletionInfo):
-        print(info)
         if info.current.startswith(constants.SHORT_FLAG_PREFIX) and (
             constants.FLAG_PREFIX not in info.words
         ):
@@ -71,16 +70,29 @@ class Command(ParamMixin):
             ]
 
         else:
+            # We are completing for an option
             param_name = info.words[-1 if info.current == "" else -2]
+            param_name = param_name.lstrip(constants.SHORT_FLAG_PREFIX)
+            param = self.get_param(param_name)
+            if param and param.is_option and constants.FLAG_PREFIX not in info.words:
+                cls = Alias.resolve(param.type_info.origin)
+                if hasattr(cls, "__completions__"):
+                    return get_completions(cls, info)  # type: ignore
 
-            if param_name.startswith(constants.SHORT_FLAG_PREFIX):
-                param_name = param_name.lstrip(constants.SHORT_FLAG_PREFIX)
-                param = self.get_param(param_name)
+            # We are completing for a positional argument
+            # This is a pretty lazy approach, but it works for now
+            else:
 
-                if param:
-                    # TODO: parameter types define what completions are available
-                    # Return the completions for param's type
-                    breakpoint()
+                pos_arg_count = 0
+                for word in reversed(info.words[1:]):
+                    if word.startswith(constants.SHORT_FLAG_PREFIX):
+                        break
+                    pos_arg_count += 1
+
+                param = self.pos_params[pos_arg_count]
+                cls = Alias.resolve(param.type_info.origin)
+                if hasattr(cls, "__completions__"):
+                    return get_completions(cls, info)  # type: ignore
 
         return []
 

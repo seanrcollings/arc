@@ -2,7 +2,7 @@
 .. include:: ../../wiki/Data-Types.md
 """
 from .helpers import TypeInfo, convert
-from .file import *
+from .file import File, Stdin
 from .range import Range
 from .aliases import Alias
 from .semver import SemVer

@@ -2,21 +2,21 @@ import pathlib
 import typing as t
 
 from arc import errors
+from arc.autocompletions import Completion, CompletionInfo, CompletionType
 from arc.types import helpers
 
 
 __all__ = ["ValidPath", "FilePath", "DirectoryPath", "strictpath"]
 
 # The concrete implementation of Path isn't chosen
-# until instantiation, so you can't sublcass Path directly
-# we can get around this by getting the type of an instance
+# until instantiation, so you can't sublcass Path directly.
+# We can get around this by getting the type of an instance
 # of Path
 PathType = type(pathlib.Path())
 
 
 class ValidPath(PathType):  # type: ignore
     name = "path"
-
     valid: t.ClassVar[bool] = True
     directory: t.ClassVar[bool] = False
     file: t.ClassVar[bool] = False
@@ -41,7 +41,7 @@ class ValidPath(PathType):  # type: ignore
                 raise ValueError(str(err))
 
     def resolve(self, strict=False):
-        # resolve() creates a new Path object, so
+        # HACK resolve() creates a new Path object, so
         # __validate will get called recursively when
         # matches is set.
         cls = type(self)
@@ -56,6 +56,19 @@ class ValidPath(PathType):  # type: ignore
             return cls(value)
         except (AssertionError, ValueError) as e:
             raise errors.ConversionError(value, str(e)) from e
+
+    @classmethod
+    def __completions__(cls, info: CompletionInfo):
+        res = []
+        if cls.file:
+            res.append(Completion(info.current, CompletionType.FILE))
+        if cls.directory:
+            res.append(Completion(info.current, CompletionType.DIR))
+
+        if len(res) == 0:
+            res.append(Completion(info.current, CompletionType.FILE))
+
+        return res
 
 
 class FilePath(ValidPath):

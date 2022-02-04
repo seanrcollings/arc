@@ -81,9 +81,11 @@ class CLI(Command):
 
     def __completions__(self, info: CompletionInfo):
         # Completes Command names
-        if len(info.words) == 1 and not info.current.startswith(
-            constants.SHORT_FLAG_PREFIX
-        ):
+
+        if (
+            (len(info.words) == 1 and info.current == "")
+            or (len(info.words) == 2 and info.current == info.words[-1])
+        ) and not info.current.startswith(constants.SHORT_FLAG_PREFIX):
             return [
                 Completion(fullname, description=command.short_description or "")
                 for command, fullname in helpers.get_all_commands(self)[1:]

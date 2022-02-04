@@ -43,10 +43,11 @@ class ParamMixin:
 
             def _autocomplete_callback(value: str, ctx, _param):
                 if value:
-                    completions(value, ctx)
+                    print(completions(value, ctx), end="")
                     ctx.exit()
 
-            params.append(
+            params.insert(
+                0,
                 Option(
                     "autocomplete",
                     annotation=str,
@@ -54,7 +55,7 @@ class ParamMixin:
                     callback=_autocomplete_callback,
                     default=None,
                     expose=False,
-                )
+                ),
             )
 
         return params

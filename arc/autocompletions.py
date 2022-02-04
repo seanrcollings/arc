@@ -17,15 +17,12 @@ logger = logging.getArcLogger("comp")
 
 def completions(shell: str, ctx: Context):
     info = CompletionInfo.from_env()
-    completions: ShellCompletion = shells[shell](ctx, info)
+    # with open("info", "w+") as f:
+    #     f.write(str(info.words))
+    #     f.write(info.current)
 
-    if info.empty():
-        print(completions.source())
-    else:
-        comps = completions.complete()
-        # with open("out", "w+") as f:
-        #     f.write(comps)
-        print(comps)
+    completions: ShellCompletion = shells[shell](ctx, info)
+    return completions.source() if info.empty() else completions.complete()
 
 
 def get_completions(obj: CompletionProtocol, info: CompletionInfo) -> list[Completion]:
@@ -132,8 +129,8 @@ function _{name}_completions
         switch $type
             case file
                 __fish_complete_path $data
-            # case dir
-            #     __fish_complete_directories $data
+            case dir
+                __fish_complete_directories $data
             case plain
                 echo $data
             case '*'
