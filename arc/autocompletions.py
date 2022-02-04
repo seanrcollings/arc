@@ -18,7 +18,12 @@ logger = logging.getArcLogger("comp")
 def completions(shell: str, ctx: Context):
     info = CompletionInfo.from_env()
     completions: ShellCompletion = shells[shell](ctx, info)
-    return completions.source() if info.empty() else completions.complete()
+    with open("info", "w+") as f:
+        f.write(str(info) + "\n")
+        res = completions.source() if info.empty() else completions.complete()
+        f.write(str(res) + "\n")
+
+    return res
 
 
 def get_completions(obj: CompletionProtocol, info: CompletionInfo) -> list[Completion]:
@@ -73,7 +78,7 @@ class ShellCompletion:
         name = self.command.name or utils.discover_name().replace(".", "_")
         return {
             "name": name,
-            "func_name": f"{name}_completions".replace("-", "_"),
+            "func_name": f"_{name}_completions".replace("-", "_"),
         }
 
     def source(self) -> str:
@@ -92,30 +97,34 @@ class BashCompletion(ShellCompletion):
     template = """\
 {func_name}() {{
     local completions;
+    local IFS=" ";
 
-    completions=$(env COMP_WORDS=${{COMP_LINE}} COMP_CURRENT=${{COMP_WORDS[$COMP_CWORD]}} python manage.py --autocomplete bash)
-    echo 'env COMP_WORDS=${{COMP_LINE}} COMP_CURRENT=${{COMP_WORDS[$COMP_CWORD]}} python manage.py --autocomplete bash' > info
+    completions=$(env COMP_WORDS="${{COMP_WORDS[*]}}" COMP_CURRENT="${{COMP_WORDS[COMP_CWORD]}}" python manage.py --autocomplete bash)
 
     for comp in $completions; do
-        COMPREPLY+=($comp)
+        IFS="|" read -r type value <<< "$comp"
+
+        if [[ $type == "file" ]]; then
+            compopt -o default
+        elif [[ $type == "dir" ]]; then
+            compopt -o dirnames
+        elif [[ $type == "plain" ]]; then
+            COMPREPLY+=($value)
+        fi
     done
 
     return 0
 }}
 
-complete -F {func_name} {name}
+complete -o nosort -F {func_name} {name}
 """
 
     def complete(self) -> str:
         comps = get_completions(self.command, self.info)
-        with open("info", "w+") as f:
-            f.write(str(comps))
-            f.write("\n")
-            f.write(str(self.info))
         return " ".join([self.format_completion(comp) for comp in comps])
 
     def format_completion(self, comp: Completion) -> str:
-        return f"{comp.value}"
+        return f"{comp.type.value}|{comp.value}"
 
 
 # class ZshCompletion(BashCompletion):
