@@ -204,7 +204,7 @@ def test_arguments(cli: CLI):
         )
         == """\
 USAGE
-    test command [--key-opt <...>] [--help] [--flag] --key-req <...> [--] pos-
+    test command [--help] [--flag] [--key-opt <...>] --key-req <...> [--] pos-
     req [pos-opt]
 
 ARGUMENTS

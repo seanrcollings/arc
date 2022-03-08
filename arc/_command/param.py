@@ -291,7 +291,7 @@ class Argument(Param):
             else:
                 string = self.arg_alias
         else:
-            string = f"<{self.arg_alias}>"
+            string = self.arg_alias
 
         if self.optional:
             return f"[{string}]"

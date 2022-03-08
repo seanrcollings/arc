@@ -1,7 +1,9 @@
 from __future__ import annotations
+import types
 import typing as t
 import dataclasses as dc
 
+from arc import errors
 
 if t.TYPE_CHECKING:
     from arc.context import Context
@@ -67,6 +69,10 @@ class CallbackStack:
         self.__stack = []
 
     def add(self, gen: t.Generator[None, t.Any, None]):
+        if not isinstance(gen, types.GeneratorType):
+            raise errors.CallbackError(
+                "Callback must be a generator. Did you miss a yield?"
+            )
         next(gen)  # Advance it to the first yield
         self.__stack.append(gen)
 
