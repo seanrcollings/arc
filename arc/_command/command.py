@@ -76,10 +76,6 @@ class Command(ParamMixin):
                 and info.words[-1].startswith(constants.SHORT_FLAG_PREFIX)
             ):
                 param_name = info.words[-1]
-            elif len(info.words) > 1 and info.words[-2].startswith(
-                constants.SHORT_FLAG_PREFIX
-            ):
-                param_name = info.words[-2]
 
             if param_name:
                 param_name = param_name.lstrip(constants.SHORT_FLAG_PREFIX)
@@ -89,9 +85,7 @@ class Command(ParamMixin):
                     and param.is_option
                     and constants.FLAG_PREFIX not in info.words
                 ):
-                    cls = Alias.resolve(param.type_info.origin)
-                    if hasattr(cls, "__completions__"):
-                        return get_completions(cls, info)  # type: ignore
+                    return get_completions(param, info)
 
             else:
                 # We are completing for a positional argument

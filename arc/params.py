@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing as t
 from arc._command import param
 from arc import constants
+from arc import typing as at
 
 
 class ParamInfo:
@@ -17,6 +18,7 @@ class ParamInfo:
         action: param.ParamAction = None,
         prompt: str = None,
         envvar: str = None,
+        complete: at.CompletionFunc = None,
     ):
         self.param_cls = param_cls
         self.arg_alias = arg_alias
@@ -27,6 +29,7 @@ class ParamInfo:
         self.action = action
         self.prompt = prompt
         self.envvar = envvar
+        self.complete = complete
 
     def dict(self):
         """Used to pass to `Param()` as **kwargs"""
@@ -39,6 +42,7 @@ class ParamInfo:
             "action": self.action,
             "prompt": self.prompt,
             "envvar": self.envvar,
+            "comp_func": self.complete,
         }
 
 
@@ -51,6 +55,7 @@ def Param(
     callback: t.Callable = None,
     prompt: str = None,
     envvar: str = None,
+    complete: at.CompletionFunc = None,
 ) -> t.Any:
     """A CLI Paramater. Automatically decides whether it is
     a `positional`, `option` or `flag`
@@ -73,7 +78,6 @@ def Param(
     ```
     """
     return ParamInfo(
-        None,
         arg_alias=name,
         short=short,
         default=default,
@@ -81,6 +85,7 @@ def Param(
         callback=callback,
         prompt=prompt,
         envvar=envvar,
+        complete=complete,
     )
 
 

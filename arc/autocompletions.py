@@ -30,7 +30,9 @@ def completions(shell: str, ctx: Context):
 def get_completions(obj: CompletionProtocol, info: CompletionInfo) -> list[Completion]:
     """Gets the completions for a particular object that supports the `CompletionProtocol`"""
     comps = obj.__completions__(info)
-    if not isinstance(comps, list):
+    if comps is None:
+        comps = []
+    elif not isinstance(comps, list):
         comps = [comps]
     return comps
 

@@ -7,9 +7,8 @@ import typing as t
 from arc import errors, constants
 from arc.color import colorize, fg, colored
 from arc.config import config
-from arc.prompt import select
-from arc.typing import CollectionTypes
-
+from arc import typing as at
+from arc.autocompletions import CompletionInfo, Completion, get_completions
 
 if t.TYPE_CHECKING:
     from arc.context import Context
@@ -91,6 +90,7 @@ class Param:
         nargs: int = None,
         prompt: str = None,
         envvar: str = None,
+        comp_func: t.Optional[at.CompletionFunc] = None,
     ):
 
         self.type_info = helpers.TypeInfo.analyze(annotation)
@@ -103,6 +103,7 @@ class Param:
         self.expose: bool = expose
         self.prompt: t.Optional[str] = prompt
         self.envvar: t.Optional[str] = envvar
+        self.comp_func = comp_func
 
         if self.type_info.is_optional_type():
             self.type_info = self.type_info.sub_types[0]
@@ -113,7 +114,7 @@ class Param:
 
         if action:
             self.action = action
-        elif helpers.safe_issubclass(self.type_info.origin, CollectionTypes):
+        elif helpers.safe_issubclass(self.type_info.origin, at.CollectionTypes):
             self.action = ParamAction.APPEND
         else:
             self.action = ParamAction.STORE
@@ -152,6 +153,14 @@ class Param:
             raise ValueError(
                 "Invalid value for format spec, must be: usage or arguments"
             )
+
+    def __completions__(self, info: CompletionInfo):
+        if self.comp_func:
+            return self.comp_func(info)
+
+        cls = aliases.Alias.resolve(self.type_info.origin)
+        if hasattr(cls, "__completions__"):
+            return get_completions(cls, info)  # type: ignore
 
     def _format_usage(self):
         return ""
