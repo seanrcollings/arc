@@ -81,18 +81,17 @@ class CLI(Command):
 
     def __completions__(self, info: CompletionInfo):
         # Completes Command names
-
         if (
-            (len(info.words) == 1 and info.current == "")
-            or (len(info.words) == 2 and info.current == info.words[-1])
+            (len(info.words) == 0 and info.current == "")
+            or (len(info.words) == 1 and info.current == info.words[-1])
         ) and not info.current.startswith(constants.SHORT_FLAG_PREFIX):
             return [
                 Completion(fullname, description=command.short_description or "")
                 for command, fullname in helpers.get_all_commands(self)[1:]
             ]
         # Finds the current command and delegates completions to it
-        elif len(info.words) >= 2:
-            command_name = info.words.pop(1)
+        elif len(info.words) >= 1:
+            command_name = info.words[0]
             for command, fullname in helpers.get_all_commands(self):
                 if fullname == command_name:
                     return get_completions(command, info)

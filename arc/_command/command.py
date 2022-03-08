@@ -69,18 +69,37 @@ class Command(ParamMixin):
 
         else:
             # We are completing for an option
-            param_name = info.words[-1 if info.current == "" else -2]
-            param_name = param_name.lstrip(constants.SHORT_FLAG_PREFIX)
-            param = self.get_param(param_name)
-            if param and param.is_option and constants.FLAG_PREFIX not in info.words:
-                cls = Alias.resolve(param.type_info.origin)
-                if hasattr(cls, "__completions__"):
-                    return get_completions(cls, info)  # type: ignore
+            param_name = None
+            if (
+                len(info.words) >= 1
+                and info.current == ""
+                and info.words[-1].startswith(constants.SHORT_FLAG_PREFIX)
+            ):
+                param_name = info.words[-1]
+            elif len(info.words) > 1 and info.words[-2].startswith(
+                constants.SHORT_FLAG_PREFIX
+            ):
+                param_name = info.words[-2]
 
-            # We are completing for a positional argument
-            # This is a pretty lazy approach, but it works for now
+            if param_name:
+                param_name = param_name.lstrip(constants.SHORT_FLAG_PREFIX)
+                param = self.get_param(param_name)
+                if (
+                    param
+                    and param.is_option
+                    and constants.FLAG_PREFIX not in info.words
+                ):
+                    cls = Alias.resolve(param.type_info.origin)
+                    if hasattr(cls, "__completions__"):
+                        return get_completions(cls, info)  # type: ignore
+
             else:
-
+                # We are completing for a positional argument
+                # TODO: This approach does not take into consideration positonal
+                # arguments that are peppered in between options. It only counts ones
+                # at the end of the command line. Addtionally, it does not take into
+                # account that collection types can include more than 1 positional
+                # argument.
                 pos_arg_count = 0
                 for word in reversed(info.words[1:]):
                     if (

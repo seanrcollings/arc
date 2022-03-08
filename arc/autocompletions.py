@@ -18,10 +18,11 @@ logger = logging.getArcLogger("comp")
 def completions(shell: str, ctx: Context):
     info = CompletionInfo.from_env()
     completions: ShellCompletion = shells[shell](ctx, info)
-    with open("info", "w+") as f:
-        f.write(str(info) + "\n")
-        res = completions.source() if info.empty() else completions.complete()
-        f.write(str(res) + "\n")
+    res = (
+        completions.complete()
+        if completions.should_complete()
+        else completions.source()
+    )
 
     return res
 
@@ -44,7 +45,7 @@ class CompletionInfo:
 
     @classmethod
     def from_env(cls) -> CompletionInfo:
-        words = os.getenv("COMP_WORDS", "").split()
+        words = os.getenv("COMP_WORDS", "").split()[1:]
         current = os.getenv("COMP_CURRENT", "")
         return cls(words, current)
 
@@ -72,14 +73,22 @@ class ShellCompletion:
         self.ctx = ctx
         self.command = ctx.command
         self.info = info
+        self.command_name = self.command.name or utils.discover_name().replace(".", "_")
 
     @property
     def completion_vars(self) -> dict:
-        name = self.command.name or utils.discover_name().replace(".", "_")
         return {
-            "name": name,
-            "func_name": f"_{name}_completions".replace("-", "_"),
+            "name": self.command_name,
+            "func_name": f"_{self.command_name}_completions".replace("-", "_"),
+            "completion_var": self.completion_var,
         }
+
+    @property
+    def completion_var(self) -> str:
+        return f"_{self.command_name}_complete".upper().replace("-", "_")
+
+    def should_complete(self) -> bool:
+        return os.getenv(self.completion_var) is not None
 
     def source(self) -> str:
         """Returns the script for the paricular lanuage"""
@@ -156,7 +165,7 @@ class FishCompletion(ShellCompletion):
     name = "fish"
     template = """\
 function {func_name}
-    set -l completions (env COMP_WORDS=(commandline -cp) COMP_CURRENT=(commandline -t) python manage.py --autocomplete fish)
+    set -l completions (env {completion_var}=true COMP_WORDS=(commandline -cp) COMP_CURRENT=(commandline -t) python manage.py --autocomplete fish)
 
     for comp in $completions
         set -l parsed (string split '|' $comp)
