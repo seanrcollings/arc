@@ -1,8 +1,10 @@
 from contextlib import contextmanager
 import pytest
+from arc import autocompletions
 from arc.autocompletions import completions
 from arc import CLI, Param, types
 import arc
+from arc.params import Argument
 
 from tests import utils
 
@@ -108,6 +110,28 @@ class TestFish:
             ):
                 assert completions("fish", ctx).split("\n") == [
                     f"file|{arg}",
+                ]
+
+        def test_custom_completions(self, ccli: CLI):
+            def _complete(info):
+                return [
+                    autocompletions.Completion("test1"),
+                    autocompletions.Completion("test2"),
+                ]
+
+            @ccli.command()
+            def custom(*, arg=Param(complete=_complete)):
+                ...
+
+            ctx = ccli.create_ctx(ccli.name)
+            with utils.environ(
+                _TEST_COMPLETE="true",
+                COMP_WORDS=f"cli custom --arg ",
+                COMP_CURRENT="",
+            ):
+                assert completions("fish", ctx).split("\n") == [
+                    "plain|test1",
+                    "plain|test2",
                 ]
 
     class TestSingleCommand:

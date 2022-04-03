@@ -94,6 +94,7 @@ class Command(ParamMixin):
                 # at the end of the command line. Addtionally, it does not take into
                 # account that collection types can include more than 1 positional
                 # argument.
+
                 pos_arg_count = 0
                 for word in reversed(info.words[1:]):
                     if (
@@ -108,9 +109,7 @@ class Command(ParamMixin):
 
                 if pos_arg_count < len(self.pos_params):
                     param = self.pos_params[pos_arg_count]
-                    cls = Alias.resolve(param.type_info.origin)
-                    if hasattr(cls, "__completions__"):
-                        return get_completions(cls, info)  # type: ignore
+                    return get_completions(param, info)
 
         return []
 
