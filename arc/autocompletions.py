@@ -8,7 +8,6 @@ from arc import utils, logging
 
 if t.TYPE_CHECKING:
     from arc.context import Context
-    from arc._command import Command
     from arc.typing import CompletionProtocol
 
 
@@ -17,12 +16,10 @@ logger = logging.getArcLogger("comp")
 
 def completions(shell: str, ctx: Context):
     info = CompletionInfo.from_env()
-    completions: ShellCompletion = shells[shell](ctx, info)
-    res = (
-        completions.complete()
-        if completions.should_complete()
-        else completions.source()
-    )
+    comp: ShellCompletion = shells[shell](ctx, info)
+    res = comp.complete() if comp.should_complete() else comp.source()
+    with open("output.txt", "w") as f:
+        f.write(res)
 
     return res
 
@@ -98,6 +95,7 @@ class ShellCompletion:
 
     def complete(self) -> str:
         """Actually provides the completions"""
+        return ""
 
     def format_completion(self, comp: Completion) -> str:
         return ""
@@ -108,11 +106,10 @@ class BashCompletion(ShellCompletion):
     template = """\
 {func_name}() {{
     local completions;
-    local IFS=" ";
 
-    completions=$(env COMP_WORDS="${{COMP_WORDS[*]}}" COMP_CURRENT="${{COMP_WORDS[COMP_CWORD]}}" python manage.py --autocomplete bash)
+    completions=$(env {completion_var}=true COMP_WORDS="${{COMP_WORDS[*]}}" COMP_CURRENT="${{COMP_WORDS[COMP_CWORD]}}" python manage.py --autocomplete bash)
 
-    for comp in $completions; do
+    while IFS= read -r comp; do
         IFS="|" read -r type value <<< "$comp"
 
         if [[ $type == "file" ]]; then
@@ -122,7 +119,7 @@ class BashCompletion(ShellCompletion):
         elif [[ $type == "plain" ]]; then
             COMPREPLY+=($value)
         fi
-    done
+    done <<< "$completions"
 
     return 0
 }}
@@ -132,35 +129,43 @@ complete -o nosort -F {func_name} {name}
 
     def complete(self) -> str:
         comps = get_completions(self.command, self.info)
-        return " ".join([self.format_completion(comp) for comp in comps])
+        return "\n".join([self.format_completion(comp) for comp in comps])
 
     def format_completion(self, comp: Completion) -> str:
         return f"{comp.type.value}|{comp.value}"
 
 
-# class ZshCompletion(BashCompletion):
-#     name = "zsh"
-#     template = """\
-# #compdef {func_name} {name}
+class ZshCompletion(BashCompletion):
+    name = "zsh"
+    template = """\
+function {func_name} {{
+    local completions;
+    completions=$(env {completion_var}=true COMP_WORDS="${{COMP_WORDS[*]}}" COMP_CURRENT="${{COMP_WORDS[COMP_CWORD]}}" python manage.py --autocomplete zsh)
 
-# function {func_name} {{
-#     local completions;
-#     completions=$(env COMP_WORDS=${{COMP_POINT}} COMP_CURRENT=${{COMP_CWORD}} python manage.py --autocomplete zsh)
+    for comp in $completions
+    do
+        local parsed type value
+        parsed=(${{(s/:/)str}})
+        type=${{parsed[1]}}
+        value=${{parsed[2]}}
 
-#     for comp in $completions; do
+        _arguments $value
+    done
+}}
 
-#     done
+compdef {func_name} {name}
+"""
 
-#     return 0
-# }}
-# """
+    def complete(self) -> str:
+        comps = get_completions(self.command, self.info)
+        return "\n".join([self.format_completion(comp) for comp in comps])
 
-#     def format_completion(self, comp: Completion) -> str:
-#         string = f"{comp.type.value}|{comp.value}"
-#         if comp.description:
-#             string += f"[{comp.description}]"
+    def format_completion(self, comp: Completion) -> str:
+        string = f"{comp.type.value}|{comp.value}"
+        if comp.description:
+            string += f"[{comp.description}]"
 
-#         return string
+        return string
 
 
 class FishCompletion(ShellCompletion):
@@ -204,4 +209,4 @@ complete -f -c {name} -a "({func_name})";
         return string
 
 
-shells = {"bash": BashCompletion, "fish": FishCompletion}
+shells = {"bash": BashCompletion, "fish": FishCompletion, "zsh": ZshCompletion}

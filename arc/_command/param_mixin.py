@@ -8,6 +8,7 @@ import functools
 import typing as t
 
 from arc.autocompletions import completions
+from arc import errors
 
 if t.TYPE_CHECKING:
     from arc._command.param_builder import ParamBuilder

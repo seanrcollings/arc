@@ -43,7 +43,11 @@ def command():
     return c
 
 
-class TestFish:
+class TestCompletions:
+    """This class tests the actual functionality of the autocompletion.
+    Each shell-type has seprate tests below
+    """
+
     class TestCLI:
         def test_subcommands(self, ccli: CLI):
             ctx = ccli.create_ctx(ccli.name)
@@ -170,3 +174,15 @@ class TestFish:
                 assert completions("fish", ctx).split("\n") == [
                     f"file|{arg}",
                 ]
+
+
+class TestBash:
+    def test_command(self, ccli: CLI):
+        ctx = ccli.create_ctx(ccli.name)
+        with utils.environ(_TEST_COMPLETE="true", COMP_WORDS="cli", COMP_CURRENT=""):
+            assert completions("bash", ctx).split("\n") == [
+                "plain|command",
+                "plain|command:sub",
+                "plain|command2",
+                "plain|command3",
+            ]
