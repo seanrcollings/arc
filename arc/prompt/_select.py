@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import typing as t
+import sys
 
-from black import sys
 from arc.color import colorize, fg
 from arc.present.formatters import TextFormatter
 from arc.prompt.helpers import (

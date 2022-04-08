@@ -138,22 +138,23 @@ complete -o nosort -F {func_name} {name}
 class ZshCompletion(BashCompletion):
     name = "zsh"
     template = """\
-function {func_name} {{
+#compdef {name}
+
+{func_name}() {{
     local completions;
     completions=$(env {completion_var}=true COMP_WORDS="${{COMP_WORDS[*]}}" COMP_CURRENT="${{COMP_WORDS[COMP_CWORD]}}" python manage.py --autocomplete zsh)
 
-    for comp in $completions
-    do
-        local parsed type value
-        parsed=(${{(s/:/)str}})
+    while IFS= read -r comp; do
+        parsed=(${{(@s/|/)comp}})
         type=${{parsed[1]}}
         value=${{parsed[2]}}
+        echo "$type -> $value" >> "output.txt"
+        compadd $value
+    done <<< "$completions"
 
-        _arguments $value
-    done
 }}
 
-compdef {func_name} {name}
+compdef {func_name} {name};
 """
 
     def complete(self) -> str:
@@ -162,8 +163,8 @@ compdef {func_name} {name}
 
     def format_completion(self, comp: Completion) -> str:
         string = f"{comp.type.value}|{comp.value}"
-        if comp.description:
-            string += f"[{comp.description}]"
+        # if comp.description:
+        #     string += f"[{comp.description}]"
 
         return string
 

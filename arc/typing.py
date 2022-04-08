@@ -44,7 +44,7 @@ class Suggestions(t.TypedDict, total=False):
 
 Env = t.Literal["development", "production"]
 CallbackTime = t.Literal["before", "around", "after"]
-CompletionFunc: t.TypeAlias = (
+CompletionFunc = (
     "t.Callable[[CompletionInfo], t.Union[list[Completion], Completion, None]]"
 )
 
