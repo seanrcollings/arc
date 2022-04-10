@@ -154,13 +154,13 @@ class Param:
                 "Invalid value for format spec, must be: usage or arguments"
             )
 
-    def __completions__(self, info: CompletionInfo):
+    def __completions__(self, info: CompletionInfo, *args, **kwargs):
         if self.comp_func:
-            return self.comp_func(info)
+            return self.comp_func(info, self)
 
         cls = aliases.Alias.resolve(self.type_info.origin)
         if hasattr(cls, "__completions__"):
-            return get_completions(cls, info)  # type: ignore
+            return get_completions(cls, info, self)  # type: ignore
 
     def _format_usage(self):
         return ""

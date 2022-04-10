@@ -58,7 +58,7 @@ class ValidPath(PathType):  # type: ignore
             raise errors.ConversionError(value, str(e)) from e
 
     @classmethod
-    def __completions__(cls, info: CompletionInfo):
+    def __completions__(cls, info: CompletionInfo, _param):
         res = []
         if cls.file:
             res.append(Completion(info.current, CompletionType.FILE))

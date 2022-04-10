@@ -58,7 +58,7 @@ class Command(ParamMixin):
     def __repr__(self):
         return f"{self.__class__.__name__}(name={self.name!r})"
 
-    def __completions__(self, info: CompletionInfo):
+    def __completions__(self, info: CompletionInfo, *args, **kwargs):
         if info.current.startswith(constants.SHORT_FLAG_PREFIX) and (
             constants.FLAG_PREFIX not in info.words[0:-1]
         ):

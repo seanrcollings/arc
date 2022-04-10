@@ -11,6 +11,7 @@ import dataclasses
 import _io  # type: ignore
 
 from arc import errors, logging, utils
+from arc import autocompletions
 from arc.autocompletions import Completion, CompletionInfo, CompletionType
 from arc.color import colorize, fg
 from arc.types.helpers import (
@@ -389,6 +390,12 @@ class LiteralAlias(Alias, of=t.Literal):
             list(str(tp.base) for tp in param.type_info.sub_types), ctx, param
         )
 
+    @classmethod
+    def __completions__(cls, info, param):
+        return [
+            autocompletions.Completion(str(tp.base)) for tp in param.type_info.sub_types
+        ]
+
 
 # Stdlib types ---------------------------------------------------------------------------------
 
@@ -414,6 +421,13 @@ class EnumAlias(Alias, of=enum.Enum):
             ctx,
             param,
         )
+
+    @classmethod
+    def __completions__(cls, info, param):
+        return [
+            autocompletions.Completion(str(m.value))
+            for m in param.type_info.origin.__members__.values()
+        ]
 
 
 class PathAlias(Alias, of=pathlib.Path):

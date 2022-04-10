@@ -30,9 +30,11 @@ def completions(shell: str, ctx: Context):
     return res
 
 
-def get_completions(obj: CompletionProtocol, info: CompletionInfo) -> list[Completion]:
+def get_completions(
+    obj: CompletionProtocol, info: CompletionInfo, *args, **kwargs
+) -> list[Completion]:
     """Gets the completions for a particular object that supports the `CompletionProtocol`"""
-    comps = obj.__completions__(info)
+    comps = obj.__completions__(info, *args, **kwargs)
     if comps is None:
         comps = []
     elif not isinstance(comps, list):

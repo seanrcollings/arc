@@ -51,7 +51,7 @@ CompletionFunc: t.TypeAlias = (  # type: ignore
 
 class CompletionProtocol(t.Protocol):
     def __completions__(
-        self, info: CompletionInfo
+        self, info: CompletionInfo, *args, **kwargs
     ) -> list[Completion] | Completion | None:
         ...
 
