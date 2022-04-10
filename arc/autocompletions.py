@@ -3,7 +3,7 @@ import typing as t
 import os
 import enum
 import dataclasses as dc
-from arc import utils, logging
+from arc import utils, logging, errors
 
 
 if t.TYPE_CHECKING:
@@ -16,9 +16,15 @@ logger = logging.getArcLogger("comp")
 
 def completions(shell: str, ctx: Context):
     info = CompletionInfo.from_env()
+    if shell not in shells:
+        raise errors.ArgumentError(
+            f"Unsupported shell: {shell}. Supported shells: {', '.join(shells)}"
+        )
     comp: ShellCompletion = shells[shell](ctx, info)
     res = comp.complete() if comp.should_complete() else comp.source()
+
     with open("output.txt", "w") as f:
+        f.write(str(info))
         f.write(res)
 
     return res
@@ -53,6 +59,7 @@ class CompletionType(enum.Enum):
     FILE = "file"
     DIR = "dir"
     USERS = "users"
+    GROUPS = "groups"
     PLAIN = "plain"
 
 
@@ -117,7 +124,7 @@ class BashCompletion(ShellCompletion):
         elif [[ $type == "dir" ]]; then
             compopt -o dirnames
         elif [[ $type == "plain" ]]; then
-            COMPREPLY+=($value)
+            COMPREPLY+=($(compgen -W "$value" "${{COMP_WORDS[1]}}"))
         fi
     done <<< "$completions"
 
@@ -142,16 +149,23 @@ class ZshCompletion(BashCompletion):
 
 {func_name}() {{
     local completions;
-    completions=$(env {completion_var}=true COMP_WORDS="${{COMP_WORDS[*]}}" COMP_CURRENT="${{COMP_WORDS[COMP_CWORD]}}" python manage.py --autocomplete zsh)
+    completions=$(env {completion_var}=true COMP_WORDS="${{words[*]}}" COMP_CURRENT=${{words[$CURRENT]}} python manage.py --autocomplete zsh)
 
     while IFS= read -r comp; do
         parsed=(${{(@s/|/)comp}})
         type=${{parsed[1]}}
         value=${{parsed[2]}}
-        echo "$type -> $value" >> "output.txt"
-        compadd $value
-    done <<< "$completions"
 
+        if [[ "$type" == "dir" ]]; then
+            _path_files -/
+        elif [[ "$type" == "file" ]]; then
+            _path_files -f
+        elif [[ "$type" == "plain" ]]; then
+            compadd $value
+        fi
+    done
+
+    done <<< "$completions"
 }}
 
 compdef {func_name} {name};
@@ -185,6 +199,10 @@ function {func_name}
                 __fish_complete_path $data
             case dir
                 __fish_complete_directories $data
+            case users
+                __fish_complete_users $data
+            case groups
+                __fish_complete_groups $data
             case plain
                 echo $data
             case '*'
