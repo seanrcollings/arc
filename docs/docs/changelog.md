@@ -2,6 +2,8 @@
 
 - Added the ability to gather input from environment variables or by prompting the user directly.
 - Added `prompt.select()` for a more elegant selection menu
+- Implemented [Shell Completions](./usage/shell-completions.md) for Bash, Zsh, and Fish. **CURRENTLY EXPERIMENTAL**
+- Fixed bug where specifying the `version` for the CLI would cause the application to crash
 
 ## `6.2.2`
 
