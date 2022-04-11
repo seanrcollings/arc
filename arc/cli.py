@@ -49,7 +49,6 @@ class CLI(Command):
         name: str = None,
         state: dict = None,
         version: str = None,
-        env: at.Env = "production",
         **ctx_dict,
     ):
         """
@@ -58,13 +57,9 @@ class CLI(Command):
                 a name will be automatically discovered based on file name.
             state: dictionary of key value pairs to pass to commands
             version: Version string to display with `--version`
-            env: Environment of the application. `development` or `production`
             ctx_dict: additional keyword arguments to pass to the execution context
         """
-
-        config.environment = env
         self.version = version
-        logging.root_setup(env)
         utils.header("INIT")
 
         super().__init__(
@@ -74,7 +69,7 @@ class CLI(Command):
             **ctx_dict,
         )
 
-        if env == "development":
+        if config.environment == "development":
             from ._debug import debug  # pylint: disable=import-outside-toplevel
 
             self.install_command(debug)

@@ -21,7 +21,6 @@ from .param_mixin import ParamMixin
 
 
 logger = logging.getArcLogger("command")
-DEFAULT_SECTION: str = config.default_section_name
 
 
 class Command(ParamMixin):
@@ -338,13 +337,13 @@ class Command(ParamMixin):
         required to possess a section header, and
         will be entered in as the `description` section.
         """
-        parsed: dict[str, str] = {DEFAULT_SECTION: ""}
+        parsed: dict[str, str] = {config.default_section_name: ""}
         if not self.doc:
             return {}
 
         lines = [line.strip() for line in self.doc.split("\n")]
 
-        current_section = DEFAULT_SECTION
+        current_section = config.default_section_name
 
         for line in lines:
             if line.startswith("#"):
