@@ -5,7 +5,6 @@ import enum
 import dataclasses as dc
 from arc import utils, logging, errors
 
-
 if t.TYPE_CHECKING:
     from arc.context import Context
     from arc.typing import CompletionProtocol
@@ -21,13 +20,7 @@ def completions(shell: str, ctx: Context):
             f"Unsupported shell: {shell}. Supported shells: {', '.join(shells)}"
         )
     comp: ShellCompletion = shells[shell](ctx, info)
-    res = comp.complete() if comp.should_complete() else comp.source()
-
-    with open("output.txt", "w") as f:
-        f.write(str(info))
-        f.write(res)
-
-    return res
+    return comp.complete() if comp.should_complete() else comp.source()
 
 
 def get_completions(
@@ -116,7 +109,8 @@ class BashCompletion(ShellCompletion):
 {func_name}() {{
     local completions;
 
-    completions=$(env {completion_var}=true COMP_WORDS="${{COMP_WORDS[*]}}" COMP_CURRENT="${{COMP_WORDS[COMP_CWORD]}}" python manage.py --autocomplete bash)
+    completions=$(env {completion_var}=true COMP_WORDS="${{COMP_WORDS[*]}}" \
+        COMP_CURRENT="${{COMP_WORDS[COMP_CWORD]}}" python manage.py --autocomplete bash)
 
     while IFS= read -r comp; do
         IFS="|" read -r type value <<< "$comp"
@@ -126,8 +120,9 @@ class BashCompletion(ShellCompletion):
         elif [[ $type == "dir" ]]; then
             compopt -o dirnames
         elif [[ $type == "plain" ]]; then
-            COMPREPLY+=($(compgen -W "$value" "${{COMP_WORDS[1]}}"))
+            COMPREPLY+=($(compgen -W "$value" -- "${{COMP_WORDS[COMP_CWORD]}}"))
         fi
+
     done <<< "$completions"
 
     return 0
@@ -150,10 +145,13 @@ class ZshCompletion(BashCompletion):
 #compdef {name}
 
 {func_name}() {{
-    local completions;
-    completions=$(env {completion_var}=true COMP_WORDS="${{words[*]}}" COMP_CURRENT=${{words[$CURRENT]}} python manage.py --autocomplete zsh)
+    local -a completions;
+    local -a array;
 
-    while IFS= read -r comp; do
+    completions=("${{(@f)$(env {completion_var}=true COMP_WORDS="${{words[*]}}" \
+        COMP_CURRENT=${{words[$CURRENT]}} python manage.py --autocomplete zsh)}}")
+
+    for comp in $completions; do
         parsed=(${{(@s/|/)comp}})
         type=${{parsed[1]}}
         value=${{parsed[2]}}
@@ -162,12 +160,18 @@ class ZshCompletion(BashCompletion):
             _path_files -/
         elif [[ "$type" == "file" ]]; then
             _path_files -f
+        elif [[ "$type" == "users" ]]; then
+            _users
+        elif [[ "$type" == "groups" ]]; then
+            _groups
         elif [[ "$type" == "plain" ]]; then
-            compadd $value
+            array+=("$value")
         fi
     done
 
-    done <<< "$completions"
+    if [ -n "$array" ]; then
+        compadd -U -V unsorted -a array
+    fi
 }}
 
 compdef {func_name} {name};
@@ -189,7 +193,8 @@ class FishCompletion(ShellCompletion):
     name = "fish"
     template = """\
 function {func_name}
-    set -l completions (env {completion_var}=true COMP_WORDS=(commandline -cp) COMP_CURRENT=(commandline -t) python manage.py --autocomplete fish)
+    set -l completions (env {completion_var}=true COMP_WORDS=(commandline -cp) \
+        COMP_CURRENT=(commandline -t) python manage.py --autocomplete fish)
 
     for comp in $completions
         set -l parsed (string split '|' $comp)

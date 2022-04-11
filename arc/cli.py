@@ -79,7 +79,7 @@ class CLI(Command):
 
             self.install_command(debug)
 
-    def __completions__(self, info: CompletionInfo):
+    def __completions__(self, info: CompletionInfo, *args, **kwargs):
         # Completes Command names
         if (
             (len(info.words) == 0 and info.current == "")
