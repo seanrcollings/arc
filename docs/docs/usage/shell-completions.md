@@ -9,19 +9,19 @@
     ```
 
 The autocompletions will be generated with the following
-commands for shell. `foo` is used as an example command entry point / name
+commands. `foo` is used as an example command entry point / name
 === "bash"
-    Add two `~/.bashrc`
+    Add to `~/.bashrc`
     ```bash
     eval "$(foo --autocomplete bash)"
     ```
-=== "zhs"
+=== "zsh"
     Add to `~/.zshrc`
     ```zsh
     eval "$(foo --autocomplete zsh)"
     ```
 === "fish"
-    Add to `~/.config/fish/config.fish`
+    Add to `~/.config/fish/completions/foo.fish`
     ```fish
     foo --autocomplete fish | source
     ```
@@ -48,4 +48,14 @@ The following types have builtin completion support:
 - `#!python  arc.types.FilePath`
 - `#!python  arc.types.DirectoryPath`
 
-## Custom Completions
+### Custom Types
+When implenting your own types, you can provide completions for them implementing the `#!python __completions__()` method on your class.
+
+```py title="examples/custom_type_completions.py"
+--8<-- "examples/custom_type_completions.py"
+```
+
+```console
+$ custom_type_example <tab>
+1 2
+```

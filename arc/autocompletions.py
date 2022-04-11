@@ -110,7 +110,7 @@ class BashCompletion(ShellCompletion):
     local completions;
 
     completions=$(env {completion_var}=true COMP_WORDS="${{COMP_WORDS[*]}}" \
-        COMP_CURRENT="${{COMP_WORDS[COMP_CWORD]}}" python manage.py --autocomplete bash)
+        COMP_CURRENT="${{COMP_WORDS[COMP_CWORD]}}" {name} --autocomplete bash)
 
     while IFS= read -r comp; do
         IFS="|" read -r type value <<< "$comp"
@@ -149,7 +149,7 @@ class ZshCompletion(BashCompletion):
     local -a array;
 
     completions=("${{(@f)$(env {completion_var}=true COMP_WORDS="${{words[*]}}" \
-        COMP_CURRENT=${{words[$CURRENT]}} python manage.py --autocomplete zsh)}}")
+        COMP_CURRENT=${{words[$CURRENT]}} {name} --autocomplete zsh)}}")
 
     for comp in $completions; do
         parsed=(${{(@s/|/)comp}})
@@ -194,7 +194,7 @@ class FishCompletion(ShellCompletion):
     template = """\
 function {func_name}
     set -l completions (env {completion_var}=true COMP_WORDS=(commandline -cp) \
-        COMP_CURRENT=(commandline -t) python manage.py --autocomplete fish)
+        COMP_CURRENT=(commandline -t) {name} --autocomplete fish)
 
     for comp in $completions
         set -l parsed (string split '|' $comp)

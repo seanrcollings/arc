@@ -346,13 +346,7 @@ class Option(_KeywordParam):
 
 class Flag(_KeywordParam):
     def __init__(self, arg_name: str, annotation: type = bool, **kwargs):
-
         super().__init__(arg_name, annotation, **kwargs)
-
-        # if self.default not in {True, False, MISSING}:
-        #     raise errors.ArgumentError(
-        #         "The default for a flag must be True, False, or not specified."
-        #     )
 
         if self.default is constants.MISSING:
             self.default = False

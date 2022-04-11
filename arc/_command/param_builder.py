@@ -26,7 +26,7 @@ class ParamBuilder:
     def build(self):
         params: list[Param] = []
         for arg in self.sig.parameters.values():
-            arg._annotation = self.annotations.get(arg.name) or str
+            arg._annotation = self.annotations.get(arg.name) or arg.empty
 
             if arg.kind in (arg.VAR_KEYWORD, arg.VAR_POSITIONAL):
                 raise errors.ArgumentError("Arc does not support *args and **kwargs.")
@@ -50,9 +50,16 @@ class ParamBuilder:
             if should_negotiate_param_type:
                 self.negotiate_param_type(arg, info)
 
+            annotation = arg.annotation
+            if arg.annotation is arg.empty:
+                if info.param_cls is param.Flag:
+                    annotation = bool
+                else:
+                    annotation = str
+
             param_obj = info.param_cls(
                 arg_name=arg.name,
-                annotation=arg.annotation,
+                annotation=annotation,
                 **info.dict(),
             )
 
