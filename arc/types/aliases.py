@@ -454,7 +454,7 @@ class IOAlias(Alias, of=(_io._IOBase, t.IO)):
             return dataclasses.asdict(arg)
 
     @classmethod
-    def __completions__(cls, info: CompletionInfo):
+    def __completions__(cls, info: CompletionInfo, _param):
         return Completion(info.current, CompletionType.FILE)
 
 

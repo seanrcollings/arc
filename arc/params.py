@@ -97,6 +97,7 @@ def Argument(
     callback: t.Callable = None,
     prompt: str = None,
     envvar: str = None,
+    complete: at.CompletionFunc = None,
 ) -> t.Any:
     """A CLI Paramater. Input will be passed in positionally.
 
@@ -120,6 +121,7 @@ def Argument(
         callback=callback,
         prompt=prompt,
         envvar=envvar,
+        complete=complete,
     )
 
 
@@ -132,6 +134,7 @@ def Option(
     callback: t.Callable = None,
     prompt: str = None,
     envvar: str = None,
+    complete: at.CompletionFunc = None,
 ) -> t.Any:
     """A (generally optional) keyword parameter.
 
@@ -156,6 +159,7 @@ def Option(
         callback=callback,
         prompt=prompt,
         envvar=envvar,
+        complete=complete,
     )
 
 

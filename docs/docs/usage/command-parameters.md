@@ -16,11 +16,12 @@ In *arc*, command-line parameters are defined using Python function arguments. *
 ### Notes
 - If no default value is given, the argument is required.
 
-### Arguments to `arc.Argument()`
-- `name: str`: The name that will be used the the param on the command line
-- `default: Any`: The default value for the param
-- `description: str`: A string that documents the use / purpose of the parameter. Will be used in `--help` documentation
-- `callback: Callable`: a function which will be called with the parsed value from the command line
+### Arguments to `#!python arc.Argument()`
+- `#!python name: str`: The name that will be used the the param on the command line
+- `#!python default: Any`: The default value for the param
+- `#!python  description: str`: A string that documents the use / purpose of the parameter. Will be used in `--help` documentation
+- `#!python  callback: Callable`: a function which will be called with the parsed value from the command line
+- `#!python complete: CompletionFunc`: a function which will be called to provide [completions](./shell-completions.md) for the parameter. This argument will superscede completions for the parameters type
 
 
 ## `arc.Option`
@@ -41,11 +42,12 @@ Options are (usually optional) parameters that are identified by keyword.
 - Just like `Argument`, an `Option` is optional if the argument is given a default value, and required otherwise. However, it is usually good practice to make `Options` optional (hence the name).
 
 ### Arguments to `arc.Option()`
-- `name: str`: The name that will be used the the param on the command line
-- `short: str`: A length-one string that will be used for the short-name of this option (`--help -> -h`)
-- `default: Any`: The default value for the param
-- `description: str`: A string that documents the use / purpose of the parameter. Will be used in `--help` documentation
-- `callback: Callable`: a function which will be called with the parsed value from the command line
+- `#!python name: str`: The name that will be used the the param on the command line
+- `#!python short: str`: A length-one string that will be used for the short-name of this option (`--help -> -h`)
+- `#!python  default: Any`: The default value for the param
+- `#!python  description: str`: A string that documents the use / purpose of the parameter. Will be used in `--help` documentation
+- `#!python  callback: Callable`: a function which will be called with the parsed value from the command line
+- - `#!python complete: CompletionFunc`: a function which will be called to provide [completions](./shell-completions.md) for the parameter. This argument will superscede completions for the parameters type
 
 
 

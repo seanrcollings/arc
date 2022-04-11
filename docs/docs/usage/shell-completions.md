@@ -51,6 +51,8 @@ The following types have builtin completion support:
 ### Custom Types
 When implenting your own types, you can provide completions for them implementing the `#!python __completions__()` method on your class.
 
+This method recieves an `info` object that contains information about the current state of the command line, and `param` which is the parameter that is being completed (in the below example, that parameter would be `foo`). The method should return a list of `#!python arc.autocompletions.Completion()` objects that are the possible completions for the parameter.
+
 ```py title="examples/custom_type_completions.py"
 --8<-- "examples/custom_type_completions.py"
 ```
@@ -59,3 +61,5 @@ When implenting your own types, you can provide completions for them implementin
 $ custom_type_example <tab>
 1 2
 ```
+
+## Custom Completions

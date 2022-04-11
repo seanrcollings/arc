@@ -117,7 +117,7 @@ class TestCompletions:
                 ]
 
         def test_custom_completions(self, ccli: CLI):
-            def _complete(info):
+            def _complete(info, param):
                 return [
                     autocompletions.Completion("test1"),
                     autocompletions.Completion("test2"),
@@ -176,13 +176,4 @@ class TestCompletions:
                 ]
 
 
-class TestBash:
-    def test_command(self, ccli: CLI):
-        ctx = ccli.create_ctx(ccli.name)
-        with utils.environ(_TEST_COMPLETE="true", COMP_WORDS="cli", COMP_CURRENT=""):
-            assert completions("bash", ctx).split("\n") == [
-                "plain|command",
-                "plain|command:sub",
-                "plain|command2",
-                "plain|command3",
-            ]
+# TODO: Once the formats for each shell is nailed down, ti's probabl a good idea to run some tests for each
