@@ -4,11 +4,15 @@ All builtin types (int, str, float, etc...) have a corresponding Alias type.
 from __future__ import annotations
 
 import enum
+from lib2to3.pytree import BasePattern
 import pathlib
 import typing as t
 import ipaddress
 import dataclasses
+
+from regex import B
 import _io  # type: ignore
+import re
 
 from arc import errors, logging, utils
 from arc import autocompletions
@@ -480,3 +484,18 @@ class IPv4Alias(ipaddress.IPv4Address, _Address, of=ipaddress.IPv4Address):
 
 class IPv6Alias(ipaddress.IPv4Address, _Address, of=ipaddress.IPv6Address):
     name = "IPv6"
+
+
+class PatternAlias(Alias, of=re.Pattern):
+    @classmethod
+    def convert(cls, value: str, info: TypeInfo):
+        try:
+            return re.compile(value, cls.flags(info))
+        except re.error as e:
+            raise errors.ConversionError(value, f"Not a valid regex pattern", e) from e
+
+    @classmethod
+    def flags(cls, info: TypeInfo):
+        if len(info.annotations) == 0:
+            return 0
+        return info.annotations[0]
