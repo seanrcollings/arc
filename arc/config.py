@@ -24,12 +24,14 @@ class Config:
     )
     env_prefix: str = ""
     prompt: Prompt = Prompt(" ")
+    version: t.Optional[str] = None
 
 
 config = Config()
 
 
 def configure(
+    version: t.Optional[str] = None,
     environment: t.Optional[at.Env] = None,
     default_section_name: t.Optional[str] = None,
     transform_snake_case: t.Optional[bool] = None,
@@ -40,20 +42,30 @@ def configure(
 ):
     """Function for updating global `arc` configuration
 
-    environment: (Env, optional): The current environment, either `production` or `development`.
-        Defaults to `production`. When in `development` mode, debug information
-        is printed during execution.
-    default_section_name: (str, optional): The name to use by default if the first section in a
-        command docstring is does not have a header. Defaults to `description`.
-    transform_snake_case: (bool, optional):  Transform `snake_case` to `kebab-case`.
-        Defaults to `True`.
-    brand_color: (Ansi): Highlight color to use in help documentation. Defaults to `fg.ARC_BLUE`.
-    env_prefix: (str, optional): A prefix to use when selecting values from environmental
-            variables. Will be combined with the name specified for a parameter.
-    prompt: (arc.prompt.Prompt, optional): A prompt object will be used when prompting
-        for parameter values. Is also made available via `Context.prompt`.
+    Args:
+        version: (str, optional) Version string to display with `--version`
+
+        environment: (Env, optional): The current environment, either `production` or `development`.
+            Defaults to `production`. When in `development` mode, debug
+            information is printed during execution.
+
+        default_section_name: (str, optional): The name to use by default if the first section in a
+            command docstring is does not have a header. Defaults to `description`.
+
+        transform_snake_case: (bool, optional):  Transform `snake_case` to `kebab-case`.
+            Defaults to `True`.
+
+        brand_color: (Ansi): Highlight color to use in help documentation.
+            Defaults to `fg.ARC_BLUE`.
+
+        env_prefix: (str, optional): A prefix to use when selecting values from environmental
+                variables. Will be combined with the name specified for a parameter.
+
+        prompt: (arc.prompt.Prompt, optional): A prompt object will be used when prompting
+            for parameter values. Is also made available via `Context.prompt`.
     """
     dictionary = {
+        "version": version,
         "environment": environment,
         "default_section_name": default_section_name,
         "transform_snake_case": transform_snake_case,

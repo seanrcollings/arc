@@ -36,6 +36,7 @@ class Command(ParamMixin):
     ):
         self._callback = callback
         self.name = name
+        self.version: t.Optional[str] = None
         self.subcommands: dict[str, Command] = {}
         self.subcommand_aliases: dict[str, str] = {}
         self.state = state or {}
@@ -130,14 +131,18 @@ class Command(ParamMixin):
 
     # Command Execution ------------------------------------------------------------
     def __call__(self, *args, **kwargs):
+        self.version = config.version
+        if config.environment == "development":
+            del self.params
+
         if not isinstance(sys.stdout, utils.IoWrapper):
             with contextlib.redirect_stdout(utils.IoWrapper(sys.stdout)):
-                return self.main(*args, **kwargs)
+                return self._main(*args, **kwargs)
         else:
-            return self.main(*args, **kwargs)
+            return self._main(*args, **kwargs)
 
     @utils.timer("Running Command")
-    def main(
+    def _main(
         self,
         args: t.Union[str, list[str]] = None,
         fullname: str = None,
