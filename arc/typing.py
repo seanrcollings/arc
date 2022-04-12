@@ -37,8 +37,8 @@ CollectionTypes = (list, set, tuple)
 
 
 class Suggestions(t.TypedDict, total=False):
-    levenshtein_distance: int
-    suggest_arguments: bool
+    distance: int
+    suggest_params: bool
     suggest_commands: bool
 
 

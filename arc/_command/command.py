@@ -13,7 +13,6 @@ from arc.context import Context
 from arc.parser import Parser
 from arc.present.help_formatter import HelpFormatter
 from arc.config import config
-from arc.types.aliases import Alias
 from arc.typing import ClassCallback
 from arc import callback as acb
 from arc.autocompletions import CompletionInfo, Completion, get_completions
@@ -57,7 +56,7 @@ class Command(ParamMixin):
     def __repr__(self):
         return f"{self.__class__.__name__}(name={self.name!r})"
 
-    def __completions__(self, info: CompletionInfo, *args, **kwargs):
+    def __completions__(self, info: CompletionInfo, *_args, **_kwargs):
         if info.current.startswith(constants.SHORT_FLAG_PREFIX) and (
             constants.FLAG_PREFIX not in info.words[0:-1]
         ):
@@ -360,7 +359,9 @@ class Command(ParamMixin):
 
     @property
     def description(self) -> t.Optional[str]:
-        return self._description or self.parsed_docstring.get("description")
+        return self._description or self.parsed_docstring.get(
+            config.default_section_name
+        )
 
     @property
     def short_description(self) -> t.Optional[str]:

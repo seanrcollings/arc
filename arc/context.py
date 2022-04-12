@@ -3,7 +3,7 @@ import contextlib
 import os
 import typing as t
 
-from arc import errors, logging, typing as at
+from arc import errors, logging
 from arc.callback import Callback, CallbackStack
 from arc.color import colorize, fg
 from arc.config import config
@@ -20,14 +20,6 @@ logger = logging.getArcLogger("ctx")
 
 
 T = t.TypeVar("T")
-
-default_sug: at.Suggestions = {
-    "levenshtein_distance": 2,
-    "suggest_arguments": True,
-    "suggest_commands": True,
-}
-
-default_prompt = Prompt(" ")
 
 
 @special(default=object())
@@ -48,10 +40,6 @@ class Context:
             `CLI` root. If a command is executing standalone, this will always be empty
         execute_callbacks (bool): whether or not to execute command callbacks
             when executing the command
-        env_prefix: (str, optional): A prefix to use when selecting values from environmental
-            variables. Will be combined with the name specified for a parameter.
-        prompt: (arc.prompt.Prompt, optional): A prompt object will be used when prompting
-            for parameter values.
     """
 
     # Each time a command is invoked,
@@ -68,26 +56,13 @@ class Context:
         fullname: str,
         command_chain: list[Command] = None,
         parent: Context = None,
-        suggestions: at.Suggestions = None,
         execute_callbacks: bool = True,
-        env_prefix: str = "",
-        prompt: Prompt = None,
     ):
         self.command = command
         self.fullname = fullname
         self.command_chain = command_chain or [command]
         self.parent = parent
         self.execute_callbacks = execute_callbacks
-        if "prompt" not in self.meta:
-            self.meta["prompt"] = prompt or default_prompt
-        if "env_prefix" not in self.meta:
-            self.meta["env_prefix"] = env_prefix
-
-        if suggestions is not None:
-            self.suggestions = default_sug | suggestions
-        else:
-            self.suggestions = default_sug
-
         self.args: dict[str, t.Any] = {}
         self.extra: list[str] = []
         self.callback_stack = CallbackStack()
@@ -125,19 +100,8 @@ class Context:
         return curr
 
     @property
-    def meta(self):
-        """Meta is an object that is
-        shared globally by all `Context` instances
-        """
-        return self._meta
-
-    @property
     def prompt(self) -> Prompt:
-        return self.meta["prompt"]
-
-    @property
-    def env_prefix(self) -> str:
-        return self.meta["env_prefix"]
+        return self.config.prompt
 
     def create_state(self) -> State:
         state: State = State()
@@ -229,7 +193,7 @@ class Context:
         raise errors.Exit(code)
 
     def getenv(self, name: str, default):
-        return os.getenv(self.env_prefix + name, default)
+        return os.getenv(self.config.env_prefix + name, default)
 
     @classmethod
     def push(cls, ctx: Context) -> None:

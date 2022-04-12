@@ -138,7 +138,7 @@ class CLI(Command):
                 if not args:
                     logger.debug("No arguments present")
                     print(self.get_usage(ctx))
-                    return
+                    raise errors.Exit(1)
 
                 subcommand_name = args.pop(0)
                 command_namespace = helpers.get_command_namespace(subcommand_name)
