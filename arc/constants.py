@@ -1,5 +1,3 @@
-from arc import utils
-
 NAMESPACE_SEP: str = ":"
 """Character to seperate command names: `parent:child:granchild`"""
 FLAG_PREFIX: str = "--"

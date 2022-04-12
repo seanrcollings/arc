@@ -1,5 +1,5 @@
 from arc._command.command import Command
-from arc import CLI, command, utils
+from arc import CLI, command, utils, namespace
 from arc.present.help_formatter import HelpFormatter
 from arc import Param
 from arc.context import Context
@@ -59,7 +59,6 @@ OPTIONS
     --version (-v)  Displays the app's current version
 
 SUBCOMMANDS
-    debug           debug utilties for an arc application
     command         description content
 """
     )
@@ -82,25 +81,34 @@ OPTIONS
 
 
 def test_namespace(cli: CLI):
-    debug = cli.subcommands["debug"]
+
+    ns = namespace("ns", description="ns description")
+
+    @ns.subcommand()
+    def command1():
+        """command1 desc"""
+
+    @ns.subcommand()
+    def command2():
+        """command2 desc"""
+
+    cli.install_command(ns)
+
     assert (
-        utils.ansi_clean(debug.get_help(cli.create_ctx(cli.name).child_context(debug)))
+        utils.ansi_clean(ns.get_help(cli.create_ctx(cli.name).child_context(ns)))
         == """\
 USAGE
-    test debug:<subcommand> [ARGUMENTS ...]
+    test ns:<subcommand> [ARGUMENTS ...]
 
 DESCRIPTION
-    debug utilties for an arc application
+    ns description
 
 OPTIONS
     --help (-h)  Shows help documentation
 
 SUBCOMMANDS
-    config       Displays information about the current config of the arc app
-    aliases      Displays information aboubt the currently accessible type
-                 aliases
-    arcfile      Prints the contents of the .arc file in the CWD
-    schema       Prints out a dictionary representation of the CLI
+    command1     command1 desc
+    command2     command2 desc
 """
     )
 

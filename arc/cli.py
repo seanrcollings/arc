@@ -66,11 +66,6 @@ class CLI(Command):
             **ctx_dict,
         )
 
-        if config.environment == "development":
-            from ._debug import debug  # pylint: disable=import-outside-toplevel
-
-            self.install_command(debug)
-
     def __completions__(self, info: CompletionInfo, *_args, **_kwargs):
         # Completes Command names
         if (
