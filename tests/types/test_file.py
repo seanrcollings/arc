@@ -1,8 +1,19 @@
+import os
 import typing as t
 from pathlib import Path
 import pytest
 from arc import CLI
 from arc.types import File
+
+
+@pytest.fixture(scope="module", autouse=True)
+def create_file():
+    with open("tests/test-file", "w") as f:
+        f.write("content")
+
+    yield
+
+    os.remove("tests/test-file")
 
 
 @pytest.mark.parametrize(
@@ -39,10 +50,10 @@ def test_read(cli: CLI):
     def read(file: File.Read):
         return file, file.read()
 
-    file, contents = cli("read tests/.arc")
+    file, contents = cli("read tests/test-file")
     assert file.closed
     assert file.mode == "r"
-    assert contents == "mode=development"
+    assert contents == "content"
 
 
 def test_binary_read(cli: CLI):
@@ -50,10 +61,10 @@ def test_binary_read(cli: CLI):
     def read(file: File.BinaryRead):
         return file, file.read()
 
-    file, contents = cli("read tests/.arc")
+    file, contents = cli("read tests/test-file")
     assert file.closed
     assert file.mode == "rb"
-    assert contents == b"mode=development"
+    assert contents == b"content"
 
 
 def test_write(cli: CLI, tmp_path: Path):
