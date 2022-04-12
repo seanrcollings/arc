@@ -109,6 +109,14 @@ def validate(cls):
     return cls
 
 
+def display(*include: str):
+    def inner(self):
+        properties = ", ".join([f"{p}={getattr(self, p)!r}" for p in include])
+        return f"{self.__class__.__name__}({properties})"
+
+    return inner
+
+
 def convert(
     protocol: type[TypeProtocol],
     value: Any,

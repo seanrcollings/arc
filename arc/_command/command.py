@@ -133,7 +133,10 @@ class Command(ParamMixin):
     def __call__(self, *args, **kwargs):
         self.version = config.version
         if config.environment == "development":
-            del self.params
+            try:
+                del self.params
+            except AttributeError:
+                ...
 
         if not isinstance(sys.stdout, utils.IoWrapper):
             with contextlib.redirect_stdout(utils.IoWrapper(sys.stdout)):
