@@ -1,4 +1,5 @@
-from unittest import mock
+import contextlib
+import os
 from pathlib import Path
 import pytest
 
@@ -35,17 +36,39 @@ def test_nonexistant_command(cli: CLI):
         cli("doesnotexist x=2")
 
 
+@contextlib.contextmanager
+def create_autoload_file():
+    try:
+        file = open("tests/autoload.py", "w")
+        file.write(
+            """
+from arc import command
+
+@command()
+def toload():
+    ...
+
+"""
+        )
+        file.close()
+        yield
+    finally:
+        os.remove("tests/autoload.py")
+
+
 class TestAutoload:
     root = Path(__file__).parent.parent
 
     def test_autoload_file(self, cli: CLI):
-        cli.subcommands.pop("debug")
-        cli.autoload(str(self.root / "arc/_debug.py"))
-        assert "debug" in cli.subcommands
+        with create_autoload_file():
+            cli.autoload("./tests/autoload.py")
+            assert "toload" in cli.subcommands
 
     def test_autoload_error(self, cli: CLI):
-        with pytest.raises(CommandError):
-            cli.autoload(str(self.root / "arc/_debug.py"))
+        with create_autoload_file():
+            cli.autoload("./tests/autoload.py")
+            with pytest.raises(CommandError):
+                cli.autoload("./tests/autoload.py")
 
 
 def test_command_alias(cli: CLI):

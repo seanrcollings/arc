@@ -11,8 +11,6 @@ from tests import utils
 
 @pytest.fixture()
 def ccli(cli: CLI):
-    cli.subcommands.pop("debug")
-
     @cli.command()
     def command(arg1: types.ValidPath, *, opt1: types.File.Read, flag: bool):
         ...

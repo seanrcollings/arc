@@ -1,3 +1,4 @@
+import os
 import pytest
 import pathlib
 from arc import CLI, errors
@@ -6,13 +7,13 @@ from arc.types import path
 
 class TestImpl:
     def test_valid(self):
-        assert path.ValidPath("tests/.arc") == pathlib.Path("tests/.arc")
+        assert path.ValidPath("tests/conftest.py") == pathlib.Path("tests/conftest.py")
 
         with pytest.raises(ValueError):
             path.ValidPath("doesntexist")
 
     def test_file(self):
-        assert path.FilePath("tests/.arc") == pathlib.Path("tests/.arc")
+        assert path.FilePath("tests/conftest.py") == pathlib.Path("tests/conftest.py")
 
         with pytest.raises(ValueError):
             path.FilePath("doesntexist")
@@ -27,7 +28,7 @@ class TestImpl:
             path.DirectoryPath("doesntexist")
 
         with pytest.raises(ValueError):
-            path.DirectoryPath("tests/.arc")
+            path.DirectoryPath("tests/conftest.py")
 
     def test_strict(self):
         DirectoryPath = path.strictpath(directory=True)

@@ -10,24 +10,19 @@ from arc.context import Context
 from arc.types.helpers import join_or
 from arc.utils import IDENT
 from arc._command.param import Param, ParamAction
+from arc.config import config
 
 logger = logging.getArcLogger("parse")
 
 
-# TODO: this will only ever return one possibility
 def find_possible_params(
     params: list[Param], missing: str, distance: int
 ) -> list[Param]:
-    filtered = []
-    if len(params) > 0:
-        cur_dis, param = min(
-            ((utils.levenshtein(param.arg_alias, missing), param) for param in params),
-            key=lambda tup: tup[0],
-        )
-        if cur_dis <= distance:
-            filtered.append(param)
-
-    return filtered
+    return [
+        param
+        for param in params
+        if utils.levenshtein(param.arg_alias, missing) <= distance
+    ]
 
 
 class TokenType(enum.Enum):
@@ -215,13 +210,13 @@ class Parser:
         styled = colorize(token.raw, fg.YELLOW)
         message = f"Option {styled} not recognized"
 
-        if self.ctx and self.ctx.suggestions["suggest_arguments"]:
+        if config.suggestions["suggest_params"]:
             suggest_args = [
                 param.arg_alias
                 for param in find_possible_params(
                     self.params,
                     token.value,
-                    self.ctx.suggestions["levenshtein_distance"],
+                    config.suggestions["distance"],
                 )
             ]
 

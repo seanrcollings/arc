@@ -25,20 +25,11 @@ def _help_callback(value, ctx, _param):
 class ParamMixin:
     builder: type[ParamBuilder]
     _autocomplete: bool
+    version: t.Optional[str]
 
     @functools.cached_property
     def params(self) -> list[Param]:
         params = self.builder(self._callback).build()  # type: ignore
-        params.insert(
-            0,
-            Flag(
-                "help",
-                short="h",
-                description="Shows help documentation",
-                callback=_help_callback,
-                expose=False,
-            ),
-        )
 
         if self._autocomplete:
 
@@ -58,6 +49,35 @@ class ParamMixin:
                     expose=False,
                 ),
             )
+
+        if self.version:
+
+            def _version_callback(value, ctx, _param):
+                if value:
+                    print(self.version)
+                    ctx.exit()
+
+            params.insert(
+                0,
+                Flag(
+                    "version",
+                    short="v",
+                    description="Displays the app's current version",
+                    callback=_version_callback,
+                    expose=False,
+                ),
+            )
+
+        params.insert(
+            0,
+            Flag(
+                "help",
+                short="h",
+                description="Shows help documentation",
+                callback=_help_callback,
+                expose=False,
+            ),
+        )
 
         return params
 

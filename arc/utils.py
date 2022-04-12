@@ -157,6 +157,7 @@ class IoWrapper(io.StringIO):
 
     def __init__(self, wrapped: t.TextIO):
         self.wrapped = wrapped
+        super().__init__()
 
     def write(self, message: str):
         if not self.wrapped.isatty():

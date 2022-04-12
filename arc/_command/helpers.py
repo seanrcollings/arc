@@ -5,12 +5,10 @@ import typing as t
 from arc.color import effects, fg
 from arc import errors, utils, constants
 from arc.context import Context
-from arc.parser import Parser
+from arc.types.helpers import join_or
 
 if t.TYPE_CHECKING:
     from .command import Command
-    from .param import Param
-    from arc.autocompletions import CompletionInfo
 
 
 def get_all_commands(
@@ -75,12 +73,15 @@ def find_command_chain(
                 f"Check {fg.BLUE}--help{effects.CLEAR} for available commands"
             )
 
-            if ctx.suggestions["suggest_commands"] and (
-                possible_command := find_similar_command(
-                    command, command_namespace, ctx.suggestions["levenshtein_distance"]
+            if ctx.config.suggestions["suggest_commands"] and (
+                possible_commands := find_similar_commands(
+                    command, command_namespace, ctx.config.suggestions["distance"]
                 )
             ):
-                message += f"\n\tPerhaps you meant {fg.YELLOW}{possible_command}{effects.CLEAR}?"
+                message += (
+                    f"\n\tPerhaps you meant {fg.YELLOW}"
+                    f"{join_or(possible_commands)}{effects.CLEAR}?"
+                )
 
             raise errors.CommandNotFound(message)
 
@@ -95,30 +96,21 @@ def get_command(command: Command, name: str, ctx) -> t.Optional[Command]:
     return None
 
 
-def find_similar_command(
+def find_similar_commands(
     command: Command, namespace_list: list[str], distance: int
-) -> str | None:
-    """Finds commands in the command tree that resemble `namespace_list`
-    Compares each of their full-qualified names to the provided name with
-    the levenshtein algorithm. If it's similar enough (with respect to)
-    `config.suggest_levenshtein_distance`, that command_name will be returned
+) -> list[str]:
+    """Finds all command names that are no more than `distance` away from the
+    provided `namespace_list` using the levenshtein distance algorithm.
     """
 
     namespace_str = constants.NAMESPACE_SEP.join(namespace_list)
     command_names = get_all_command_names(command)
 
-    cur_dis, command_name = min(
-        (
-            (utils.levenshtein(namespace_str, command_name), command_name)
-            for command_name in command_names
-        ),
-        key=lambda tup: tup[0],
-    )
-
-    if cur_dis <= distance:
-        return command_name
-
-    return None
+    return [
+        command_name
+        for command_name in command_names
+        if utils.levenshtein(namespace_str, command_name) <= distance
+    ]
 
 
 namespace_seperated = re.compile(

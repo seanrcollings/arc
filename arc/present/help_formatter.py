@@ -28,7 +28,7 @@ class HelpFormatter(TextFormatter):
         self.write_usage(command, ctx)
 
         if command.description:
-            with self.section("DESCRIPTION"):
+            with self.section(config.default_section_name.upper()):
                 self.write_text(paragraphize(command.description))
 
         command.update_param_descriptions()
@@ -37,7 +37,7 @@ class HelpFormatter(TextFormatter):
         self.write_params("OPTIONS", command.key_params)
 
         for section, body in command.parsed_docstring.items():
-            if section in {"arguments", "description"}:
+            if section in {"arguments", config.default_section_name}:
                 continue
 
             with self.section(section):

@@ -69,3 +69,5 @@
   exec: [command, --verbose command]
 - file: from_env.py
   exec: ["", "10"]
+- file: hello_configuration.py
+  exec: [--help, --version]

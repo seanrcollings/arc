@@ -1,11 +1,8 @@
 import io
-import os
-import contextlib
-import typing as t
 
 import pytest
 
-from arc import CLI, Argument, Option, errors, Context
+from arc import CLI, Argument, Option, errors, configure
 from tests.utils import environ
 from arc.prompt.helpers import ARROW_DOWN
 
@@ -25,7 +22,7 @@ class TestEnv:
             assert cli("env") == 2
 
     def test_prefix(self, cli: CLI):
-        Context._meta["env_prefix"] = "TEST_"
+        configure(env_prefix="TEST_")
 
         try:
 
@@ -36,7 +33,7 @@ class TestEnv:
             with environ(TEST_VAL="2"):
                 assert cli("env") == 2
         finally:
-            Context._meta["env_prefix"] = ""
+            configure(env_prefix="")
 
     def test_multiple(self, cli: CLI):
         @cli.command()

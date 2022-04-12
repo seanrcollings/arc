@@ -2,11 +2,11 @@ from functools import cached_property
 import typing as t
 import sys
 
-from arc import constants, errors, utils, logging, typing as at
+from arc import constants, errors, utils, logging
 from arc.autocompletions import Completion, CompletionInfo, get_completions
 from arc.color import colorize, fg
 from arc.config import config
-from arc._command.param import Flag, Option
+from arc._command.param import Flag
 from arc.autoload import Autoload
 from arc._command import helpers, Command
 from arc.context import Context
@@ -48,8 +48,6 @@ class CLI(Command):
         self,
         name: str = None,
         state: dict = None,
-        version: str = None,
-        env: at.Env = "production",
         **ctx_dict,
     ):
         """
@@ -57,14 +55,8 @@ class CLI(Command):
             name: name of the CLI, will be used in the help command. If one is not provided,
                 a name will be automatically discovered based on file name.
             state: dictionary of key value pairs to pass to commands
-            version: Version string to display with `--version`
-            env: Environment of the application. `development` or `production`
             ctx_dict: additional keyword arguments to pass to the execution context
         """
-
-        config.environment = env
-        self.version = version
-        logging.root_setup(env)
         utils.header("INIT")
 
         super().__init__(
@@ -74,12 +66,7 @@ class CLI(Command):
             **ctx_dict,
         )
 
-        if env == "development":
-            from ._debug import debug  # pylint: disable=import-outside-toplevel
-
-            self.install_command(debug)
-
-    def __completions__(self, info: CompletionInfo, *args, **kwargs):
+    def __completions__(self, info: CompletionInfo, *_args, **_kwargs):
         # Completes Command names
         if (
             (len(info.words) == 0 and info.current == "")
@@ -100,30 +87,8 @@ class CLI(Command):
         # Completes Global Options
         # return super().__completions__(info)
 
-    @cached_property
-    def params(self):
-        params = super().params
-        if self.version:
-
-            def _version_callback(value, ctx: Context, _param):
-                if value:
-                    print(self.version)
-                    ctx.exit()
-
-            params.append(
-                Flag(
-                    "version",
-                    short="v",
-                    description="Displays the app's current version",
-                    callback=_version_callback,
-                    expose=False,
-                )
-            )
-
-        return params
-
     @utils.timer("Running CLI")
-    def main(
+    def _main(
         self,
         args: t.Union[str, list[str]] = None,
         fullname: str = None,
@@ -143,7 +108,7 @@ class CLI(Command):
                 if not args:
                     logger.debug("No arguments present")
                     print(self.get_usage(ctx))
-                    return
+                    raise errors.Exit(1)
 
                 subcommand_name = args.pop(0)
                 command_namespace = helpers.get_command_namespace(subcommand_name)
@@ -163,7 +128,7 @@ class CLI(Command):
                     print(str(e))
                     raise errors.Exit(1)
 
-                return command_chain[-1].main(
+                return command_chain[-1]._main(  # pylint: disable=protected-access
                     args,
                     subcommand_name,
                     parent=ctx,

@@ -279,16 +279,6 @@ def test_literal(cli: CLI):
         cli("li other")
 
 
-def test_file(cli: CLI):
-    @cli.command()
-    def fi(file: File.Read):
-        return file
-
-    file = cli("fi tests/.arc")
-    assert file.mode == "r"
-    assert file.closed
-
-
 def test_range(cli: CLI):
     @cli.command()
     def ra(range: Annotated[Range, 1, 10]):

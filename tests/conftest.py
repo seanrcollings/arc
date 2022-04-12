@@ -1,13 +1,13 @@
 import pytest
 
-from arc import CLI, logging
+from arc import CLI, logging, configure
 
 logger = logging.getArcLogger()
 
 
 @pytest.fixture
 def cli():
-    cli = CLI(name="test", env="development")
-    logger.setLevel(logging.CRITICAL)
+    configure(environment="development")
+    cli = CLI(name="test")
 
     return cli

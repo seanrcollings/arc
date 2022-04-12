@@ -13,7 +13,6 @@ from arc.context import Context
 from arc.parser import Parser
 from arc.present.help_formatter import HelpFormatter
 from arc.config import config
-from arc.types.aliases import Alias
 from arc.typing import ClassCallback
 from arc import callback as acb
 from arc.autocompletions import CompletionInfo, Completion, get_completions
@@ -21,7 +20,6 @@ from .param_mixin import ParamMixin
 
 
 logger = logging.getArcLogger("command")
-DEFAULT_SECTION: str = config.default_section_name
 
 
 class Command(ParamMixin):
@@ -38,6 +36,7 @@ class Command(ParamMixin):
     ):
         self._callback = callback
         self.name = name
+        self.version: t.Optional[str] = None
         self.subcommands: dict[str, Command] = {}
         self.subcommand_aliases: dict[str, str] = {}
         self.state = state or {}
@@ -58,7 +57,7 @@ class Command(ParamMixin):
     def __repr__(self):
         return f"{self.__class__.__name__}(name={self.name!r})"
 
-    def __completions__(self, info: CompletionInfo, *args, **kwargs):
+    def __completions__(self, info: CompletionInfo, *_args, **_kwargs):
         if info.current.startswith(constants.SHORT_FLAG_PREFIX) and (
             constants.FLAG_PREFIX not in info.words[0:-1]
         ):
@@ -132,14 +131,18 @@ class Command(ParamMixin):
 
     # Command Execution ------------------------------------------------------------
     def __call__(self, *args, **kwargs):
+        self.version = config.version
+        if config.environment == "development":
+            del self.params
+
         if not isinstance(sys.stdout, utils.IoWrapper):
             with contextlib.redirect_stdout(utils.IoWrapper(sys.stdout)):
-                return self.main(*args, **kwargs)
+                return self._main(*args, **kwargs)
         else:
-            return self.main(*args, **kwargs)
+            return self._main(*args, **kwargs)
 
     @utils.timer("Running Command")
-    def main(
+    def _main(
         self,
         args: t.Union[str, list[str]] = None,
         fullname: str = None,
@@ -338,13 +341,13 @@ class Command(ParamMixin):
         required to possess a section header, and
         will be entered in as the `description` section.
         """
-        parsed: dict[str, str] = {DEFAULT_SECTION: ""}
+        parsed: dict[str, str] = {config.default_section_name: ""}
         if not self.doc:
             return {}
 
         lines = [line.strip() for line in self.doc.split("\n")]
 
-        current_section = DEFAULT_SECTION
+        current_section = config.default_section_name
 
         for line in lines:
             if line.startswith("#"):
@@ -361,7 +364,9 @@ class Command(ParamMixin):
 
     @property
     def description(self) -> t.Optional[str]:
-        return self._description or self.parsed_docstring.get("description")
+        return self._description or self.parsed_docstring.get(
+            config.default_section_name
+        )
 
     @property
     def short_description(self) -> t.Optional[str]:
