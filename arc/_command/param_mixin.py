@@ -30,16 +30,6 @@ class ParamMixin:
     @functools.cached_property
     def params(self) -> list[Param]:
         params = self.builder(self._callback).build()  # type: ignore
-        params.insert(
-            0,
-            Flag(
-                "help",
-                short="h",
-                description="Shows help documentation",
-                callback=_help_callback,
-                expose=False,
-            ),
-        )
 
         if self._autocomplete:
 
@@ -67,15 +57,27 @@ class ParamMixin:
                     print(self.version)
                     ctx.exit()
 
-            params.append(
+            params.insert(
+                0,
                 Flag(
                     "version",
                     short="v",
                     description="Displays the app's current version",
                     callback=_version_callback,
                     expose=False,
-                )
+                ),
             )
+
+        params.insert(
+            0,
+            Flag(
+                "help",
+                short="h",
+                description="Shows help documentation",
+                callback=_help_callback,
+                expose=False,
+            ),
+        )
 
         return params
 
