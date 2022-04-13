@@ -47,6 +47,8 @@ nav:
       - Command Autoloading: usage/command-autoloading.md
       - Command State: usage/command-state.md
       - Shell Completions: usage/shell-completions.md
+  - Examples:
+      - Grep Clone: examples/grep-clone.md
   - Reference:
       - arc.cli: reference/cli.md
       - arc.color: reference/color.md
