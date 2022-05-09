@@ -1,3 +1,4 @@
+import re
 from typing import Annotated, Literal, Union, TypedDict, Any, Optional
 from pathlib import Path
 import enum
@@ -315,3 +316,14 @@ def test_context(cli: CLI):
         return ctx
 
     assert isinstance(cli("ct"), Context)
+
+
+def test_pattern(cli: CLI):
+    @cli.command()
+    def rg(pattern: re.Pattern):
+        return pattern
+
+    assert cli("rg .+") == re.compile(".+")
+
+    with pytest.raises(errors.ArgumentError):
+        cli("rg [")
