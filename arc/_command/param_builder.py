@@ -29,7 +29,7 @@ class ParamBuilder:
             arg._annotation = self.annotations.get(arg.name) or arg.empty
 
             if arg.kind in (arg.VAR_KEYWORD, arg.VAR_POSITIONAL):
-                raise errors.ArgumentError("Arc does not support *args and **kwargs.")
+                raise errors.ArgumentError("arc does not support *args and **kwargs.")
             if isinstance(arg.default, ParamInfo):
                 info: ParamInfo = arg.default
             else:
