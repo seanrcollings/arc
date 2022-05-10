@@ -46,7 +46,7 @@ class Context:
     # an instance of Context is pushed onto
     # this stack. When execution completes, the
     # context will be popped off the stack
-    __stack: list[Context] = []
+    _stack: list[Context] = []
     config = config
     _meta: dict[str, t.Any] = {}
 
@@ -198,20 +198,20 @@ class Context:
     @classmethod
     def push(cls, ctx: Context) -> None:
         """Pushes a context onto the internal stack"""
-        cls.__stack.append(ctx)
+        cls._stack.append(ctx)
 
     @classmethod
     def pop(cls) -> Context:
         """Pops a context off the internal stack"""
-        return cls.__stack.pop()
+        return cls._stack.pop()
 
     @classmethod
     def current(cls) -> Context:
         """Returns the current context"""
-        if not cls.__stack:
+        if not cls._stack:
             raise RuntimeError("No contexts exist")
 
-        return cls.__stack[-1]
+        return cls._stack[-1]
 
     @classmethod
     def __convert__(cls, _value, _info, ctx: Context):

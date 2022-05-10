@@ -112,11 +112,6 @@ class Command(ParamMixin):
 
         return []
 
-    def autocomplete(self):
-        self._autocomplete = True
-        if config.environment == "development":
-            del self.params
-
     def schema(self):
         return {
             "name": self.name,
@@ -131,7 +126,15 @@ class Command(ParamMixin):
 
     # Command Execution ------------------------------------------------------------
     def __call__(self, *args, **kwargs):
+        if Context._stack:
+            raise errors.ArcError(
+                "A command object can only be called directly at the top level. "
+                "If you need to execute a command from within another command, "
+                "use Context.execute(<command>) instead."
+            )
+
         self.version = config.version
+        self._autocomplete = config.autocomplete
         if config.environment == "development":
             del self.params
 

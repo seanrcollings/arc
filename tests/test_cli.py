@@ -105,3 +105,12 @@ class TestCLIOptions:
             @cli.options
             def options(val: int):
                 ...
+
+
+def test_root_exectuion_only(cli: CLI):
+    @cli.command()
+    def command():
+        command()
+
+    with pytest.raises(errors.ArcError):
+        cli("command")

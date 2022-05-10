@@ -14,10 +14,7 @@ from typing import (
 )
 import re
 
-from arc import utils, result
-from arc.typing import CompletionProtocol
-from arc import constants, utils, result
-from arc.color import colorize, fg
+from arc import utils, result, constants
 from arc.prompt import select
 
 if TYPE_CHECKING:

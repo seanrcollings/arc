@@ -25,6 +25,7 @@ class Config:
     env_prefix: str = ""
     prompt: Prompt = Prompt(" ")
     version: t.Optional[str] = None
+    autocomplete: bool = False
 
 
 config = Config()
@@ -39,32 +40,36 @@ def configure(
     suggestions: t.Optional[at.Suggestions] = None,
     env_prefix: t.Optional[str] = None,
     prompt: t.Optional[Prompt] = None,
+    autocomplete: t.Optional[bool] = None,
 ):
     """Function for updating global `arc` configuration
 
     Args:
-        version: (str, optional) Version string to display with `--version`
+        version: Version string to display with `--version`
 
-        environment: (Env, optional): The current environment, either `production` or `development`.
+        environment: The current environment, either `production` or `development`.
             Defaults to `production`. When in `development` mode, debug
             information is printed during execution.
 
-        default_section_name: (str, optional): The name to use by default if the first section in a
+        default_section_name: The name to use by default if the first section in a
             command docstring is does not have a header. Defaults to `description`.
 
-        transform_snake_case: (bool, optional):  Transform `snake_case` to `kebab-case`.
+        transform_snake_case:  Transform `snake_case` to `kebab-case`.
             Defaults to `True`.
 
-        brand_color: (Ansi): Highlight color to use in help documentation.
+        brand_color: Highlight color to use in help documentation.
             Defaults to `fg.ARC_BLUE`.
 
-        env_prefix: (str, optional): A prefix to use when selecting values from environmental
+        env_prefix: A prefix to use when selecting values from environmental
                 variables. Will be combined with the name specified for a parameter.
 
-        prompt: (arc.prompt.Prompt, optional): A prompt object will be used when prompting
+        prompt: A prompt object will be used when prompting
             for parameter values. Is also made available via `Context.prompt`.
+
+        autocomplete: Enable / disable command line completions for this app. Currently
+            the default is `False`
     """
-    dictionary = {
+    data = {
         "version": version,
         "environment": environment,
         "default_section_name": default_section_name,
@@ -73,9 +78,10 @@ def configure(
         "suggestions": config.suggestions | (suggestions or {}),
         "env_prefix": env_prefix,
         "prompt": prompt,
+        "autocomplete": autocomplete,
     }
 
-    for key, value in dictionary.items():
+    for key, value in data.items():
         if value is not None:
             setattr(config, key, value)
 
