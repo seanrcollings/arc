@@ -1,3 +1,5 @@
+*arc* uses [Python type hints](https://peps.python.org/pep-0484/) for data conversion / validation.
+
 When Possible, *arc* uses builtin and standard library data types for arguments. But if no type is available, or the builtin types don't provide the neccessary functionality, *arc* may implement a custom type.
 
 ## Standard Libary Types
