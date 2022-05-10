@@ -8,6 +8,7 @@ import pathlib
 import typing as t
 import ipaddress
 import dataclasses
+import re
 import _io  # type: ignore
 
 from arc import errors, logging, utils
@@ -478,5 +479,20 @@ class IPv4Alias(ipaddress.IPv4Address, _Address, of=ipaddress.IPv4Address):
     name = "IPv4"
 
 
-class IPv6Alias(ipaddress.IPv4Address, _Address, of=ipaddress.IPv6Address):
+class IPv6Alias(ipaddress.IPv6Address, _Address, of=ipaddress.IPv6Address):
     name = "IPv6"
+
+
+class PatternAlias(Alias, of=re.Pattern):
+    @classmethod
+    def convert(cls, value: str, info: TypeInfo):
+        try:
+            return re.compile(value, cls.flags(info))
+        except re.error as e:
+            raise errors.ConversionError(value, "Not a valid regex pattern", e) from e
+
+    @classmethod
+    def flags(cls, info: TypeInfo):
+        if len(info.annotations) == 0:
+            return 0
+        return info.annotations[0]
