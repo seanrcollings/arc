@@ -253,10 +253,13 @@ class _CollectionAlias(Alias):
         try:
             return cls.alias_for([sub_type.__convert__(v, sub, ctx) for v in lst])
         except errors.ConversionError as e:
-            raise errors.ConversionError(
-                value,
-                f"{value} is not a valid {typ.name} of {sub.name}s",
-            ) from e
+            if name := getattr(sub_type, "name"):
+                raise errors.ConversionError(
+                    value,
+                    f"{colorize(' '.join(value), fg.YELLOW)} is not a valid {typ.name} of {name}s",
+                    e,
+                ) from e
+            raise e
 
 
 class ListAlias(list, _CollectionAlias, of=list):
@@ -438,6 +441,8 @@ class PathAlias(Alias, of=pathlib.Path):
 
 
 class IOAlias(Alias, of=(_io._IOBase, t.IO)):
+    name = "file"
+
     @classmethod
     def convert(cls, value: str, info: TypeInfo) -> t.IO:
         try:
