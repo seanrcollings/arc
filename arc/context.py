@@ -2,6 +2,7 @@ from __future__ import annotations
 import contextlib
 import os
 import typing as t
+import types
 
 from arc import errors, logging
 from arc.callback import Callback, CallbackStack
@@ -65,7 +66,6 @@ class Context:
         self.execute_callbacks = execute_callbacks
         self.args: dict[str, t.Any] = {}
         self.extra: list[str] = []
-        self.callback_stack = CallbackStack()
         self.state: State = self.create_state()
 
         # The result of the most recent execution
@@ -134,14 +134,9 @@ class Context:
                     cb_dict.pop(cb, None)
 
             for cb in cb_dict:
-                try:
-                    cb_stack.add(cb.func(args, self))  # type: ignore
-                except AttributeError as e:
-                    colored = colorize(str(cb.func.__name__), fg.YELLOW)  # type: ignore
-                    raise errors.CallbackError(
-                        f"{colored} is not a valid callback. "
-                        f"Perhaps you missed a {colorize('yield', fg.ARC_BLUE)}?"
-                    ) from e
+                v = cb.func(args, self)
+                if isinstance(v, types.GeneratorType):
+                    cb_stack.add(v)  # type: ignore
         return cb_stack
 
     def execute(self, callback: t.Union[Command, t.Callable], **kwargs):

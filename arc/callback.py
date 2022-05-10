@@ -70,9 +70,7 @@ class CallbackStack:
 
     def add(self, gen: t.Generator[None, t.Any, None]):
         if not isinstance(gen, types.GeneratorType):
-            raise errors.CallbackError(
-                "Callback must be a generator. Did you miss a yield?"
-            )
+            raise errors.CallbackError("Callback must be a generator. ")
         next(gen)  # Advance it to the first yield
         self.__stack.append(gen)
 

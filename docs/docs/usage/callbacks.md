@@ -9,16 +9,17 @@ In *arc*, callbacks are a way to encapsulate shared functionality across multipl
 ```console
 --8<-- "examples/outputs/callback_example"
 ```
-
-???+ tip
-    Any function valid as a `#!python contextlib.contextmanager()` should be a valid callback function. Note that the only requirement is that the function *must* yield. If it does not yield, it will fail at execution.
-
+!!! note
+    The examples used in this document will generally `yield` to show that callbacks *wrap* the
+    execution of a command. However, they are not required to do this and can just be simple functions
+    if they only need to perform setup before the command runs.
 
 ## Creating Callbacks
 As seen above, all `Command` objects have a `callback()` method for creating callbacks for that command. This is actually an alias for a two step process, that becomes more useful when using callbacks in a [multi-command CLI](cli.md)
 ```py title="examples/callback_create.py"
 --8<-- "examples/callback_create.py"
 ```
+
 
 ```console
 --8<-- "examples/outputs/callback_create"
