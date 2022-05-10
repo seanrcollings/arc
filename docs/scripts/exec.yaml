@@ -71,5 +71,11 @@
   exec: ["", "10"]
 - file: hello_configuration.py
   exec: [--help, --version]
-- file: rep_clone/1_grep_clone.py
+- file: grep_clone/1_grep_clone.py
   exec: ["", "--help"]
+- file: grep_clone/1_grep_clone.py
+  exec: ["", "--help"]
+- file: grep_clone/2_grep_clone.py
+  exec: ["^[\\d+] docs/index.md docs/features.md"]
+- file: grep_clone/3_grep_clone.py
+  exec: ["arc docs/index.md docs/features.md"]

@@ -35,4 +35,17 @@ Next, we're going to want to add arguments to the command. For now, we'll only b
 ```console
 --8<-- "examples/outputs/2_grep_clone"
 ```
+
+As you can see, we've already got a validated regex pattern, and file handles to each of the specified files.
+
 ## 3. Functionality
+
+With type handling / data validation *already* out of the way, the implentation will be fairly straightfoward.
+
+```py title="examples/grep_clone/3_grep_clone.py"
+--8<-- "examples/grep_clone/3_grep_clone.py"
+```
+Let's run this over a couple of *arc's* documentation files searching for references to *arc*
+```console
+--8<-- "examples/outputs/3_grep_clone"
+```
