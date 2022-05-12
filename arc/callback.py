@@ -12,6 +12,8 @@ if t.TYPE_CHECKING:
 
 CallbackFunc = t.Callable[[dict[str, t.Any], "Context"], t.Generator[None, t.Any, None]]
 
+ErrorHandlerFunc = t.Callable[[Exception, "Context"], t.Optional[bool]]
+
 
 @dc.dataclass(frozen=True)
 class Callback:
