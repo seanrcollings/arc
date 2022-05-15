@@ -79,3 +79,7 @@
   exec: ["^[\\d+] docs/index.md docs/features.md"]
 - file: grep_clone/3_grep_clone.py
   exec: ["arc docs/index.md docs/features.md"]
+- file: error_handlers.py
+  exec: [""]
+- file: error_handlers_callback.py
+  exec: [""]

@@ -44,6 +44,7 @@ nav:
       - Documentation Generation: usage/documentation-generation.md
       - Colored Output: usage/colored-output.md
       - Callbacks: usage/callbacks.md
+      - Error Handlers: usage/error-handlers.md
       - Command Autoloading: usage/command-autoloading.md
       - Command State: usage/command-state.md
       - Shell Completions: usage/shell-completions.md
