@@ -6,7 +6,7 @@ import typing as t
 import shlex
 import sys
 
-from arc import constants, errors, logging, utils
+from arc import constants, error_handlers, errors, logging, utils
 from arc.color import colorize, effects, fg
 from arc._command.param_builder import ParamBuilder, wrap_class_callback
 from arc.context import Context
@@ -317,15 +317,8 @@ class Command(ParamMixin):
         """Register an error handler"""
 
         def inner(callback: acb.ErrorHandlerFunc) -> acb.Callback:
-            def callback_wrapper(_args, _ctx):
-                try:
-                    yield
-                except exceptions as e:
-                    res = callback(e, Context.current())
-                    if res is True:
-                        raise errors.Exit(0)
 
-            cb = acb.create(inherit=inherit)(callback_wrapper)
+            cb = error_handlers.create_handler(*exceptions, inherit=inherit)(callback)
             self.callbacks.insert(0, cb)
             return cb
 
