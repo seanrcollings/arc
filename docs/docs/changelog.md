@@ -4,6 +4,7 @@
 - Improved some error messages
 - Fixed a bug to do with callback error handling
 - Added [error handlers](./usage/error-handlers.md) as syntatic sugar for callback error handling
+- Add `User` and `Group` type
 
 ## `6.3.0`
 

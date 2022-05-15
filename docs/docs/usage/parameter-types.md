@@ -174,6 +174,14 @@ TODO
 
 TODO
 
+`User` (**UNIX ONLY**)
+
+A representation of a unix user.
+
+`Group` (**UNIX ONLY**)
+
+A representation of a unix group.
+
 ### File System Types
 
 
