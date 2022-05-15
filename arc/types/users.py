@@ -16,7 +16,7 @@ class User:
         uid: int,
         gid: int,
         gecos: str,
-        dir: str,
+        directory: str,
         shell: str,
     ):
         self.name = name
@@ -24,7 +24,7 @@ class User:
         self.id = uid
         self.group_id = gid
         self.gecos = gecos
-        self.directory = pathlib.Path(dir)
+        self.directory = pathlib.Path(directory)
         self.shell = pathlib.Path(shell)
 
     __repr__ = display("name", "id", "group_id", "gecos", "directory", "shell")
