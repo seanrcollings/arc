@@ -1,3 +1,10 @@
+## `6.4.0`
+- [Shell Completions](./usage/shell-completions.md) now enabled with `arc.configure()`
+- Callbacks are no longer required to `yield` to be valid
+- Improved some error messages
+- Fixed a bug to do with callback error handling
+- Added [error handlers](./usage/error-handlers.md) as syntatic sugar for callback error handling
+
 ## `6.3.0`
 
 - Added the ability to gather input from environment variables or by prompting the user directly.

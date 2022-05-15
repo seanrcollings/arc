@@ -71,16 +71,18 @@ def test_final(cli: CLI):
 
 
 def test_missing_yield(cli: CLI):
+    """A pure function should still execute"""
+
     @callback.create()
     def cb(_args, ctx):
-        ...
+        raise CallbackException(ctx)
 
     @cb
     @cli.subcommand()
     def command():
         ...
 
-    with pytest.raises(errors.CallbackError):
+    with pytest.raises(CallbackException):
         cli("command")
 
 

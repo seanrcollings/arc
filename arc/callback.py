@@ -12,6 +12,8 @@ if t.TYPE_CHECKING:
 
 CallbackFunc = t.Callable[[dict[str, t.Any], "Context"], t.Generator[None, t.Any, None]]
 
+ErrorHandlerFunc = t.Callable[[Exception, "Context"], t.Optional[bool]]
+
 
 @dc.dataclass(frozen=True)
 class Callback:
@@ -70,31 +72,43 @@ class CallbackStack:
 
     def add(self, gen: t.Generator[None, t.Any, None]):
         if not isinstance(gen, types.GeneratorType):
-            raise errors.CallbackError(
-                "Callback must be a generator. Did you miss a yield?"
-            )
+            raise errors.CallbackError("Callback must be a generator.")
         next(gen)  # Advance it to the first yield
         self.__stack.append(gen)
 
-    def __enter__(self):
-        return self
+    def throw(self, exception: Exception):
+        """Used if an error occurs in command execution.
+        Notifies each of the callbacks that an error occured.
 
-    def __exit__(self, exc_type, exc_value, trace):
+        Args:
+            exception: The exception that occured within the executing command
+
+        Raises:
+            exception: if none of the callbacks handle the exception, re-raiseo
+        """
+
+        exc_type = type(exception)
+        trace = exception.__traceback__
+
+        handled_exception = False
+
         for gen in reversed(self.__stack):
             try:
-                if exc_value:
-                    gen.throw(exc_type, exc_value, trace)
-                else:
-                    next(gen)
+                gen.throw(exc_type, exception, trace)
+            except StopIteration:
+                handled_exception = True
+                break
+            except Exception as e:
+                exception = e
+                handled_exception = False
+
+        if not handled_exception:
+            raise exception
+
+    def close(self):
+        """Closes each callback by calling `next()` on them"""
+        for gen in reversed(self.__stack):
+            try:
+                next(gen)
             except StopIteration:
                 ...
-
-    def close(self, exception: Exception = None):
-        if exception:
-            exc_type: t.Optional[type[Exception]] = type(exception)
-            trace = exception.__traceback__
-        else:
-            exc_type = None
-            trace = None
-
-        self.__exit__(exc_type, exception, trace)

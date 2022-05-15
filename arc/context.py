@@ -2,10 +2,10 @@ from __future__ import annotations
 import contextlib
 import os
 import typing as t
+import types
 
 from arc import errors, logging
 from arc.callback import Callback, CallbackStack
-from arc.color import colorize, fg
 from arc.config import config
 from arc import _command
 from arc.params import special
@@ -46,7 +46,7 @@ class Context:
     # an instance of Context is pushed onto
     # this stack. When execution completes, the
     # context will be popped off the stack
-    __stack: list[Context] = []
+    _stack: list[Context] = []
     config = config
     _meta: dict[str, t.Any] = {}
 
@@ -65,7 +65,6 @@ class Context:
         self.execute_callbacks = execute_callbacks
         self.args: dict[str, t.Any] = {}
         self.extra: list[str] = []
-        self.callback_stack = CallbackStack()
         self.state: State = self.create_state()
 
         # The result of the most recent execution
@@ -134,14 +133,9 @@ class Context:
                     cb_dict.pop(cb, None)
 
             for cb in cb_dict:
-                try:
-                    cb_stack.add(cb.func(args, self))  # type: ignore
-                except AttributeError as e:
-                    colored = colorize(str(cb.func.__name__), fg.YELLOW)  # type: ignore
-                    raise errors.CallbackError(
-                        f"{colored} is not a valid callback. "
-                        f"Perhaps you missed a {colorize('yield', fg.ARC_BLUE)}?"
-                    ) from e
+                v = cb.func(args, self)
+                if isinstance(v, types.GeneratorType):
+                    cb_stack.add(v)  # type: ignore
         return cb_stack
 
     def execute(self, callback: t.Union[Command, t.Callable], **kwargs):
@@ -167,9 +161,15 @@ class Context:
         else:
             ctx = self
 
-        with ctx, ctx.create_callback_stack(kwargs):
-            ctx.result = callback(**kwargs)
-            return ctx.result
+        cb_stack = ctx.create_callback_stack(kwargs)
+        with ctx:
+            try:
+                ctx.result = callback(**kwargs)
+            except Exception as e:
+                cb_stack.throw(e)
+            else:
+                cb_stack.close()
+                return ctx.result
 
     def close(self):
         logger.debug("Closing %s", self)
@@ -198,20 +198,20 @@ class Context:
     @classmethod
     def push(cls, ctx: Context) -> None:
         """Pushes a context onto the internal stack"""
-        cls.__stack.append(ctx)
+        cls._stack.append(ctx)
 
     @classmethod
     def pop(cls) -> Context:
         """Pops a context off the internal stack"""
-        return cls.__stack.pop()
+        return cls._stack.pop()
 
     @classmethod
     def current(cls) -> Context:
         """Returns the current context"""
-        if not cls.__stack:
+        if not cls._stack:
             raise RuntimeError("No contexts exist")
 
-        return cls.__stack[-1]
+        return cls._stack[-1]
 
     @classmethod
     def __convert__(cls, _value, _info, ctx: Context):

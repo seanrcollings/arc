@@ -8,6 +8,7 @@ import pathlib
 import typing as t
 import ipaddress
 import dataclasses
+import re
 import _io  # type: ignore
 
 from arc import errors, logging, utils
@@ -108,7 +109,7 @@ class Alias:
             f"{name} is not a valid type. "
             f"Please ensure that {name} conforms to the custom type protocol "
             f"or that there is a alias type registered for it: "
-            "<link stub>"
+            "https://arc.seanrcollings.com/usage/parameter-types/#custom-types"
         )
 
 
@@ -252,10 +253,13 @@ class _CollectionAlias(Alias):
         try:
             return cls.alias_for([sub_type.__convert__(v, sub, ctx) for v in lst])
         except errors.ConversionError as e:
-            raise errors.ConversionError(
-                value,
-                f"{value} is not a valid {typ.name} of {sub.name}s",
-            ) from e
+            if name := getattr(sub_type, "name"):
+                raise errors.ConversionError(
+                    value,
+                    f"{colorize(' '.join(value), fg.YELLOW)} is not a valid {typ.name} of {name}s",
+                    e,
+                ) from e
+            raise e
 
 
 class ListAlias(list, _CollectionAlias, of=list):
@@ -437,6 +441,8 @@ class PathAlias(Alias, of=pathlib.Path):
 
 
 class IOAlias(Alias, of=(_io._IOBase, t.IO)):
+    name = "file"
+
     @classmethod
     def convert(cls, value: str, info: TypeInfo) -> t.IO:
         try:
@@ -478,5 +484,20 @@ class IPv4Alias(ipaddress.IPv4Address, _Address, of=ipaddress.IPv4Address):
     name = "IPv4"
 
 
-class IPv6Alias(ipaddress.IPv4Address, _Address, of=ipaddress.IPv6Address):
+class IPv6Alias(ipaddress.IPv6Address, _Address, of=ipaddress.IPv6Address):
     name = "IPv6"
+
+
+class PatternAlias(Alias, of=re.Pattern):
+    @classmethod
+    def convert(cls, value: str, info: TypeInfo):
+        try:
+            return re.compile(value, cls.flags(info))
+        except re.error as e:
+            raise errors.ConversionError(value, "Not a valid regex pattern", e) from e
+
+    @classmethod
+    def flags(cls, info: TypeInfo):
+        if len(info.annotations) == 0:
+            return 0
+        return info.annotations[0]

@@ -5,7 +5,8 @@
     To enable shell completions, add the following to your script:
 
     ```py
-    cli.autocomplete()
+    import arc
+    arc.configure(autocomplete=True)
     ```
 
 The autocompletions will be generated with the following
