@@ -6,7 +6,7 @@ import typing as t
 import shlex
 import sys
 
-from arc import constants, errors, logging, utils
+from arc import constants, error_handlers, errors, logging, utils
 from arc.color import colorize, effects, fg
 from arc._command.param_builder import ParamBuilder, wrap_class_callback
 from arc.context import Context
@@ -272,13 +272,12 @@ class Command(ParamMixin):
         """Installs a command object as a subcommand
         of the current object"""
         # Commands created with @command do not have a name by default
-        # to faccilitate automatic name discovery. When they are added
+        # to facilitate automatic name discovery. When they are added
         # to a parent command, a name needs to be added
         if not command.name:
             command.name = command._callback.__name__
 
         self.subcommands[command.name] = command
-        # command.callbacks = self.inheritable_callbacks()
 
         logger.debug(
             "Registered %s%s%s command to %s%s%s",
@@ -291,6 +290,39 @@ class Command(ParamMixin):
         )
 
         return command
+
+    # Callbacks ------------------------------------------------------
+
+    def callback(
+        self, callback: acb.CallbackFunc = None, *, inherit: bool = True
+    ) -> t.Callable[[acb.CallbackFunc], acb.Callback]:
+        """Register a command callback"""
+
+        def inner(callback: acb.CallbackFunc) -> acb.Callback:
+            cb = acb.create(inherit=inherit)(callback)
+            self.callbacks.append(cb)
+            return cb
+
+        if callback:
+            return inner(callback)  # type: ignore
+
+        return inner
+
+    def inheritable_callbacks(self):
+        return (callback for callback in self.callbacks if callback.inherit)
+
+    # Error Handlers -----------------------------------------------------
+
+    def handle(self, *exceptions: type[Exception], inherit: bool = True):
+        """Register an error handler"""
+
+        def inner(callback: acb.ErrorHandlerFunc) -> acb.Callback:
+
+            cb = error_handlers.create_handler(*exceptions, inherit=inherit)(callback)
+            self.callbacks.insert(0, cb)
+            return cb
+
+        return inner
 
     # Helpers ------------------------------------------------------------
 
@@ -408,20 +440,3 @@ class Command(ParamMixin):
         for param in self.params:
             if not param.description:
                 param.description = descriptions.get(param.arg_name)
-
-    # Callbacks ------------------------------------------------------
-    def callback(
-        self, callback: acb.CallbackFunc = None, *, inherit: bool = True
-    ) -> t.Callable[[acb.CallbackFunc], acb.Callback]:
-        def inner(callback: acb.CallbackFunc) -> acb.Callback:
-            cb = acb.create(inherit=inherit)(callback)
-            self.callbacks.append(cb)
-            return cb
-
-        if callback:
-            return inner(callback)  # type: ignore
-
-        return inner
-
-    def inheritable_callbacks(self):
-        return (callback for callback in self.callbacks if callback.inherit)

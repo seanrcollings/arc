@@ -10,5 +10,6 @@ from arc.result import Err, Ok, Result
 from arc.context import Context
 from arc.types import *
 from arc.params import Param, Option, Flag, Argument, Count
+from arc.error_handlers import create_handler
 
 __version__ = "6.3.0"

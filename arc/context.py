@@ -6,7 +6,6 @@ import types
 
 from arc import errors, logging
 from arc.callback import Callback, CallbackStack
-from arc.color import colorize, fg
 from arc.config import config
 from arc import _command
 from arc.params import special
@@ -162,9 +161,15 @@ class Context:
         else:
             ctx = self
 
-        with ctx, ctx.create_callback_stack(kwargs):
-            ctx.result = callback(**kwargs)
-            return ctx.result
+        cb_stack = ctx.create_callback_stack(kwargs)
+        with ctx:
+            try:
+                ctx.result = callback(**kwargs)
+            except Exception as e:
+                cb_stack.throw(e)
+            else:
+                cb_stack.close()
+                return ctx.result
 
     def close(self):
         logger.debug("Closing %s", self)
