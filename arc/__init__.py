@@ -12,4 +12,4 @@ from arc.types import *
 from arc.params import Param, Option, Flag, Argument, Count
 from arc.error_handlers import create_handler
 
-__version__ = "6.3.0"
+__version__ = "6.4.0"
