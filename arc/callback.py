@@ -84,25 +84,32 @@ class CallbackStack:
             exception: The exception that occured within the executing command
 
         Raises:
-            exception: if none of the callbacks handle the exception, re-raiseo
+            exception: if none of the callbacks handle the exception, re-raises
         """
 
         exc_type = type(exception)
         trace = exception.__traceback__
 
-        handled_exception = False
+        exception_handled = False
 
         for gen in reversed(self.__stack):
             try:
-                gen.throw(exc_type, exception, trace)
+                if exception_handled:
+                    try:
+                        next(gen)
+                    except StopIteration:
+                        ...
+                else:
+                    gen.throw(exc_type, exception, trace)
             except StopIteration:
-                handled_exception = True
-                break
+                exception_handled = True
             except Exception as e:
-                exception = e
-                handled_exception = False
+                if isinstance(e, errors.Exit):
+                    raise e
 
-        if not handled_exception:
+                exception = e
+
+        if not exception_handled:
             raise exception
 
     def close(self):

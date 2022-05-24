@@ -322,7 +322,7 @@ class Command(ParamMixin):
         def inner(callback: acb.ErrorHandlerFunc) -> acb.Callback:
 
             cb = error_handlers.create_handler(*exceptions, inherit=inherit)(callback)
-            self.callbacks.insert(0, cb)
+            self.callbacks.append(cb)
             return cb
 
         return inner
