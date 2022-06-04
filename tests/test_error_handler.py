@@ -33,5 +33,5 @@ def test_multi_execution(cli: CLI):
     command.handle(Exception)(func2)
 
     cli("command")
-    assert func1.call_count == 2
+    assert func1.call_count == 1
     assert func2.call_count == 1
