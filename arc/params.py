@@ -1,92 +1,47 @@
-"""Public API for hanlding parameter modification"""
-from __future__ import annotations
 import typing as t
-from arc._command import param
+
+import inspect
+
 from arc import constants
-from arc import typing as at
+from arc._command.param import param
+from arc.utils import isdunder
 
 
 class ParamInfo:
     def __init__(
         self,
-        param_cls: type[param.Param] = None,
-        arg_alias: str = None,
+        param_cls: type[param.Param],
+        param_name: str = None,
         short: str = None,
         default: t.Any = constants.MISSING,
         description: str = None,
         callback: t.Callable = None,
-        action: param.ParamAction = None,
+        action: param.Action = None,
         prompt: str = None,
         envvar: str = None,
-        complete: at.CompletionFunc = None,
     ):
         self.param_cls = param_cls
-        self.arg_alias = arg_alias
-        self.short = short
+        self.param_name = param_name
+        self.short_name = short
         self.default = default
         self.description = description
         self.callback = callback
         self.action = action
         self.prompt = prompt
         self.envvar = envvar
-        self.complete = complete
 
     def dict(self):
         """Used to pass to `Param()` as **kwargs"""
         return {
-            "arg_alias": self.arg_alias,
-            "short": self.short,
+            "param_name": self.param_name,
+            "short_name": self.short_name,
             "default": self.default,
             "description": self.description,
             "callback": self.callback,
-            "action": self.action,
             "prompt": self.prompt,
             "envvar": self.envvar,
-            "comp_func": self.complete,
+            # "action": self.action,
         }
-
-
-def Param(
-    *,
-    name: str = None,
-    short: str = None,
-    default: t.Any = constants.MISSING,
-    description: str = None,
-    callback: t.Callable = None,
-    prompt: str = None,
-    envvar: str = None,
-    complete: at.CompletionFunc = None,
-) -> t.Any:
-    """A CLI Paramater. Automatically decides whether it is
-    a `positional`, `option` or `flag`
-
-    # Example
-    ```py
-    @cli.command()
-    def test(val: int = Param(), *, val2: int = Param(), flag: bool = Param()):
-        print(val, val2, flag)
-    ```
-    Each Param type will be determined as follows:
-    - `val`:  Positional argument because it precedes the bare `*`.
-    - `val2`: Option argument because  it proceeds the bare `*`.
-              Python considers this a "keyword only" argument, and so does arc
-    - `flag`: Flag argument because it has `bool` type
-
-    ```
-    $ python example.py test --val2 3 --flag -- 2
-    2 3 True
-    ```
-    """
-    return ParamInfo(
-        arg_alias=name,
-        short=short,
-        default=default,
-        description=description,
-        callback=callback,
-        prompt=prompt,
-        envvar=envvar,
-        complete=complete,
-    )
 
 
 def Argument(
@@ -97,7 +52,6 @@ def Argument(
     callback: t.Callable = None,
     prompt: str = None,
     envvar: str = None,
-    complete: at.CompletionFunc = None,
 ) -> t.Any:
     """A CLI Paramater. Input will be passed in positionally.
 
@@ -114,14 +68,13 @@ def Argument(
     ```
     """
     return ParamInfo(
-        param_cls=param.Argument,
-        arg_alias=name,
+        param_cls=param.ArgumentParam,
+        param_name=name,
         default=default,
         description=description,
         callback=callback,
         prompt=prompt,
         envvar=envvar,
-        complete=complete,
     )
 
 
@@ -134,7 +87,6 @@ def Option(
     callback: t.Callable = None,
     prompt: str = None,
     envvar: str = None,
-    complete: at.CompletionFunc = None,
 ) -> t.Any:
     """A (generally optional) keyword parameter.
 
@@ -151,15 +103,14 @@ def Option(
     ```
     """
     return ParamInfo(
-        param_cls=param.Option,
-        arg_alias=name,
+        param_cls=param.OptionParam,
+        param_name=name,
         short=short,
         default=default,
         description=description,
         callback=callback,
         prompt=prompt,
         envvar=envvar,
-        complete=complete,
     )
 
 
@@ -188,8 +139,8 @@ def Flag(
     ```
     """
     return ParamInfo(
-        param_cls=param.Flag,
-        arg_alias=name,
+        param_cls=param.FlagParam,
+        param_name=name,
         short=short,
         default=default,
         description=description,
@@ -224,77 +175,65 @@ def Count(
     ```
     """
     return ParamInfo(
-        param_cls=param.Flag,
-        arg_alias=name,
+        param_cls=param.FlagParam,
+        param_name=name,
         short=short,
         default=default,
         description=description,
         callback=callback,
-        action=param.ParamAction.COUNT,
+        action=param.Action.COUNT,
     )
 
 
-def SpecialParam(
-    name: str = None,
-    short: str = None,
-    default: t.Any = constants.MISSING,
-    description: str = None,
-    callback: t.Callable = None,
-    prompt: str = None,
-    envvar: str = None,
-) -> t.Any:
-    """Params marked as "Special" are not exposed to the command line
-    interface and cannot recieve user input. As such, they're values
-    are expected to come from elsewhere. This allows commands to recieve
-    their values like regular params, but still have them act in a particular
-    way.
+def class_signature(cls: type):
+    """"""
+    annotations = t.get_type_hints(cls, include_extras=True)
+    defaults = {name: getattr(cls, name) for name in dir(cls) if not isdunder(name)}
+    attrs = {}
 
-    It is primarly used for some builtin-types like `State` and `Context`.
-    """
-    return ParamInfo(
-        param_cls=param.SpecialParam,
-        arg_alias=name,
-        short=short,
-        default=default,
-        description=description,
-        callback=callback,
-        prompt=prompt,
-        envvar=envvar,
+    for name, annotation in annotations.items():
+        attrs[name] = (annotation, inspect.Parameter.empty)
+
+    for name, default in defaults.items():
+        if name in attrs:
+            attrs[name] = (attrs[name][0], default)
+        else:
+            attrs[name] = (t.Any, default)
+
+    parameters = [
+        inspect.Parameter(
+            name=name,
+            kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            default=default,
+            annotation=annotation,
+        )
+        for name, (annotation, default) in attrs.items()
+    ]
+
+    sig = inspect.Signature(
+        sorted(parameters, key=lambda p: not p.default is inspect.Parameter.empty)
     )
+    # inspect.signature() checks for a cached signature object
+    # at __signature__. So we can cache it there
+    # to generate the correct signature object
+    # during the parameter building process
+    setattr(cls, "__signature__", sig)
+    return sig
 
 
-T = t.TypeVar("T")
+def lazy_class_signature(cls: type):
+    setattr(cls, "__signature__", classmethod(property(class_signature)))  # type: ignore
+    return cls
 
 
-def __cls_deco_factory(param_cls: type[param.Param]):
-    def decorator(
-        name: str = None,
-        short: str = None,
-        default: t.Any = constants.MISSING,
-        description: str = None,
-        overwrite: bool = False,
-    ):
-        def inner(cls: T) -> T:
-            setattr(
-                cls,
-                "__param_info__",
-                {
-                    "param_cls": param_cls,
-                    "arg_alias": name,
-                    "short": short,
-                    "default": default,
-                    "description": description,
-                    "overwrite": overwrite,
-                },
-            )
-            return cls
-
-        return inner
-
-    return decorator
+G = t.TypeVar("G", bound=type)
 
 
-argument = __cls_deco_factory(param.Argument)
-option = __cls_deco_factory(param.Option)
-flag = __cls_deco_factory(param.Flag)
-special = __cls_deco_factory(param.SpecialParam)
+def group(cls: G) -> G:
+    setattr(cls, "__arc_group__", True)
+    lazy_class_signature(cls)
+    return cls
+
+
+def Depends(callback: t.Callable) -> t.Any:
+    return ParamInfo(param_cls=param.InjectedParam, callback=callback)

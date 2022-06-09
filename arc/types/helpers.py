@@ -186,17 +186,17 @@ def match(pattern: str, string: str) -> result.Result[None, str]:
     return result.Ok()
 
 
-def input_prompt(ctx: Context, param: Param, **kwargs):
-    empty = param.default is not constants.MISSING
+# def input_prompt(ctx: Context, param: Param, **kwargs):
+#     empty = param.default is not constants.MISSING
 
-    return (
-        ctx.prompt.input(param.get_prompt_string(), empty=empty, **kwargs)
-        or constants.MISSING
-    )
+#     return (
+#         ctx.prompt.input(param.get_prompt_string(), empty=empty, **kwargs)
+#         or constants.MISSING
+#     )
 
 
-def password_prompt(ctx: Context, param: Param):
-    return input_prompt(ctx, param, sensitive=True)
+# def password_prompt(ctx: Context, param: Param):
+#     return input_prompt(ctx, param, sensitive=True)
 
 
 def select_prompt(values: list, ctx: Context, param: Param, **kwargs):

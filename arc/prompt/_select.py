@@ -84,7 +84,7 @@ class SelectionMenu(Widget):
 
     def __init__(
         self,
-        items: t.Sequence[at.SupportsStr],
+        items: t.Sequence[t.Any],
         char: str = "❯",
         highlight_color: str = fg.ARC_BLUE,
     ):
@@ -119,7 +119,7 @@ class SelectionMenu(Widget):
         elif seq == ARROW_DOWN:
             self.selected = min(len(self.items) - 1, self.selected + 1)
 
-    def write(self, text: at.SupportsStr):
+    def write(self, text: t.Any):
         text = str(text).replace("\n", f"\n{self.tab_distance}").split("\n")
         self._buffer.extend(text)
 

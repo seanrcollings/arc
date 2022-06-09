@@ -78,4 +78,4 @@ class ArcStreamHandler(logging.StreamHandler):
         if not stream:
             stream = sys.stderr
 
-        super().__init__(utils.IoWrapper(stream))
+        super().__init__(stream)

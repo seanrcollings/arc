@@ -13,7 +13,7 @@ class _ResultBase(ABC, Generic[T]):
         return str(self._value)
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} : {self._value!r}>"
+        return f"{self.__class__.__name__}({self._value!r})"
 
     def __eq__(self, other):
         return self._value == other._value
