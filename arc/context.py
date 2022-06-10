@@ -13,8 +13,9 @@ T = t.TypeVar("T")
 class Context:
     _stack: list[Context] = []
     command: _command.Command
-    _stack_count = 0
     _exit_stack: contextlib.ExitStack
+    _stack_count: int
+    rest: list[str]
 
     config = config
 
@@ -23,6 +24,8 @@ class Context:
     ) -> None:
         self.command = command
         self.parent = parent
+        self.rest = []
+        self._stack_count = 0
         self._exit_stack = contextlib.ExitStack()
 
     def __repr__(self):
@@ -75,13 +78,20 @@ class Context:
 
     def run(self, args: list[str]):
         parser = self.command.create_parser()
-        parsed = parser.parse_intermixed_args(args)
+        parsed, rest = parser.parse_known_intermixed_args(args)
+        if rest and not self.config.allow_unrecognized_args:
+            raise errors.UnrecognizedArgError(
+                f"Unrecognized arguments: {' '.join(rest)}", self
+            )
+        else:
+            self.rest = rest
+
         processed, missing = self.command.process_parsed_result(parsed, self)
 
         if missing:
             params = ", ".join(colorize(param.cli_name, fg.YELLOW) for param in missing)
             raise errors.MissingArgError(
-                f"The following arguments are required: {params}"
+                f"The following arguments are required: {params}", self
             )
 
         self.command.inject_dependancies(processed, self)

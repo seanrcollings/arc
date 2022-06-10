@@ -26,6 +26,7 @@ class Config:
     prompt: Prompt = Prompt(" ")
     version: t.Optional[str] = None
     autocomplete: bool = False
+    allow_unrecognized_args: bool = False
 
 
 config = Config()

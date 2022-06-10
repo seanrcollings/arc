@@ -13,6 +13,12 @@ class Parser(argparse.ArgumentParser):
         res = super().parse_intermixed_args(args, namespace)
         return dict(res._get_kwargs())
 
+    def parse_known_intermixed_args(  # type: ignore
+        self, args: t.Sequence[str] | None = None, namespace=None
+    ) -> tuple[at.ParseResult, list[str]]:
+        parsed, rest = super().parse_known_intermixed_args(args, namespace)
+        return (dict(parsed._get_kwargs()), rest)
+
     def add_param(self, param: Param):
         kwargs: dict[str, t.Any] = {"action": param.action.value, "default": MISSING}
 

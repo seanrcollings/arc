@@ -143,7 +143,7 @@ class Param(
         return self.get_value(res, ctx)
 
     def get_value(self, res: at.ParseResult, ctx: Context) -> t.Any | MissingType:
-        value: t.Any = res.get(self.param_name, MISSING)
+        value: t.Any = res.pop(self.param_name, MISSING)
 
         if value is MISSING:
             if self.envvar and (env := self.get_env_value(ctx)):

@@ -40,9 +40,9 @@ class UsageError(ExternalError):
         self.ctx = ctx
 
     def __str__(self):
-        if self.ctx:
-            usage = self.ctx.command.get_usage(self.ctx, help_hint=False)
-            return f"{usage}\n{self.message}"
+        # if self.ctx:
+        #     usage = self.ctx.command.get_usage(self.ctx, help_hint=False)
+        #     return f"{usage}\n{self.message}"
 
         return self.message
 
