@@ -2,6 +2,7 @@ from __future__ import annotations
 import argparse
 import typing as t
 from arc._command.param import Action, Param
+from arc.constants import MISSING
 import arc.typing as at
 
 
@@ -13,9 +14,9 @@ class Parser(argparse.ArgumentParser):
         return dict(res._get_kwargs())
 
     def add_param(self, param: Param):
-        kwargs: dict[str, t.Any] = {"action": param.action.value}
+        kwargs: dict[str, t.Any] = {"action": param.action.value, "default": MISSING}
 
-        if param.action not in (Action.STORE_FALSE, Action.STORE_TRUE):
+        if param.action is Action.STORE:
             kwargs["nargs"] = param.nargs
 
         self.add_argument(*param.get_param_names(), **kwargs)

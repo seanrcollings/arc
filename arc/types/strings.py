@@ -1,6 +1,6 @@
 import typing as t
 from arc.types import aliases
-from arc.types.helpers import password_prompt
+from arc.prompt.prompts import password_prompt
 
 __all__ = ["strictstr", "Char", "Password"]
 

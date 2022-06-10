@@ -2,10 +2,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 import enum
 from functools import cached_property
+import os
 import typing as t
 
 from arc import errors, utils
+from arc.color import colorize, fg
+from arc.prompt.prompts import input_prompt
+from arc.types.type_info import TypeInfo
 import arc.typing as at
+from arc.types import aliases
 from arc.constants import MISSING, MissingType
 
 if t.TYPE_CHECKING:
@@ -13,54 +18,6 @@ if t.TYPE_CHECKING:
 
 
 T = t.TypeVar("T")
-
-
-@dataclass
-class TypeInfo(t.Generic[T]):
-    original_type: at.Annotation
-    origin: type[T]
-    sub_types: tuple[TypeInfo, ...]
-    annotations: tuple[t.Any, ...]
-    _name: str | None = None
-
-    @property
-    def name(self) -> str:
-        return (
-            self._name
-            or getattr(self.origin, "name", None)
-            or getattr(self.origin, "__name__", None)
-            or str(self.origin)
-        )
-
-    @property
-    def is_optional_type(self) -> bool:
-        """The type is `Optional[T]`"""
-        return (
-            self.origin is t.Union
-            and len(self.sub_types) == 2
-            and self.sub_types[-1].original_type is type(None)
-        )
-
-    @classmethod
-    def analyze(cls, annotation) -> TypeInfo:
-        original_type = annotation
-        origin = t.get_origin(annotation) or annotation
-        annotated_args: tuple = tuple()
-
-        if origin is t.Annotated:
-            args = t.get_args(annotation)
-            annotation = args[0]
-            origin = t.get_origin(annotation) or annotation
-            annotated_args = args[1:]
-
-        sub_types = tuple(cls.analyze(arg) for arg in t.get_args(annotation))
-
-        return cls(
-            original_type=original_type,
-            origin=origin,
-            sub_types=sub_types,
-            annotations=annotated_args,
-        )
 
 
 class Action(enum.Enum):
@@ -74,16 +31,17 @@ class Action(enum.Enum):
 class Param(
     t.Generic[T],
     utils.Display,
-    members=["argument_name", "annotation"],
+    members=["argument_name", "type"],
 ):
     argument_name: str
     param_name: str
     short_name: str | None
     type: TypeInfo
-    default: T | MissingType | None
+    default: T | MissingType
     description: str | None
     envvar: str | None
     prompt: str | None
+    action: Action
 
     def __init__(
         self,
@@ -96,16 +54,18 @@ class Param(
         callback: t.Callable | None = None,
         envvar: str | None = None,
         prompt: str | None = None,
+        action: Action | None = None,
     ):
         self.argument_name = argument_name
         self.param_name = param_name or argument_name
         self.short_name = short_name
         self.type = TypeInfo.analyze(annotation)
-        self.default = default
+        self.default = default if default is not None else MISSING
         self.description = description
         self.callback = callback
         self.envvar = envvar
         self.prompt = prompt
+        self.action = action or Action.STORE
 
         if self.short_name and len(self.short_name) > 1:
             raise errors.ParamError(
@@ -151,6 +111,16 @@ class Param(
     def is_required(self):
         return not self.is_optional
 
+    @property
+    def prompt_string(self):
+        if self.default is not MISSING:
+            return self.prompt + colorize(f"({self.default})", fg.GREY)
+        return self.prompt
+
+    @property
+    def cli_name(self):
+        return self.param_name
+
     @cached_property
     def nargs(self) -> at.NArgs:
         if (
@@ -167,12 +137,33 @@ class Param(
 
         return None
 
-    @cached_property
-    def action(self) -> Action:
-        return Action.STORE
+    def process_parsed_result(
+        self, res: at.ParseResult, ctx: Context
+    ) -> t.Any | MissingType:
+        return self.get_value(res, ctx)
 
-    def process_parsed_result(self, res: at.ParseResult, ctx: Context):
-        return res.get(self.param_name)
+    def get_value(self, res: at.ParseResult, ctx: Context) -> t.Any | MissingType:
+        value: t.Any = res.get(self.param_name, MISSING)
+
+        if value is MISSING:
+            if self.envvar and (env := self.get_env_value(ctx)):
+                value = env
+            elif self.prompt and (prompt := self.get_prompt_value(ctx)):
+                value = prompt
+            else:
+                value = self.default
+
+        return value
+
+    def get_env_value(self, ctx: Context):
+        return os.getenv(f"{ctx.config.env_prefix}{self.envvar}")
+
+    def get_prompt_value(self, ctx: Context):
+        type_class: type[at.TypeProtocol] = aliases.Alias.resolve(self.type)
+        if hasattr(type_class, "__prompt__"):
+            return type_class.__prompt__(ctx, self)  # type: ignore
+
+        return input_prompt(ctx, self)
 
     def get_param_names(self) -> list[str]:
         return []
@@ -180,19 +171,28 @@ class Param(
 
 class ArgumentParam(
     Param[t.Any],
-    members=["argument_name", "param_name", "default"],
+    members=["argument_name", "type"],
 ):
     @property
     def is_argument(self):
         return True
+
+    @cached_property
+    def nargs(self):
+        return "?"
 
     def get_param_names(self) -> list[str]:
         return [self.param_name]
 
 
 class KeywordParam(Param[T]):
+    @property
     def is_keyword(self):
         return True
+
+    @property
+    def cli_name(self):
+        return f"--{self.param_name}"
 
     def get_param_names(self) -> list[str]:
         if self.short_name:
@@ -202,20 +202,15 @@ class KeywordParam(Param[T]):
 
 
 class OptionParam(KeywordParam[t.Any]):
+    @property
     def is_option(self):
         return True
 
 
 class FlagParam(KeywordParam[bool]):
+    @property
     def is_flag(self):
         return True
-
-    @cached_property
-    def action(self) -> Action:
-        if self.default:
-            return Action.STORE_FALSE
-
-        return Action.STORE_TRUE
 
 
 class InjectedParam(Param):

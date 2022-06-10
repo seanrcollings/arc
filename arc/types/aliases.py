@@ -16,15 +16,15 @@ from arc import autocompletions
 from arc.autocompletions import Completion, CompletionInfo, CompletionType
 from arc.color import colorize, fg
 from arc.types.helpers import (
-    TypeInfo,
     join_and,
     join_or,
     match,
     safe_issubclass,
     convert,
-    select_prompt,
     validate,
 )
+from arc.prompt.prompts import select_prompt
+from arc.types.type_info import TypeInfo
 
 from arc.typing import Annotation, TypeProtocol
 
@@ -381,11 +381,12 @@ class LiteralAlias(Alias, of=t.Literal):
     @classmethod
     def g_convert(cls, value: t.Any, info: TypeInfo):
         for sub in info.sub_types:
-            if str(sub.base) == value:
-                return sub.base
+            if str(sub.original_type) == value:
+                return sub.original_type
 
         raise errors.ConversionError(
-            value, f"must be {join_or(list(sub.base for sub in info.sub_types))}"
+            value,
+            f"must be {join_or(list(sub.original_type for sub in info.sub_types))}",
         )
 
     @classmethod

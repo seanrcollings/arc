@@ -3,6 +3,7 @@ import typing as t
 import collections
 
 from py import process
+from arc.constants import MISSING
 
 import arc.typing as at
 from .param import Param
@@ -24,10 +25,11 @@ class ParamGroup(collections.UserList[Param]):
     def __repr__(self):
         return f"ParamGroup(name={self.name!r}, params={self.data!r})"
 
-    def __iter__(self):
+    def all_params(self):
+        """Generator that yields all params in itself, and in it's sub groups recursivley"""
         if self.sub_groups:
             for sub in self.sub_groups:
-                yield from sub
+                yield from sub.all_params()
 
         yield from self.data
 
@@ -43,25 +45,34 @@ class ParamGroup(collections.UserList[Param]):
 
         return None
 
-    def process_parsed_result(self, res: at.ParseResult, ctx: Context) -> t.Any | dict:
+    def process_parsed_result(
+        self, res: at.ParseResult, ctx: Context
+    ) -> tuple[t.Any | dict, list[Param]]:
         processed = {}
-        for param in self:
+        missing: list[Param] = []
+
+        param: Param
+        for param in self.data:
             if param.is_injected:
                 continue
 
-            processed[param.argument_name] = param.process_parsed_result(res, ctx)
+            value = param.process_parsed_result(res, ctx)
+            if value is MISSING:
+                missing.append(param)
+            processed[param.argument_name] = value
 
         for sub in self.sub_groups:
-            processed[sub.name] = sub.process_parsed_result(res, ctx)
+            processed[sub.name], sub_missing = sub.process_parsed_result(res, ctx)
+            missing.extend(sub_missing)
 
         if self.cls:
             inst = self.cls()
             for key, value in processed.items():
                 setattr(inst, key, value)
 
-            return inst
+            return (inst, missing)
 
-        return processed
+        return processed, missing
 
     def inject_dependancies(self, args: dict[str, t.Any], ctx: Context):
         injected = {}

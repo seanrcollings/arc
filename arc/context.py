@@ -4,6 +4,7 @@ import contextlib
 
 from arc import errors
 from arc import _command
+from arc.color import colorize, fg
 from arc.config import config
 
 T = t.TypeVar("T")
@@ -65,13 +66,24 @@ class Context:
 
         return curr
 
+    @property
+    def prompt(self):
+        return self.config.prompt
+
     def close(self):
         self._exit_stack.close()
 
     def run(self, args: list[str]):
         parser = self.command.create_parser()
         parsed = parser.parse_intermixed_args(args)
-        processed = self.command.process_parsed_result(parsed, self)
+        processed, missing = self.command.process_parsed_result(parsed, self)
+
+        if missing:
+            params = ", ".join(colorize(param.cli_name, fg.YELLOW) for param in missing)
+            raise errors.MissingArgError(
+                f"The following arguments are required: {params}"
+            )
+
         self.command.inject_dependancies(processed, self)
         return self.execute(self.command.callback, **processed)
 

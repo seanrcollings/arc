@@ -1,15 +1,17 @@
 from __future__ import annotations
-from functools import cached_property
 import sys
 import typing as t
 import shlex
 
 from arc import utils
-from arc.context import Context
 from arc.parser import Parser
-from .param import ParamGroup, ParamMixin
+from .param import ParamMixin
+from arc.context import Context
 
 import arc.typing as at
+
+if t.TYPE_CHECKING:
+    from .param import Param, ParamGroup
 
 
 class Command(
@@ -35,7 +37,7 @@ class Command(
         self.subcommands = {}
 
     def __call__(self, args: str | list[str] | None = None):
-        args = args or sys.argv
+        args = args or sys.argv[1:]
         if isinstance(args, str):
             args = shlex.split(args)
 
@@ -62,15 +64,22 @@ class Command(
 
     # Execution ------------------------------------------------------------------
 
-    def process_parsed_result(self, res: at.ParseResult, ctx: Context):
+    def process_parsed_result(
+        self, res: at.ParseResult, ctx: Context
+    ) -> tuple[dict[str, t.Any], list[Param]]:
         processed: dict[str, t.Any] = {}
-        for group in self.param_groups:
-            if group.is_default:
-                processed |= group.process_parsed_result(res, ctx)
-            else:
-                processed[group.name] = group.process_parsed_result(res, ctx)
+        missing: list[Param] = []
 
-        return processed
+        for group in self.param_groups:
+            group_processed, group_missing = group.process_parsed_result(res, ctx)
+            missing.extend(group_missing)
+
+            if group.is_default:
+                processed.update(group_processed)
+            else:
+                processed[group.name] = group_processed
+
+        return processed, missing
 
     def inject_dependancies(self, args: dict[str, t.Any], ctx: Context):
         for group in self.param_groups:

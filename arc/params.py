@@ -40,7 +40,7 @@ class ParamInfo:
             "callback": self.callback,
             "prompt": self.prompt,
             "envvar": self.envvar,
-            # "action": self.action,
+            "action": self.action,
         }
 
 
@@ -145,6 +145,7 @@ def Flag(
         default=default,
         description=description,
         callback=callback,
+        action=param.Action.STORE_FALSE if default else param.Action.STORE_TRUE,
     )
 
 
@@ -186,7 +187,6 @@ def Count(
 
 
 def class_signature(cls: type):
-    """"""
     annotations = t.get_type_hints(cls, include_extras=True)
     defaults = {name: getattr(cls, name) for name in dir(cls) if not isdunder(name)}
     attrs = {}

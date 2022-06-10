@@ -13,7 +13,7 @@ class ParamMixin:
     @property
     def params(self):
         for group in self.param_groups:
-            yield from group
+            yield from group.all_params()
 
     @property
     def cli_params(self):
