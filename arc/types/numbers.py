@@ -1,4 +1,5 @@
 import typing as t
+from arc import errors
 from arc.types import aliases
 
 __all__ = [
@@ -13,6 +14,40 @@ __all__ = [
     "strictint",
     "strictfloat",
 ]
+
+
+class StrictType:
+    def __new__(cls, value):
+        return cls.validate(value)
+
+    @classmethod
+    def validate(cls, value):
+        return value
+
+
+class StrictInt(StrictType, int):
+    greater_than: t.ClassVar[t.Union[int, float, None]] = None
+    less_than: t.ClassVar[t.Union[int, float, None]] = None
+    matches: t.ClassVar[t.Optional[str]] = None
+
+    @classmethod
+    def validate(cls, value):
+        value = int(value)
+
+        if value >= cls.less_than:
+            raise errors.ConversionError(value, f"must be less than {cls.less_than}")
+        if value <= cls.greater_than:
+            raise errors.ConversionError(
+                value, f"must be greater than {cls.greater_than}"
+            )
+
+        # if value.matches:
+        #     if (err := match(cls.matches, str(cls))).err:
+        #         raise errors.ValidationError(str(err))
+
+        return value
+
+
 # Integers ----------------------------------------------------------------
 def strictint(
     base: int = 10,
@@ -23,7 +58,7 @@ def strictint(
 ) -> type[aliases.IntAlias]:
     return type(
         name or "StrictInteger",
-        (aliases.IntAlias,),
+        (StrictInt,),
         {
             "base": base,
             "greater_than": greater_than,

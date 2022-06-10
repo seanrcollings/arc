@@ -105,7 +105,7 @@ class Alias:
                     return cls.aliases[parent]
 
         name = colorize(annotation.__name__, fg.YELLOW)
-        raise errors.ArgumentError(
+        raise errors.ParamError(
             f"{name} is not a valid type. "
             f"Please ensure that {name} conforms to the custom type protocol "
             f"or that there is a alias type registered for it: "
@@ -125,23 +125,20 @@ class StringAlias(Alias, str, of=str):
 
     @classmethod
     def convert(cls, value: t.Any) -> str:
-        try:
-            return cls(value)  # type: ignore
-        except ValueError as e:
-            raise errors.ConversionError(value, str(e)) from e
+        return cls(value)  # type: ignore
 
     def _validate(self):
         if self.max_length and len(self) > self.max_length:
-            raise ValueError(f"maximum length is {self.max_length}")
+            raise errors.ConversionError(self, f"maximum length is {self.max_length}")
 
         if self.min_length and len(self) < self.min_length:
-            raise ValueError(f"minimum length is {self.min_length}")
+            raise errors.ConversionError(self, f"minimum length is {self.min_length}")
 
         if self.length and len(self) != self.length:
-            raise ValueError(f"must be {self.length} characters long")
+            raise errors.ConversionError(self, f"must be {self.length} characters long")
 
         if self.matches and (err := match(self.matches, self)).err:
-            raise ValueError(err.unwrap())
+            raise errors.ConversionError(self, err.unwrap())
 
 
 class BytesAlias(bytes, Alias, of=bytes):
@@ -158,34 +155,29 @@ class _NumberBaseAlias(Alias):
 
     @classmethod
     def convert(cls, value: t.Any) -> t.Any:
-        try:
-            converted = cls(value)  # type: ignore
-        except ValueError as e:
-            raise errors.ConversionError(value, "invalid value", str(e)) from e
-
+        converted = cls(value)  # type: ignore
         return converted
 
     def _validate_shared(self):
         if self > self.less_than:
-            raise ValueError(f"must be less than {self.less_than}")
+            raise errors.ConversionError(self, f"must be less than {self.less_than}")
         if self < self.greater_than:
-            raise ValueError(f"must be greater than {self.greater_than}")
+            raise errors.ConversionError(
+                self, f"must be greater than {self.greater_than}"
+            )
 
         if self.matches:
             if (err := match(self.matches, str(self))).err:
-                raise ValueError(str(err))
+                raise errors.ConversionError(self, str(err))
 
 
-@validate
-class IntAlias(int, _NumberBaseAlias, of=int):
+class IntAlias(Alias, of=int):
     name = "integer"
-    base: t.ClassVar[int] = 10
 
-    def __new__(cls, value: t.Any):
-        if isinstance(value, str):
-            return int.__new__(cls, value, base=cls.base)
-        else:
-            return int.__new__(cls, value)
+    @classmethod
+    def convert(cls, value: str, info: TypeInfo) -> t.Any:
+        converted = info.origin(value)  # type: ignore
+        return converted
 
 
 @validate
@@ -199,17 +191,19 @@ class FloatAlias(float, _NumberBaseAlias, of=float):
         _natural, fractional = str(self).split(".")
 
         if self.min_precision and self.min_precision > len(fractional):
-            raise ValueError(
-                f"minimum decimal precision allowed is {self.min_precision}"
+            raise errors.ConversionError(
+                self, f"minimum decimal precision allowed is {self.min_precision}"
             )
 
         if self.max_precision and self.max_precision < len(fractional):
-            raise ValueError(
-                f"maximum decimal precision allowed is {self.min_precision}"
+            raise errors.ConversionError(
+                self, f"maximum decimal precision allowed is {self.min_precision}"
             )
 
         if self.precision and self.precision != len(fractional):
-            raise ValueError(f"decimal precision must be {self.precision}")
+            raise errors.ConversionError(
+                self, f"decimal precision must be {self.precision}"
+            )
 
 
 TRUE_VALUES = {"true", "t", "yes", "1"}
@@ -332,7 +326,7 @@ class DictAlias(dict, Alias, of=dict):
                 value,
                 f"{value} is not a valid {info.name} of "
                 f"{key_sub.name} keys and {value_sub.name} values",
-                source=e,
+                e,
             ) from e
 
     @classmethod

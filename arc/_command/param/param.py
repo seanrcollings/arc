@@ -6,8 +6,9 @@ import os
 import typing as t
 
 from arc import errors, utils
-from arc.color import colorize, fg
+from arc.color import colorize, effects, fg
 from arc.prompt.prompts import input_prompt
+from arc.types.helpers import convert, iscontextmanager
 from arc.types.type_info import TypeInfo
 import arc.typing as at
 from arc.types import aliases
@@ -18,6 +19,8 @@ if t.TYPE_CHECKING:
 
 
 T = t.TypeVar("T")
+
+NO_CONVERT = {None, bool, t.Any, MISSING}
 
 
 class Action(enum.Enum):
@@ -140,7 +143,29 @@ class Param(
     def process_parsed_result(
         self, res: at.ParseResult, ctx: Context
     ) -> t.Any | MissingType:
-        return self.get_value(res, ctx)
+        value = self.get_value(res, ctx)
+
+        value = self.convert(value, ctx)
+
+        if value is not MISSING and self.callback:
+            value = self.callback(value, ctx, self) or value
+
+        if iscontextmanager(value) and not value is ctx:
+            value = ctx.resource(value)  # type: ignore
+
+        return value
+
+    def convert(self, value: t.Any, ctx: Context) -> T | MissingType:
+        if value not in NO_CONVERT and self.type.origin not in NO_CONVERT:
+            try:
+                return convert(aliases.Alias.resolve(self.type), value, self.type, ctx)
+            except errors.ConversionError as e:
+                message = f"invalid value for {colorize(self.cli_name, fg.YELLOW)}: {colorize(str(e), effects.BOLD)}"
+                if e.details:
+                    message += colorize(f" ({e.details})", fg.GREY)
+                raise errors.InvalidArgValue(message, ctx) from e
+
+        return MISSING
 
     def get_value(self, res: at.ParseResult, ctx: Context) -> t.Any | MissingType:
         value: t.Any = res.pop(self.param_name, MISSING)

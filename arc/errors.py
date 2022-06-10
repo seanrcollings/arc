@@ -24,9 +24,9 @@ class ArgumentError(ExternalError):
 class ConversionError(ArgumentError):
     """Raised if a type conversion fails"""
 
-    def __init__(self, value, message: str, source=None):
+    def __init__(self, value, message: str, details=None):
         self.value = value
-        self.source = source
+        self.details = details
         super().__init__(message)
 
 
@@ -55,11 +55,19 @@ class UnrecognizedArgError(UsageError):
     ...
 
 
+class InvalidArgValue(UsageError):
+    ...
+
+
 class InternalError(ArcError):
     """Errors that fire due to development / internal errors"""
 
 
+class CommandError(InternalError):
+    ...
+
+
 class ParamError(InternalError):
-    def __init__(self, message, param):
+    def __init__(self, message, param=None):
         super().__init__(message)
         self.param = param
