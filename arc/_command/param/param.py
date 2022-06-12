@@ -160,7 +160,10 @@ class Param(
             try:
                 return convert(aliases.Alias.resolve(self.type), value, self.type, ctx)
             except errors.ConversionError as e:
-                message = f"invalid value for {colorize(self.cli_name, fg.YELLOW)}: {colorize(str(e), effects.BOLD)}"
+                message = (
+                    f"invalid value for {colorize(self.cli_name, fg.YELLOW)}: "
+                    f"{colorize(str(e), effects.BOLD)}"
+                )
                 if e.details:
                     message += colorize(f" ({e.details})", fg.GREY)
                 raise errors.InvalidArgValue(message, ctx) from e

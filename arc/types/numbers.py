@@ -1,6 +1,10 @@
+from __future__ import annotations
 import typing as t
 from arc import errors
-from arc.types import aliases
+from arc.types.strict import RegexValidator, StrictType, ComparisonValidator
+
+if t.TYPE_CHECKING:
+    import re
 
 __all__ = [
     "Hex",
@@ -11,95 +15,89 @@ __all__ = [
     "PositiveFloat",
     "NegativeFloat",
     "AnyNumber",
-    "strictint",
-    "strictfloat",
+    "StrictInt",
+    "StrictFloat",
 ]
 
 
-class StrictType:
-    def __new__(cls, value):
-        return cls.validate(value)
-
-    @classmethod
-    def validate(cls, value):
-        return value
-
-
-class StrictInt(StrictType, int):
-    greater_than: t.ClassVar[t.Union[int, float, None]] = None
-    less_than: t.ClassVar[t.Union[int, float, None]] = None
-    matches: t.ClassVar[t.Optional[str]] = None
-
-    @classmethod
-    def validate(cls, value):
-        value = int(value)
-
-        if value >= cls.less_than:
-            raise errors.ConversionError(value, f"must be less than {cls.less_than}")
-        if value <= cls.greater_than:
-            raise errors.ConversionError(
-                value, f"must be greater than {cls.greater_than}"
-            )
-
-        # if value.matches:
-        #     if (err := match(cls.matches, str(cls))).err:
-        #         raise errors.ValidationError(str(err))
-
-        return value
-
-
 # Integers ----------------------------------------------------------------
-def strictint(
-    base: int = 10,
-    greater_than: t.Union[int, float] = float("-inf"),
-    less_than: t.Union[int, float] = float("inf"),
-    matches: str = None,
-    name: str = None,
-) -> type[aliases.IntAlias]:
-    return type(
-        name or "StrictInteger",
-        (StrictInt,),
-        {
-            "base": base,
-            "greater_than": greater_than,
-            "less_than": less_than,
-            "matches": matches,
-        },
-    )
+class StrictInt(StrictType[int], ComparisonValidator[int], RegexValidator, int):
+    base: t.ClassVar[int] = 10
+    greater_than: t.ClassVar[int | None] = None
+    less_than: t.ClassVar[int | None] = None
+    matches: t.ClassVar[str | re.Pattern | None] = None
+
+    @classmethod
+    def validate(cls, value) -> int:
+        cls._match(value)
+        value = int(value, base=cls.base)
+        cls.compare(value)
+
+        return value
 
 
-Binary = strictint(base=2, name="Binary")
-Oct = strictint(base=8, name="Oct")
-Hex = strictint(base=16, name="Hex")
-PositiveInt = strictint(greater_than=0, name="PositiveInt")
-NegativeInt = strictint(less_than=0, name="NegativeInt")
+class Binary(StrictInt):
+    base = 2
+
+
+class Oct(StrictInt):
+    base = 8
+
+
+class Hex(StrictInt):
+    base = 16
+
+
+class PositiveInt(StrictInt):
+    greater_than = 0
+
+
+class NegativeInt(StrictInt):
+    less_than = 0
+
 
 # Floats -------------------------------------------------------------------
-def strictfloat(
-    greater_than: t.Union[int, float] = float("-inf"),
-    less_than: t.Union[int, float] = float("inf"),
-    matches: str = None,
-    min_precision: t.Optional[int] = None,
-    max_precision: t.Optional[int] = None,
-    precision: t.Optional[int] = None,
-    name: str = None,
-) -> type[aliases.FloatAlias]:
-    return type(
-        name or "StrictFloat",
-        (aliases.FloatAlias,),
-        {
-            "greater_than": greater_than,
-            "less_than": less_than,
-            "min_precision": min_precision,
-            "max_precision": max_precision,
-            "precision": precision,
-            "matches": matches,
-        },
-    )
 
 
-PositiveFloat = strictfloat(greater_than=0, name="PositiveFloat")
-NegativeFloat = strictfloat(less_than=0, name="NegativeFloat")
+class StrictFloat(StrictType[float], ComparisonValidator[float], float):
+    greater_than: t.ClassVar[float | int | None] = None
+    less_than: t.ClassVar[float | int | None] = None
+    matches: t.ClassVar[int | None] = None
+    min_precision: t.ClassVar[int | None] = None
+    max_precision: t.ClassVar[int | None] = None
+    precision: t.ClassVar[int | None] = None
+
+    @classmethod
+    def validate(cls, value: str) -> float:
+        _natural, fractional = value.split(".")
+
+        if cls.min_precision and cls.min_precision > len(fractional):
+            raise errors.ConversionError(
+                value, f"minimum decimal precision allowed is {cls.min_precision}"
+            )
+
+        if cls.max_precision and cls.max_precision < len(fractional):
+            raise errors.ConversionError(
+                value, f"maximum decimal precision allowed is {cls.max_precision}"
+            )
+
+        if cls.precision and cls.precision != len(fractional):
+            raise errors.ConversionError(
+                value, f"decimal precision must be {cls.precision}"
+            )
+
+        number = float(value)
+        cls.compare(number)
+
+        return number
+
+
+class PositiveFloat(StrictFloat):
+    greater_than: t.ClassVar[float | int | None] = 0
+
+
+class NegativeFloat(StrictFloat):
+    less_than: t.ClassVar[float | int | None] = 0
 
 
 AnyNumber = t.Union[float, Hex, Oct, Binary, int]

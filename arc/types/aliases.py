@@ -9,19 +9,17 @@ import typing as t
 import ipaddress
 import dataclasses
 import re
+
 import _io  # type: ignore
 
 from arc import errors, logging, utils
 from arc import autocompletions
 from arc.autocompletions import Completion, CompletionInfo, CompletionType
 from arc.color import colorize, fg
+from arc.present.helpers import Joiner
 from arc.types.helpers import (
-    join_and,
-    join_or,
-    match,
     safe_issubclass,
     convert,
-    validate,
 )
 from arc.prompt.prompts import select_prompt
 from arc.types.type_info import TypeInfo
@@ -61,14 +59,6 @@ class Alias:
             obj = utils.dispatch_args(cls.convert, value, typ, ctx)
         else:
             obj = utils.dispatch_args(cls.g_convert, value, typ, ctx)
-
-        # Alias types that have an associated "strict" type
-        # will always return an instance of themselves, so all
-        # validations will execute. For the alias itself, we just
-        # want to return the type it aliases, so we convert it
-        # back to that type
-        if isinstance(obj, cls):
-            obj = cls.alias_for(obj)  # type: ignore # pylint: disable=not-callable
 
         return obj
 
@@ -116,7 +106,6 @@ class Alias:
 # Builtin Types ---------------------------------------------------------------------------------
 
 
-@validate
 class StringAlias(Alias, str, of=str):
     max_length: t.ClassVar[t.Optional[int]] = None
     min_length: t.ClassVar[t.Optional[int]] = None
@@ -124,21 +113,8 @@ class StringAlias(Alias, str, of=str):
     matches: t.ClassVar[t.Optional[str]] = None
 
     @classmethod
-    def convert(cls, value: t.Any) -> str:
-        return cls(value)  # type: ignore
-
-    def _validate(self):
-        if self.max_length and len(self) > self.max_length:
-            raise errors.ConversionError(self, f"maximum length is {self.max_length}")
-
-        if self.min_length and len(self) < self.min_length:
-            raise errors.ConversionError(self, f"minimum length is {self.min_length}")
-
-        if self.length and len(self) != self.length:
-            raise errors.ConversionError(self, f"must be {self.length} characters long")
-
-        if self.matches and (err := match(self.matches, self)).err:
-            raise errors.ConversionError(self, err.unwrap())
+    def convert(cls, value: str, info: TypeInfo[str]) -> str:
+        return info.origin(value)
 
 
 class BytesAlias(bytes, Alias, of=bytes):
@@ -147,85 +123,22 @@ class BytesAlias(bytes, Alias, of=bytes):
         return str(value).encode()
 
 
-class _NumberBaseAlias(Alias):
-    alias_for: t.ClassVar[type]
-    greater_than: t.ClassVar[t.Union[int, float]] = float("-inf")
-    less_than: t.ClassVar[t.Union[int, float]] = float("inf")
-    matches: t.ClassVar[t.Optional[str]] = None
-
-    @classmethod
-    def convert(cls, value: t.Any) -> t.Any:
-        converted = cls(value)  # type: ignore
-        return converted
-
-    def _validate_shared(self):
-        if self > self.less_than:
-            raise errors.ConversionError(self, f"must be less than {self.less_than}")
-        if self < self.greater_than:
-            raise errors.ConversionError(
-                self, f"must be greater than {self.greater_than}"
-            )
-
-        if self.matches:
-            if (err := match(self.matches, str(self))).err:
-                raise errors.ConversionError(self, str(err))
-
-
 class IntAlias(Alias, of=int):
-    name = "integer"
-
     @classmethod
-    def convert(cls, value: str, info: TypeInfo) -> t.Any:
-        converted = info.origin(value)  # type: ignore
-        return converted
+    def convert(cls, value: str, info: TypeInfo[int]) -> int:
+        try:
+            return info.origin(value)
+        except ValueError as e:
+            raise errors.ConversionError(value, "must be an integer", e)
 
 
-@validate
-class FloatAlias(float, _NumberBaseAlias, of=float):
-    name = "float"
-    min_precision: t.ClassVar[t.Optional[int]] = None
-    max_precision: t.ClassVar[t.Optional[int]] = None
-    precision: t.ClassVar[t.Optional[int]] = None
-
-    def _validate(self):
-        _natural, fractional = str(self).split(".")
-
-        if self.min_precision and self.min_precision > len(fractional):
-            raise errors.ConversionError(
-                self, f"minimum decimal precision allowed is {self.min_precision}"
-            )
-
-        if self.max_precision and self.max_precision < len(fractional):
-            raise errors.ConversionError(
-                self, f"maximum decimal precision allowed is {self.min_precision}"
-            )
-
-        if self.precision and self.precision != len(fractional):
-            raise errors.ConversionError(
-                self, f"decimal precision must be {self.precision}"
-            )
-
-
-TRUE_VALUES = {"true", "t", "yes", "1"}
-FALSE_VALUES = {"false", "f", "no", "0"}
-
-
-class BoolAlias(int, Alias, of=bool):
-    name = "boolean"
-
+class FloatAlias(Alias, of=float):
     @classmethod
-    def convert(cls, value: t.Any) -> bool:
-        if isinstance(value, str):
-            if value.isnumeric():
-                return bool(int(value))
-
-            value = value.lower()
-            if value in TRUE_VALUES:
-                return True
-            elif value in FALSE_VALUES:
-                return False
-
-        return bool(value)
+    def convert(cls, value, info: TypeInfo[float]) -> float:
+        try:
+            return info.origin(value)
+        except ValueError as e:
+            raise errors.ConversionError(value, "must be a float", e)
 
 
 class _CollectionAlias(Alias):
@@ -337,7 +250,7 @@ class DictAlias(dict, Alias, of=dict):
                 raise errors.ConversionError(
                     elements,
                     f"{key} is not a valid key name. "
-                    f"Valid keys are: {join_and(list(hints.keys()))}",
+                    f"Valid keys are: {Joiner.with_and(list(hints.keys()))}",
                 )
 
             sub_type = Alias.resolve(hints[key])
@@ -367,7 +280,7 @@ class UnionAlias(Alias, of=t.Union):
 
         raise errors.ConversionError(
             value,
-            f"must be a {join_or(list(sub.name for sub in info.sub_types))}",
+            f"must be a {Joiner.with_or(list(sub.name for sub in info.sub_types))}",
         )
 
 
@@ -380,7 +293,7 @@ class LiteralAlias(Alias, of=t.Literal):
 
         raise errors.ConversionError(
             value,
-            f"must be {join_or(list(sub.original_type for sub in info.sub_types))}",
+            f"must be {Joiner.with_or(list(sub.original_type for sub in info.sub_types))}",
         )
 
     @classmethod
@@ -410,7 +323,7 @@ class EnumAlias(Alias, of=enum.Enum):
         except ValueError as e:
             raise errors.ConversionError(
                 value,
-                f"must be {join_or([m.value for m in info.origin.__members__.values()])}",
+                f"must be {Joiner.with_or([m.value for m in info.origin.__members__.values()])}",
             ) from e
 
     @classmethod

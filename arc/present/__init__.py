@@ -2,3 +2,4 @@
 from .table import Table
 from .box import Box
 from .loaders import BarLoader, RectangleLoader, Pacman, SlantLoader
+from .helpers import Joiner

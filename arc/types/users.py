@@ -4,11 +4,12 @@ import grp
 import functools
 import pathlib
 
-from arc import errors, autocompletions as ac
-from .helpers import display
+from arc import errors, utils, autocompletions as ac
 
 
-class User:
+class User(
+    utils.Display, members=["name", "id", "group_id", "gecos", "directory", "shell"]
+):
     def __init__(
         self,
         name: str,
@@ -26,8 +27,6 @@ class User:
         self.gecos = gecos
         self.directory = pathlib.Path(directory)
         self.shell = pathlib.Path(shell)
-
-    __repr__ = display("name", "id", "group_id", "gecos", "directory", "shell")
 
     @classmethod
     def __convert__(cls, value):
@@ -62,7 +61,7 @@ class User:
         return [Group(*g) for g in grp.getgrall() if self.name in g.gr_mem]
 
 
-class Group:
+class Group(utils.Display, members=["name", "id", "members"]):
     def __init__(
         self, name: str, password: str | None, gid: int, mem: list[str] = None
     ) -> None:
@@ -70,8 +69,6 @@ class Group:
         self.password = password
         self.id = gid
         self._mem = mem or []
-
-    __repr__ = display("name", "id", "members")
 
     @classmethod
     def __convert__(cls, value):
