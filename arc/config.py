@@ -1,3 +1,4 @@
+from __future__ import annotations
 import typing as t
 from dataclasses import dataclass, field
 import arc.typing as at
@@ -27,6 +28,7 @@ class Config:
     version: t.Optional[str] = None
     autocomplete: bool = False
     allow_unrecognized_args: bool = False
+    global_callback_execution: t.Literal["always", "args_present"] = "args_present"
 
 
 config = Config()
@@ -42,6 +44,8 @@ def configure(
     env_prefix: t.Optional[str] = None,
     prompt: t.Optional[Prompt] = None,
     autocomplete: t.Optional[bool] = None,
+    allow_unrecognized_args: t.Optional[bool] = None,
+    global_callback_execution: t.Optional[t.Literal["always", "args_present"]] = None,
 ):
     """Function for updating global `arc` configuration
 
@@ -69,6 +73,12 @@ def configure(
 
         autocomplete: Enable / disable command line completions for this app. Currently
             the default is `False`
+
+        allow_unrecognized_args: arc will not error when there are arguments provided
+            that arc does not recognize. Their values will bes tored in `Context.rest`
+            defaults to `False`
+
+        global_callback_execution: ...
     """
     data = {
         "version": version,
@@ -80,6 +90,8 @@ def configure(
         "env_prefix": env_prefix,
         "prompt": prompt,
         "autocomplete": autocomplete,
+        "allow_unrecognized_args": allow_unrecognized_args,
+        "global_callback_execution": global_callback_execution,
     }
 
     for key, value in data.items():

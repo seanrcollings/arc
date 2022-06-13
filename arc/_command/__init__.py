@@ -1,1 +1,1 @@
-from .command import Command, command
+from .command import Command, command, namespace

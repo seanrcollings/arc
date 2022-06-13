@@ -21,7 +21,10 @@ class Context:
     state: dict[str, t.Any] = {}
 
     def __init__(
-        self, command: _command.Command, parent: Context | None = None
+        self,
+        command: _command.Command,
+        parent: Context | None = None,
+        state: dict | None = None,
     ) -> None:
         self.command = command
         self.parent = parent
@@ -119,6 +122,7 @@ class Context:
             ctx = self.create_child(callback)
             cmd = callback
             callback = cmd.callback
+            cmd.inject_dependancies(kwargs, ctx)
 
         else:
             ctx = self

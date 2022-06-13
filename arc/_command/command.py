@@ -1,4 +1,5 @@
 from __future__ import annotations
+from ast import alias
 import sys
 import typing as t
 import shlex
@@ -14,6 +15,36 @@ import arc.typing as at
 if t.TYPE_CHECKING:
     from .param import Param, ParamGroup
 
+K = t.TypeVar("K")
+V = t.TypeVar("V")
+
+
+class SubcommandsDict(dict[K, V]):
+    aliases: dict[K, K]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.aliases = {}
+
+    def get(self, key: K, default=None):
+        if super().__contains__(key):
+            return self[key]
+        if key in self.aliases:
+            return self[self.aliases[key]]
+
+        return default
+
+    def __contains__(self, key: object):
+        return super().__contains__(key) or key in self.aliases
+
+    def add_alias(self, key, alias):
+        self.aliases[alias] = key
+
+    def add_aliases(self, key, *aliases):
+        for alias in aliases:
+            self.add_alias(key, alias)
+
 
 class Command(
     ParamMixin,
@@ -22,30 +53,75 @@ class Command(
 ):
     parent: Command | None
     name: str
-    subcommands: dict[str, Command]
+    description: str | None
+    subcommands: SubcommandsDict[str, Command]
     param_groups: list[ParamGroup]
     callback: at.CommandCallback
 
     def __init__(
         self,
         callback: at.CommandCallback,
-        name: str | None = None,
+        name: str,
+        description: str | None = None,
         parent: Command | None = None,
     ):
         self.callback = callback
-        self.name = name or callback.__name__
+        self.name = name
+        self.description = description
         self.parent = parent
-        self.subcommands = {}
+        self.subcommands = SubcommandsDict()
 
         if config.environment == "development":
             self.param_groups
 
-    def __call__(self, user_args: str | list[str] | None = None, state: dict = None):
-        args = self.get_args(user_args)
+    def __call__(self, input_args: at.InputArgs = None, state: dict = None):
+        args = self.get_args(input_args)
 
         if state:
             Context.state = state
 
+        return self.__main(args)
+
+    @property
+    def schema(self):
+        return {
+            "name": self.name,
+            "params": [param.schema for param in self.params],
+            "subcommands": [com.schema for com in self.subcommands.values()],
+        }
+
+    @property
+    def is_namespace(self):
+        self.callback is namespace_callback
+
+    # Subcommands ----------------------------------------------------------------
+
+    def subcommand(self, name: at.CommandName = None, description: str | None = None):
+        def inner(callback: at.CommandCallback):
+            command_name, aliases = self._get_command_name(callback, name)
+            command = Command(
+                callback=callback,
+                name=command_name,
+                description=description,
+                parent=self,
+            )
+            self.subcommands[command.name] = command
+            self.subcommands.add_aliases(command_name, *aliases)
+            return command
+
+        return inner
+
+    def add_command(self, command: Command):
+        self.subcommands[command.name] = command
+        command.parent = self
+        return command
+
+    def add_commands(self, *commands: Command):
+        return [self.add_command(command) for command in commands]
+
+    # Execution ------------------------------------------------------------------
+
+    def __main(self, args: list[str]):
         global_args = []
         while len(args) > 0 and args[0] not in self.subcommands:
             global_args.append(args.pop(0))
@@ -56,43 +132,22 @@ class Command(
         for idx, value in enumerate(args):
             if value in command.subcommands:
                 index = idx
-                command = command.subcommands[value]
+                command = command.subcommands.get(value)
 
         with self.create_ctx() as ctx:
-            global_res = ctx.run(global_args)
+            if (
+                global_args
+                or command is self
+                or config.global_callback_execution == "always"
+            ):
+                global_res = ctx.run(global_args)
 
-            if command is self:
-                return global_res
+                if command is self:
+                    return global_res
 
             with command.create_ctx(parent=ctx) as commandctx:
                 command_args = args[index + 1 :]
                 return commandctx.run(command_args)
-
-    @property
-    def schema(self):
-        return {
-            "name": self.name,
-            "params": [param.schema for param in self.params],
-            "subcommands": [com.schema for com in self.subcommands.values()],
-        }
-
-    # Subcommands ----------------------------------------------------------------
-
-    def subcommand(self, name: str | None = None):
-        def inner(callback: at.CommandCallback):
-            command_name = name
-            if not command_name:
-                command_name = callback.__name__
-            if config.transform_snake_case and not name:
-                command_name = command_name.replace("_", "-")
-
-            command = Command(callback=callback, name=command_name, parent=self)
-            self.subcommands[command.name] = command
-            return command
-
-        return inner
-
-    # Execution ------------------------------------------------------------------
 
     def process_parsed_result(
         self, res: at.ParseResult, ctx: Context
@@ -127,7 +182,7 @@ class Command(
     def create_ctx(self, **kwargs):
         return Context(self, **kwargs)
 
-    def get_args(self, args: str | list[str] | None):
+    def get_args(self, args: at.InputArgs):
         if args is None:
             args = sys.argv[1:]
 
@@ -136,9 +191,35 @@ class Command(
 
         return args
 
+    def _get_command_name(
+        self, callback: at.CommandCallback, names: at.CommandName
+    ) -> tuple[str, tuple[str, ...]]:
+        if names is None:
+            name = callback.__name__
+
+            if config.transform_snake_case:
+                name = name.replace("_", "-")
+
+            return name, tuple()
+
+        if isinstance(names, str):
+            return names, tuple()
+
+        return names[0], tuple(names[1:])
+
 
 def command(name: str | None = None):
     def inner(callback: at.CommandCallback):
-        return Command(callback=callback, name=name, parent=None)
+        return Command(
+            callback=callback, name=name or utils.discover_name(), parent=None
+        )
 
     return inner
+
+
+def namespace_callback():
+    ...
+
+
+def namespace(name: str):
+    return Command(callback=namespace_callback, name=name, parent=None)
