@@ -45,14 +45,33 @@ class Param(
     members=["argument_name", "type"],
 ):
     argument_name: str
+    """The cannonical name of the function's argument"""
     param_name: str
+    """The names used on the command line / for parsing"""
     short_name: str | None
+    """Optional single-character name alternabive for keyword params"""
     type: TypeInfo
+    """Information on the type of the argument"""
     default: T | MissingType | None
+    """Default value for this Param, will be used if no
+    other source provides a value. A value `MISSING` indicates
+    that the parameter is required. Otherwise, the parameter is optional"""
     description: str | None
+    """Documentation for this parameter. If none is provided explicitly,
+    it may also originate from the command's docstring"""
     envvar: str | None
+    """Optional Enviroment variable to pull the value from
+    if there is no value provided on the CLI"""
     prompt: str | None
+    """Optional input prompt text to pull the value from
+    stdin with when no valus is provided on the CLI"""
     action: Action
+    """argparse action associated with this param"""
+    expose: bool
+    """If a param is 'exposed' it will be passed to the command's callback.
+    If it's not 'exposed' then it will not be passed to the command's callback.
+    This is useful when the parameter's side effects are desired, but the value
+    doesn't matter. This is used to implment the `--version` and `--help` flags"""
 
     def __init__(
         self,
@@ -66,6 +85,7 @@ class Param(
         envvar: str | None = None,
         prompt: str | None = None,
         action: Action | None = None,
+        expose: bool = True,
     ):
         self.argument_name = argument_name
         self.param_name = param_name or argument_name
@@ -77,6 +97,7 @@ class Param(
         self.prompt = prompt
         self.action = action or Action.STORE
         self.type = TypeInfo.analyze(annotation)
+        self.expose = expose
 
         if self.type.is_union_type:
             for sub in self.type.sub_types:

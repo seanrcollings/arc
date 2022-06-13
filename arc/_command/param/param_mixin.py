@@ -1,4 +1,9 @@
 from functools import cached_property
+
+from arc.config import config
+
+from .param import Action, FlagParam
+from .param_group import ParamGroup
 from .param_builder import ParamBuilder
 
 
@@ -7,6 +12,45 @@ class ParamMixin:
     def param_groups(self):
         builder = ParamBuilder(self.callback)
         groups = builder.build()
+
+        default = ParamGroup.get_default_group(groups)
+        if config.version and self.parent is None:
+
+            def _version_callback(value, ctx, param):
+                print(config.version)
+                ctx.exit()
+
+            default.insert(
+                0,
+                FlagParam(
+                    "version",
+                    short_name="v",
+                    annotation=bool,
+                    description="Displays the version number",
+                    default=False,
+                    callback=_version_callback,
+                    action=Action.STORE_TRUE,
+                    expose=False,
+                ),
+            )
+
+        def _help_callback(value, ctx, param):
+            print("show help")
+            ctx.exit()
+
+        default.insert(
+            0,
+            FlagParam(
+                "help",
+                short_name="h",
+                annotation=bool,
+                description="Displays the help",
+                default=False,
+                callback=_help_callback,
+                action=Action.STORE_TRUE,
+                expose=False,
+            ),
+        )
 
         return groups
 

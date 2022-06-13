@@ -58,7 +58,8 @@ class ParamGroup(collections.UserList[Param]):
             value = param.process_parsed_result(res, ctx)
             if value is MISSING:
                 missing.append(param)
-            processed[param.argument_name] = value
+            if param.expose:
+                processed[param.argument_name] = value
 
         for sub in self.sub_groups:
             processed[sub.name], sub_missing = sub.process_parsed_result(res, ctx)
