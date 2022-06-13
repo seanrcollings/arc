@@ -47,15 +47,15 @@ class UsageError(ExternalError):
         return self.message
 
 
-class MissingArgError(UsageError):
+class MissingArgError(UsageError, ArgumentError):
     ...
 
 
-class UnrecognizedArgError(UsageError):
+class UnrecognizedArgError(UsageError, ArgumentError):
     ...
 
 
-class InvalidArgValue(UsageError):
+class InvalidArgValue(UsageError, ArgumentError):
     ...
 
 

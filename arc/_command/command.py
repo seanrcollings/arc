@@ -86,7 +86,7 @@ class Command(
             if config.transform_snake_case:
                 command_name = command_name.replace("_", "-")
 
-            command = Command(callback=callback, name=name, parent=self)
+            command = Command(callback=callback, name=command_name, parent=self)
             self.subcommands[command.name] = command
             return command
 
@@ -138,8 +138,6 @@ class Command(
 
 
 def command(name: str | None = None):
-    name = name or utils.discover_name()
-
     def inner(callback: at.CommandCallback):
         return Command(callback=callback, name=name, parent=None)
 

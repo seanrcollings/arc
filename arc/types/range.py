@@ -3,8 +3,7 @@ import math
 import typing as t
 from arc import errors
 
-if t.TYPE_CHECKING:
-    from arc.types.type_info import TypeInfo
+from arc.types.type_info import TypeInfo
 
 
 class Range(int):

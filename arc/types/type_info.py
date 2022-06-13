@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
+from functools import cached_property
 import typing as t
 from arc.types.aliases import Alias
 
@@ -15,7 +16,6 @@ class TypeInfo(t.Generic[T]):
     origin: type[T]
     sub_types: tuple[TypeInfo, ...]
     annotations: tuple[t.Any, ...]
-    resolved_type: type[at.TypeProtocol]
     _name: str | None = None
 
     @property
@@ -28,6 +28,11 @@ class TypeInfo(t.Generic[T]):
         )
 
     @property
+    def is_union_type(self) -> bool:
+        """The type is `Union[T...]`"""
+        return self.origin is t.Union
+
+    @property
     def is_optional_type(self) -> bool:
         """The type is `Optional[T]`"""
         return (
@@ -35,6 +40,10 @@ class TypeInfo(t.Generic[T]):
             and len(self.sub_types) == 2
             and self.sub_types[-1].original_type is type(None)
         )
+
+    @cached_property
+    def resolved_type(self):
+        return Alias.resolve(self.origin)
 
     @classmethod
     def analyze(cls, annotation) -> TypeInfo:
@@ -49,12 +58,10 @@ class TypeInfo(t.Generic[T]):
             annotated_args = args[1:]
 
         sub_types = tuple(cls.analyze(arg) for arg in t.get_args(annotation))
-        resolved = Alias.resolve(origin)
 
         return cls(
             original_type=original_type,
             origin=origin,
             sub_types=sub_types,
             annotations=annotated_args,
-            resolved_type=resolved,
         )

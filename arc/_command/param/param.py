@@ -48,7 +48,7 @@ class Param(
     param_name: str
     short_name: str | None
     type: TypeInfo
-    default: T | MissingType
+    default: T | MissingType | None
     description: str | None
     envvar: str | None
     prompt: str | None
@@ -70,13 +70,24 @@ class Param(
         self.argument_name = argument_name
         self.param_name = param_name or argument_name
         self.short_name = short_name
-        self.type = TypeInfo.analyze(annotation)
-        self.default = default if default is not None else MISSING
+        self.default = default
         self.description = description
         self.callback = callback
         self.envvar = envvar
         self.prompt = prompt
         self.action = action or Action.STORE
+        self.type = TypeInfo.analyze(annotation)
+
+        if self.type.is_union_type:
+            for sub in self.type.sub_types:
+                if utils.safe_issubclass(sub.origin, (set, tuple, list)):
+                    raise errors.ParamError(
+                        f"{self.type.original_type} is not a valid type. "
+                        f"lists, sets, and tuples cannot be members of a Union / Optional type"
+                    )
+
+        if self.type.is_optional_type and self.default is MISSING:
+            self.default = None
 
         if self.short_name and len(self.short_name) > 1:
             raise errors.ParamError(

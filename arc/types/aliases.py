@@ -26,6 +26,8 @@ from arc.prompt.prompts import select_prompt
 
 from arc.typing import Annotation, TypeProtocol
 
+from arc.types import type_info
+
 if t.TYPE_CHECKING:
     from arc.types.type_info import TypeInfo
     from arc.context import Context
@@ -255,9 +257,9 @@ class DictAlias(dict, Alias, of=dict):
                     f"Valid keys are: {Joiner.with_and(list(hints.keys()))}",
                 )
 
-            sub_type = Alias.resolve(hints[key])
+            sub_info = type_info.TypeInfo.analyze(hints[key])
             try:
-                elements[key] = convert(sub_type, value, info, ctx)
+                elements[key] = convert(sub_info.resolved_type, value, sub_info, ctx)
             except errors.ConversionError as e:
                 raise errors.ConversionError(
                     value, f"{value} is not a valid value for key {key}", e

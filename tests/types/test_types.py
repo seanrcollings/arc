@@ -23,15 +23,14 @@ def test_optional(cli: arc.Command):
     def non(val: Optional[int]):
         return val
 
-    @cli.subcommand()
-    def non2(val: Optional[list[int]]):
-        return val
-
     assert cli("non") == None
     assert cli("non 1") == 1
 
-    assert cli("non2") == None
-    assert cli("non2 1 2 3") == [1, 2, 3]
+    # @cli.subcommand()
+    # def non2(val: Optional[list[int]]):
+    #     return val
+    # assert cli("non2") == None
+    # assert cli("non2 1 2 3") == [1, 2, 3]
 
 
 @pytest.mark.parametrize(
@@ -267,12 +266,12 @@ class TestUnion:
         assert cli("un 1 2 3 4") == [1, 2, 3, 4]
         assert cli("un 1 string 2 string") == [1, "string", 2, "string"]
 
-        @cli.subcommand()
-        def un2(val: Union[list[int], list[str]]):
-            return val
+    def test_collections_not_allowed(self, cli):
+        with pytest.raises(errors.ParamError):
 
-        assert cli("un2 1,2,3,4") == [1, 2, 3, 4]
-        assert cli("un2 1,string,3,4") == ["1", "string", "3", "4"]
+            @cli.subcommand()
+            def un2(val: Union[list[int], list[str]]):
+                return val
 
 
 def test_literal(cli: arc.Command):
