@@ -83,7 +83,7 @@ class Command(
             command_name = name
             if not command_name:
                 command_name = callback.__name__
-            if config.transform_snake_case:
+            if config.transform_snake_case and not name:
                 command_name = command_name.replace("_", "-")
 
             command = Command(callback=callback, name=command_name, parent=self)
