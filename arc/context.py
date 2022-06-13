@@ -18,6 +18,7 @@ class Context:
     rest: list[str]
 
     config = config
+    state: dict[str, t.Any] = {}
 
     def __init__(
         self, command: _command.Command, parent: Context | None = None
@@ -41,6 +42,10 @@ class Context:
         Context.pop()
         if self._stack_count == 0:
             self.close()
+
+    @classmethod
+    def __depends__(self, ctx: Context):
+        return ctx
 
     @classmethod
     def push(cls, ctx: Context) -> None:
@@ -77,14 +82,17 @@ class Context:
         self._exit_stack.close()
 
     def run(self, args: list[str]):
-        parser = self.command.create_parser()
-        parsed, rest = parser.parse_known_intermixed_args(args)
-        if rest and not self.config.allow_unrecognized_args:
-            raise errors.UnrecognizedArgError(
-                f"Unrecognized arguments: {' '.join(rest)}", self
-            )
+        if args:
+            parser = self.command.create_parser()
+            parsed, rest = parser.parse_known_intermixed_args(args)
+            if rest and not self.config.allow_unrecognized_args:
+                raise errors.UnrecognizedArgError(
+                    f"Unrecognized arguments: {' '.join(rest)}", self
+                )
+            else:
+                self.rest = rest
         else:
-            self.rest = rest
+            parsed = {}
 
         processed, missing = self.command.process_parsed_result(parsed, self)
 
@@ -109,7 +117,6 @@ class Context:
 
         if isinstance(callback, _command.Command):
             ctx = self.create_child(callback)
-            # ctx.state = self.state | ctx.state
             cmd = callback
             callback = cmd.callback
 

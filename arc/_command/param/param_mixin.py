@@ -24,6 +24,6 @@ class ParamMixin:
 
     @property
     def injected_params(self):
-        for param in self.paramsz:
+        for param in self.params:
             if param.is_injected:
                 yield param

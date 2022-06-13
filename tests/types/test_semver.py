@@ -1,7 +1,7 @@
 import pytest
 from arc.types import SemVer
 
-from arc import CLI, errors
+import arc
 
 VERSIONS = [
     "1.0.0-alpha",
@@ -45,9 +45,9 @@ def test_bump_patch():
 
 
 @pytest.mark.parametrize("value", VERSIONS)
-def test_usage(cli: CLI, value):
-    @cli.command()
-    def v(version: SemVer):
+def test_usage(value):
+    @arc.command()
+    def command(version: SemVer):
         return version
 
-    assert cli(f"v {value}") == SemVer.parse(value)
+    assert command(value) == SemVer.parse(value)

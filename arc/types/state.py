@@ -9,7 +9,8 @@ class State(dict):
     """State object, extends `dict`"""
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({super().__repr__()})"
+        values = ", ".join(f"{key}={value}" for key, value in self.items())
+        return f"{self.__class__.__name__}({values})"
 
     def __getattr__(self, attr):
         try:
@@ -24,7 +25,7 @@ class State(dict):
         return type(self)(super().__or__(other))
 
     @classmethod
-    def __convert__(cls, _value, _info, ctx: Context):
+    def __depends__(cls, ctx: Context):
         # To account for State subclassing we create a new
         # State object with cls(), then set that, as the
         # context's state object

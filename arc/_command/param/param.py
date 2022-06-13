@@ -4,6 +4,7 @@ import enum
 from functools import cached_property
 import os
 import typing as t
+from unittest.mock import DEFAULT
 
 from arc import errors, utils
 from arc.color import colorize, effects, fg
@@ -29,6 +30,13 @@ class Action(enum.Enum):
     STORE_FALSE = "store_false"
     APPEND = "append"
     COUNT = "count"
+
+
+class ValueOrigin(enum.Enum):
+    CLI = "cli"
+    ENV = "env"
+    PROMPT = "prompt"
+    DEFAULT = "default"
 
 
 class Param(
@@ -133,21 +141,22 @@ class Param(
         ):
             return len(self.type.sub_types)
         elif utils.safe_issubclass(self.type.origin, (tuple, list, set)):
-            if self.default is MISSING:
-                return "+"
-
             return "*"
 
         return None
 
     def process_parsed_result(
         self, res: at.ParseResult, ctx: Context
-    ) -> t.Any | MissingType:
-        value = self.get_value(res, ctx)
+    ) -> T | MissingType:
+        value, origin = self.get_value(res, ctx)
 
-        value = self.convert(value, ctx)
+        if value not in (None, MISSING, True, False) and self.type.origin not in (
+            bool,
+            t.Any,
+        ):
+            value = self.convert(value, ctx)
 
-        if value is not MISSING and self.callback:
+        if self.callback and value is not MISSING and origin is not ValueOrigin.DEFAULT:
             value = self.callback(value, ctx, self) or value
 
         if iscontextmanager(value) and not value is ctx:
@@ -155,40 +164,42 @@ class Param(
 
         return value
 
-    def convert(self, value: t.Any, ctx: Context) -> T | MissingType:
-        if value not in NO_CONVERT and self.type.origin not in NO_CONVERT:
-            try:
-                return convert(aliases.Alias.resolve(self.type), value, self.type, ctx)
-            except errors.ConversionError as e:
-                message = (
-                    f"invalid value for {colorize(self.cli_name, fg.YELLOW)}: "
-                    f"{colorize(str(e), effects.BOLD)}"
-                )
-                if e.details:
-                    message += colorize(f" ({e.details})", fg.GREY)
-                raise errors.InvalidArgValue(message, ctx) from e
+    def convert(self, value: t.Any, ctx: Context) -> T:
+        try:
+            return convert(self.type.resolved_type, value, self.type, ctx)
+        except errors.ConversionError as e:
+            message = (
+                f"invalid value for {colorize(self.cli_name, fg.YELLOW)}: "
+                f"{colorize(str(e), effects.BOLD)}"
+            )
+            if e.details:
+                message += colorize(f" ({e.details})", fg.GREY)
+            raise errors.InvalidArgValue(message, ctx) from e
 
-        return MISSING
-
-    def get_value(self, res: at.ParseResult, ctx: Context) -> t.Any | MissingType:
-        value: t.Any = res.pop(self.param_name, MISSING)
+    def get_value(
+        self, res: at.ParseResult, ctx: Context
+    ) -> tuple[t.Any | MissingType, ValueOrigin]:
+        value: t.Any = res.pop(self.argument_name, MISSING)
+        origin = ValueOrigin.CLI
 
         if value is MISSING:
             if self.envvar and (env := self.get_env_value(ctx)):
                 value = env
+                origin = ValueOrigin.ENV
             elif self.prompt and (prompt := self.get_prompt_value(ctx)):
                 value = prompt
+                origin = ValueOrigin.PROMPT
             else:
                 value = self.default
+                origin = ValueOrigin.DEFAULT
 
-        return value
+        return (value, origin)
 
     def get_env_value(self, ctx: Context):
         return os.getenv(f"{ctx.config.env_prefix}{self.envvar}")
 
     def get_prompt_value(self, ctx: Context):
-        type_class: type[at.TypeProtocol] = aliases.Alias.resolve(self.type)
-        if hasattr(type_class, "__prompt__"):
+        if hasattr(self.type.resolved_type, "__prompt__"):
             return type_class.__prompt__(ctx, self)  # type: ignore
 
         return input_prompt(ctx, self)
@@ -205,12 +216,12 @@ class ArgumentParam(
     def is_argument(self):
         return True
 
-    @cached_property
-    def nargs(self):
-        return "?"
+    # @cached_property
+    # def nargs(self):
+    #     return "?"
 
     def get_param_names(self) -> list[str]:
-        return [self.param_name]
+        return [self.argument_name]
 
 
 class KeywordParam(Param[T]):

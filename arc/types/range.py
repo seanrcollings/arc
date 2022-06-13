@@ -1,8 +1,10 @@
+from __future__ import annotations
 import math
 import typing as t
 from arc import errors
-from arc.types.helpers import TypeInfo
-from arc.types.aliases import Alias
+
+if t.TYPE_CHECKING:
+    from arc.types.type_info import TypeInfo
 
 
 class Range(int):
@@ -45,7 +47,7 @@ class Range(int):
             )
 
         sub = TypeInfo.analyze(int)
-        num: int = Alias.resolve(sub).__convert__(value, sub, state)
+        num: int = sub.resolved_type.__convert__(value, sub, state)
         try:
             return Range(num, *info.annotations)
         except AssertionError as e:

@@ -40,12 +40,10 @@ class ComparisonValidator(t.Generic[T]):
 
     @classmethod
     def compare(cls, value: Comparable[T]):
-        if cls.less_than and value >= cls.less_than:
-            raise errors.ConversionError(value, f"must be less than {cls.less_than}")
-        if cls.greater_than and value <= cls.greater_than:
-            raise errors.ConversionError(
-                value, f"must be greater than {cls.greater_than}"
-            )
+        if cls.less_than is not None and (value >= cls.less_than):
+            raise ValueError(f"must be less than {cls.less_than}")
+        if cls.greater_than is not None and (value <= cls.greater_than):
+            raise ValueError(f"must be greater than {cls.greater_than}")
 
 
 class RegexValidator:
@@ -54,6 +52,4 @@ class RegexValidator:
     @classmethod
     def _match(cls, value: str):
         if cls.matches and not re.match(cls.matches, value):
-            raise errors.ConversionError(
-                value, f"does not follow required format: {cls.matches}"
-            )
+            raise ValueError(f"does not follow required format: {cls.matches}")

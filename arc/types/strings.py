@@ -18,13 +18,13 @@ class StrictStr(StrictType[str], RegexValidator, str):
         length = len(value)
 
         if cls.max_length and length > cls.max_length:
-            raise errors.ConversionError(value, f"maximum length is {cls.max_length}")
+            raise ValueError(f"maximum length is {cls.max_length}")
 
         if cls.min_length and length < cls.min_length:
-            raise errors.ConversionError(value, f"minimum length is {cls.min_length}")
+            raise ValueError(f"minimum length is {cls.min_length}")
 
         if cls.length and length != cls.length:
-            raise errors.ConversionError(value, f"must be {cls.length} characters long")
+            raise ValueError(f"must be {cls.length} characters long")
 
         cls._match(value)
 

@@ -22,11 +22,12 @@ from arc.types.helpers import (
     convert,
 )
 from arc.prompt.prompts import select_prompt
-from arc.types.type_info import TypeInfo
+
 
 from arc.typing import Annotation, TypeProtocol
 
 if t.TYPE_CHECKING:
+    from arc.types.type_info import TypeInfo
     from arc.context import Context
 
 
@@ -75,10 +76,8 @@ class Alias:
                 Alias.aliases[alias] = cls  # type: ignore
 
     @classmethod
-    def resolve(cls, annotation: t.Union[TypeInfo, type]) -> type[TypeProtocol]:
+    def resolve(cls, annotation: type) -> type[TypeProtocol]:
         """Handles resolving alias types"""
-        if isinstance(annotation, TypeInfo):
-            annotation = annotation.origin
 
         if safe_issubclass(annotation, TypeProtocol):
             return annotation
@@ -114,7 +113,10 @@ class StringAlias(Alias, str, of=str):
 
     @classmethod
     def convert(cls, value: str, info: TypeInfo[str]) -> str:
-        return info.origin(value)
+        try:
+            return info.origin(value)
+        except ValueError as e:
+            raise errors.ConversionError(value, str(e))
 
 
 class BytesAlias(bytes, Alias, of=bytes):
@@ -155,7 +157,7 @@ class _CollectionAlias(Alias):
     def g_convert(cls, value: str, typ: TypeInfo, ctx):
         lst = cls.convert(value)
         sub = typ.sub_types[0]
-        sub_type = Alias.resolve(sub)
+        sub_type = sub.resolved_type
 
         try:
             return cls.alias_for([sub_type.__convert__(v, sub, ctx) for v in lst])
@@ -195,7 +197,7 @@ class TupleAlias(tuple, _CollectionAlias, of=tuple):
             )
 
         return tuple(
-            convert(Alias.resolve(item_type), item, item_type, ctx)
+            convert(item_type.resolved_type, item, item_type, ctx)
             for item_type, item in zip(info.sub_types, tup)
         )
 
@@ -220,9 +222,9 @@ class DictAlias(dict, Alias, of=dict):
     def g_convert(cls, value, info: TypeInfo, ctx):
         dct: dict = cls.convert(value, info, ctx)
         key_sub = info.sub_types[0]
-        key_type = Alias.resolve(key_sub)
+        key_type = key_sub.resolved_type
         value_sub = info.sub_types[1]
-        value_type = Alias.resolve(value_sub)
+        value_type = value_sub.resolved_type
 
         try:
             return cls.alias_for(
@@ -266,15 +268,14 @@ class DictAlias(dict, Alias, of=dict):
 
 # Typing types ---------------------------------------------------------------------------------
 
-
+# TODO: improve error hanlding
 class UnionAlias(Alias, of=t.Union):
     @classmethod
     def g_convert(cls, value: t.Any, info: TypeInfo, ctx):
 
         for sub in info.sub_types:
             try:
-                type_cls = Alias.resolve(sub)
-                return convert(type_cls, value, sub, ctx)
+                return convert(sub.resolved_type, value, sub, ctx)
             except Exception:
                 ...
 

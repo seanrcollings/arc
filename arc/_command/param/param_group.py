@@ -2,7 +2,6 @@ from __future__ import annotations
 import typing as t
 import collections
 
-from py import process
 from arc.constants import MISSING
 
 import arc.typing as at
@@ -25,13 +24,13 @@ class ParamGroup(collections.UserList[Param]):
     def __repr__(self):
         return f"ParamGroup(name={self.name!r}, params={self.data!r})"
 
-    def all_params(self):
+    def all_params(self) -> t.Generator[Param, None, None]:
         """Generator that yields all params in itself, and in it's sub groups recursivley"""
+        yield from self.data
+
         if self.sub_groups:
             for sub in self.sub_groups:
                 yield from sub.all_params()
-
-        yield from self.data
 
     @property
     def is_default(self) -> bool:
@@ -94,5 +93,5 @@ class ParamGroup(collections.UserList[Param]):
             inst = args[self.name]
             for key, value in injected.items():
                 setattr(inst, key, value)
-
-        args.update(injected)
+        else:
+            args.update(injected)

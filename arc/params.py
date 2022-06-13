@@ -145,7 +145,6 @@ def Flag(
         default=default,
         description=description,
         callback=callback,
-        action=param.Action.STORE_FALSE if default else param.Action.STORE_TRUE,
     )
 
 

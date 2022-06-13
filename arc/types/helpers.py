@@ -4,12 +4,11 @@ from typing import (
     Any,
     TYPE_CHECKING,
 )
-import re
 
 from arc import utils
-from arc.types.type_info import TypeInfo
 
 if TYPE_CHECKING:
+    from arc.types.type_info import TypeInfo
     from arc.types.aliases import TypeProtocol
     from arc.context import Context
 

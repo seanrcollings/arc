@@ -1,7 +1,7 @@
-import os
 import pytest
 import pathlib
-from arc import CLI, errors
+import arc
+from arc import errors
 from arc.types import path
 
 
@@ -31,22 +31,25 @@ class TestImpl:
             path.DirectoryPath("tests/conftest.py")
 
     def test_strict(self):
-        DirectoryPath = path.strictpath(directory=True)
-        assert DirectoryPath("arc") == path.DirectoryPath("arc")
+        class InHomeDir(path.ValidPath):
+            valid = False
+            matches = rf"^{pathlib.Path.home()}.*"
 
-        InHomeDir = path.strictpath(matches=rf"^{pathlib.Path.home()}.+")
-        assert InHomeDir("arc") == pathlib.Path("arc")
+        assert (
+            InHomeDir(str(pathlib.Path.home() / "something"))
+            == pathlib.Path.home() / "something"
+        )
 
         with pytest.raises(ValueError):
             InHomeDir("/tmp")
 
 
-def test_usage(cli: CLI):
-    @cli.command()
+def test_usage():
+    @arc.command()
     def pa(path: path.ValidPath):
         return path
 
-    assert cli("pa arc") == path.ValidPath("arc")
+    assert pa("arc") == path.ValidPath("arc")
 
-    with pytest.raises(errors.InvalidParamaterError):
-        cli("pa doesnotexist")
+    with pytest.raises(errors.InvalidArgValue):
+        pa("doesnotexist")

@@ -122,7 +122,9 @@ class SemVer:
 
         return cmp(len(pr1), len(pr2))
 
-    def _cmp_prerelease_tag(self, a: t.Union[str, int], b: t.Union[str, int]):
+    def _cmp_prerelease_tag(
+        self, a: t.Union[str, int], b: t.Union[str, int]
+    ) -> at.CompareReturn:
         """Compares two prerelease tags given the following conditions:
         - Identifiers consisting of only digits are compared numerically.
         - Identifiers with letters or hyphens are compared lexically in ASCII sort order.

@@ -3,8 +3,9 @@ import typing as t
 import inspect
 
 from arc import errors, utils
+from arc.config import config
 from arc.constants import MISSING
-from .param import Param, FlagParam, ArgumentParam, OptionParam
+from .param import Action, InjectedParam, Param, FlagParam, ArgumentParam, OptionParam
 from .param_group import ParamGroup
 from arc.params import ParamInfo
 
@@ -52,6 +53,9 @@ class ParamBuilder:
         if annotation is param.empty:
             annotation = bool if info.param_cls is FlagParam else str
 
+        if config.transform_snake_case and not info.param_name:
+            info.param_name = param.name.replace("_", "-")
+
         return info.param_cls(
             argument_name=param.name,
             annotation=annotation,
@@ -69,6 +73,20 @@ class ParamBuilder:
                 default=param.default if param.default is not param.empty else MISSING,
             )
 
+        if param_cls is FlagParam and info.action is None:
+            if info.default is MISSING or not info.default:
+                info.action = Action.STORE_TRUE
+            else:
+                info.action = Action.STORE_FALSE
+
+        if hasattr(param.annotation, "__depends__"):
+            if param.default is not param.empty:
+                raise errors.ParamError(
+                    f"type {param.annotation} is a special type used for dependancy injection. "
+                    "As such, it cannot be provided with a default value or parameter value"
+                )
+            info.callback = param.annotation.__depends__
+
         # A default of false is always assumed with flags, so they
         # are always optional
         if info.default is MISSING and param_cls is FlagParam:
@@ -77,15 +95,16 @@ class ParamBuilder:
         return info
 
     def get_param_cls(self, param: inspect.Parameter) -> type[Param]:
-        if param.annotation is bool:
+        if hasattr(param.annotation, "__depends__"):
+            return InjectedParam
+
+        elif param.annotation is bool or isinstance(param.default, bool):
             return FlagParam
 
         elif param.kind is param.POSITIONAL_ONLY:
             raise errors.ParamError(
-                "Positional only arguments are not allowed as arc "
-                "passes all arguments by keyword internally "
-                "please remove the '/' from "
-                "your function definition",
+                "Positional only arguments are not allowed. "
+                "please remove the '/' from your function definition",
                 param,
             )
 

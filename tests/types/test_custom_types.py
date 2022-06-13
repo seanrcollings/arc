@@ -1,8 +1,9 @@
 import pytest
-from arc import CLI, errors
+import arc
+from arc import errors
 
 
-def test_convert(cli: CLI):
+def test_convert():
     class TestType:
         def __init__(self, value: str):
             self.value = value
@@ -11,39 +12,27 @@ def test_convert(cli: CLI):
         def __convert__(cls, value):
             return cls(value)
 
-    @cli.command()
+    @arc.command()
     def command(val: TestType):
         return val
 
-    res = cli("command 2")
+    res = command("2")
     assert isinstance(res, TestType)
     assert res.value == "2"
 
 
-def test_protocol_violation(cli: CLI):
+def test_protocol_violation():
     class NoConvert:
         ...
 
-    # class NonClassMethod:
-    #     def __convert__(self, value):
-    #         ...
+    with pytest.raises(errors.ParamError):
 
-    @cli.command()
-    def c1(val: NoConvert):
-        return val
-
-    # @cli.command()
-    # def c2(val: NonClassMethod):
-    #     return val
-
-    with pytest.raises(errors.ArgumentError):
-        cli("c1 2")
-
-    # with pytest.raises(errors.ArgumentError):
-    #     cli("c2 2")
+        @arc.command()
+        def c1(val: NoConvert):
+            return val
 
 
-def test_cleanup(cli: CLI):
+def test_cleanup():
     class CleanupError(Exception):
         ...
 
@@ -62,9 +51,9 @@ def test_cleanup(cli: CLI):
             assert self.value == "2"
             raise CleanupError()
 
-    @cli.command()
+    @arc.command()
     def c(val: TestType):
         return val
 
     with pytest.raises(CleanupError):
-        cli("c 2")
+        c("2")

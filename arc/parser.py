@@ -20,9 +20,15 @@ class Parser(argparse.ArgumentParser):
         return (dict(parsed._get_kwargs()), rest)
 
     def add_param(self, param: Param):
-        kwargs: dict[str, t.Any] = {"action": param.action.value, "default": MISSING}
+        kwargs: dict[str, t.Any] = {
+            "action": param.action.value,
+            "default": MISSING,
+        }
 
         if param.action is Action.STORE:
             kwargs["nargs"] = param.nargs
+
+        if not param.is_argument:
+            kwargs["dest"] = param.argument_name
 
         self.add_argument(*param.get_param_names(), **kwargs)

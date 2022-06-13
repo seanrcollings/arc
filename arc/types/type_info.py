@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 import typing as t
+from arc.types.aliases import Alias
 
 import arc.typing as at
 
@@ -14,6 +15,7 @@ class TypeInfo(t.Generic[T]):
     origin: type[T]
     sub_types: tuple[TypeInfo, ...]
     annotations: tuple[t.Any, ...]
+    resolved_type: type[at.TypeProtocol]
     _name: str | None = None
 
     @property
@@ -47,10 +49,12 @@ class TypeInfo(t.Generic[T]):
             annotated_args = args[1:]
 
         sub_types = tuple(cls.analyze(arg) for arg in t.get_args(annotation))
+        resolved = Alias.resolve(origin)
 
         return cls(
             original_type=original_type,
             origin=origin,
             sub_types=sub_types,
             annotations=annotated_args,
+            resolved_type=resolved,
         )

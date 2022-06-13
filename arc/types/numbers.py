@@ -30,7 +30,10 @@ class StrictInt(StrictType[int], ComparisonValidator[int], RegexValidator, int):
     @classmethod
     def validate(cls, value) -> int:
         cls._match(value)
-        value = int(value, base=cls.base)
+        if isinstance(value, str):
+            value = int(value, base=cls.base)
+        else:
+            value = int(value)
         cls.compare(value)
 
         return value
@@ -39,13 +42,22 @@ class StrictInt(StrictType[int], ComparisonValidator[int], RegexValidator, int):
 class Binary(StrictInt):
     base = 2
 
+    def __str__(self):
+        return bin(self)
+
 
 class Oct(StrictInt):
     base = 8
 
+    def __str__(self):
+        return oct(self)
+
 
 class Hex(StrictInt):
     base = 16
+
+    def __str__(self):
+        return hex(self)
 
 
 class PositiveInt(StrictInt):
@@ -68,8 +80,8 @@ class StrictFloat(StrictType[float], ComparisonValidator[float], float):
     precision: t.ClassVar[int | None] = None
 
     @classmethod
-    def validate(cls, value: str) -> float:
-        _natural, fractional = value.split(".")
+    def validate(cls, value: str | float) -> float:
+        _natural, fractional = str(float(value)).split(".")
 
         if cls.min_precision and cls.min_precision > len(fractional):
             raise errors.ConversionError(

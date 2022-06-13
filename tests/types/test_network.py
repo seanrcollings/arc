@@ -1,8 +1,8 @@
 import pytest
 import ipaddress
 
+import arc
 from arc.types import network
-from arc import CLI
 
 
 IPV4 = [
@@ -28,32 +28,32 @@ IPV6 = [
 
 class TestAddresses:
     @pytest.mark.parametrize("value", IPV4)
-    def test_ipv4_success(self, cli: CLI, value):
-        @cli.command()
-        def ipv4(address: ipaddress.IPv4Address):
+    def test_ipv4_success(self, value):
+        @arc.command()
+        def command(address: ipaddress.IPv4Address):
             return address
 
-        assert cli(f"ipv4 {value}") == ipaddress.IPv4Address(value)
+        assert command(str(value)) == ipaddress.IPv4Address(value)
 
     @pytest.mark.parametrize("value", IPV6)
-    def test_ipv6(self, cli: CLI, value):
-        @cli.command()
-        def ipv6(address: ipaddress.IPv6Address):
+    def test_ipv6(self, value):
+        @arc.command()
+        def command(address: ipaddress.IPv6Address):
             return address
 
-        assert cli(f"ipv6 {value}") == ipaddress.IPv6Address(value)
+        assert command(str(value)) == ipaddress.IPv6Address(value)
 
     @pytest.mark.parametrize(
         "value,cls",
         [(ip, ipaddress.IPv4Address) for ip in IPV4]
         + [(ip, ipaddress.IPv6Address) for ip in IPV6],  # type: ignore
     )
-    def test_ip(self, cli: CLI, value, cls):
-        @cli.command()
-        def ip(address: network.IPAddress):
+    def test_ip(self, value, cls):
+        @arc.command()
+        def command(address: network.IPAddress):
             return address
 
-        assert cli(f"ip {value}") == cls(value)
+        assert command(str(value)) == cls(value)
 
 
 # From: https://github.com/samuelcolvin/pydantic/blob/master/tests/test_networks.py
@@ -138,14 +138,18 @@ class TestUrl:
                 == "https://example.com"
             )
 
-            NoStrip = network.stricturl(strip_whitespace=False)
+            class NoStrip(network.Url):
+                strip_whitespace = False
+
             assert (
                 NoStrip.parse("    https://example.com    ")
                 == "    https://example.com    "
             )
 
         def test_user_required(self):
-            UserRequired = network.stricturl(user_required=True)
+            class UserRequired(network.Url):
+                user_required = True
+
             assert (
                 UserRequired.parse("https://name@example.com")
                 == "https://name@example.com"
@@ -155,7 +159,9 @@ class TestUrl:
                 UserRequired.parse("https://example.com")
 
         def test_host_required(self):
-            HostRequired = network.stricturl(host_required=True)
+            class HostRequired(network.Url):
+                host_required = True
+
             assert HostRequired.parse("https://example.com") == "https://example.com"
 
             with pytest.raises(ValueError):
@@ -163,25 +169,25 @@ class TestUrl:
 
     class TestUsage:
         @pytest.mark.parametrize("value", URLS)
-        def test_url(self, cli: CLI, value):
-            @cli.command()
-            def url(url: network.Url):
+        def test_url(self, value):
+            @arc.command()
+            def command(url: network.Url):
                 return url
 
-            assert cli(f"url {value}") == value
+            assert command(value) == value
 
         @pytest.mark.parametrize("value", HTTP_URLS)
-        def test_http_url(self, cli: CLI, value):
-            @cli.command()
-            def url(url: network.HttpUrl):
+        def test_http_url(self, value):
+            @arc.command()
+            def command(url: network.HttpUrl):
                 return url
 
-            assert cli(f"url {value}") == value
+            assert command(value) == value
 
         @pytest.mark.parametrize("value", POSTGRES_URLS)
-        def test_psql_url(self, cli: CLI, value):
-            @cli.command()
-            def url(url: network.PostgresUrl):
+        def test_psql_url(self, value):
+            @arc.command()
+            def command(url: network.PostgresUrl):
                 return url
 
-            assert cli(f"url {value}") == value
+            assert command(value) == value
