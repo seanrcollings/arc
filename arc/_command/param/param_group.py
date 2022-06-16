@@ -3,7 +3,7 @@ import typing as t
 import collections
 
 from arc.constants import MISSING
-
+from arc import errors
 import arc.typing as at
 from .param import Param
 
@@ -37,12 +37,12 @@ class ParamGroup(collections.UserList[Param]):
         return self.name == self.DEFAULT
 
     @classmethod
-    def get_default_group(cls, groups: list[ParamGroup]) -> ParamGroup | None:
+    def get_default_group(cls, groups: list[ParamGroup]) -> ParamGroup:
         for group in groups:
             if group.is_default:
                 return group
 
-        return None
+        raise errors.InternalError("No default param group found")
 
     def process_parsed_result(
         self, res: at.ParseResult, ctx: Context

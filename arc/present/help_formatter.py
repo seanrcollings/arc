@@ -1,170 +1,204 @@
-# from __future__ import annotations
+from __future__ import annotations
 
-# import typing as t
-# import textwrap
-# from arc import constants, logging
-# from arc.color import colored, colorize, fg, effects
-# from arc.config import config
-# from arc.context import Context
-# from arc._command.param import Param
-# from arc.utils import ansi_len
-# from arc.present.formatters import TextFormatter
+import typing as t
+import textwrap
 
-# if t.TYPE_CHECKING:
-#     from arc._command.command import Command
+from arc.color import colored, colorize, fg, effects
+from arc.config import config
+from arc.context import Context
+from arc.present.text import Span, Text
+from arc.utils import ansi_len
+from arc.present.formatters import TextFormatter
 
-
-# logger = logging.getArcLogger("cdoc")
-
-
-# def paragraphize(string: str) -> list[str]:
-#     return [textwrap.dedent(para).strip("\n") for para in string.split("\n\n")]
+if t.TYPE_CHECKING:
+    from arc._command.param import Param
+    from arc._command.documentation import Documentation, ParamDoc
+    from arc._command.command import Command
 
 
-# class HelpFormatter(TextFormatter):
-#     _longest_intro: int = 0
+def paragraphize(string: str) -> list[str]:
+    return [textwrap.dedent(para).strip("\n") for para in string.split("\n\n")]
 
-#     def write_help(self, command: Command, ctx: Context):
-#         self.write_usage(command, ctx)
 
-#         if command.description:
-#             with self.section(config.default_section_name.upper()):
-#                 self.write_text(paragraphize(command.description))
+class HelpFormatter(TextFormatter):
+    _longest_intro: int = 0
 
-#         command.update_param_descriptions()
+    def __init__(self, doc: Documentation, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.doc = doc
+        self.command = self.doc.command
 
-#         self.write_params("ARGUMENTS", command.pos_params)
-#         self.write_params("OPTIONS", command.key_params)
+    @property
+    def argument_params(self):
+        return [param for param in self.doc.params if param["kind"] == "argument"]
 
-#         for section, body in command.parsed_docstring.items():
-#             if section in {"arguments", config.default_section_name}:
-#                 continue
+    @property
+    def key_params(self):
+        return [param for param in self.doc.params if param["kind"] != "argument"]
 
-#             with self.section(section):
-#                 self.write_text(paragraphize(body))
+    def write_help(self):
+        doc = self.doc
+        self.write_usage()
 
-#         self.write_subcommands(command, command.subcommands.values())
+        if doc.description:
+            with self.section(config.default_section_name.upper()):
+                self.write_text(paragraphize(doc.description))
 
-#     def write_heading(self, heading: str):
-#         super().write_heading(colorize(heading.upper(), effects.BOLD))
+        args = self.get_params(self.argument_params)
+        options = self.get_params(self.key_params)
+        subcommands = self.get_subcommands(
+            self.command, self.command.subcommands.values()
+        )
 
-#     def write_usage(self, command: Command, ctx: Context):
-#         from arc.cli import CLI
+        longest = max(map(len, (v[0] for v in args + options + subcommands))) + 2
 
-#         with self.section("USAGE"):
-#             if command.is_namespace():
-#                 command_str = f"{command.name}{constants.NAMESPACE_SEP}<subcommand>"
-#                 self.write_text(
-#                     colored(
-#                         f"{colorize(ctx.root.command.name, config.brand_color)} "
-#                         f"{colorize(command_str, effects.UNDERLINE)} [ARGUMENTS ...]",
-#                     )
-#                 )
-#             elif isinstance(command, CLI):
-#                 self.write_text(
-#                     colored(
-#                         f"{colorize(ctx.root.command.name, config.brand_color)} [OPTIONS] "
-#                         f"{colorize('<command>', effects.UNDERLINE)} [ARGUMENTS ...]",
-#                     )
-#                 )
-#             else:
-#                 command_str = ctx.fullname
-#                 params_str = self._param_str(command)
+        if args:
+            self.write_section("ARGUMENTS", args, longest)
+        if options:
+            self.write_section("OPTIONS", options, longest)
+        if subcommands:
+            self.write_section("SUBCOMMANDS", subcommands, longest)
 
-#                 if ctx.command is ctx.root.command:
-#                     self.write_text(
-#                         colored(
-#                             f"{colorize(command_str, config.brand_color)} {params_str}"
-#                         )
-#                     )
-#                 else:
-#                     self.write_text(
-#                         colored(
-#                             f"{colorize(ctx.root.command.name, config.brand_color)} "
-#                             f"{colorize(command_str, effects.UNDERLINE)} {params_str}"
-#                         )
-#                     )
+        for section, body in doc.docstring.items():
+            if section in {"arguments", config.default_section_name}:
+                continue
 
-#     def _param_str(self, command: Command):
-#         params = []
-#         for param in sorted(
-#             command.key_params,
-#             key=lambda p: not p.optional,
-#         ):
-#             params.append(format(param, "usage"))
+            with self.section(section):
+                self.write_text(paragraphize(body))
 
-#         if len(params) > 0 and len(command.pos_params) > 0:
-#             params.append("[" + constants.FLAG_PREFIX + "]")
+    def write_heading(self, heading: str):
+        super().write_heading(colorize(heading.upper(), effects.BOLD))
 
-#         for param in command.pos_params:
-#             params.append(format(param, "usage"))
+    def write_usage(self):
+        command = self.command
 
-#         return " ".join(params)
+        with self.section("USAGE"):
+            if command.is_namespace:
+                command_str = f"{command.name} <subcommand>"
+                self.write_text(
+                    colored(
+                        f"{colorize(command.root.name, config.brand_color)} "
+                        f"{colorize(command_str, effects.UNDERLINE)} [ARGUMENTS ...]",
+                    )
+                )
+            elif command.is_root:
+                params_str = self.usage_params()
+                self.write_text(
+                    colored(
+                        f"{colorize(command.root.name, config.brand_color)} {params_str}"
+                    )
+                )
+                if self.doc.command.subcommands:
+                    self.write_paragraph()
+                    self.write_text(
+                        colored(
+                            f"{colorize(command.root.name, config.brand_color)} [OPTIONS] "
+                            f"{colorize('<subcommand>', effects.UNDERLINE)} [ARGUMENTS ...]",
+                        )
+                    )
+            else:
+                fullname = command.fullname
+                path = " ".join(fullname[0:-1])
+                name = fullname[-1]
+                params_str = self.usage_params()
 
-#     def write_params(self, section: str, params: t.Collection[Param]):
-#         data = [
-#             (
-#                 format(param, "arguments"),
-#                 textwrap.dedent(param.description or "").strip("\n"),
-#             )
-#             for param in params
-#         ]
-#         if not data:
-#             return
+                self.write_text(
+                    colored(
+                        f"{colorize(command.root.name, config.brand_color)} "
+                        f"{path} {colorize(name, effects.UNDERLINE)} {params_str}"
+                    )
+                )
 
-#         # The length of the longest argument name
-#         longest = ansi_len(max(data, key=lambda v: ansi_len(v[0]))[0]) + 2
-#         self._longest_intro = longest
+                if self.doc.command.subcommands:
+                    self.write_paragraph()
+                    self.write_text(
+                        colored(
+                            f"{colorize(command.root.name, config.brand_color)} {path} {name} "
+                            f"{colorize('<subcommand>', effects.UNDERLINE)} [ARGUMENTS ...]",
+                        )
+                    )
 
-#         with self.section(section):
-#             for name, desc in data:
+    def usage_params(self):
+        formatted = []
+        for param in sorted(
+            self.key_params,
+            key=lambda p: not p["optional"],
+        ):
+            if param["kind"] == "argument":
+                continue
 
-#                 self.write(
-#                     self.wrap_text(
-#                         f"{name:<{longest}}{desc or ''}",
-#                         width=self.width,
-#                         initial_indent=" " * self.current_indent,
-#                         subsequent_indent=(" " * self.current_indent) + (" " * longest),
-#                     )
-#                 )
-#                 self.write_paragraph()
+            formatted.append(self.format_single_param(param))
 
-#         # Quick fix for added empty line from self.section()
-#         self._buffer.pop()
+        if len(formatted) > 0 and len(self.argument_params) > 0:
+            formatted.append("[--]")
 
-#     def write_subcommands(self, parent: Command, commands: t.Collection[Command]):
-#         data = []
-#         for command in commands:
-#             name = colored(colorize(command.name, config.brand_color))
-#             desc = command.short_description
-#             aliases = tuple(
-#                 alias
-#                 for alias, name in parent.subcommand_aliases.items()
-#                 if name == command.name
-#             )
-#             if aliases:
-#                 name = colored(
-#                     name + colorize(" (" + ", ".join(aliases) + ")", fg.GREY)
-#                 )
+        for param in self.argument_params:
+            if param["kind"] == "argument":
+                formatted.append(self.format_single_param(param))
 
-#             data.append((name, desc))
+        return " ".join(formatted)
 
-#         if not data:
-#             return
+    def format_single_param(self, param: ParamDoc):
+        name = ""
+        if param["kind"] == "argument":
+            name = param["name"]
+        else:
+            if param["short_name"] is not None:
+                name = f"-{param['short_name']}"
+            else:
+                name = f"--{param['name']}"
 
-#         longest = ansi_len(max(data, key=lambda v: ansi_len(v[0]))[0]) + 2
-#         longest = max(self._longest_intro, longest)
+            if param["kind"] == "option":
+                name += " <...>"
 
-#         with self.section("SUBCOMMANDs"):
-#             for name, desc in data:
-#                 self.write(
-#                     self.wrap_text(
-#                         f"{name:<{longest}}{desc or ''}",
-#                         width=self.width,
-#                         initial_indent=" " * self.current_indent,
-#                         subsequent_indent=(" " * self.current_indent) + (" " * longest),
-#                     )
-#                 )
-#                 self.write_paragraph()
+        if param["optional"]:
+            name = f"[{name}]"
 
-#         self._buffer.pop()
+        return name
+
+    def get_params(self, params: t.Collection[ParamDoc]):
+        data = []
+        for param in params:
+            name: Text = Text()
+            if param["kind"] == "argument":
+                name = Text(Span(param["name"], config.brand_color))
+            else:
+                name = Text(Span(f"--{param['name']}", config.brand_color))
+                if param["short_name"]:
+                    name += Span(f" (-{param['short_name']})", fg.GREY)
+
+            data.append((name, textwrap.dedent(param["description"] or "").strip("\n")))
+
+        return data
+
+    def get_subcommands(self, parent: Command, commands: t.Collection[Command]):
+        data = []
+        for command in commands:
+            name = Text(Span(command.name, config.brand_color))
+            desc = command.doc.short_description or ""
+            aliases = parent.subcommands.aliases_for(command.name)
+            if aliases:
+                name += Span(" (" + ", ".join(aliases) + ")", fg.GREY)
+
+            data.append((name, desc))
+
+        return data
+
+    def write_section(self, section: str, data: list[tuple[Text, str]], longest: int):
+        with self.section(section):
+            for name, desc in data:
+                fullname = name.spans[0]
+                diff = longest - len(fullname)
+
+                self.write(
+                    self.wrap_text(
+                        f"{name:colored|,<{diff}}{desc}",
+                        width=self.width,
+                        initial_indent=" " * self.current_indent,
+                        subsequent_indent=(" " * self.current_indent) + (" " * longest),
+                    )
+                )
+                self.write_paragraph()
+
+        # Quick fix for added empty line from self.section()
+        self._buffer.pop()

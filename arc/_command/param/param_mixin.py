@@ -1,3 +1,5 @@
+from __future__ import annotations
+import typing as t
 from functools import cached_property
 
 from arc.config import config
@@ -8,8 +10,11 @@ from .param_builder import ParamBuilder
 
 
 class ParamMixin:
+    callback: t.Callable
+    parent: t.Any
+
     @cached_property
-    def param_groups(self):
+    def param_groups(self) -> list[ParamGroup]:
         builder = ParamBuilder(self.callback)
         groups = builder.build()
 
@@ -35,7 +40,7 @@ class ParamMixin:
             )
 
         def _help_callback(value, ctx, param):
-            print("show help")
+            print(ctx.command.doc.help())
             ctx.exit()
 
         default.insert(
@@ -64,6 +69,30 @@ class ParamMixin:
         """All params that are available on the command line"""
         for param in self.params:
             if not param.is_injected:
+                yield param
+
+    @property
+    def argument_params(self):
+        for param in self.params:
+            if param.is_argument:
+                yield param
+
+    @property
+    def key_params(self):
+        for param in self.params:
+            if param.is_keyword:
+                yield param
+
+    @property
+    def option_params(self):
+        for param in self.params:
+            if param.is_option:
+                yield param
+
+    @property
+    def flag_params(self):
+        for param in self.params:
+            if param.is_flag:
                 yield param
 
     @property

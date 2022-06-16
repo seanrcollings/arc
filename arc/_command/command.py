@@ -5,6 +5,7 @@ import typing as t
 import shlex
 
 from arc import utils
+from arc._command.documentation import Documentation
 from arc.config import config
 from arc.parser import Parser
 from .param import ParamMixin
@@ -38,12 +39,15 @@ class SubcommandsDict(dict[K, V]):
     def __contains__(self, key: object):
         return super().__contains__(key) or key in self.aliases
 
-    def add_alias(self, key, alias):
+    def add_alias(self, key: K, alias: K):
         self.aliases[alias] = key
 
-    def add_aliases(self, key, *aliases):
+    def add_aliases(self, key: K, *aliases: K):
         for alias in aliases:
             self.add_alias(key, alias)
+
+    def aliases_for(self, key: K) -> list[K]:
+        return [alias for alias, val in self.aliases.items() if val == key]
 
 
 class Command(
@@ -53,7 +57,7 @@ class Command(
 ):
     parent: Command | None
     name: str
-    description: str | None
+    _description: str | None
     subcommands: SubcommandsDict[str, Command]
     param_groups: list[ParamGroup]
     callback: at.CommandCallback
@@ -67,14 +71,15 @@ class Command(
     ):
         self.callback = callback
         self.name = name
-        self.description = description
         self.parent = parent
         self.subcommands = SubcommandsDict()
+        self.doc = Documentation(self, description)
 
         if config.environment == "development":
             self.param_groups
 
     def __call__(self, input_args: at.InputArgs = None, state: dict = None):
+        self.name = self.name or utils.discover_name()
         args = self.get_args(input_args)
 
         if state:
@@ -93,6 +98,28 @@ class Command(
     @property
     def is_namespace(self):
         self.callback is namespace_callback
+
+    @property
+    def is_root(self):
+        return self.parent is None
+
+    @property
+    def root(self):
+        command = self
+        while command.parent:
+            command = command.parent
+
+        return command
+
+    @property
+    def fullname(self):
+        names = []
+        command = self
+        while command.parent:
+            names.append(command.name)
+            command = command.parent
+
+        return list(reversed(names))
 
     # Subcommands ----------------------------------------------------------------
 

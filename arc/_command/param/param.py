@@ -248,9 +248,9 @@ class ArgumentParam(
     def is_argument(self):
         return True
 
-    # @cached_property
-    # def nargs(self):
-    #     return "?"
+    @cached_property
+    def nargs(self):
+        return "?"
 
     def get_param_names(self) -> list[str]:
         return [self.argument_name]
