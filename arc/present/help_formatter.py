@@ -3,15 +3,12 @@ from __future__ import annotations
 import typing as t
 import textwrap
 
-from arc.color import colored, colorize, fg, effects
+from arc.color import colorize, fg, effects
 from arc.config import config
-from arc.context import Context
-from arc.present.text import Span, Text
 from arc.utils import ansi_len
 from arc.present.formatters import TextFormatter
 
 if t.TYPE_CHECKING:
-    from arc._command.param import Param
     from arc._command.documentation import Documentation, ParamDoc
     from arc._command.command import Command
 
@@ -50,7 +47,7 @@ class HelpFormatter(TextFormatter):
             self.command, self.command.subcommands.values()
         )
 
-        longest = max(map(len, (v[0] for v in args + options + subcommands))) + 2
+        longest = max(map(ansi_len, (v[0] for v in args + options + subcommands))) + 2
 
         if args:
             self.write_section("ARGUMENTS", args, longest)
@@ -76,25 +73,19 @@ class HelpFormatter(TextFormatter):
             if command.is_namespace:
                 command_str = f"{command.name} <subcommand>"
                 self.write_text(
-                    colored(
-                        f"{colorize(command.root.name, config.brand_color)} "
-                        f"{colorize(command_str, effects.UNDERLINE)} [ARGUMENTS ...]",
-                    )
+                    f"{colorize(command.root.name, config.brand_color)} "
+                    f"{colorize(command_str, effects.UNDERLINE)} [ARGUMENTS ...]",
                 )
             elif command.is_root:
                 params_str = self.usage_params()
                 self.write_text(
-                    colored(
-                        f"{colorize(command.root.name, config.brand_color)} {params_str}"
-                    )
+                    f"{colorize(command.root.name, config.brand_color)} {params_str}"
                 )
                 if self.doc.command.subcommands:
                     self.write_paragraph()
                     self.write_text(
-                        colored(
-                            f"{colorize(command.root.name, config.brand_color)} [OPTIONS] "
-                            f"{colorize('<subcommand>', effects.UNDERLINE)} [ARGUMENTS ...]",
-                        )
+                        f"{colorize(command.root.name, config.brand_color)} [OPTIONS] "
+                        f"{colorize('<subcommand>', effects.UNDERLINE)} [ARGUMENTS ...]",
                     )
             else:
                 fullname = command.fullname
@@ -103,19 +94,15 @@ class HelpFormatter(TextFormatter):
                 params_str = self.usage_params()
 
                 self.write_text(
-                    colored(
-                        f"{colorize(command.root.name, config.brand_color)} "
-                        f"{path} {colorize(name, effects.UNDERLINE)} {params_str}"
-                    )
+                    f"{colorize(command.root.name, config.brand_color)} "
+                    f"{path} {colorize(name, effects.UNDERLINE)} {params_str}"
                 )
 
                 if self.doc.command.subcommands:
                     self.write_paragraph()
                     self.write_text(
-                        colored(
-                            f"{colorize(command.root.name, config.brand_color)} {path} {name} "
-                            f"{colorize('<subcommand>', effects.UNDERLINE)} [ARGUMENTS ...]",
-                        )
+                        f"{colorize(command.root.name, config.brand_color)} {path} {name} "
+                        f"{colorize('<subcommand>', effects.UNDERLINE)} [ARGUMENTS ...]",
                     )
 
     def usage_params(self):
@@ -159,13 +146,13 @@ class HelpFormatter(TextFormatter):
     def get_params(self, params: t.Collection[ParamDoc]):
         data = []
         for param in params:
-            name: Text = Text()
+            name: str = ""
             if param["kind"] == "argument":
-                name = Text(Span(param["name"], config.brand_color))
+                name = colorize(param["name"], config.brand_color)
             else:
-                name = Text(Span(f"--{param['name']}", config.brand_color))
+                name = colorize(f"--{param['name']}", config.brand_color)
                 if param["short_name"]:
-                    name += Span(f" (-{param['short_name']})", fg.GREY)
+                    name += colorize(f" (-{param['short_name']})", fg.GREY)
 
             data.append((name, textwrap.dedent(param["description"] or "").strip("\n")))
 
@@ -174,25 +161,24 @@ class HelpFormatter(TextFormatter):
     def get_subcommands(self, parent: Command, commands: t.Collection[Command]):
         data = []
         for command in commands:
-            name = Text(Span(command.name, config.brand_color))
+            name = colorize(command.name, config.brand_color)
             desc = command.doc.short_description or ""
             aliases = parent.subcommands.aliases_for(command.name)
             if aliases:
-                name += Span(" (" + ", ".join(aliases) + ")", fg.GREY)
+                name += colorize(" (" + ", ".join(aliases) + ")", fg.GREY)
 
             data.append((name, desc))
 
         return data
 
-    def write_section(self, section: str, data: list[tuple[Text, str]], longest: int):
+    def write_section(self, section: str, data: list[tuple[str, str]], longest: int):
         with self.section(section):
             for name, desc in data:
-                fullname = name.spans[0]
-                diff = longest - len(fullname)
+                diff = longest - ansi_len(name)
 
                 self.write(
                     self.wrap_text(
-                        f"{name:colored|,<{diff}}{desc}",
+                        f"{name}{' ' * diff}{desc}",
                         width=self.width,
                         initial_indent=" " * self.current_indent,
                         subsequent_indent=(" " * self.current_indent) + (" " * longest),

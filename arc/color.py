@@ -117,24 +117,6 @@ class effects:
 # fmt: on
 
 
-class colored(str):
-    """`str` subclass that does not consider escape
-    characters in things like length and formatting"""
-
-    @cached_property
-    def _cleaned(self):
-        from arc import utils
-
-        return utils.ansi_clean(self)
-
-    def __format__(self, spec: str):
-        formatted = format(self._cleaned, spec)
-        return formatted.replace(self._cleaned, self)
-
-    def split(self, *args, **kwargs):
-        return [colored(s) for s in super().split(*args, **kwargs)]
-
-
 def colorize(string: str, *codes: str, clear: bool = True):
     """Applies colors / effects to an entire string
 

@@ -4,7 +4,6 @@ from contextlib import contextmanager
 import textwrap
 import typing as t
 
-from arc.color import colorize, colored
 from arc.utils import ansi_len
 
 DEFAULT_MAX_WIDTH = 80
@@ -39,10 +38,6 @@ class TextFormatter:
     def dedent(self):
         """Dedents text by `indent_increment`"""
         self.current_indent -= self.indent_increment
-
-    def style(self, string: str, *styles):
-        """Styles a given string with `*styles`"""
-        return colored(colorize(string, *styles))
 
     def write(self, string: str):
         self._buffer.append(string)

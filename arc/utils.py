@@ -105,6 +105,16 @@ def ansi_clean(string: str):
     return ansi_escape.sub("", string)
 
 
-@functools.cache
 def ansi_len(string: str):
-    return len(ansi_clean(string))
+    length = 0
+    in_escape_code = False
+
+    for char in string:
+        if in_escape_code and char == "m":
+            in_escape_code = False
+        elif char == "\x1b" or in_escape_code:
+            in_escape_code = True
+        else:
+            length += 1
+
+    return length
