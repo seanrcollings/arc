@@ -4,7 +4,7 @@ import sys
 import typing as t
 import shlex
 
-from arc import utils
+from arc import errors, utils
 from arc._command.documentation import Documentation
 from arc.color import colorize, fg
 from arc.config import config
@@ -87,6 +87,12 @@ class Command(
             self.name = utils.discover_name()
         args = self.get_args(input_args)
 
+        if self.is_root and len(list(self.argument_params)) != 0:
+            raise errors.CommandError(
+                "Top-level command with subcommands cannot "
+                "have argument / positional parameters"
+            )
+
         if state:
             Context._state = state
 
@@ -127,8 +133,7 @@ class Command(
                 description=description,
                 parent=self,
             )
-            self.subcommands[command.name] = command
-            self.subcommands.add_aliases(command_name, *aliases)
+            self.add_command(command, aliases)
             return command
 
         return inner
