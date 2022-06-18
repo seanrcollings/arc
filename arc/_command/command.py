@@ -71,13 +71,14 @@ class Command(
         name: str | None = None,
         description: str | None = None,
         parent: Command | None = None,
+        explicit_name: bool = True,
     ):
         self.callback = callback
         self.name = name or callback.__name__
         self.parent = parent
         self.subcommands = SubcommandsDict()
         self.doc = Documentation(self, description)
-        self.explicit_name = bool(name)
+        self.explicit_name = explicit_name
 
         if config.environment == "development":
             self.param_groups
@@ -245,6 +246,7 @@ def command(name: str | None = None, description: str | None = None):
             name=Command.get_command_name(callback, name)[0],
             description=description,
             parent=None,
+            explicit_name=bool(name),
         )
 
     return inner
