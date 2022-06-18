@@ -171,11 +171,11 @@ class Param(
             and self.type.sub_types
             and self.type.sub_types[-1].origin is not Ellipsis
         ):
-            return len(self.type.sub_types)
+            return len(self.type.sub_types)  # Consume a specific number
         elif utils.safe_issubclass(self.type.origin, (tuple, list, set)):
-            return "*"
+            return "*"  # Consume one or more
 
-        return None
+        return "?"  # Optional
 
     def process_parsed_result(
         self, res: at.ParseResult, ctx: Context
@@ -247,10 +247,6 @@ class ArgumentParam(
     @property
     def is_argument(self):
         return True
-
-    @cached_property
-    def nargs(self):
-        return "?"
 
     def get_param_names(self) -> list[str]:
         return [self.argument_name]

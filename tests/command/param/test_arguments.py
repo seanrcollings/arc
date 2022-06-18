@@ -25,6 +25,17 @@ class TestArgumentDeclartion:
             command("")
 
 
+def test_missing():
+    @arc.command()
+    def command(val: list):
+        return val
+
+    assert command("1 2") == ["1", "2"]
+
+    with pytest.raises(errors.MissingArgError):
+        command("")
+
+
 def test_ordering():
     @arc.command()
     def command(val1, val2, val3, val4):

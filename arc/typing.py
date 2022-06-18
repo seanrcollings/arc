@@ -7,7 +7,7 @@ if t.TYPE_CHECKING:
 
 Annotation = t.Union[t._SpecialForm, type]
 
-NArgs = t.Union[int, t.Literal["+", "*"], None]
+NArgs = t.Union[int, t.Literal["+", "*", "?"], None]
 
 ParseResult = dict[str, t.Union[str, list[str], None]]
 

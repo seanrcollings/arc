@@ -4,9 +4,7 @@ import arc
 
 
 def test_transform():
-    @arc.command()
-    def command():
-        ...
+    command = arc.namespace("command")
 
     @command.subcommand()
     def two_words(*, first_name: str = "", other_arg: str = ""):
@@ -26,9 +24,7 @@ def test_disable_transform():
     try:
         arc.configure(transform_snake_case=False)
 
-        @arc.command()
-        def command():
-            ...
+        command = arc.namespace("command")
 
         @command.subcommand()
         def two_words(*, first_name: str = "", other_arg: str = ""):
@@ -47,9 +43,7 @@ def test_disable_transform():
 
 
 def test_explicit_names():
-    @arc.command()
-    def command():
-        ...
+    command = arc.namespace("command")
 
     @command.subcommand("two_words")
     def two_words(

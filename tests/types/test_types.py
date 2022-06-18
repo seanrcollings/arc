@@ -11,11 +11,7 @@ from arc import Context
 
 @pytest.fixture(scope="function")
 def cli():
-    @arc.command()
-    def cli():
-        ...
-
-    return cli
+    return arc.namespace("cli")
 
 
 def test_optional(cli: arc.Command):
