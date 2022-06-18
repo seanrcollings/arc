@@ -20,8 +20,16 @@ def test_aliases():
     def sub():
         return "sub"
 
+    @arc.command()
+    def other_sub():
+        return "other_sub"
+
+    ns.add_command(other_sub, ["os"])
+
     assert ns("sub") == "sub"
     assert ns("s") == "sub"
+    assert ns("other-sub") == "other_sub"
+    assert ns("os") == "other_sub"
 
 
 def test_global_args():

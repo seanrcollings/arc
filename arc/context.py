@@ -6,6 +6,7 @@ from arc import errors
 from arc import _command
 from arc.color import colorize, fg
 from arc.config import config
+from arc.types.state import State
 
 T = t.TypeVar("T")
 
@@ -18,7 +19,8 @@ class Context:
     rest: list[str]
 
     config = config
-    state: dict[str, t.Any] = {}
+    _state: dict[str, t.Any] = {}
+    state: State = State(_state)
 
     def __init__(
         self,

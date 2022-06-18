@@ -88,7 +88,7 @@ class Command(
         args = self.get_args(input_args)
 
         if state:
-            Context.state = state
+            Context._state = state
 
         return self.__main(args)
 
@@ -120,7 +120,7 @@ class Command(
 
     def subcommand(self, name: at.CommandName = None, description: str | None = None):
         def inner(callback: at.CommandCallback):
-            command_name, aliases = self._get_command_name(callback, name)
+            command_name, aliases = self.get_command_name(callback, name)
             command = Command(
                 callback=callback,
                 name=command_name,
@@ -215,8 +215,9 @@ class Command(
 
         return args
 
-    def _get_command_name(
-        self, callback: at.CommandCallback, names: at.CommandName
+    @staticmethod
+    def get_command_name(
+        callback: at.CommandCallback, names: at.CommandName
     ) -> tuple[str, tuple[str, ...]]:
         if names is None:
             name = callback.__name__
@@ -236,7 +237,7 @@ def command(name: str | None = None, description: str | None = None):
     def inner(callback: at.CommandCallback):
         return Command(
             callback=callback,
-            name=name,
+            name=Command.get_command_name(callback, name)[0],
             description=description,
             parent=None,
         )
