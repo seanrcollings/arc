@@ -12,6 +12,7 @@ from .param_builder import ParamBuilder
 class ParamMixin:
     callback: t.Callable
     parent: t.Any
+    is_namespace: bool
 
     @cached_property
     def param_groups(self) -> list[ParamGroup]:
@@ -19,7 +20,7 @@ class ParamMixin:
         groups = builder.build()
 
         default = ParamGroup.get_default_group(groups)
-        if config.version and self.parent is None:
+        if config.version and self.parent is None and not self.is_namespace:
 
             def _version_callback(value, ctx, param):
                 print(config.version)

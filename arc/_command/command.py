@@ -6,8 +6,10 @@ import shlex
 
 from arc import utils
 from arc._command.documentation import Documentation
+from arc.color import colorize, fg
 from arc.config import config
 from arc.parser import Parser
+from arc.present.helpers import Joiner
 from .param import ParamMixin
 from arc.context import Context
 
@@ -55,31 +57,34 @@ class Command(
     utils.Display,
     members=["name", "callback", "params", "subcommands"],
 ):
-    parent: Command | None
+    callback: at.CommandCallback
     name: str
-    _description: str | None
+    parent: Command | None
     subcommands: SubcommandsDict[str, Command]
     param_groups: list[ParamGroup]
-    callback: at.CommandCallback
+    doc: Documentation
+    explicit_name: bool
 
     def __init__(
         self,
         callback: at.CommandCallback,
-        name: str,
+        name: str | None = None,
         description: str | None = None,
         parent: Command | None = None,
     ):
         self.callback = callback
-        self.name = name
+        self.name = name or callback.__name__
         self.parent = parent
         self.subcommands = SubcommandsDict()
         self.doc = Documentation(self, description)
+        self.explicit_name = bool(name)
 
         if config.environment == "development":
             self.param_groups
 
     def __call__(self, input_args: at.InputArgs = None, state: dict = None):
-        self.name = self.name or utils.discover_name()
+        if not self.explicit_name:
+            self.name = utils.discover_name()
         args = self.get_args(input_args)
 
         if state:
@@ -97,7 +102,7 @@ class Command(
 
     @property
     def is_namespace(self):
-        self.callback is namespace_callback
+        return self.callback is namespace_callback
 
     @property
     def is_root(self):
@@ -110,16 +115,6 @@ class Command(
             command = command.parent
 
         return command
-
-    @property
-    def fullname(self):
-        names = []
-        command = self
-        while command.parent:
-            names.append(command.name)
-            command = command.parent
-
-        return list(reversed(names))
 
     # Subcommands ----------------------------------------------------------------
 
@@ -138,9 +133,11 @@ class Command(
 
         return inner
 
-    def add_command(self, command: Command):
+    def add_command(self, command: Command, aliases: t.Sequence[str] | None = None):
         self.subcommands[command.name] = command
         command.parent = self
+        if aliases:
+            self.subcommands.add_aliases(command.name, *aliases)
         return command
 
     def add_commands(self, *commands: Command):
@@ -235,18 +232,31 @@ class Command(
         return names[0], tuple(names[1:])
 
 
-def command(name: str | None = None):
+def command(name: str | None = None, description: str | None = None):
     def inner(callback: at.CommandCallback):
         return Command(
-            callback=callback, name=name or utils.discover_name(), parent=None
+            callback=callback,
+            name=name,
+            description=description,
+            parent=None,
         )
 
     return inner
 
 
-def namespace_callback():
-    ...
+def namespace_callback(ctx: Context):
+    print(ctx.command.doc.usage())
+    command = colorize(
+        f"{ctx.command.root.name} {Joiner.with_space(ctx.command.doc.fullname)} --help",
+        fg.YELLOW,
+    )
+    print(f"{command} for more information")
 
 
-def namespace(name: str):
-    return Command(callback=namespace_callback, name=name, parent=None)
+def namespace(name: str, description: str | None = None):
+    return Command(
+        callback=namespace_callback,
+        name=name,
+        description=description,
+        parent=None,
+    )

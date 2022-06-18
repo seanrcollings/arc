@@ -13,7 +13,7 @@ ParseResult = dict[str, t.Union[str, list[str], None]]
 
 Env = t.Literal["production", "development"]
 
-CommandName = t.Union[str, tuple[str], list[str], None]
+CommandName = t.Union[str, t.Sequence[str], None]
 
 InputArgs = t.Union[str, t.Sequence[str], None]
 

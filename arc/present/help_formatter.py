@@ -5,6 +5,7 @@ import textwrap
 
 from arc.color import colorize, fg, effects
 from arc.config import config
+from arc.present.helpers import Joiner
 from arc.utils import ansi_len
 from arc.present.formatters import TextFormatter
 
@@ -70,45 +71,66 @@ class HelpFormatter(TextFormatter):
         command = self.command
 
         with self.section("USAGE"):
-            if command.is_namespace:
-                command_str = f"{command.name} <subcommand>"
-                self.write_text(
-                    f"{colorize(command.root.name, config.brand_color)} "
-                    f"{colorize(command_str, effects.UNDERLINE)} [ARGUMENTS ...]",
+            if command.is_root:
+                params_str = self.usage_params(
+                    [p for p in self.key_params if p["name"] in ("help", "version")],
+                    self.argument_params,
                 )
-            elif command.is_root:
-                params_str = self.usage_params()
+                global_param_str = self.usage_params(self.doc.global_params, [])
                 self.write_text(
                     f"{colorize(command.root.name, config.brand_color)} {params_str}"
                 )
                 if self.doc.command.subcommands:
                     self.write_paragraph()
                     self.write_text(
-                        f"{colorize(command.root.name, config.brand_color)} [OPTIONS] "
-                        f"{colorize('<subcommand>', effects.UNDERLINE)} [ARGUMENTS ...]",
+                        Joiner.with_space(
+                            [
+                                colorize(command.root.name, config.brand_color),
+                                global_param_str,
+                                colorize("<subcommand>", effects.UNDERLINE),
+                                "[ARGUMENTS ...]",
+                            ],
+                            remove_falsey=True,
+                        )
                     )
             else:
-                fullname = command.fullname
+                params_str = self.usage_params(self.key_params, self.argument_params)
+                fullname = self.doc.fullname
                 path = " ".join(fullname[0:-1])
                 name = fullname[-1]
-                params_str = self.usage_params()
 
-                self.write_text(
-                    f"{colorize(command.root.name, config.brand_color)} "
-                    f"{path} {colorize(name, effects.UNDERLINE)} {params_str}"
-                )
+                if not command.is_namespace:
+                    self.write_text(
+                        Joiner.with_space(
+                            [
+                                colorize(command.root.name, config.brand_color),
+                                path,
+                                colorize(name, effects.UNDERLINE),
+                                params_str,
+                            ],
+                            remove_falsey=True,
+                        )
+                    )
+                    self.write_paragraph()
 
                 if self.doc.command.subcommands:
-                    self.write_paragraph()
                     self.write_text(
-                        f"{colorize(command.root.name, config.brand_color)} {path} {name} "
-                        f"{colorize('<subcommand>', effects.UNDERLINE)} [ARGUMENTS ...]",
+                        Joiner.with_space(
+                            [
+                                colorize(command.root.name, config.brand_color),
+                                path,
+                                name,
+                                colorize("<subcommand>", effects.UNDERLINE),
+                                "[ARGUMENTS ...]",
+                            ],
+                            remove_falsey=True,
+                        )
                     )
 
-    def usage_params(self):
+    def usage_params(self, key_params: list[ParamDoc], arg_params: list[ParamDoc]):
         formatted = []
         for param in sorted(
-            self.key_params,
+            key_params,
             key=lambda p: not p["optional"],
         ):
             if param["kind"] == "argument":
@@ -116,10 +138,10 @@ class HelpFormatter(TextFormatter):
 
             formatted.append(self.format_single_param(param))
 
-        if len(formatted) > 0 and len(self.argument_params) > 0:
+        if len(formatted) > 0 and len(arg_params) > 0:
             formatted.append("[--]")
 
-        for param in self.argument_params:
+        for param in arg_params:
             if param["kind"] == "argument":
                 formatted.append(self.format_single_param(param))
 

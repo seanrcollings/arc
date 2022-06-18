@@ -45,6 +45,16 @@ class Documentation:
         return formatter.value
 
     @property
+    def fullname(self):
+        names = []
+        command = self.command
+        while command.parent:
+            names.append(command.name)
+            command = command.parent
+
+        return list(reversed(names))
+
+    @property
     def description(self) -> t.Optional[str]:
         return self._description or self.docstring.get(config.default_section_name)
 
@@ -55,7 +65,11 @@ class Documentation:
 
     @property
     def global_params(self) -> list[ParamDoc]:
-        return self._param_helper(self.command.root)
+        return [
+            p
+            for p in self._param_helper(self.command.root)
+            if p["name"] not in ("help", "version")
+        ]
 
     @property
     def params(self) -> list[ParamDoc]:
