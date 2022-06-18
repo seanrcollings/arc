@@ -1,5 +1,5 @@
 import arc
-from arc import callback
+from arc._command import callback
 
 
 @callback.create()

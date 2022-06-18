@@ -1,6 +1,8 @@
 from __future__ import annotations
 import typing as t
 
+from arc.color import colorize, fg
+
 if t.TYPE_CHECKING:
     from arc.context import Context
 
@@ -71,3 +73,7 @@ class ParamError(InternalError):
     def __init__(self, message, param=None):
         super().__init__(message)
         self.param = param
+
+
+class DecoratorError(InternalError):
+    ...

@@ -29,6 +29,7 @@ class Config:
     autocomplete: bool = False
     allow_unrecognized_args: bool = False
     global_callback_execution: t.Literal["always", "args_present"] = "args_present"
+    report_bug: str | None = None
 
 
 config = Config()
@@ -46,6 +47,7 @@ def configure(
     autocomplete: t.Optional[bool] = None,
     allow_unrecognized_args: t.Optional[bool] = None,
     global_callback_execution: t.Optional[t.Literal["always", "args_present"]] = None,
+    report_bug: str | None = None,
 ):
     """Function for updating global `arc` configuration
 
@@ -79,6 +81,9 @@ def configure(
             defaults to `False`
 
         global_callback_execution: ...
+
+        report_bug: link to report a bug when an unhandled exception occurs within your
+            application
     """
     data = {
         "version": version,
@@ -92,6 +97,7 @@ def configure(
         "autocomplete": autocomplete,
         "allow_unrecognized_args": allow_unrecognized_args,
         "global_callback_execution": global_callback_execution,
+        "report_bug": report_bug,
     }
 
     for key, value in data.items():

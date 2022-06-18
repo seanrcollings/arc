@@ -4,6 +4,7 @@ import contextlib
 
 from arc import errors
 from arc import _command
+from arc._command.decorators import DecoratorStack
 from arc.color import colorize, fg
 from arc.config import config
 from arc.types.state import State
@@ -108,7 +109,19 @@ class Context:
             )
 
         self.command.inject_dependancies(processed, self)
-        return self.execute(self.command.callback, **processed)
+        deco_stack = DecoratorStack()
+        for deco in reversed(self.command.decorators):
+            deco_stack.add(deco.func(processed, self))
+
+        try:
+            res = self.execute(self.command.callback, **processed)
+        except Exception as e:
+            res = None
+            deco_stack.throw(e)
+        else:
+            deco_stack.close()
+
+        return res
 
     def execute(self, callback: t.Union[_command.Command, t.Callable], **kwargs):
         """Can be called in two ways

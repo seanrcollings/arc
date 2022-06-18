@@ -5,6 +5,7 @@ import typing as t
 import shlex
 
 from arc import errors, utils
+from arc._command.decorators import CommandDecorator
 from arc._command.documentation import Documentation
 from arc.color import colorize, fg
 from arc.config import config
@@ -64,6 +65,7 @@ class Command(
     param_groups: list[ParamGroup]
     doc: Documentation
     explicit_name: bool
+    decorators: list[CommandDecorator]
 
     def __init__(
         self,
@@ -79,6 +81,7 @@ class Command(
         self.subcommands = SubcommandsDict()
         self.doc = Documentation(self, description)
         self.explicit_name = explicit_name
+        self.decorators = []
 
         if config.environment == "development":
             self.param_groups
@@ -88,7 +91,7 @@ class Command(
             self.name = utils.discover_name()
         args = self.get_args(input_args)
 
-        if self.is_root and len(list(self.argument_params)) != 0:
+        if self.is_root and self.subcommands and len(list(self.argument_params)) != 0:
             raise errors.CommandError(
                 "Top-level command with subcommands cannot "
                 "have argument / positional parameters"
@@ -97,7 +100,22 @@ class Command(
         if state:
             Context._state = state
 
-        return self.__main(args)
+        try:
+            return self.__main(args)
+        except errors.ExternalError as e:
+            if config.environment == "production":
+                print(e)
+                raise errors.Exit(1)
+
+            raise
+        except Exception as e:
+            if config.report_bug:
+                raise errors.InternalError(
+                    f"{self.name} has encountered a critical error. "
+                    f"Please file a bug report with the maintainer: {colorize(config.report_bug, fg.YELLOW)}"
+                ) from e
+
+            raise
 
     @property
     def schema(self):
