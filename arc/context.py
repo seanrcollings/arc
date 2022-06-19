@@ -4,7 +4,6 @@ import contextlib
 
 from arc import errors
 from arc import _command
-from arc._command.decorators import DecoratorStack
 from arc.color import colorize, fg
 from arc.config import config
 from arc.types.state import State
@@ -17,17 +16,18 @@ class Context:
     command: _command.Command
     _exit_stack: contextlib.ExitStack
     _stack_count: int
+    args: dict[str, t.Any]
     rest: list[str]
 
     config = config
     _state: dict[str, t.Any] = {}
-    state: State = State(_state)
+    state: State = State()
+    state.data = _state
 
     def __init__(
         self,
         command: _command.Command,
         parent: Context | None = None,
-        state: dict | None = None,
     ) -> None:
         self.command = command
         self.parent = parent
@@ -109,17 +109,16 @@ class Context:
             )
 
         self.command.inject_dependancies(processed, self)
-        deco_stack = DecoratorStack()
-        for deco in reversed(self.command.decorators):
-            deco_stack.add(deco.func(processed, self))
+        self.args = processed
+        self.command.decorators.start(self)
 
         try:
             res = self.execute(self.command.callback, **processed)
         except Exception as e:
             res = None
-            deco_stack.throw(e)
+            self.command.decorators.throw(e)
         else:
-            deco_stack.close()
+            self.command.decorators.close()
 
         return res
 

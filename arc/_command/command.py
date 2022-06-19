@@ -5,7 +5,7 @@ import typing as t
 import shlex
 
 from arc import errors, utils
-from arc._command.decorators import CommandDecorator
+from arc._command.decorators import CommandDecorator, DecoratorStack
 from arc._command.documentation import Documentation
 from arc.color import colorize, fg
 from arc.config import config
@@ -65,7 +65,7 @@ class Command(
     param_groups: list[ParamGroup]
     doc: Documentation
     explicit_name: bool
-    decorators: list[CommandDecorator]
+    decorators: DecoratorStack
 
     def __init__(
         self,
@@ -81,7 +81,7 @@ class Command(
         self.subcommands = SubcommandsDict()
         self.doc = Documentation(self, description)
         self.explicit_name = explicit_name
-        self.decorators = []
+        self.decorators = DecoratorStack()
 
         if config.environment == "development":
             self.param_groups

@@ -10,9 +10,7 @@ if t.TYPE_CHECKING:
     from arc._command import Command
 
 
-DecoratorFunc = t.Callable[
-    [dict[str, t.Any], "Context"], t.Generator[None, t.Any, None]
-]
+DecoratorFunc = t.Callable[["Context"], t.Optional[t.Generator[None, t.Any, None]]]
 
 
 @dc.dataclass(frozen=True)
@@ -22,12 +20,12 @@ class CommandDecorator:
     inherit: bool = True
 
     def __call__(self, command: Command) -> Command:
-        command.decorators.append(self)
+        command.decorators.add(self)
         return command
 
     def remove(self, command: Command) -> Command:
         """Removes the callback from the decorated `command`"""
-        command.decorators.remove(self)
+        command.decorators.add(self)
         return command
 
 
@@ -68,7 +66,7 @@ def error_handler(*errors: type[Exception], inherit: bool = False):
     from arc.context import Context
 
     def inner(func: ErrorHandlerFunc):
-        def handle_errors(args, ctx):
+        def handle_errors(_ctx):
             try:
                 yield
             except errors as e:
@@ -84,19 +82,33 @@ def error_handler(*errors: type[Exception], inherit: bool = False):
 
 
 class DecoratorStack:
-    __stack: list[t.Generator[None, t.Any, None]]
+    __decos: list[CommandDecorator]
+    __gens: list[t.Generator[None, t.Any, None]]
 
     def __repr__(self):
-        return f"DecoratorStack({self.__stack})"
+        return f"DecoratorStack({self.__decos})"
 
     def __init__(self):
-        self.__stack = []
+        self.__decos = []
+        self.__gens = []
 
-    def add(self, gen: t.Generator[None, t.Any, None]):
-        if not isinstance(gen, types.GeneratorType):
-            raise errors.DecoratorError("Decorator must be a generator.")
-        next(gen)  # Advance it to the first yield
-        self.__stack.append(gen)
+    def start(self, ctx: Context):
+        for deco in reversed(self.__decos):
+            gen = deco.func(ctx)  # type: ignore
+            if isinstance(gen, types.GeneratorType):
+                next(gen)
+                self.__gens.append(gen)  # type: ignore
+
+    def close(self):
+        """Closes each callback by calling `next()` on them"""
+        for gen in reversed(self.__gens):
+            try:
+                next(gen)
+            except StopIteration:
+                ...
+
+    def add(self, deco: CommandDecorator):
+        self.__decos.append(deco)
 
     def throw(self, exception: Exception):
         """Used if an error occurs in command execution.
@@ -114,7 +126,7 @@ class DecoratorStack:
 
         exception_handled = False
 
-        for gen in reversed(self.__stack):
+        for gen in reversed(self.__gens):
             try:
                 if exception_handled:
                     try:
@@ -132,12 +144,5 @@ class DecoratorStack:
                 exception = e
 
         if not exception_handled:
+            breakpoint()
             raise exception
-
-    def close(self):
-        """Closes each callback by calling `next()` on them"""
-        for gen in reversed(self.__stack):
-            try:
-                next(gen)
-            except StopIteration:
-                ...
