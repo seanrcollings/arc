@@ -1,10 +1,12 @@
 from __future__ import annotations
 from ast import alias
+import inspect
 import sys
 import typing as t
 import shlex
 
 from arc import errors, utils
+from arc._command import classful
 from arc._command.decorators import CommandDecorator, DecoratorStack
 from arc._command.documentation import Documentation
 from arc.color import colorize, fg
@@ -75,7 +77,13 @@ class Command(
         parent: Command | None = None,
         explicit_name: bool = True,
     ):
-        self.callback = callback
+        if inspect.isclass(callback):
+            self.callback = classful.wrap_class_callback(
+                t.cast(type[at.ClassCallback], callback)
+            )
+        else:
+            self.callback = callback
+
         self.name = name or callback.__name__
         self.parent = parent
         self.subcommands = SubcommandsDict()

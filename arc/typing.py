@@ -20,6 +20,7 @@ InputArgs = t.Union[str, t.Sequence[str], None]
 CompareReturn = t.Literal[-1, 0, 1]
 
 
+@t.runtime_checkable
 class ClassCallback(t.Protocol):
     def handle(self):
         ...

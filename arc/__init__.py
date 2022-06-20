@@ -5,3 +5,4 @@ from arc.params import Argument, Option, Flag, Count, Depends, group
 from arc import types
 from arc.context import Context
 from arc.config import configure
+from arc import errors
