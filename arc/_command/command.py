@@ -7,6 +7,7 @@ import shlex
 
 from arc import errors, utils
 from arc._command import classful
+from arc._command.autoload import Autoload
 from arc._command.decorators import CommandDecorator, DecoratorStack
 from arc._command.documentation import Documentation
 from arc.color import colorize, fg
@@ -68,6 +69,7 @@ class Command(
     doc: Documentation
     explicit_name: bool
     decorators: DecoratorStack
+    __autoload__: bool
 
     def __init__(
         self,
@@ -76,6 +78,7 @@ class Command(
         description: str | None = None,
         parent: Command | None = None,
         explicit_name: bool = True,
+        autoload: bool = False,
     ):
         if inspect.isclass(callback):
             self.callback = classful.wrap_class_callback(
@@ -90,6 +93,7 @@ class Command(
         self.doc = Documentation(self, description)
         self.explicit_name = explicit_name
         self.decorators = DecoratorStack()
+        self.__autoload__ = autoload
 
         if config.environment == "development":
             self.param_groups
@@ -229,6 +233,9 @@ class Command(
 
     # Helpers --------------------------------------------------------------------
 
+    def autoload(self, *paths: str):
+        Autoload(paths, self).load()
+
     def create_parser(self):
         parser = Parser(add_help=False)
         for param in self.cli_params:
@@ -282,6 +289,7 @@ def command(name: str | None = None, description: str | None = None):
             description=description,
             parent=None,
             explicit_name=bool(name),
+            autoload=True,
         )
 
     return inner
@@ -302,4 +310,5 @@ def namespace(name: str, description: str | None = None):
         name=name,
         description=description,
         parent=None,
+        autoload=True,
     )
