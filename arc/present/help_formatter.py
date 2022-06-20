@@ -71,15 +71,18 @@ class HelpFormatter(TextFormatter):
         command = self.command
 
         with self.section("USAGE"):
-            if command.is_root:
+            if command.is_root and command.subcommands:
                 params_str = self.usage_params(
                     [p for p in self.key_params if p["name"] in ("help", "version")],
                     self.argument_params,
                 )
                 global_param_str = self.usage_params(self.doc.global_params, [])
                 self.write_text(
-                    f"{colorize(command.root.name, config.brand_color)} {params_str}"
+                    Joiner.with_space(
+                        [colorize(command.root.name, config.brand_color), params_str]
+                    )
                 )
+
                 if self.doc.command.subcommands:
                     self.write_paragraph()
                     self.write_text(
@@ -96,8 +99,8 @@ class HelpFormatter(TextFormatter):
             else:
                 params_str = self.usage_params(self.key_params, self.argument_params)
                 fullname = self.doc.fullname
-                path = " ".join(fullname[0:-1])
-                name = fullname[-1]
+                path = " ".join(fullname[0:-1]) if fullname else ""
+                name = colorize(fullname[-1], effects.UNDERLINE) if fullname else ""
 
                 if not command.is_namespace:
                     self.write_text(
@@ -105,15 +108,15 @@ class HelpFormatter(TextFormatter):
                             [
                                 colorize(command.root.name, config.brand_color),
                                 path,
-                                colorize(name, effects.UNDERLINE),
+                                name,
                                 params_str,
                             ],
                             remove_falsey=True,
                         )
                     )
-                    self.write_paragraph()
 
                 if self.doc.command.subcommands:
+                    self.write_paragraph()
                     self.write_text(
                         Joiner.with_space(
                             [
@@ -145,7 +148,7 @@ class HelpFormatter(TextFormatter):
             if param["kind"] == "argument":
                 formatted.append(self.format_single_param(param))
 
-        return " ".join(formatted)
+        return Joiner.with_space(formatted, remove_falsey=True)
 
     def format_single_param(self, param: ParamDoc):
         name = ""

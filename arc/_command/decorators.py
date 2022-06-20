@@ -25,7 +25,7 @@ class CommandDecorator:
 
     def remove(self, command: Command) -> Command:
         """Removes the callback from the decorated `command`"""
-        command.decorators.add(self)
+        command.decorators.remove(self)
         return command
 
 
@@ -92,6 +92,12 @@ class DecoratorStack:
         self.__decos = []
         self.__gens = []
 
+    def __iter__(self):
+        yield from self.__decos
+
+    def __contains__(self, value):
+        return value in self.__decos
+
     def start(self, ctx: Context):
         for deco in reversed(self.__decos):
             gen = deco.func(ctx)  # type: ignore
@@ -109,6 +115,9 @@ class DecoratorStack:
 
     def add(self, deco: CommandDecorator):
         self.__decos.append(deco)
+
+    def remove(self, deco: CommandDecorator):
+        self.__decos.remove(deco)
 
     def throw(self, exception: Exception):
         """Used if an error occurs in command execution.
@@ -144,5 +153,4 @@ class DecoratorStack:
                 exception = e
 
         if not exception_handled:
-            breakpoint()
             raise exception

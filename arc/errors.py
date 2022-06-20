@@ -19,6 +19,10 @@ class ExternalError(ArcError):
     """Errors that fire due to user / input errors"""
 
 
+class ExecutionError(ExternalError):
+    ...
+
+
 class ArgumentError(ExternalError):
     ...
 

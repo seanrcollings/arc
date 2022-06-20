@@ -29,5 +29,5 @@ class State(collections.UserDict):
     @classmethod
     def __depends__(cls, ctx: Context):
         state = cls()
-        state.data = ctx._state
+        state.data = ctx.state.data
         return state

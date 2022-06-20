@@ -20,9 +20,7 @@ class Context:
     rest: list[str]
 
     config = config
-    _state: dict[str, t.Any] = {}
     state: State = State()
-    state.data = _state
 
     def __init__(
         self,

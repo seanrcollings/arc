@@ -97,8 +97,7 @@ class Command(
                 "have argument / positional parameters"
             )
 
-        if state:
-            Context._state = state
+        Context.state.data = state or {}
 
         try:
             return self.__main(args)
@@ -160,8 +159,10 @@ class Command(
     def add_command(self, command: Command, aliases: t.Sequence[str] | None = None):
         self.subcommands[command.name] = command
         command.parent = self
+        self.inherit_decorators(command)
         if aliases:
             self.subcommands.add_aliases(command.name, *aliases)
+
         return command
 
     def add_commands(self, *commands: Command):
@@ -238,6 +239,14 @@ class Command(
             args = shlex.split(args)
 
         return args
+
+    def inherit_decorators(self, command: Command):
+        decos, command.decorators = command.decorators, DecoratorStack()
+
+        for deco in self.decorators:
+            command.decorators.add(deco)
+        for deco in decos:
+            command.decorators.add(deco)
 
     @staticmethod
     def get_command_name(

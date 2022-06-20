@@ -302,13 +302,13 @@ class LiteralAlias(Alias, of=t.Literal):
     @classmethod
     def __prompt__(cls, ctx, param):
         return select_prompt(
-            list(str(tp.base) for tp in param.type_info.sub_types), ctx, param
+            list(str(tp.origin) for tp in param.type.sub_types), ctx, param
         )
 
     @classmethod
     def __completions__(cls, info, param):
         return [
-            autocompletions.Completion(str(tp.base)) for tp in param.type_info.sub_types
+            autocompletions.Completion(str(tp.origin)) for tp in param.type.sub_types
         ]
 
 

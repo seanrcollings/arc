@@ -232,7 +232,7 @@ class Param(
 
     def get_prompt_value(self, ctx: Context):
         if hasattr(self.type.resolved_type, "__prompt__"):
-            return type_class.__prompt__(ctx, self)  # type: ignore
+            return self.type.resolved_type.__prompt__(ctx, self)  # type: ignore
 
         return input_prompt(ctx, self)
 

@@ -113,7 +113,7 @@ class Documentation:
             if line.startswith("#"):
                 current_section = line[1:].strip().lower()
                 parsed[current_section] = ""
-            else:
+            elif line:
                 parsed[current_section] += line + "\n"
 
         return parsed
