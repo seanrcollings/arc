@@ -180,21 +180,19 @@ class Command(
     def add_commands(self, *commands: Command):
         return [self.add_command(command) for command in commands]
 
+    def inherit_decorators(self, command: Command):
+        decos, command.decorators = command.decorators, DecoratorStack()
+
+        for deco in self.decorators:
+            command.decorators.add(deco)
+        for deco in decos:
+            command.decorators.add(deco)
+
     # Execution ------------------------------------------------------------------
 
     def __main(self, args: list[str]):
-        global_args = []
-        while len(args) > 0 and args[0] not in self.subcommands:
-            global_args.append(args.pop(0))
-
-        command: Command = self
-
-        index = 0
-        for idx, value in enumerate(args):
-            if value in command.subcommands:
-                index = idx
-                command = command.subcommands.get(value)
-
+        global_args, command, command_args = self.split_args(args)
+        print(global_args, command, command_args)
         with self.create_ctx() as ctx:
             if (
                 global_args
@@ -207,7 +205,6 @@ class Command(
                     return global_res
 
             with command.create_ctx(parent=ctx) as commandctx:
-                command_args = args[index + 1 :]
                 return commandctx.run(command_args)
 
     def process_parsed_result(
@@ -231,37 +228,54 @@ class Command(
         for group in self.param_groups:
             group.inject_dependancies(args, ctx)
 
-    # Helpers --------------------------------------------------------------------
+    # Argument Handling ---------------------------------------------------------
 
-    def autoload(self, *paths: str):
-        Autoload(paths, self).load()
-
-    def create_parser(self):
-        parser = Parser(add_help=False)
-        for param in self.cli_params:
-            parser.add_param(param)
-
-        return parser
-
-    def create_ctx(self, **kwargs):
-        return Context(self, **kwargs)
-
-    def get_args(self, args: at.InputArgs):
+    def get_args(self, args: at.InputArgs) -> list[str]:
         if args is None:
             args = sys.argv[1:]
 
         if isinstance(args, str):
             args = shlex.split(args)
 
-        return args
+        return list(args)
 
-    def inherit_decorators(self, command: Command):
-        decos, command.decorators = command.decorators, DecoratorStack()
+    def split_args(self, args: list[str]) -> tuple[list[str], Command, list[str]]:
+        """Seperates out a sequence of args into:
+        - global arguments
+        - a subcommand object
+        - command arguments
+        """
+        index = 0
+        global_args: list[str] = []
+        while index < len(args) and args[index] not in self.subcommands:
+            global_args.append(args[index])
+            index += 1
 
-        for deco in self.decorators:
-            command.decorators.add(deco)
-        for deco in decos:
-            command.decorators.add(deco)
+        command: Command = self
+
+        for idx, value in enumerate(args):
+            if value in command.subcommands:
+                index = idx
+                command = command.subcommands.get(value)
+
+        command_args: list[str] = args[index + 1 :]
+
+        return global_args, command, command_args
+
+    def create_parser(self) -> Parser:
+        parser = Parser(add_help=False)
+        for param in self.cli_params:
+            parser.add_param(param)
+
+        return parser
+
+    # Helpers --------------------------------------------------------------------
+
+    def autoload(self, *paths: str):
+        Autoload(paths, self).load()
+
+    def create_ctx(self, **kwargs) -> Context:
+        return Context(self, **kwargs)
 
     @staticmethod
     def get_command_name(

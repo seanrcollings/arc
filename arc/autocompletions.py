@@ -4,6 +4,7 @@ import os
 import enum
 import dataclasses as dc
 from arc import utils, logging, errors
+from arc.present.helpers import Joiner
 
 if t.TYPE_CHECKING:
     from arc.context import Context
@@ -14,13 +15,14 @@ logger = logging.getArcLogger("comp")
 
 
 def completions(shell: str, ctx: Context):
+
     info = CompletionInfo.from_env()
     if shell not in shells:
         raise errors.ArgumentError(
-            f"Unsupported shell: {shell}. Supported shells: {', '.join(shells)}"
+            f"Unsupported shell: {shell}. Supported shells: {Joiner.with_comma(shells)}"
         )
     comp: ShellCompletion = shells[shell](ctx, info)
-    return comp.complete() if comp.should_complete() else comp.source()
+    # return comp.complete() if comp.should_complete() else comp.source()
 
 
 def get_completions(

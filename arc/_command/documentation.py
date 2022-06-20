@@ -68,7 +68,7 @@ class Documentation:
         return [
             p
             for p in self._param_helper(self.command.root)
-            if p["name"] not in ("help", "version")
+            if p["name"] not in self.command.SPECIAL_PARAMS
         ]
 
     @property

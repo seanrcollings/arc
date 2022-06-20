@@ -73,7 +73,7 @@ class HelpFormatter(TextFormatter):
         with self.section("USAGE"):
             if command.is_root and command.subcommands:
                 params_str = self.usage_params(
-                    [p for p in self.key_params if p["name"] in ("help", "version")],
+                    [p for p in self.key_params if p["name"] in command.SPECIAL_PARAMS],
                     self.argument_params,
                 )
                 global_param_str = self.usage_params(self.doc.global_params, [])

@@ -1,6 +1,9 @@
 import pytest
 import arc
 
+# NOTE: any time that cli_params is checked against, two are added to the explcit number
+# to account for --help and --autocomplete
+
 
 def test_group():
     @arc.group
@@ -12,7 +15,7 @@ def test_group():
     def command(group: Group):
         return group
 
-    assert len(list(command.cli_params)) == 3
+    assert len(list(command.cli_params)) == 4
     group = command("1 2")
     assert group.val == 1
     assert group.other_val == 2
@@ -32,7 +35,7 @@ def test_subgroup():
     def command(group: Group):
         return group
 
-    assert len(list(command.cli_params)) == 3
+    assert len(list(command.cli_params)) == 4
 
     group = command("1 2")
     assert group.val == 1

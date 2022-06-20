@@ -13,6 +13,8 @@ if t.TYPE_CHECKING:
 
 class ParamGroup(collections.UserList[Param]):
     DEFAULT = "default"
+    """A group with name `DEFAULT` is the base group and
+    gets spread into the function arguments"""
     sub_groups: list[ParamGroup]
 
     def __init__(self, name: str, cls: type | None = None, *args, **kwargs):

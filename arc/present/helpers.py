@@ -10,9 +10,12 @@ class Joiner:
         return string.join(str(v) for v in values)
 
     @staticmethod
-    def with_space(values: t.Sequence, remove_falsey: bool = False):
-
+    def with_space(values: t.Iterable, remove_falsey: bool = False):
         return Joiner.join(values, " ", remove_falsey)
+
+    @staticmethod
+    def with_comma(values: t.Iterable, remove_falsey: bool = False):
+        return Joiner.join(values, ", ", remove_falsey)
 
     @staticmethod
     def with_last(values: t.Sequence, string: str, last_string: str):

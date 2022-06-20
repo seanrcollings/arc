@@ -15,10 +15,11 @@ def test_basic():
         utils.ansi_clean(command.doc.help())
         == """\
 USAGE
-    command [-h]
+    command [-h] [--autocomplete <...>]
 
 OPTIONS
-    --help (-h)  Displays this help message
+    --help (-h)     Displays this help message
+    --autocomplete  Shell completion support
 """
     )
 
@@ -32,13 +33,14 @@ def test_description():
         utils.ansi_clean(command.doc.help())
         == """\
 USAGE
-    command [-h]
+    command [-h] [--autocomplete <...>]
 
 DESCRIPTION
     Here's a description
 
 OPTIONS
-    --help (-h)  Displays this help message
+    --help (-h)     Displays this help message
+    --autocomplete  Shell completion support
 """
     )
 
@@ -63,7 +65,7 @@ def test_advanced_parsing():
             command.doc.help()
             == """\
 USAGE
-    command [-h]
+    command [-h] [--autocomplete <...>]
 
 DESCRIPTION
     Here's a description
@@ -71,7 +73,8 @@ DESCRIPTION
     Here's another description paragraph
 
 OPTIONS
-    --help (-h)  Displays this help message
+    --help (-h)     Displays this help message
+    --autocomplete  Shell completion support
 
 SECTION
     Here's an additional section
@@ -101,11 +104,12 @@ def test_subcommands():
         utils.ansi_clean(command.doc.help())
         == """\
 USAGE
-    command [-h]
+    command [-h] [--autocomplete <...>]
     command <subcommand> [ARGUMENTS ...]
 
 OPTIONS
-    --help (-h)  Displays this help message
+    --help (-h)     Displays this help message
+    --autocomplete  Shell completion support
 
 SUBCOMMANDS
     sub
@@ -173,18 +177,19 @@ SUBCOMMANDS
 
 ARGS_STR = """\
 USAGE
-    command [-h] [--key-opt <...>] [--flag] --key-req <...> [--] pos-req [pos-
-    opt]
+    command [-h] [--autocomplete <...>] [--key-opt <...>] [--flag] --key-req
+    <...> [--] pos-req [pos-opt]
 
 ARGUMENTS
-    pos-req      positional required
-    pos-opt      positional optional
+    pos-req         positional required
+    pos-opt         positional optional
 
 OPTIONS
-    --help (-h)  Displays this help message
-    --key-req    key required
-    --key-opt    key optional
-    --flag       flag
+    --help (-h)     Displays this help message
+    --autocomplete  Shell completion support
+    --key-req       key required
+    --key-opt       key optional
+    --flag          flag
 """
 
 
