@@ -7,6 +7,7 @@ import typing as t
 from unittest.mock import DEFAULT
 
 from arc import errors, utils
+from arc.autocompletions import Completion, CompletionInfo, get_completions
 from arc.color import colorize, effects, fg
 from arc.prompt.prompts import input_prompt
 from arc.types.helpers import convert, iscontextmanager
@@ -72,6 +73,7 @@ class Param(
     If it's not 'exposed' then it will not be passed to the command's callback.
     This is useful when the parameter's side effects are desired, but the value
     doesn't matter. This is used to implment the `--version` and `--help` flags"""
+    comp_func: at.CompletionFunc | None
 
     def __init__(
         self,
@@ -86,6 +88,7 @@ class Param(
         prompt: str | None = None,
         action: Action | None = None,
         expose: bool = True,
+        comp_func: at.CompletionFunc | None = None,
     ):
         self.argument_name = argument_name
         self.param_name = param_name or argument_name
@@ -98,6 +101,7 @@ class Param(
         self.action = action or Action.STORE
         self.type = TypeInfo.analyze(annotation)
         self.expose = expose
+        self.comp_func = comp_func
 
         if self.type.is_union_type:
             for sub in self.type.sub_types:
@@ -115,6 +119,13 @@ class Param(
                 f"Parameter {self.param_name}'s shortened name is longer than 1 character",
                 self,
             )
+
+    def __completions__(self, info: CompletionInfo, *args, **kwargs):
+        if self.comp_func:
+            return self.comp_func(info, self)
+
+        if hasattr(self.type.resolved_type, "__completions__"):
+            return get_completions(self.type.resolved_type, info, self)
 
     @property
     def schema(self):

@@ -1,8 +1,10 @@
 from __future__ import annotations
 import typing as t
 
+from arc.autocompletions import CompletionInfo, Completion
+
 if t.TYPE_CHECKING:
-    from arc.autocompletions import Completion, CompletionInfo
+    from arc._command.param import Param
 
 
 Annotation = t.Union[t._SpecialForm, type]
@@ -18,6 +20,10 @@ CommandName = t.Union[str, t.Sequence[str], None]
 InputArgs = t.Union[str, t.Sequence[str], None]
 
 CompareReturn = t.Literal[-1, 0, 1]
+
+CompletionFunc = t.Callable[
+    [CompletionInfo, "Param"], t.Union[list[Completion], Completion, None]
+]
 
 
 @t.runtime_checkable

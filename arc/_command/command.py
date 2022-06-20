@@ -18,6 +18,7 @@ from .param import ParamMixin
 from arc.context import Context
 
 import arc.typing as at
+from arc.autocompletions import CompletionInfo, get_completions, Completion
 
 if t.TYPE_CHECKING:
     from .param import Param, ParamGroup
@@ -128,6 +129,53 @@ class Command(
 
             raise
 
+    def __completions__(self, info: CompletionInfo, *_args, **_kwargs):
+        if info.current.startswith("-") and ("--" not in info.words[0:-1]):
+            return [
+                Completion(param.cli_name, description=param.description or "")
+                for param in self.key_params
+            ]
+
+        else:
+            # We are completing for an option
+            param_name = None
+            if (
+                len(info.words) >= 1
+                and info.current == ""
+                and info.words[-1].startswith("-")
+            ):
+                param_name = info.words[-1]
+
+            if param_name:
+                param_name = param_name.lstrip("-")
+                param = self.get_param(param_name)
+                if param and param.is_option and "--" not in info.words:
+                    return get_completions(param, info)
+
+            else:
+                # We are completing for a positional argument
+                # TODO: This approach does not take into consideration positonal
+                # arguments that are peppered in between options. It only counts ones
+                # at the end of the command line. Addtionally, it does not take into
+                # account that collection types can include more than 1 positional
+                # argument.
+
+                pos_arg_count = 0
+                for word in reversed(info.words[1:]):
+                    if word.startswith("-") and word != "--":
+                        break
+                    pos_arg_count += 1
+
+                if info.current != "" and pos_arg_count > 0:
+                    pos_arg_count -= 1
+
+                args = list(self.argument_params)
+                if pos_arg_count < len(args):
+                    param = args[pos_arg_count]
+                    return get_completions(param, info)
+
+        return []
+
     @property
     def schema(self):
         return {
@@ -192,7 +240,7 @@ class Command(
 
     def __main(self, args: list[str]):
         global_args, command, command_args = self.split_args(args)
-        print(global_args, command, command_args)
+
         with self.create_ctx() as ctx:
             if (
                 global_args
@@ -270,6 +318,17 @@ class Command(
         return parser
 
     # Helpers --------------------------------------------------------------------
+
+    def complete(self, param_name: str):
+        param = self.get_param(param_name)
+        if param:
+            def inner(func: at.CompletionFunc):
+                param.comp_func = func # type: ignore
+                return func
+
+            return inner
+
+        raise errors.ParamError(f"No parameter with name: {param_name}")
 
     def autoload(self, *paths: str):
         Autoload(paths, self).load()

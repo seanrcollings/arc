@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+shell=$1
+
+if [[ "$shell" == "fish" ]]; then
+    fish -C 'and direnv reload; and python cli.py --autocomplete fish | source'
+elif [[ "$shell" == "bash" ]]; then
+    echo 'you picked bash'
+elif [[ "$shell" == "zsh" ]]; then
+    echo 'you picked zsh'
+else
+    echo 'Not a valid shell configuration'
+fi

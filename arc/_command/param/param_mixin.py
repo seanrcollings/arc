@@ -1,11 +1,12 @@
 from __future__ import annotations
 import typing as t
 from functools import cached_property
+from arc import autocompletions
 from arc.autocompletions import completions
 
 from arc.config import config
 
-from .param import Action, FlagParam, OptionParam
+from .param import Action, FlagParam, OptionParam, Param
 from .param_group import ParamGroup
 from .param_builder import ParamBuilder
 
@@ -75,6 +76,13 @@ class ParamMixin:
             if param.is_injected:
                 yield param
 
+    def get_param(self, name: str) -> t.Optional[Param]:
+        for param in self.params:
+            if name in (param.argument_name, param.param_name, param.short_name):
+                return param
+
+        return None
+
     def __add_version_param(self, group: ParamGroup):
         def version_callback(_value, ctx, _param):
             print(config.version)
@@ -115,14 +123,16 @@ class ParamMixin:
 
     def __add_autocomplete_param(self, group: ParamGroup):
         def autocomplete_callback(value, ctx, _param):
-            completions(value, ctx)
+            print(completions(value, ctx), end="")
             ctx.exit()
 
+        annotation = t.Literal[1]
+        annotation.__args__ = tuple(autocompletions.shells.keys())  # type: ignore
         group.insert(
             0,
             OptionParam(
                 "autocomplete",
-                annotation=str,
+                annotation=annotation,  # type: ignore
                 description="Shell completion support",
                 callback=autocomplete_callback,
                 default=None,

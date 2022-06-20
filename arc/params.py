@@ -3,6 +3,7 @@ import typing as t
 from arc import constants
 from arc._command.classful import lazy_class_signature
 from arc._command.param import param
+import arc.typing as at
 
 
 class ParamInfo:
@@ -17,6 +18,7 @@ class ParamInfo:
         action: param.Action = None,
         prompt: str = None,
         envvar: str = None,
+        complete: at.CompletionFunc = None,
     ):
         self.param_cls = param_cls
         self.param_name = param_name
@@ -27,6 +29,7 @@ class ParamInfo:
         self.action = action
         self.prompt = prompt
         self.envvar = envvar
+        self.complete = complete
 
     def dict(self):
         """Used to pass to `Param()` as **kwargs"""
@@ -39,6 +42,7 @@ class ParamInfo:
             "prompt": self.prompt,
             "envvar": self.envvar,
             "action": self.action,
+            "comp_func": self.complete,
         }
 
 
@@ -85,6 +89,7 @@ def Option(
     callback: t.Callable = None,
     prompt: str = None,
     envvar: str = None,
+    complete: at.CompletionFunc = None,
 ) -> t.Any:
     """A (generally optional) keyword parameter.
 
@@ -109,6 +114,7 @@ def Option(
         callback=callback,
         prompt=prompt,
         envvar=envvar,
+        complete=complete,
     )
 
 
