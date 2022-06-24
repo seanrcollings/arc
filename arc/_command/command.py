@@ -255,6 +255,16 @@ class Command(
             with command.create_ctx(parent=ctx) as commandctx:
                 return commandctx.run(command_args)
 
+    def parse_args(
+        self, args: list[str], ctx: Context
+    ) -> tuple[at.ParseResult, list[str]]:
+        parser = self.create_parser()
+        try:
+            return parser.parse_known_intermixed_args(args)
+        except errors.NotEnoughValues as e:
+            e.ctx = ctx
+            raise
+
     def process_parsed_result(
         self, res: at.ParseResult, ctx: Context
     ) -> tuple[dict[str, t.Any], list[Param]]:
@@ -322,8 +332,9 @@ class Command(
     def complete(self, param_name: str):
         param = self.get_param(param_name)
         if param:
+
             def inner(func: at.CompletionFunc):
-                param.comp_func = func # type: ignore
+                param.comp_func = func  # type: ignore
                 return func
 
             return inner

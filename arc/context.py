@@ -86,18 +86,7 @@ class Context:
         self._exit_stack.close()
 
     def run(self, args: list[str]):
-        if args:
-            parser = self.command.create_parser()
-            parsed, rest = parser.parse_known_intermixed_args(args)
-            if rest and not self.config.allow_unrecognized_args:
-                raise errors.UnrecognizedArgError(
-                    f"Unrecognized arguments: {' '.join(rest)}", self
-                )
-            else:
-                self.rest = rest
-        else:
-            parsed = {}
-
+        parsed = self.parse_args(args)
         processed, missing = self.command.process_parsed_result(parsed, self)
 
         if missing:
@@ -141,6 +130,21 @@ class Context:
 
         with ctx:
             return callback(**kwargs)
+
+    def parse_args(self, args: list[str]):
+        if args:
+            parsed, rest = self.command.parse_args(args, self)
+
+            if rest and not self.config.allow_unrecognized_args:
+                raise errors.UnrecognizedArgError(
+                    f"Unrecognized arguments: {' '.join(rest)}", self
+                )
+            else:
+                self.rest = rest
+        else:
+            parsed = {}
+
+        return parsed
 
     def create_child(self, command: _command.Command) -> Context:
         """Creates a new context that is the child of the current context"""

@@ -166,6 +166,21 @@ class TestTuple:
         assert cli("any-size 1 2 3 4") == (1, 2, 3, 4)
         assert cli("any-size 1 2 3 4 5 6") == (1, 2, 3, 4, 5, 6)
 
+    def test_not_enough_args(self, cli: arc.Command):
+        @cli.subcommand()
+        def not_enough_pos(val: tuple[int, int]):
+            return val
+
+        with pytest.raises(errors.NotEnoughValues):
+            cli("not-enough-pos 1")
+
+        @cli.subcommand()
+        def not_enough_opt(*, val: tuple[int, int]):
+            return val
+
+        with pytest.raises(errors.NotEnoughValues):
+            cli("not-enough-opt --val 1")
+
 
 class TestSet:
     def test_standard(self, cli: arc.Command):

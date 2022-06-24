@@ -65,6 +65,10 @@ class InvalidArgValue(UsageError, ArgumentError):
     ...
 
 
+class NotEnoughValues(UsageError, ArgumentError):
+    ...
+
+
 class InternalError(ArcError):
     """Errors that fire due to development / internal errors"""
 
