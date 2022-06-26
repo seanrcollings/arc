@@ -88,19 +88,13 @@ class ParamMixin:
         return None
 
     def __add_version_param(self, group: ParamGroup):
-        def version_callback(_value, ctx, _param):
-            print(config.version)
-            ctx.exit()
-
-        group.insert(
-            0,
+        group.append(
             FlagParam(
                 "version",
                 short_name="v",
                 annotation=bool,
                 description="Displays the app's version number",
                 default=False,
-                # callback=version_callback,
                 action=CustomVersionAction,
                 expose=False,
             ),
@@ -123,8 +117,7 @@ class ParamMixin:
     def __add_autocomplete_param(self, group: ParamGroup):
         annotation = t.Literal[1]
         annotation.__args__ = tuple(autocompletions.shells.keys())  # type: ignore
-        group.insert(
-            0,
+        group.append(
             OptionParam(
                 "autocomplete",
                 annotation=annotation,  # type: ignore

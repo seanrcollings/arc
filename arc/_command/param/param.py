@@ -195,6 +195,11 @@ class Param(
     ) -> T | MissingType:
         value, origin = self.get_value(res, ctx)
 
+        if self.is_required and value is None:
+            raise errors.MissingArgError(
+                f"argument {colorize(self.cli_name, fg.YELLOW)} expected 1 argument"
+            )
+
         if value not in (None, MISSING, True, False) and self.type.origin not in (
             bool,
             t.Any,

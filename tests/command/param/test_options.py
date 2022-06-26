@@ -24,6 +24,9 @@ class TestOptionDeclaration:
         with pytest.raises(errors.MissingArgError):
             command("")
 
+        with pytest.raises(errors.MissingArgError):
+            command("--name")
+
 
 def test_ordering():
     @arc.command()
