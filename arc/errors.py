@@ -8,7 +8,12 @@ if t.TYPE_CHECKING:
 
 
 class Exit(SystemExit):
-    ...
+    def __init__(self, code: int = 0, message: str | None = None) -> None:
+        super().__init__(code)
+        self.message = message
+
+    def __str__(self) -> str:
+        return self.message or super().__str__()
 
 
 class ArcError(Exception):
@@ -65,7 +70,7 @@ class InvalidArgValue(UsageError, ArgumentError):
     ...
 
 
-class NotEnoughValues(UsageError, ArgumentError):
+class ParserError(UsageError, ArgumentError):
     ...
 
 

@@ -154,6 +154,10 @@ class HelpFormatter(TextFormatter):
         name = ""
         if param["kind"] == "argument":
             name = param["name"]
+
+            nargs = param["nargs"]
+            if isinstance(nargs, int) and nargs:
+                name += f" {name}" * (nargs - 1)
         else:
             if param["short_name"] is not None:
                 name = f"-{param['short_name']}"
@@ -161,7 +165,13 @@ class HelpFormatter(TextFormatter):
                 name = f"--{param['name']}"
 
             if param["kind"] == "option":
-                name += " <...>"
+                value = f" {param['name'].upper()}"
+
+                nargs = param["nargs"]
+                if isinstance(nargs, int) and nargs:
+                    value += value * (nargs - 1)
+
+                name += value
 
         if param["optional"]:
             name = f"[{name}]"

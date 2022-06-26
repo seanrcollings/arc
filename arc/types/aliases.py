@@ -152,8 +152,7 @@ class _CollectionAlias(Alias):
     def convert(cls, value: t.Any):
         if isinstance(value, str):
             return cls.alias_for(value.split(","))
-        elif isinstance(value, list):
-            return cls.alias_for(value)
+        return cls.alias_for(value)
 
     @classmethod
     def g_convert(cls, value: str, typ: TypeInfo, ctx):

@@ -15,7 +15,7 @@ def test_group():
     def command(group: Group):
         return group
 
-    assert len(list(command.cli_params)) == 4
+    assert len(list(command.cli_params)) == 3
     group = command("1 2")
     assert group.val == 1
     assert group.other_val == 2
@@ -35,7 +35,7 @@ def test_subgroup():
     def command(group: Group):
         return group
 
-    assert len(list(command.cli_params)) == 4
+    assert len(list(command.cli_params)) == 3
 
     group = command("1 2")
     assert group.val == 1

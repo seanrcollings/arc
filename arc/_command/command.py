@@ -261,7 +261,7 @@ class Command(
         parser = self.create_parser()
         try:
             return parser.parse_known_intermixed_args(args)
-        except errors.NotEnoughValues as e:
+        except errors.ParserError as e:
             e.ctx = ctx
             raise
 
@@ -323,7 +323,7 @@ class Command(
     def create_parser(self) -> Parser:
         parser = Parser(add_help=False)
         for param in self.cli_params:
-            parser.add_param(param)
+            parser.add_param(param, self)
 
         return parser
 

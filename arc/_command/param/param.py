@@ -1,10 +1,12 @@
 from __future__ import annotations
+import argparse
 from dataclasses import dataclass
 import enum
 from functools import cached_property
 import os
 import typing as t
 from unittest.mock import DEFAULT
+from xml.etree.ElementPath import prepare_parent
 
 from arc import errors, utils
 from arc.autocompletions import Completion, CompletionInfo, get_completions
@@ -66,7 +68,7 @@ class Param(
     prompt: str | None
     """Optional input prompt text to pull the value from
     stdin with when no valus is provided on the CLI"""
-    action: Action
+    action: Action | t.Type[argparse.Action]
     """argparse action associated with this param"""
     expose: bool
     """If a param is 'exposed' it will be passed to the command's callback.
@@ -86,7 +88,7 @@ class Param(
         callback: t.Callable | None = None,
         envvar: str | None = None,
         prompt: str | None = None,
-        action: Action | None = None,
+        action: Action | t.Type[argparse.Action] | None = None,
         expose: bool = True,
         comp_func: at.CompletionFunc | None = None,
     ):
@@ -258,6 +260,13 @@ class ArgumentParam(
     @property
     def is_argument(self):
         return True
+
+    # @property
+    # def nargs(self):
+    #     if utils.safe_issubclass(self.type.origin, (tuple, list, set)):
+    #         return "*"  # Consume one or more
+
+    #     return "?"  # Optional
 
     def get_param_names(self) -> list[str]:
         return [self.argument_name]

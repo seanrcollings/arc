@@ -171,14 +171,14 @@ class TestTuple:
         def not_enough_pos(val: tuple[int, int]):
             return val
 
-        with pytest.raises(errors.NotEnoughValues):
+        with pytest.raises(errors.ParserError):
             cli("not-enough-pos 1")
 
         @cli.subcommand()
         def not_enough_opt(*, val: tuple[int, int]):
             return val
 
-        with pytest.raises(errors.NotEnoughValues):
+        with pytest.raises(errors.ParserError):
             cli("not-enough-opt --val 1")
 
 

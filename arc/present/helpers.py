@@ -1,21 +1,30 @@
 import typing as t
 
+from arc.color import colorize
+
 
 class Joiner:
     @staticmethod
-    def join(values: t.Iterable, string: str, remove_falsey: bool = False):
+    def join(
+        values: t.Iterable,
+        string: str,
+        remove_falsey: bool = False,
+        style: t.Iterable[str] = None,
+    ):
         if remove_falsey:
             values = [v for v in values if v]
 
-        return string.join(str(v) for v in values)
+        style = style or []
+
+        return string.join(colorize(v, *style) for v in values)
 
     @staticmethod
     def with_space(values: t.Iterable, remove_falsey: bool = False):
         return Joiner.join(values, " ", remove_falsey)
 
     @staticmethod
-    def with_comma(values: t.Iterable, remove_falsey: bool = False):
-        return Joiner.join(values, ", ", remove_falsey)
+    def with_comma(values: t.Iterable, *args, **kwargs):
+        return Joiner.join(values, ", ", *args, **kwargs)
 
     @staticmethod
     def with_last(values: t.Sequence, string: str, last_string: str):

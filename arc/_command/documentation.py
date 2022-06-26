@@ -6,6 +6,8 @@ import typing as t
 from arc.config import config
 from arc._command.param import param
 from arc.present.help_formatter import HelpFormatter
+import arc.typing as at
+
 
 if t.TYPE_CHECKING:
     from arc._command.command import Command
@@ -26,6 +28,7 @@ class ParamDoc(t.TypedDict):
     description: str | None
     kind: ParamKinds
     optional: bool
+    nargs: at.NArgs
 
 
 class Documentation:
@@ -85,6 +88,7 @@ class Documentation:
                 or descriptions.get(param.argument_name),
                 "kind": KIND_MAPPING[type(param)],
                 "optional": param.is_optional,
+                "nargs": param.nargs,
             }
             for param in command.cli_params
         ]

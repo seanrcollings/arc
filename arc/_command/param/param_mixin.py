@@ -1,10 +1,12 @@
 from __future__ import annotations
+import argparse
 import typing as t
 from functools import cached_property
 from arc import autocompletions
 from arc.autocompletions import completions
 
 from arc.config import config
+from arc.parser import CustomAutocompleteAction, CustomHelpAction, CustomVersionAction
 
 from .param import Action, FlagParam, OptionParam, Param
 from .param_group import ParamGroup
@@ -25,10 +27,12 @@ class ParamMixin:
 
         default = ParamGroup.get_default_group(groups)
         if self.is_root and not self.is_namespace:
-            self.__add_autocomplete_param(default)
 
             if config.version:
                 self.__add_version_param(default)
+
+            if config.autocomplete:
+                self.__add_autocomplete_param(default)
 
         self.__add_help_param(default)
 
@@ -96,17 +100,13 @@ class ParamMixin:
                 annotation=bool,
                 description="Displays the app's version number",
                 default=False,
-                callback=version_callback,
-                action=Action.STORE_TRUE,
+                # callback=version_callback,
+                action=CustomVersionAction,
                 expose=False,
             ),
         )
 
     def __add_help_param(self, group: ParamGroup):
-        def help_callback(_value, ctx, _param):
-            print(ctx.command.doc.help())
-            ctx.exit()
-
         group.insert(
             0,
             FlagParam(
@@ -115,17 +115,12 @@ class ParamMixin:
                 annotation=bool,
                 description="Displays this help message",
                 default=False,
-                callback=help_callback,
-                action=Action.STORE_TRUE,
+                action=CustomHelpAction,
                 expose=False,
             ),
         )
 
     def __add_autocomplete_param(self, group: ParamGroup):
-        def autocomplete_callback(value, ctx, _param):
-            print(completions(value, ctx), end="")
-            ctx.exit()
-
         annotation = t.Literal[1]
         annotation.__args__ = tuple(autocompletions.shells.keys())  # type: ignore
         group.insert(
@@ -134,7 +129,7 @@ class ParamMixin:
                 "autocomplete",
                 annotation=annotation,  # type: ignore
                 description="Shell completion support",
-                callback=autocomplete_callback,
+                action=CustomAutocompleteAction,
                 default=None,
                 expose=False,
             ),

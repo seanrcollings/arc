@@ -1,14 +1,22 @@
 from __future__ import annotations
-import re
+import enum
 import typing as t
 import argparse
 from gettext import gettext as _, ngettext
 
 from arc._command.param import Action, Param
+from arc.autocompletions import completions
+from arc.color import fg
+from arc.config import config
 from arc.constants import MISSING
+from arc.context import Context
 import arc.typing as at
 from arc import errors
 from arc.present.helpers import Joiner
+from arc.utils import safe_issubclass
+
+if t.TYPE_CHECKING:
+    from arc._command.command import Command
 
 
 class Parser(argparse.ArgumentParser):
@@ -24,11 +32,16 @@ class Parser(argparse.ArgumentParser):
         parsed, rest = super().parse_known_intermixed_args(args, namespace)
         return (dict(parsed._get_kwargs()), rest)
 
-    def add_param(self, param: Param):
+    def add_param(self, param: Param, command: Command):
         kwargs: dict[str, t.Any] = {
-            "action": param.action.value,
+            "action": param.action.value
+            if isinstance(param.action, enum.Enum)
+            else param.action,
             "default": MISSING,
         }
+
+        if safe_issubclass(param.action, CustomAction):
+            kwargs["command"] = command
 
         if param.action is Action.STORE:
             kwargs["nargs"] = param.nargs
@@ -124,7 +137,7 @@ class Parser(argparse.ArgumentParser):
                 try:
                     return self._match_argument(action, args_str_pattern)
                 except argparse.ArgumentError as e:
-                    raise errors.NotEnoughValues(str(e)) from e
+                    raise errors.ParserError(str(e)) from e
 
             match_argument = _wrapped_match_argument
             # ORIGINAL ------------------------------------------
@@ -283,8 +296,9 @@ class Parser(argparse.ArgumentParser):
 
         if required_actions:
             # MODIFIED -----------------------------------------------------------
-            raise errors.NotEnoughValues(
-                f"the following arguments are required: {Joiner.with_comma(required_actions)}"
+            self.error(
+                _("the following arguments are required: %s")
+                % Joiner.with_comma(required_actions, style=(fg.YELLOW))
             )
             # ORIGINAL -----------------------------------------------------------
             # self.error(
@@ -312,3 +326,33 @@ class Parser(argparse.ArgumentParser):
 
         # return the updated namespace and the extra arguments
         return namespace, extras
+
+    def error(self, message: str) -> t.NoReturn:
+        raise errors.ParserError(message)
+
+    def exit(self, status: int = 0, message: str | None = None) -> t.NoReturn:
+        raise errors.Exit(status, message)
+
+
+class CustomAction(argparse.Action):
+    def __init__(self, *args, command: Command, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.command = command
+
+
+class CustomHelpAction(CustomAction, argparse._HelpAction):
+    def __call__(self, *args, **kwargs):
+        print(self.command.doc.help())
+        raise errors.Exit()
+
+
+class CustomVersionAction(CustomAction, argparse._VersionAction):
+    def __call__(self, *args, **kwargs):
+        print(config.version)
+        raise errors.Exit()
+
+
+class CustomAutocompleteAction(CustomAction, argparse._StoreAction):
+    def __call__(self, _parser, _ns, value, *args, **kwargs):
+        print(completions(value, Context.current()), end="")
+        raise errors.Exit()
