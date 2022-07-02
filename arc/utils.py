@@ -1,11 +1,16 @@
 from __future__ import annotations
+import contextlib
 import functools
 import os
 import re
+import shlex
 import sys
 from types import MethodType
 import typing as t
 import arc.typing as at
+
+if t.TYPE_CHECKING:
+    from arc._command import Command
 
 
 def safe_issubclass(typ, classes: type | tuple[type, ...]) -> bool:
@@ -118,3 +123,29 @@ def ansi_len(string: str):
             length += 1
 
     return length
+
+
+@contextlib.contextmanager
+def environ(**env: str):
+    copy = os.environ.copy()
+    os.environ.clear()
+    os.environ.update(env)
+    try:
+        yield
+    finally:
+        os.environ.clear()
+        os.environ.update(copy)
+
+
+def test_completions(command: Command, shell: str, cmd_line: list[str] | str):
+    if isinstance(cmd_line, str):
+        cmd_line = shlex.split(cmd_line)
+
+    completions_var = f"_{command.name}_complete".upper().replace("-", "_")
+    env = {
+        completions_var: "true",
+        "COMP_WORDS": " ".join(cmd_line),
+        "COMP_CURRENT": cmd_line[-1],
+    }
+    with environ(**env):
+        command(f"--autocomplete {shell}")

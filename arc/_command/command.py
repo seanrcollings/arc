@@ -130,49 +130,69 @@ class Command(
             raise
 
     def __completions__(self, info: CompletionInfo, *_args, **_kwargs):
-        if info.current.startswith("-") and ("--" not in info.words[0:-1]):
-            return [
-                Completion(param.cli_name, description=param.description or "")
-                for param in self.key_params
-            ]
+        global_args, command, command_args = self.split_args(info.words)
 
+        if command is self:
+            args = global_args
         else:
-            # We are completing for an option
-            param_name = None
-            if (
-                len(info.words) >= 1
-                and info.current == ""
-                and info.words[-1].startswith("-")
-            ):
-                param_name = info.words[-1]
+            args = command_args
 
-            if param_name:
-                param_name = param_name.lstrip("-")
-                param = self.get_param(param_name)
-                if param and param.is_option and "--" not in info.words:
-                    return get_completions(param, info)
+        def write(*strings: str):
+            with open("output.txt", "w") as f:
+                print(*strings, file=f)
 
+        if not args and command.subcommands:
+            write("Complete for subcommands")
+            return command.__complete_subcommands(info)
+        elif info.current.startswith("-"):
+            write("Complete for option")
+            return command.__complete_option(info)
+        elif len(args) >= 1 and args[-1].startswith("-"):
+            write("Complete for option values")
+            return command.__complete_param_value(info, args[-1].lstrip("-"))
+        elif len(args) >= 2 and args[-2].startswith("-"):
+            write("Complete for option values")
+            return command.__complete_param_value(info, args[-2].lstrip("-"))
+        else:
+            if command.is_root and command.subcommands:
+                write("Complete for subcommands")
+                return command.__complete_subcommands(info)
             else:
-                # We are completing for a positional argument
-                # TODO: This approach does not take into consideration positonal
-                # arguments that are peppered in between options. It only counts ones
-                # at the end of the command line. Addtionally, it does not take into
-                # account that collection types can include more than 1 positional
-                # argument.
+                write("Complete for positional values")
+                return command.__complete_positional_value(info, args)
 
-                pos_arg_count = 0
-                for word in reversed(info.words[1:]):
-                    if word.startswith("-") and word != "--":
-                        break
-                    pos_arg_count += 1
+    def __complete_subcommands(self, info: CompletionInfo):
+        return [Completion(command.name) for command in self.subcommands.values()]
 
-                if info.current != "" and pos_arg_count > 0:
-                    pos_arg_count -= 1
+    def __complete_option(self, info: CompletionInfo):
+        return [Completion(param.cli_name) for param in self.key_params]
 
-                args = list(self.argument_params)
-                if pos_arg_count < len(args):
-                    param = args[pos_arg_count]
-                    return get_completions(param, info)
+    def __complete_param_value(self, info: CompletionInfo, param_name: str):
+        param = self.get_param(param_name)
+        if not param:
+            return []
+
+        return get_completions(param, info)
+
+    def __complete_positional_value(self, info: CompletionInfo, args: list[str]):
+        # TODO: This approach does not take into consideration positonal
+        # arguments that are peppered in between options. It only counts ones
+        # at the end of the command line. Addtionally, it does not take into
+        # account that collection types can include more than 1 positional
+        # argument.
+        pos_arg_count = 0
+        for word in reversed(args):
+            if word.startswith("-") and word != "--":
+                break
+            pos_arg_count += 1
+
+        if info.current != "" and pos_arg_count > 0:
+            pos_arg_count -= 1
+
+        arg_params = list(self.argument_params)
+        if pos_arg_count < len(arg_params):
+            param = arg_params[pos_arg_count]
+            return get_completions(param, info)
 
         return []
 
