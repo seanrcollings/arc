@@ -117,10 +117,10 @@ class Documentation:
             if line.startswith("#"):
                 current_section = line[1:].strip().lower()
                 parsed[current_section] = ""
-            elif line:
+            else:
                 parsed[current_section] += line + "\n"
 
-        return parsed
+        return {key: value.strip() for key, value in parsed.items()}
 
     @cached_property
     def _parsed_argument_section(self) -> dict[str, str]:

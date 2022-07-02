@@ -59,9 +59,9 @@ def test_advanced_parsing():
         - 3
         """
 
-        assert utils.ansi_clean(
-            command.doc.help()
-            == """\
+    assert (
+        utils.ansi_clean(command.doc.help())
+        == """\
 USAGE
     command [-h]
 
@@ -80,7 +80,7 @@ SECTION
     - 2
     - 3
 """
-        )
+    )
 
 
 def test_subcommands():
