@@ -40,7 +40,7 @@ nav:
       - Intro: usage/intro.md
       - Command Paramaters: usage/command-parameters.md
       - Paramater Types: usage/parameter-types.md
-      - Using the CLI: usage/cli.md
+      - Subcommands: usage/subcommands.md
       - Documentation Generation: usage/documentation-generation.md
       - Colored Output: usage/colored-output.md
       - Callbacks: usage/callbacks.md
@@ -50,9 +50,4 @@ nav:
       - Shell Completions: usage/shell-completions.md
   - Examples:
       - Grep Clone: examples/grep-clone.md
-  - Reference:
-      - arc.cli: reference/cli.md
-      - arc.color: reference/color.md
-      - arc.command: reference/command.md
-      - arc.config: reference/config.md
   - Changelog: changelog.md

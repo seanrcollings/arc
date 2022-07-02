@@ -23,13 +23,13 @@ hello()
 ```
 
 ```
-$ python example.py hello Sean
+$ python hello.py Sean
 Hello, Sean!
 ```
 
 ```
 USAGE
-    example.py [-h] [--] name
+    hello.py [-h] [--] name
 
 DESCRIPTION
     My first arc program!

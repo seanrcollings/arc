@@ -31,7 +31,7 @@ To start off, here's a simple example application that can be used to greet some
 
 
 ```console
---8<-- "examples/outputs/hello_exec"
+--8<-- "examples/outputs/hello"
 ```
 
 ### Automatic Documentation
