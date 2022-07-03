@@ -1,5 +1,4 @@
 from __future__ import annotations
-from ast import alias
 import inspect
 import sys
 import typing as t
@@ -130,6 +129,9 @@ class Command(
             raise
 
     def __completions__(self, info: CompletionInfo, *_args, **_kwargs):
+        # TODO: it does not take into
+        # account that collection types can include more than 1 positional
+        # argument.
         global_args, command, command_args = self.split_args(info.words)
 
         if command is self:
@@ -137,28 +139,18 @@ class Command(
         else:
             args = command_args
 
-        def write(*strings: str):
-            with open("output.txt", "w") as f:
-                print(*strings, file=f)
-
         if not args and command.subcommands:
-            write("Complete for subcommands")
             return command.__complete_subcommands(info)
         elif info.current.startswith("-"):
-            write("Complete for option")
             return command.__complete_option(info)
         elif len(args) >= 1 and args[-1].startswith("-"):
-            write("Complete for option values")
             return command.__complete_param_value(info, args[-1].lstrip("-"))
         elif len(args) >= 2 and args[-2].startswith("-"):
-            write("Complete for option values")
             return command.__complete_param_value(info, args[-2].lstrip("-"))
         else:
             if command.is_root and command.subcommands:
-                write("Complete for subcommands")
                 return command.__complete_subcommands(info)
             else:
-                write("Complete for positional values")
                 return command.__complete_positional_value(info, args)
 
     def __complete_subcommands(self, info: CompletionInfo):
@@ -177,9 +169,7 @@ class Command(
     def __complete_positional_value(self, info: CompletionInfo, args: list[str]):
         # TODO: This approach does not take into consideration positonal
         # arguments that are peppered in between options. It only counts ones
-        # at the end of the command line. Addtionally, it does not take into
-        # account that collection types can include more than 1 positional
-        # argument.
+        # at the end of the command line.
         pos_arg_count = 0
         for word in reversed(args):
             if word.startswith("-") and word != "--":
