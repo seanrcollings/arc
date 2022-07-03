@@ -159,3 +159,23 @@ def test_remove_decorator():
     # Shouldn't raise, because the decorator isn't present
     c1("c2")
     c1("c2 sub2")
+
+
+def test_non_inheritable():
+    @arc.decorator(inherit=False)
+    def cb(ctx):
+        raise CallbackException(ctx)
+
+    @cb
+    @arc.command()
+    def command():
+        ...
+
+    @command.subcommand()
+    def sub():
+        ...
+
+    with pytest.raises(CallbackException):
+        command("")
+
+    command("sub")

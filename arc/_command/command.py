@@ -242,7 +242,8 @@ class Command(
         decos, command.decorators = command.decorators, DecoratorStack()
 
         for deco in self.decorators:
-            command.decorators.add(deco)
+            if deco.inherit:
+                command.decorators.add(deco)
         for deco in decos:
             command.decorators.add(deco)
 
