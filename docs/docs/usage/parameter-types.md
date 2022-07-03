@@ -116,16 +116,6 @@ Enforces that the input must be a specific sub-set of values
 
 Constrains a dictionary input to a specific subset of keys and specific value types.
 
-`#!python typing.Optional`
-
-Indicates an optional parameter with a default of `None`. The following are functionality equivalent
-```py title="optional_argument.py"
---8<-- "examples/optional_argument.py"
-```
-```console
---8<-- "examples/outputs/optional_argument"
-```
-
 
 `#!python pathlib.Path`
 
@@ -262,22 +252,6 @@ Accepts floats, and integers in any base.
 `Char`
 
 Enforces that the string can only be a single character long
-
-### Strict Types
-
-`strictstr`
-
-
-`strictint`
-
-
-`strictfloat`
-
-
-`stricturl`
-
-
-`strictpath`
 
 
 ## Custom Types

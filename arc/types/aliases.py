@@ -12,7 +12,7 @@ import re
 
 import _io  # type: ignore
 
-from arc import errors, logging, utils
+from arc import errors, utils
 from arc import autocompletions
 from arc.autocompletions import Completion, CompletionInfo, CompletionType
 from arc.color import colorize, fg
@@ -31,9 +31,6 @@ from arc.types import type_info
 if t.TYPE_CHECKING:
     from arc.types.type_info import TypeInfo
     from arc.context import Context
-
-
-logger = logging.getArcLogger("ali")
 
 
 AliasFor = t.Union[Annotation, t.Tuple[Annotation, ...]]

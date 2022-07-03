@@ -1,9 +1,8 @@
 import arc
-from arc._command import callback
 
 
-@callback.create()
-def cb(args, ctx):
+@arc.decorator()
+def cb(ctx):
     print("before execution")
     yield
     print("after execution")
@@ -13,6 +12,11 @@ def cb(args, ctx):
 @arc.command()
 def command():
     print("command execution")
+
+
+@command.subcommand()
+def sub():
+    print("subcommand execution")
 
 
 command()

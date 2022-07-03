@@ -3,7 +3,6 @@ import typing as t
 from dataclasses import dataclass, field
 import arc.typing as at
 from arc.color import fg
-from arc import logging
 from arc.prompt import Prompt
 
 
@@ -103,6 +102,3 @@ def configure(
     for key, value in data.items():
         if value is not None:
             setattr(config, key, value)
-
-    if environment:
-        logging.root_setup(environment)

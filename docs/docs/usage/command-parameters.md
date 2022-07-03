@@ -17,12 +17,13 @@ In *arc*, command-line parameters are defined using Python function arguments. *
 - If no default value is given, the argument is required.
 
 ### Arguments to `#!python arc.Argument()`
-- `#!python name: str`: The name that will be used the the param on the command line
+- `#!python name: str`: The name that will be used the the param on the command line. If one is not given, the name of the argument will be used (after transforming from `snake_case` to `kebab-case`)
 - `#!python default: Any`: The default value for the param
 - `#!python  description: str`: A string that documents the use / purpose of the parameter. Will be used in `--help` documentation
 - `#!python  callback: Callable`: a function which will be called with the parsed value from the command line
 - `#!python complete: CompletionFunc`: a function which will be called to provide [completions](./shell-completions.md) for the parameter. This argument will superscede completions for the parameters type
-
+- `#!python envvar: str`: an environment variable to attempt to obtain the value from if one is not provided from user input
+- `#!python prompt: str`: an input prompt to prompt the user with a value if they do not provide one on the command line
 
 ## `arc.Option`
 Options are (usually optional) parameters that are identified by keyword.
@@ -47,7 +48,9 @@ Options are (usually optional) parameters that are identified by keyword.
 - `#!python  default: Any`: The default value for the param
 - `#!python  description: str`: A string that documents the use / purpose of the parameter. Will be used in `--help` documentation
 - `#!python  callback: Callable`: a function which will be called with the parsed value from the command line
-- - `#!python complete: CompletionFunc`: a function which will be called to provide [completions](./shell-completions.md) for the parameter. This argument will superscede completions for the parameters type
+- `#!python complete: CompletionFunc`: a function which will be called to provide [completions](./shell-completions.md) for the parameter. This argument will superscede completions for the parameters type
+- `#!python envvar: str`: an environment variable to attempt to obtain the value from if one is not provided from user input
+- `#!python prompt: str`: an input prompt to prompt the user with a value if they do not provide one on the command line
 
 
 

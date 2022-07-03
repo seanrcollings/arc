@@ -9,7 +9,7 @@ from unittest.mock import DEFAULT
 from xml.etree.ElementPath import prepare_parent
 
 from arc import errors, utils
-from arc.autocompletions import Completion, CompletionInfo, get_completions
+from arc.autocompletions import CompletionInfo, get_completions
 from arc.color import colorize, effects, fg
 from arc.prompt.prompts import input_prompt
 from arc.types.helpers import convert, iscontextmanager
@@ -177,6 +177,10 @@ class Param(
     def cli_name(self):
         return self.param_name
 
+    @property
+    def parser_default(self):
+        return MISSING
+
     @cached_property
     def nargs(self) -> at.NArgs:
         if (
@@ -299,11 +303,23 @@ class OptionParam(KeywordParam[t.Any]):
     def is_option(self):
         return True
 
+    @property
+    def parser_default(self):
+        if self.action is Action.APPEND:
+            return None
+        return MISSING
+
 
 class FlagParam(KeywordParam[bool]):
     @property
     def is_flag(self):
         return True
+
+    @property
+    def parser_default(self):
+        if self.action is Action.COUNT:
+            return 0
+        return MISSING
 
 
 class InjectedParam(Param):

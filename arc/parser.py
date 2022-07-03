@@ -33,12 +33,14 @@ class Parser(argparse.ArgumentParser):
         return (dict(parsed._get_kwargs()), rest)
 
     def add_param(self, param: Param, command: Command):
-        kwargs: dict[str, t.Any] = {
-            "action": param.action.value
-            if isinstance(param.action, enum.Enum)
-            else param.action,
-            "default": MISSING,
-        }
+        kwargs: dict[str, t.Any] = {}
+
+        kwargs["action"] = (
+            param.action.value if isinstance(param.action, enum.Enum) else param.action
+        )
+
+        if (default := param.parser_default) is not None:
+            kwargs["default"] = default
 
         if safe_issubclass(param.action, CustomAction):
             kwargs["command"] = command
