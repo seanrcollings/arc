@@ -19,7 +19,7 @@ from arc.color import colorize, fg
 from arc.present.helpers import Joiner
 from arc.types.helpers import (
     safe_issubclass,
-    convert,
+    convert_type,
 )
 from arc.prompt.prompts import select_prompt
 
@@ -113,7 +113,7 @@ class StringAlias(Alias, str, of=str):
     @classmethod
     def convert(cls, value: str, info: TypeInfo[str]) -> str:
         try:
-            return info.origin(value)
+            return str(value)
         except ValueError as e:
             raise errors.ConversionError(value, str(e))
 
@@ -127,8 +127,13 @@ class BytesAlias(bytes, Alias, of=bytes):
 class IntAlias(Alias, of=int):
     @classmethod
     def convert(cls, value: str, info: TypeInfo[int]) -> int:
+        args = info.type_arg
         try:
-            return info.origin(value)
+            if isinstance(value, str):
+                params = args.dict() if args else {}
+                return int(value, **params)
+            else:
+                return int(value)
         except ValueError as e:
             raise errors.ConversionError(value, "must be an integer", e)
 
@@ -195,7 +200,7 @@ class TupleAlias(tuple, _CollectionAlias, of=tuple):
             )
 
         return tuple(
-            convert(item_type.resolved_type, item, item_type, ctx)
+            convert_type(item_type.resolved_type, item, item_type, ctx)
             for item_type, item in zip(info.sub_types, tup)
         )
 
@@ -228,8 +233,8 @@ class DictAlias(dict, Alias, of=dict):
             return cls.alias_for(
                 [
                     (
-                        convert(key_type, k, key_sub, ctx),
-                        convert(value_type, v, value_sub, ctx),
+                        convert_type(key_type, k, key_sub, ctx),
+                        convert_type(value_type, v, value_sub, ctx),
                     )
                     for k, v in dct.items()
                 ]
@@ -255,7 +260,9 @@ class DictAlias(dict, Alias, of=dict):
 
             sub_info = type_info.TypeInfo.analyze(hints[key])
             try:
-                elements[key] = convert(sub_info.resolved_type, value, sub_info, ctx)
+                elements[key] = convert_type(
+                    sub_info.resolved_type, value, sub_info, ctx
+                )
             except errors.ConversionError as e:
                 raise errors.ConversionError(
                     value, f"{value} is not a valid value for key {key}", e
@@ -273,7 +280,7 @@ class UnionAlias(Alias, of=t.Union):
 
         for sub in info.sub_types:
             try:
-                return convert(sub.resolved_type, value, sub, ctx)
+                return convert_type(sub.resolved_type, value, sub, ctx)
             except Exception:
                 ...
 

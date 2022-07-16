@@ -55,3 +55,7 @@ class Suggestions(t.TypedDict, total=False):
     distance: int
     suggest_params: bool
     suggest_commands: bool
+
+
+T = t.TypeVar("T")
+MiddlewareCallable = t.Callable[[T], T]

@@ -3,7 +3,6 @@ import typing as t
 
 from arc import errors
 from arc.autocompletions import Completion, CompletionInfo, CompletionType
-from arc.types.strict import RegexValidator, StrictType
 
 
 __all__ = ["ValidPath", "FilePath", "DirectoryPath"]
@@ -15,17 +14,17 @@ __all__ = ["ValidPath", "FilePath", "DirectoryPath"]
 PathType = type(pathlib.Path())
 
 
-class ValidPath(StrictType[pathlib.Path], RegexValidator, PathType):  # type: ignore
+class ValidPath(PathType):  # type: ignore
     valid: t.ClassVar[bool] = True
     directory: t.ClassVar[bool] = False
     file: t.ClassVar[bool] = False
-    matches: t.ClassVar[t.Optional[str]] = None
+
+    def __new__(cls, value: str):
+        return cls.validate(value)
 
     @classmethod
     def validate(cls, value: str) -> pathlib.Path:
         path = pathlib.Path(value)
-
-        cls._match(value)
 
         if cls.valid and not path.exists():
             raise ValueError(f"{value} is not a file or directory")

@@ -65,7 +65,7 @@ class Context:
     def current(cls) -> Context:
         """Returns the current context"""
         if not cls._stack:
-            raise RuntimeError("No contexts exist")
+            raise errors.ArcError("No contexts exist")
 
         return cls._stack[-1]
 

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from arc.context import Context
 
 
-def convert(
+def convert_type(
     protocol: type[TypeProtocol],
     value: Any,
     info: TypeInfo,

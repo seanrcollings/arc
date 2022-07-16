@@ -5,7 +5,7 @@ import enum
 import pytest
 import arc
 from arc import errors
-from arc.types import File, Range
+from arc.types import File
 from arc import Context
 
 
@@ -297,27 +297,6 @@ def test_literal(cli: arc.Command):
 
     with pytest.raises(errors.ArgumentError):
         cli("li other")
-
-
-def test_range(cli: arc.Command):
-    @cli.subcommand()
-    def ra(range: Annotated[Range, 1, 10]):
-        return range
-
-    assert (res := cli("ra 1")) == 1 and isinstance(res, Range)
-    assert cli("ra 5") == 5
-    assert cli("ra 10") == 10
-
-    with pytest.raises(errors.InvalidArgValue):
-        cli("ra 11")
-
-    with pytest.raises(errors.ArgumentError):
-
-        @cli.subcommand()
-        def ra(range: Range):
-            return int(range)
-
-        cli("ra 10")
 
 
 @pytest.mark.parametrize("val", ["string", 1, 2, 100000, 1.3, 200])

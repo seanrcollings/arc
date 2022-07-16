@@ -74,6 +74,10 @@ class ParserError(UsageError, ArgumentError):
     ...
 
 
+class ValidationError(ArgumentError):
+    ...
+
+
 class InternalError(ArcError):
     """Errors that fire due to development / internal errors"""
 

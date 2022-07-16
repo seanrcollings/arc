@@ -12,7 +12,7 @@ from arc import errors, utils
 from arc.autocompletions import CompletionInfo, get_completions
 from arc.color import colorize, effects, fg
 from arc.prompt.prompts import input_prompt
-from arc.types.helpers import convert, iscontextmanager
+from arc.types.helpers import convert_type, iscontextmanager
 from arc.types.type_info import TypeInfo
 import arc.typing as at
 from arc.types import aliases
@@ -211,6 +211,8 @@ class Param(
         ):
             value = self.convert(value, ctx)
 
+        self.validate(value, ctx)
+
         if self.callback and value is not MISSING and origin is not ValueOrigin.DEFAULT:
             value = self.callback(value, ctx, self) or value
 
@@ -218,18 +220,6 @@ class Param(
             value = ctx.resource(value)  # type: ignore
 
         return value
-
-    def convert(self, value: t.Any, ctx: Context) -> T:
-        try:
-            return convert(self.type.resolved_type, value, self.type, ctx)
-        except errors.ConversionError as e:
-            message = (
-                f"invalid value for {colorize(self.cli_name, fg.YELLOW)}: "
-                f"{colorize(str(e), effects.BOLD)}"
-            )
-            if e.details:
-                message += colorize(f" ({e.details})", fg.GREY)
-            raise errors.InvalidArgValue(message, ctx) from e
 
     def get_value(
         self, res: at.ParseResult, ctx: Context
@@ -250,6 +240,23 @@ class Param(
 
         return (value, origin)
 
+    def convert(self, value: t.Any, ctx: Context) -> T:
+        try:
+            return convert_type(self.type.resolved_type, value, self.type, ctx)
+        except errors.ConversionError as e:
+            message = self._fmt_error(e)
+            if e.details:
+                message += colorize(f" ({e.details})", fg.GREY)
+            raise errors.InvalidArgValue(message, ctx) from e
+
+    def validate(self, value: t.Any, ctx: Context):
+        for middleware in self.type.middleware:
+            try:
+                middleware(value)
+            except errors.ValidationError as e:
+                message = self._fmt_error(e)
+                raise errors.InvalidArgValue(message, ctx) from e
+
     def get_env_value(self, ctx: Context):
         return os.getenv(f"{ctx.config.env_prefix}{self.envvar}")
 
@@ -261,6 +268,12 @@ class Param(
 
     def get_param_names(self) -> list[str]:
         return []
+
+    def _fmt_error(self, error: errors.ArcError):
+        return (
+            f"invalid value for {colorize(self.cli_name, fg.YELLOW)}: "
+            f"{colorize(str(error), effects.BOLD)}"
+        )
 
 
 class ArgumentParam(

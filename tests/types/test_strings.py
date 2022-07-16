@@ -1,11 +1,11 @@
 import pytest
+import arc
+from arc import errors
 from arc.types import strings
-
-# TODO: add tests for other string validators
 
 
 def test_char():
-    assert strings.Char("h") == "h"
+    assert arc.convert("h", strings.Char) == "h"
 
-    with pytest.raises(ValueError):
-        strings.Char("longer")
+    with pytest.raises(errors.ValidationError):
+        arc.convert("longer", strings.Char)

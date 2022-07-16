@@ -30,19 +30,6 @@ class TestImpl:
         with pytest.raises(ValueError):
             path.DirectoryPath("tests/conftest.py")
 
-    def test_strict(self):
-        class InHomeDir(path.ValidPath):
-            valid = False
-            matches = rf"^{pathlib.Path.home()}.*"
-
-        assert (
-            InHomeDir(str(pathlib.Path.home() / "something"))
-            == pathlib.Path.home() / "something"
-        )
-
-        with pytest.raises(ValueError):
-            InHomeDir("/tmp")
-
 
 def test_usage():
     @arc.command()

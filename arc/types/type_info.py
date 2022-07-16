@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from functools import cached_property
 import typing as t
 from arc.types.aliases import Alias
+from arc.types.type_arg import TypeArg
 
 import arc.typing as at
 
@@ -26,6 +27,22 @@ class TypeInfo(t.Generic[T]):
             or getattr(self.origin, "__name__", None)
             or str(self.origin)
         )
+
+    @cached_property
+    def type_arg(self):
+        args = (a for a in self.annotations if isinstance(a, TypeArg))
+        try:
+            curr = next(args)
+        except StopIteration:
+            return None
+
+        for arg in args:
+            curr |= arg
+        return curr
+
+    @cached_property
+    def middleware(self) -> list[at.MiddlewareCallable]:
+        return [a for a in self.annotations if callable(a)]
 
     @property
     def is_union_type(self) -> bool:

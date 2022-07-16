@@ -6,19 +6,17 @@ import typing as t
 
 from arc import errors
 from arc.present.helpers import Joiner
-from arc.types.strict import RegexValidator
 
 __all__ = ["IPAddress", "Url", "HttpUrl", "PostgresUrl"]
 
 IPAddress = t.Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
 
 
-class Url(RegexValidator, str):
+class Url(str):
     allowed_schemes: t.ClassVar[set[str]] = set()
     strip_whitespace: t.ClassVar[bool] = True
     host_required: t.ClassVar[bool] = False
     user_required: t.ClassVar[bool] = False
-    matches: t.ClassVar[str | None] = None
 
     __slots__ = (
         "url",
@@ -70,8 +68,6 @@ class Url(RegexValidator, str):
 
         if cls.strip_whitespace:
             url = url.strip()
-
-        cls._match(url)
 
         result = urlparse(url.strip())
 
