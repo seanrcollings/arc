@@ -78,7 +78,7 @@ class Between:
         self.upper = upper
 
     def __call__(self, value: SupportsComparison):
-        if value < self.lower or value > self.upper:
+        if value <= self.lower or value >= self.upper:
             raise errors.ValidationError(
                 f"must be between {self.lower} and {self.upper}"
             )
