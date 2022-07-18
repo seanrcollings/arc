@@ -57,7 +57,7 @@ class Box:
         border: Border = "regular",
         padding: Union[int, dict[str, int]] = 0,
         justify: Justification = "left",
-        color: color.Ansi = color.fg.WHITE,
+        color: str = color.fg.WHITE,
     ):
         """
         Args:

@@ -1,6 +1,7 @@
 from typing import Any, TypeVar
 from getpass import getpass
 
+import arc
 from arc.color import fg, effects
 from .helpers import write, PREVIOUS_LINE, clear_line
 from .questions import Question, QuestionError, ConfirmQuestion, InputQuestion

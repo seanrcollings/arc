@@ -1,4 +1,5 @@
 from __future__ import annotations
+import arc
 from arc.color import fg, effects
 
 RGB = tuple[int, int, int]
@@ -71,7 +72,7 @@ class Loader:
             self.progress = value
             self.arc.print()
 
-    def arc.print(self):
+    def print(self):
         arc.print(
             f"\r{self.format_str.format(bar=str(self), percent=self.percent)}",
             flush=True,
