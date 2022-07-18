@@ -55,8 +55,8 @@ class GreaterThan:
         self.smallest = smallest
 
     def __call__(self, value: SupportsComparison):
-        if value < self.smallest:
-            raise errors.ValidationError(f"must be greater than{self.smallest}")
+        if value <= self.smallest:
+            raise errors.ValidationError(f"must be greater than {self.smallest}")
 
         return value
 
@@ -66,7 +66,7 @@ class LessThan:
         self.largest = largest
 
     def __call__(self, value: SupportsComparison):
-        if value > self.largest:
+        if value >= self.largest:
             raise errors.ValidationError(f"must be less than {self.largest}")
 
         return value

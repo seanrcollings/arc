@@ -6,49 +6,62 @@ from arc import errors, validators
 
 class TestLen:
     def test_min_only(self):
-        assert arc.convert("1", t.Annotated[str, validators.Len(1)]) == "1"
-        assert arc.convert("1234", t.Annotated[str, validators.Len(4)]) == "1234"
+        assert validators.Len(1)("1") == "1"
+        assert validators.Len(4)("1234") == "1234"
 
         with pytest.raises(errors.ValidationError):
-            arc.convert("123", t.Annotated[str, validators.Len(4)])
+            validators.Len(4)("123")
 
         with pytest.raises(errors.ValidationError):
-            arc.convert("1234555", t.Annotated[str, validators.Len(4)])
+            validators.Len(4)("1234555")
 
     def test_min_max(self):
-        assert arc.convert("1", t.Annotated[str, validators.Len(1, 4)]) == "1"
-        assert arc.convert("12", t.Annotated[str, validators.Len(1, 4)]) == "12"
-        assert arc.convert("123", t.Annotated[str, validators.Len(1, 4)]) == "123"
-        assert arc.convert("1234", t.Annotated[str, validators.Len(1, 4)]) == "1234"
+        validator = validators.Len(1, 4)
+        assert validator("1") == "1"
+        assert validator("12") == "12"
+        assert validator("123") == "123"
+        assert validator("1234") == "1234"
 
         with pytest.raises(errors.ValidationError):
-            arc.convert("", t.Annotated[str, validators.Len(1, 4)])
+            validator("")
 
         with pytest.raises(errors.ValidationError):
-            arc.convert("1234555", t.Annotated[str, validators.Len(1, 4)])
+            validator("1234555")
 
 
 def test_greater_than():
-    assert arc.convert("11", t.Annotated[int, validators.GreaterThan(10)]) == 11
-    assert arc.convert("10", t.Annotated[int, validators.GreaterThan(10)]) == 10
+    validator = validators.GreaterThan(10)
+    assert validator(11) == 11
+    assert validator(12) == 12
 
     with pytest.raises(errors.ValidationError):
-        arc.convert("1", t.Annotated[int, validators.GreaterThan(10)])
+        validator(1)
+
+    with pytest.raises(errors.ValidationError):
+        validator(10)
 
 
 def test_less_than():
-    assert arc.convert("1", t.Annotated[int, validators.LessThan(10)]) == 1
-    assert arc.convert("10", t.Annotated[int, validators.LessThan(10)]) == 10
+    validator = validators.LessThan(10)
+    assert validator(1) == 1
+    assert validator(9) == 9
 
     with pytest.raises(errors.ValidationError):
-        arc.convert("11", t.Annotated[int, validators.LessThan(10)])
+        validator(11)
+
+    with pytest.raises(errors.ValidationError):
+        validator(10)
 
 
 def test_between():
-    assert arc.convert("2", t.Annotated[int, validators.Between(1, 10)]) == 2
+    validator = validators.Between(1, 10)
+    assert validator(2) == 2
 
     with pytest.raises(errors.ValidationError):
-        arc.convert("1", t.Annotated[int, validators.Between(1, 10)])
+        validator(1)
 
     with pytest.raises(errors.ValidationError):
-        arc.convert("10", t.Annotated[int, validators.Between(1, 10)])
+        validator(10)
+
+    with pytest.raises(errors.ValidationError):
+        validator(100)
