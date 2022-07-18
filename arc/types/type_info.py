@@ -41,7 +41,7 @@ class TypeInfo(t.Generic[T]):
         return curr
 
     @cached_property
-    def middleware(self) -> list[at.MiddlewareCallable]:
+    def transforms(self) -> list[at.MiddlewareCallable]:
         return [a for a in self.annotations if callable(a)]
 
     @property

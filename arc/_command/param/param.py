@@ -1,12 +1,9 @@
 from __future__ import annotations
 import argparse
-from dataclasses import dataclass
 import enum
 from functools import cached_property
 import os
 import typing as t
-from unittest.mock import DEFAULT
-from xml.etree.ElementPath import prepare_parent
 
 from arc import errors, utils
 from arc.autocompletions import CompletionInfo, get_completions
@@ -15,7 +12,6 @@ from arc.prompt.prompts import input_prompt
 from arc.types.helpers import convert_type, iscontextmanager
 from arc.types.type_info import TypeInfo
 import arc.typing as at
-from arc.types import aliases
 from arc.constants import MISSING, MissingType
 
 if t.TYPE_CHECKING:
@@ -211,7 +207,7 @@ class Param(
         ):
             value = self.convert(value, ctx)
 
-        value = self.run_middleware(value, ctx)
+        value = self.apply_transforms(value, ctx)
 
         if self.callback and value is not MISSING and origin is not ValueOrigin.DEFAULT:
             value = self.callback(value, ctx, self) or value
@@ -249,10 +245,10 @@ class Param(
                 message += colorize(f" ({e.details})", fg.GREY)
             raise errors.InvalidArgValue(message, ctx) from e
 
-    def run_middleware(self, value: t.Any, ctx: Context):
-        for middleware in self.type.middleware:
+    def apply_transforms(self, value: t.Any, ctx: Context):
+        for transform in self.type.transforms:
             try:
-                value = middleware(value)
+                value = transform(value)
             except errors.ValidationError as e:
                 message = self._fmt_error(e)
                 raise errors.InvalidArgValue(message, ctx) from e
