@@ -4,6 +4,7 @@ import sys
 import typing as t
 import shlex
 
+import arc
 from arc import errors, utils
 from arc._command import classful
 from arc._command.autoload import Autoload

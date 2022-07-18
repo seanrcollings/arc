@@ -1,11 +1,10 @@
 - file: arguments_documentation.py
   exec: [command1 --help, command2 --help]
 - file: hello.py
+  exec: Joseph
+- file: hello.py
   exec: --help
   out: hello_help
-- file: hello.py
-  exec: Joseph
-  out: hello_exec
 - file: docstring_example.py
   exec: --help
   out: docstring_example
@@ -83,6 +82,3 @@
   out: parameter_count
 - file: from_env.py
   exec: ["10", ""]
-- file: hello.py
-  out: hello_help
-  exec: [--help]

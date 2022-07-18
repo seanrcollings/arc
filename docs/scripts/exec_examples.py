@@ -10,8 +10,7 @@ import io
 from dataclasses import dataclass
 
 import yaml
-
-from arc import errors, utils
+import arc
 
 PARENT = Path(__file__).parent
 EXAMPLE_DIR = PARENT.parent / "examples"
@@ -40,51 +39,35 @@ def init():
 
 
 def exec_examples(config: list[ExecConfig]):
-
-    sys.path.append(str(EXAMPLE_DIR))
-    module = None
     for entry in config:
-        path = EXAMPLE_DIR / entry.file
-        sys.path.append(str(path.parent))
-
         execs = entry.exec
         if isinstance(execs, str):
             execs = [execs]
 
-        string = io.StringIO()
-        for execute in execs:
-            try:
-                with contextlib.redirect_stdout(string) as f:
+        with open(EXAMPLE_DIR / entry.file) as f:
+            contents = f.read()
 
-                    f.write(f"$ python {entry.file} {execute}\n")
+        if entry.out:
+            outfile = OUTPUT_DIR / entry.out
+        else:
+            outfile = OUTPUT_DIR / entry.file.strip(".py")
 
-                    args = [entry.file]
-                    if execute:
-                        args.extend(shlex.split(execute))
+        outfile.parent.mkdir(parents=True, exist_ok=True)
 
-                    sys.argv = args
+        with outfile.open("w") as f:
+            with contextlib.redirect_stdout(f):
+                for arg in execs:
+                    f.write(f"$ python {entry.file} {arg}\n")
+                    sys.argv = [entry.file, *shlex.split(arg)]
 
-                    if module:
-                        module = importlib.reload(module)
-                    else:
-                        module = importlib.import_module(path.stem)
-
-                    f.write("\n")
-
-            except SystemExit as e:
-                if e.code != entry.exit_code:
-                    arc.print(f.getvalue())
-            except Exception:
-                if not entry.error_allowed:
-                    raise
-
-        module = None
-
-        sys.path.pop()
-        output = utils.ansi_clean(f.getvalue())
-        outfile = OUTPUT_DIR / (entry.out or path.stem)
-        outfile.touch()
-        outfile.write_text(output)
+                    try:
+                        exec(contents, {})
+                    except SystemExit as e:
+                        if e.code != entry.exit_code:
+                            raise
+                    except Exception:
+                        if not entry.error_allowed:
+                            raise
 
 
 def main():

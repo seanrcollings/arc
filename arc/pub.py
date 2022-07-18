@@ -41,11 +41,12 @@ def arc_print(
     *values: object,
     sep: str | None = None,
     end: str | None = None,
-    file: PrintProtocol[str] = sys.stdout,
+    file: PrintProtocol[str] | None = None,
     flush: bool = False
 ):
+    file = file or sys.stdout
 
-    if not file.isatty():
+    if file and not file.isatty():
         values = tuple(ansi_clean(str(v)) for v in values)
 
     print(*values, sep=sep, end=end, file=file, flush=flush)

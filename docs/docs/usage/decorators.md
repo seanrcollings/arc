@@ -1,4 +1,4 @@
-An `arc` decorator is a Python deocrator that `wraps` the execution of an `arc` command. They allow shared setup / teardown logic to be abstracted and re-used at will.
+An *arc* decorator is a Python deocrator that **wraps** the execution of an *arc* command. They allow shared setup / teardown logic to be abstracted and re-used at will.
 
 ## Example
 ```py title="examples/decorator_create.py"
