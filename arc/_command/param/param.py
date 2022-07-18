@@ -207,7 +207,7 @@ class Param(
         ):
             value = self.convert(value, ctx)
 
-        value = self.apply_transforms(value, ctx)
+        value = self.run_middleware(value, ctx)
 
         if self.callback and value is not MISSING and origin is not ValueOrigin.DEFAULT:
             value = self.callback(value, ctx, self) or value
@@ -245,10 +245,10 @@ class Param(
                 message += colorize(f" ({e.details})", fg.GREY)
             raise errors.InvalidArgValue(message, ctx) from e
 
-    def apply_transforms(self, value: t.Any, ctx: Context):
-        for transform in self.type.transforms:
+    def run_middleware(self, value: t.Any, ctx: Context):
+        for middleware in self.type.middleware:
             try:
-                value = transform(value)
+                value = middleware(value)
             except errors.ValidationError as e:
                 message = self._fmt_error(e)
                 raise errors.InvalidArgValue(message, ctx) from e

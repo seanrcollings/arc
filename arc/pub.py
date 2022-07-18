@@ -13,8 +13,8 @@ def convert(value: str, type: type, context: Context | None = None):
     info = TypeInfo.analyze(type)
     converted = convert_type(info.resolved_type, value, info, context)  # type: ignore
 
-    for transform in info.transforms:
-        converted = transform(converted)
+    for middleware in info.middleware:
+        converted = middleware(converted)
 
     return converted
 

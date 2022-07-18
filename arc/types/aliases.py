@@ -53,7 +53,7 @@ class Alias:
     @classmethod
     def __convert__(cls, value, typ: TypeInfo, ctx: Context):
         if cls.name:
-            typ._name = cls.name
+            typ.name = cls.name
 
         if not typ.sub_types:
             obj = utils.dispatch_args(cls.convert, value, typ, ctx)
