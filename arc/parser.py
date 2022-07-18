@@ -1,17 +1,18 @@
 from __future__ import annotations
+
+import argparse
 import enum
 import typing as t
-import argparse
-from gettext import gettext as _, ngettext
+from gettext import gettext as _
 
+import arc
+import arc.typing as at
+from arc import errors
 from arc._command.param import Action, Param
 from arc.autocompletions import completions
 from arc.color import fg
 from arc.config import config
-from arc.constants import MISSING
 from arc.context import Context
-import arc.typing as at
-from arc import errors
 from arc.present.helpers import Joiner
 from arc.utils import safe_issubclass
 
@@ -344,17 +345,17 @@ class CustomAction(argparse.Action):
 
 class CustomHelpAction(CustomAction, argparse._HelpAction):
     def __call__(self, *args, **kwargs):
-        print(self.command.doc.help())
+        arc.print(self.command.doc.help())
         raise errors.Exit()
 
 
 class CustomVersionAction(CustomAction, argparse._VersionAction):
     def __call__(self, *args, **kwargs):
-        print(config.version)
+        arc.print(config.version)
         raise errors.Exit()
 
 
 class CustomAutocompleteAction(CustomAction, argparse._StoreAction):
     def __call__(self, _parser, _ns, value, *args, **kwargs):
-        print(completions(value, Context.current()), end="")
+        arc.print(completions(value, Context.current()), end="")
         raise errors.Exit()

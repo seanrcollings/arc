@@ -13,7 +13,7 @@
 
     @timers.subcommand()
     def test():
-        print("I've been autoloaded!")
+        arc.print("I've been autoloaded!")
     ```
 
 === "cli.py"

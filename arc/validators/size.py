@@ -11,8 +11,12 @@ class SupportsLen(t.Protocol):
 
 class Len:
     """Validator for the length of a value.
+
     - `Len(4)` - Value must be length 4
     - `Len(1, 4)` - Value must be from length 1 to 4
+
+    ## Type Constraints
+    - Supports `len()`
     """
 
     def __init__(self, min: int, max: int | None = None):
@@ -56,7 +60,11 @@ class SupportsComparison(t.Protocol):
 
 
 class GreaterThan:
-    """Validator to limit the maximum size of a value"""
+    """Validator to limit the maximum size of a value
+
+    ## Type Constraints
+    - Supports Comparison (<, >, ==)
+    """
 
     def __init__(self, smallest: SupportsComparison):
         self.smallest = smallest
@@ -69,7 +77,11 @@ class GreaterThan:
 
 
 class LessThan:
-    """Validator to limit the minimum size of a value"""
+    """Validator to limit the minimum size of a value
+
+    ## Type Constraints
+    - Supports Comparison (<, >, ==)
+    """
 
     def __init__(self, largest: SupportsComparison):
         self.largest = largest
@@ -82,7 +94,11 @@ class LessThan:
 
 
 class Between:
-    """Validator to ensure that a value falls within a particular range"""
+    """Validator to ensure that a value falls within a particular range
+
+    ## Type Constraints
+    - Supports Comparison (<, >, ==)
+    """
 
     def __init__(self, lower: SupportsComparison, upper: SupportsComparison):
         self.lower = lower

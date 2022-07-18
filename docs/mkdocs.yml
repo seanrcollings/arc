@@ -50,4 +50,8 @@ nav:
       - Shell Completions: usage/shell-completions.md
   - Examples:
       - Grep Clone: examples/grep-clone.md
+  - Reference:
+      - arc.color: reference/color.md
+      - arc.transforms: reference/transforms.md
+      - arc.validators: reference/validators.md
   - Changelog: changelog.md

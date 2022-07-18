@@ -8,7 +8,7 @@ Error handlers allow you to create modulare, composable, re-usable error handlin
 --8<-- "examples/outputs/error_handlers"
 ```
 
-The handler defined handles `RuntimeError`s so it was executed and handled the error. Because there was an error handler registered, no stack trace was printed to the console, and the application exited with a 0 exit code.
+The handler defined handles `RuntimeError`s so it was executed and handled the error. Because there was an error handler registered, no stack trace was arc.printed to the console, and the application exited with a 0 exit code.
 
 ## Re-Raising
 

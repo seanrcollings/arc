@@ -23,7 +23,7 @@ def password_prompt(ctx: Context, param: Param):
 
 
 def select_prompt(values: list, ctx: Context, param: Param, **kwargs):
-    print(param.prompt)
+    arc.print(param.prompt)
     res = select(values, highlight_color=ctx.config.brand_color, **kwargs)
 
     if res is None:

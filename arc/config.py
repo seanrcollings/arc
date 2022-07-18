@@ -55,7 +55,7 @@ def configure(
 
         environment: The current environment, either `production` or `development`.
             Defaults to `production`. When in `development` mode, debug
-            information is printed during execution.
+            information is arc.printed during execution.
 
         default_section_name: The name to use by default if the first section in a
             command docstring is does not have a header. Defaults to `description`.

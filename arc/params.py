@@ -61,7 +61,7 @@ def Argument(
     ```py
     @cli.command()
     def test(val: int = Argument()):
-        print(val)
+        arc.print(val)
     ```
 
     ```
@@ -97,7 +97,7 @@ def Option(
     ```py
     @cli.command()
     def test(val: int = Option()):
-        print(val)
+        arc.print(val)
     ```
 
     ```
@@ -158,7 +158,7 @@ def Flag(
     ```py
     @cli.command()
     def test(val: bool = Flag()):
-        print(val)
+        arc.print(val)
     ```
 
     ```
@@ -192,7 +192,7 @@ def Count(
     ```py
     @cli.command()
     def test(val: int = Count(short="v")):
-        print(val)
+        arc.print(val)
     ```
 
     ```

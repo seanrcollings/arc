@@ -2,7 +2,7 @@
 title: Home
 ---
 # Overview
-*arc* is a tool for building declartive, and highly extendable CLI applications for Python ^3.9 based on Pyton type-hints
+*arc* is a tool for building declartive, and highly extendable CLI applications for Python ^3.9 based on Python type-hints
 
 *arc's* features include:
 

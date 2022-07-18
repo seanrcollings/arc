@@ -69,17 +69,17 @@ class Loader:
     def update(self, value):
         if not self.done:
             self.progress = value
-            self.print()
+            self.arc.print()
 
-    def print(self):
-        print(
+    def arc.print(self):
+        arc.print(
             f"\r{self.format_str.format(bar=str(self), percent=self.percent)}",
             flush=True,
             end="",
         )
 
     def clear(self):
-        print("\u001b[2K")
+        arc.print("\u001b[2K")
 
 
 class BarLoader(Loader):

@@ -26,9 +26,9 @@ import arc
 
 @arc.decorator(inherit=False)
 def cb():
-    print("before execution")
+    arc.print("before execution")
     yield
-    print("after execution")
+    arc.print("after execution")
 ```
 This decorator must be applied explicitly to all commands it should wrap
 

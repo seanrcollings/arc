@@ -83,3 +83,6 @@
   out: parameter_count
 - file: from_env.py
   exec: ["10", ""]
+- file: hello.py
+  out: hello_help
+  exec: [--help]

@@ -73,7 +73,7 @@ def exec_examples(config: list[ExecConfig]):
 
             except SystemExit as e:
                 if e.code != entry.exit_code:
-                    print(f.getvalue())
+                    arc.print(f.getvalue())
             except Exception:
                 if not entry.error_allowed:
                     raise

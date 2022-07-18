@@ -10,7 +10,7 @@ arc.configure(
 @arc.command()
 def hello(name: str):
     """My first arc program!"""
-    print(f"Hello {name}!")
+    arc.print(f"Hello {name}!")
 
 
 hello()

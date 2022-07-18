@@ -4,14 +4,21 @@ import typing as t
 class Round:
     """Type Tranformation to round given input to `ndigits`
 
-    ```
+    ```py
+    import arc
+    from arc.transforms import Round
+
     @arc.command()
     def command(val: Annotated[float, Round(2)])
-        print(val)
+        arc.print(val)
+
+    command()
     ```
 
-    >>> command('1.123456789')
+    ```console
+    $ python example.py 1.123456789
     1.23
+    ```
     """
 
     __slots__ = ("ndigits",)

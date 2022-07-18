@@ -115,7 +115,7 @@ class Command(
             return self.__main(args)
         except errors.ExternalError as e:
             if config.environment == "production":
-                print(e)
+                arc.print(e)
                 raise errors.Exit(1)
 
             raise
@@ -391,12 +391,12 @@ def command(name: str | None = None, description: str | None = None):
 
 
 def namespace_callback(ctx: Context):
-    print(ctx.command.doc.usage())
+    arc.print(ctx.command.doc.usage())
     command = colorize(
         f"{ctx.command.root.name} {Joiner.with_space(ctx.command.doc.fullname)} --help",
         fg.YELLOW,
     )
-    print(f"{command} for more information")
+    arc.print(f"{command} for more information")
 
 
 def namespace(name: str, description: str | None = None):

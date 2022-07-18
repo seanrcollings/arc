@@ -38,7 +38,7 @@ class Box:
 
     Examples:
     ```
-        print(Box('some cool text', padding=2, justify='center')) ->
+        arc.print(Box('some cool text', padding=2, justify='center')) ->
 
         ╭────────────────────╮
         │                    │

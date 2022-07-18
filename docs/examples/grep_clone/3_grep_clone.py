@@ -14,7 +14,7 @@ def grep(pattern: re.Pattern, files: list[File.Read]):
                     color.fg.RED + match.group() + color.effects.CLEAR,
                     line,
                 )
-                print(colored, end="")
+                arc.print(colored, end="")
 
 
 grep()

@@ -41,7 +41,7 @@ class Prompt:
             prompt (str, optional): What to display before the cursor when
                 asking a question. Defaults to `'> '`
             show_emojis (bool, optional): Whether or not to display the
-                icons / emojis when printing messages with the display
+                icons / emojis when arc.printing messages with the display
                 methods below. Defaults to True.
             color_output (bool, optional): [description]. Whether or not
                 do color the output of each of the display methods below.
@@ -135,7 +135,7 @@ class Prompt:
         return self.ask(question)
 
     def beautify(self, message: str, color: str = "", emoji: str = "", **kwargs):
-        print(
+        arc.print(
             self.colored(color) + self.emoji(emoji) + message + effects.CLEAR, **kwargs
         )
 
@@ -160,7 +160,7 @@ class Prompt:
         self.beautify(message, fg.YELLOW, "🚧", **kwargs)
 
     def subtle(self, message: str, **kwargs):
-        """"Display a subtle (light grey) message to the user"""
+        """ "Display a subtle (light grey) message to the user"""
         self.beautify(message, fg.GREY, **kwargs)
 
     def snake(self, message: str, **kwargs):

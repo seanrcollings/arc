@@ -11,7 +11,7 @@ def handle_exception(args, context):
     try:
         yield
     except RuntimeError as exc:
-        print("handled!")
+        arc.print("handled!")
 
 
 command()

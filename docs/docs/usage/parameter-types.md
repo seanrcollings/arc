@@ -292,7 +292,7 @@ class NDArrayAlias(Alias, of=np.ndarry):
 
 @arc.command()
 def main(array: np.ndarray):
-    print(repr(array))
+    arc.print(repr(array))
 
 
 main()

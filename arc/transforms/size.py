@@ -10,17 +10,25 @@ class SupportsSlice(t.Protocol):
 class Truncate:
     """Type transformation to truncate a value to `length`
 
-    ### Type Restrictions
+    ## Type Constraints
     - Support list-like slice access
 
-    ```
+    ## Example
+    ```py
+    import arc
+    from arc.transforms import Truncate
+
     @arc.command()
     def command(val: Annotated[str, Truncate(6)])
-        print(val)
+        arc.print(val)
+
+    command()
     ```
 
-    >>> command('string longer than 6 chars')
+    ```console
+    $ python example.py 'string longer than 6 chars'
     string
+    ```
     """
 
     def __init__(self, length: int):
@@ -43,18 +51,26 @@ class Pad:
     Ensures that value will be at least `length` long. `padding`
     should be the same type as value, so the concatenation functions properly
 
-    ### Type Constraints
+    ## Type Constraints
     - Support `len()`
     - Support `+` for concatenation (like `str` or `list`)
 
-    ```
+    ## Example
+    ```py
+    import arc
+    from arc.transforms import Pad
+
     @arc.command()
     def command(val: Annotated[str, Pad(6, 'b')])
-        print(val)
+        arc.print(val)
+
+    command()
     ```
 
-    >>> command('a')
-    'abbbbbb'
+    ```console
+    $ python example.py a
+    abbbbbb
+    ```
     """
 
     def __init__(self, length: int, padding: t.Any = None):

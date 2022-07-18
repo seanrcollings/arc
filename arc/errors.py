@@ -1,7 +1,6 @@
 from __future__ import annotations
 import typing as t
 
-from arc.color import colorize, fg
 
 if t.TYPE_CHECKING:
     from arc.context import Context
@@ -43,7 +42,7 @@ class ConversionError(ArgumentError):
 
 class UsageError(ExternalError):
     """Indicates that the command was used incorrectly.
-    If a ctx is provided, the command's usage will be printed,
+    If a ctx is provided, the command's usage will be arc.printed,
     along with the provided error message"""
 
     def __init__(self, message: str, ctx: Context = None):

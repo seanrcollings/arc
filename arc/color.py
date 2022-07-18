@@ -1,22 +1,8 @@
 from typing import Union
 
 
-class Ansi(str):
-    """Color class, extends str"""
-
-    ESCAPE = "\033["
-
-    def __new__(cls, content):
-        obj = str.__new__(cls, f"{cls.ESCAPE}{content}m")
-        return obj
-
-    def __init__(self, code, *_args):
-        super().__init__()
-        self.code = code
-
-
-def _rgb(val: int, red: int = 0, green: int = 0, blue: int = 0) -> Ansi:
-    return Ansi(f"{val};2;{red};{green};{blue}")
+def _rgb(val: int, red: int = 0, green: int = 0, blue: int = 0) -> str:
+    return f"\033[{val};2;{red};{green};{blue}m"
 
 
 def _hex_to_rgb(hex_rep: Union[str, int]):
@@ -41,77 +27,77 @@ def _hex_to_rgb(hex_rep: Union[str, int]):
 # fmt: off
 class fg:
     """Foreground colors"""
-    BLACK          = Ansi(30)
-    RED            = Ansi(31)
-    GREEN          = Ansi(32)
-    YELLOW         = Ansi(33)
-    BLUE           = Ansi(34)
-    MAGENTA        = Ansi(35)
-    CYAN           = Ansi(36)
-    WHITE          = Ansi(37)
-    GREY           = Ansi(90)
-    BRIGHT_RED     = Ansi(91)
-    BRIGHT_GREEN   = Ansi(92)
-    BRIGHT_YELLOW  = Ansi(93)
-    BRIGHT_BLUE    = Ansi(94)
-    BRIGHT_MAGENTA = Ansi(95)
-    BRIGHT_CYAN    = Ansi(96)
-    BRIGHT_WHITE   = Ansi(97)
-    ARC_BLUE       = Ansi('38;2;59;192;240')
+    BLACK          = "\033[30m"
+    RED            = "\033[31m"
+    GREEN          = "\033[32m"
+    YELLOW         = "\033[33m"
+    BLUE           = "\033[34m"
+    MAGENTA        = "\033[35m"
+    CYAN           = "\033[36m"
+    WHITE          = "\033[37m"
+    GREY           = "\033[90m"
+    BRIGHT_RED     = "\033[91m"
+    BRIGHT_GREEN   = "\033[92m"
+    BRIGHT_YELLOW  = "\033[93m"
+    BRIGHT_BLUE    = "\033[94m"
+    BRIGHT_MAGENTA = "\033[95m"
+    BRIGHT_CYAN    = "\033[96m"
+    BRIGHT_WHITE   = "\033[97m"
+    ARC_BLUE       = "\033[38;2;59;192;240m"
 
     @staticmethod
     def rgb(red: int = 0, green: int = 0, blue: int = 0):
-        """Returns the **foreground** ansi escape
+        """Returns the **foreground** escape
         sequence for the provided rgb values"""
         return _rgb(38, red, green, blue)
 
     @staticmethod
     def hex(hex_code: Union[str, int]):
-        """Returns the **foreground** ansi escape
+        """Returns the **foreground** escape
         sequence for the provided hex values"""
         return _rgb(38, *_hex_to_rgb(hex_code))
 
 
 class bg:
     """Background colors"""
-    BLACK          = Ansi(40)
-    RED            = Ansi(41)
-    GREEN          = Ansi(42)
-    YELLOW         = Ansi(43)
-    BLUE           = Ansi(44)
-    MAGENTA        = Ansi(45)
-    CYAN           = Ansi(46)
-    WHITE          = Ansi(47)
-    GREY           = Ansi(100)
-    BRIGHT_RED     = Ansi(101)
-    BRIGHT_GREEN   = Ansi(102)
-    BRIGHT_YELLOW  = Ansi(103)
-    BRIGHT_BLUE    = Ansi(104)
-    BRIGHT_MAGENTA = Ansi(105)
-    BRIGHT_CYAN    = Ansi(106)
-    BRIGHT_WHITE   = Ansi(107)
-    ARC_BLUE       = Ansi('48;2;59;192;240')
+    BLACK          = "\033[40m"
+    RED            = "\033[41m"
+    GREEN          = "\033[42m"
+    YELLOW         = "\033[43m"
+    BLUE           = "\033[44m"
+    MAGENTA        = "\033[45m"
+    CYAN           = "\033[46m"
+    WHITE          = "\033[47m"
+    GREY           = "\033[100m"
+    BRIGHT_RED     = "\033[101m"
+    BRIGHT_GREEN   = "\033[102m"
+    BRIGHT_YELLOW  = "\033[103m"
+    BRIGHT_BLUE    = "\033[104m"
+    BRIGHT_MAGENTA = "\033[105m"
+    BRIGHT_CYAN    = "\033[106m"
+    BRIGHT_WHITE   = "\033[107m"
+    ARC_BLUE       = "\033[48;2;59;192;240m"
 
     @staticmethod
     def rgb(red: int = 0, green: int = 0, blue: int = 0):
-        """Returns the **background** ansi escape
+        """Returns the **background** escape
         sequence for the provided rgb values"""
         return _rgb(48, red, green, blue)
 
     @staticmethod
     def hex(hex_code: Union[str, int]):
-        """Returns the **"background"** ansi escape
+        """Returns the **"background"** escape
         sequence for the provided hex value"""
         return _rgb(48, *_hex_to_rgb(hex_code))
 
 
 class effects:
     """Other effects"""
-    CLEAR         = Ansi(0)
-    BOLD          = Ansi(1)
-    ITALIC        = Ansi(3)
-    UNDERLINE     = Ansi(4)
-    STRIKETHROUGH = Ansi(9)
+    CLEAR         = "\033[0m"
+    BOLD          = "\033[1m"
+    ITALIC        = "\033[3m"
+    UNDERLINE     = "\033[4m"
+    STRIKETHROUGH = "\033[9m"
 
 # fmt: on
 
@@ -121,7 +107,7 @@ def colorize(string: str, *codes: str, clear: bool = True):
 
     Args:
         string (str): String to colorize
-        *codes (Ansi): colors / effects to apply to the string
+        *codes (str): colors / effects to apply to the strin
         clear (bool): Whether or not to append `effects.CLEAR`
             to the end of the string which will prevent any
             subsequent strings from recieving the styles. Defaults

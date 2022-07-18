@@ -1,9 +1,10 @@
 Spice up your script's output with some color! Implements both the basic ANSI-16 color scheme, and rgb
 
 !!! note
-    When `stdout` does not look like a terminal, *arc* will
-    **automagically** remove the color escape codes, so no need for you to
-    worry about anything!
+    `#!python arc.print()` has the same signature as `#!python print()`, while
+    also handling removing escape-codes when not writing to a TTY. Because of this,
+    you should generally always use `#!python arc.print()` in favor of `#!python print()`
+
 
 
 ## `arc.color.fg`
@@ -78,6 +79,6 @@ Other visual effects that can be applied to text output
 `colorize()` applies an arbitrary number of colors / effects to the provided string, and adds `effects.CLEAR` to the end of the string.
 ```py
 from arc.color import colorize, fg, bg, effects
-print(colorize('This is a colored string', fg.RED, bg.GREY, effects.UNDERLINE))
+arc.print(colorize('This is a colored string', fg.RED, bg.GREY, effects.UNDERLINE))
 ```
 ![Output](../img/colored-output.png)

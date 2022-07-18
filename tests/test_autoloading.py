@@ -17,7 +17,7 @@ arc.configure(environment="development")
 
 @arc.command()
 def test():
-    print("hello there!")
+    arc.print("hello there!")
 
 """
         )

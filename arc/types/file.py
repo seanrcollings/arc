@@ -38,7 +38,7 @@ class File(t.IO, abc.ABC):
     ```py
     @cli.command()
     def command(file: File.Read):
-        print(file.read())
+        arc.print(file.read())
     ```
 
     There are constants defined on `File` (like `File.Read` above) for
@@ -51,7 +51,7 @@ class File(t.IO, abc.ABC):
     ```py
     @cli.command()
     def command(file: Annotated[File, File.Args(...)]):
-        print(file.read())
+        arc.print(file.read())
     ```
 
     `File.Args`'s call signature matches that of `open` (minus the filename), so

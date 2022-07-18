@@ -9,8 +9,8 @@ cli = CLI(state={'test': 1})
 @cli.command()
 def state_example(state: State):
     # can be accessed like a dictionary or an attribute
-    print(state.test)
-    print(state['test'])
+    arc.print(state.test)
+    arc.print(state['test'])
 
 cli()
 ```
@@ -48,8 +48,8 @@ cli.install_command(foo)
 @foo.subcommand(state={"test": 5})
 def state_example(state: State):
 
-    print(state.test)
-    print(state.test2)
+    arc.print(state.test)
+    arc.print(state.test2)
 
 cli()
 ```
@@ -88,7 +88,7 @@ def command1(state: State, ctx: Context):
 
 @cli.command()
 def command2(state: State):
-    print(state.db)  # object is accessible here!
+    arc.print(state.db)  # object is accessible here!
 
 
 cli()
@@ -104,7 +104,7 @@ from arc import CLI, State
 
 class MyState(State):
     def punch(self):
-        print(f"ORA ORA, {self.name}")
+        arc.print(f"ORA ORA, {self.name}")
 
 
 cli = CLI(state={"name": "DIO"})

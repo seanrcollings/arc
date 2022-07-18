@@ -63,7 +63,7 @@ def dispatch_args(func: t.Callable, *args):
     For example:
     ```py
     def foo(bar, baz): # only accepts 2 args
-        print(bar, baz)
+        arc.print(bar, baz)
 
     # Will call the provided function with the first
     # two arguments

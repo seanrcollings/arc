@@ -145,7 +145,7 @@ cli = CLI()
 
 @cli.command()
 def add(val1: int, val2: int):
-    print(f"The answer is: {val1 + val2}")
+    arc.print(f"The answer is: {val1 + val2}")
 
 cli()
 ```
