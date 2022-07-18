@@ -1,13 +1,10 @@
 from __future__ import annotations
-from dataclasses import dataclass
 import typing as t
-from arc import errors
+
 from arc.types.default import Default
 from arc.types.type_arg import TypeArg
 from arc.validators.size import GreaterThan, LessThan
 
-if t.TYPE_CHECKING:
-    import re
 
 __all__ = [
     "Hex",
