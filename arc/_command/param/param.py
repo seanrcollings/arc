@@ -207,7 +207,8 @@ class Param(
         ):
             value = self.convert(value, ctx)
 
-        value = self.run_middleware(value, ctx)
+        if value not in (None, MISSING):
+            value = self.run_middleware(value, ctx)
 
         if self.callback and value is not MISSING and origin is not ValueOrigin.DEFAULT:
             value = self.callback(value, ctx, self) or value

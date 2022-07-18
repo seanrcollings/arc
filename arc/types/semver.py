@@ -81,7 +81,7 @@ class SemVer:
 
     # Comparison Operators --------------------------------------------------------------------
 
-    def compare(self, other: SemVer) -> at.CompareReturn:
+    def compare(self, other: object) -> at.CompareReturn:
         """Compares `self` with `other`
 
         Args:
@@ -91,6 +91,9 @@ class SemVer:
             at.CompareReturn: is negative if self < other,
              zero if self == other and strictly positive if self > other
         """
+
+        if not isinstance(other, SemVer):
+            return NotImplemented
 
         tup1, tup2 = self.tuple(), other.tuple()
 
