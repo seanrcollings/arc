@@ -1,9 +1,11 @@
 from __future__ import annotations
+import functools
 import itertools
 import typing as t
 from arc.errors import ArcError
 
-from arc.color import fg, effects
+from arc.color import colorize, effects, fg
+from arc.utils import ansi_len
 from . import drawing
 
 
@@ -18,7 +20,6 @@ class Column(ColumnBase, total=False):  # pylint: disable=inherit-non-class
 
     justify: drawing.Justification
     width: int
-    default: t.Any
 
 
 NO_DEFAULT = object()
@@ -46,9 +47,9 @@ BORDER_HEAVY_TRANS: drawing.Border = {
 }
 
 
-ColumnInput = list[t.Union[str, Column]]
+ColumnInput = t.Sequence[t.Union[str, Column]]
 Row = dict[str, t.Any]
-RowInput = t.Union[t.Sequence[t.Any], Row]
+TableFormatter = t.Callable[[t.Any], str]
 
 T = t.TypeVar("T")
 
@@ -59,17 +60,49 @@ def has_next(seq: t.Sequence[T]) -> t.Generator[tuple[T, bool], None, None]:
         yield val, idx < length - 1
 
 
+def _format_cell(value: t.Any):
+    return str(value)
+
+
+def _format_header_cell(value: t.Any):
+    return colorize(str(value), effects.BOLD)
+
+
+def _format_bool(val: bool):
+    return colorize(str(val), fg.GREEN if val else fg.RED)
+
+
+def _format_int(val: int):
+    return colorize(str(val), fg.BLUE)
+
+
 class Table:
-    def __init__(
-        self, columns: ColumnInput, border: str = "light", head_border: str = "heavy"
-    ) -> None:
-        self.__columns: list[Column] = self.__resolve_columns(columns)
+    def __init__(self, columns: ColumnInput, default_formatting: bool = True) -> None:
+        self.__columns: t.Sequence[Column] = self.__resolve_columns(columns)
         self.__rows: list[Row] = []
-        self._border = drawing.borders[border]
+        self._border = drawing.borders["light"]
         self._head_border = BORDER_HEAVY_TRANS
-        self._type_formatters: dict[type, t.Callable[[t.Any], str]] = {}
+        self._header_cell_formatter: TableFormatter = (
+            _format_header_cell if default_formatting else _format_cell
+        )
+        self._cell_formatter: TableFormatter = _format_cell
+        self._type_formatters: dict[type, TableFormatter] = (
+            {
+                bool: _format_bool,
+                int: _format_int,
+            }
+            if default_formatting
+            else {}
+        )
 
     def __str__(self):
+        for col in self.__columns:
+            cells = [row[col["name"]] for row in self.__rows]
+            cells.append(col["name"])
+
+            col["width"] = max(
+                ansi_len(self._fmt_cell_contents(cell)) + 2 for cell in cells
+            )
 
         table = ""
         table += self._fmt_header()
@@ -82,13 +115,52 @@ class Table:
 
         return table
 
+    def add_row(self, row: t.Sequence[t.Any]):
+        if len(row) > len(self.__columns):
+            raise ArcError("Too many values")
+
+        resolved = {}
+        for col, value in itertools.zip_longest(self.__columns, row, fillvalue=""):
+            resolved[col["name"]] = value
+
+        self.__rows.append(resolved)
+
+    def fmt_header_cell(self, func: TableFormatter | None = None):
+        def inner(func: TableFormatter):
+            self._cell_formatter = func
+            return func
+
+        if func:
+            return inner(func)
+
+        return inner
+
+    def fmt_cell(self, func: TableFormatter | None = None):
+        """Formats any cell that does not already have a formatter applied"""
+
+        def inner(func: TableFormatter):
+            self._cell_formatter = func
+            return func
+
+        if func:
+            return inner(func)
+
+        return inner
+
+    def fmt_type(self, cls: type):
+        def inner(func: t.Callable[[t.Any], str]):
+            self._type_formatters[cls] = func
+            return func
+
+        return inner
+
     def _fmt_header(self) -> str:
         border = self._head_border
         header = ""
 
         header += border["corner"]["top_left"]
         for idx, col in enumerate(self.__columns):
-            header += border["horizontal"] * (len(col["name"]) + 2)
+            header += border["horizontal"] * col["width"]
             if idx < len(self.__columns) - 1:
                 header += border["intersect"]["hori_top"]
             else:
@@ -97,15 +169,18 @@ class Table:
         header += "\n"
         header += border["vertical"]
         for col in self.__columns:
-            header += " "
-            header += col["name"]
-            header += " "
+            header += self._fmt_cell(
+                col["name"],
+                col["width"],
+                col["justify"],
+                header=True,
+            )
             header += border["vertical"]
 
         header += "\n"
         header += border["intersect"]["vert_left"]
         for col, has_next_column in has_next(self.__columns):
-            header += border["horizontal"] * (len(col["name"]) + 2)
+            header += border["horizontal"] * col["width"]
             if has_next_column:
                 header += border["intersect"]["cross"]
             else:
@@ -121,19 +196,14 @@ class Table:
 
         for col in self.__columns:
             cell = row.get(col["name"], "")
-            formatted_cell = str(cell)
-
-            if type(cell) in self._type_formatters:
-                formatted_cell = self._type_formatters[type(cell)](formatted_cell)
-
-            fmt += format(formatted_cell, f"<{len(col['name']) + 2}")
+            fmt += self._fmt_cell(cell, col["width"], col["justify"])
             fmt += border["vertical"]
 
         if not next_row:
             fmt += "\n"
             fmt += border["corner"]["bot_left"]
             for col, has_next_column in has_next(self.__columns):
-                fmt += border["horizontal"] * (len(col["name"]) + 2)
+                fmt += border["horizontal"] * col["width"]
                 if has_next_column:
                     fmt += border["intersect"]["hori_bot"]
                 else:
@@ -141,25 +211,36 @@ class Table:
 
         return fmt
 
-    def add_row(self, row: RowInput):
-        if len(row) > len(self.__columns):
-            raise ArcError("Too many values")
+    def _fmt_cell(
+        self,
+        cell: t.Any,
+        width: int,
+        justify: drawing.Justification,
+        header: bool = False,
+    ):
+        formatted_cell = self._fmt_cell_contents(cell, header)
+        width = width - 2
+        padding = " " * (width - ansi_len(formatted_cell))
 
-        if isinstance(row, dict):
-            self.__rows.append(row)
+        if justify == "left":
+            return " " + formatted_cell + padding + " "
+        elif justify == "right":
+            return " " + padding + formatted_cell + " "
+        elif justify == "center":
+            padding_width, remainder = divmod(width - ansi_len(formatted_cell), 2)
+            padding = " " * padding_width
+            return (
+                " " + padding + formatted_cell + padding + ("  " if remainder else " ")
+            )
+
+    @functools.cache
+    def _fmt_cell_contents(self, cell: t.Any, header: bool = False):
+        if header:
+            return self._header_cell_formatter(cell)
+        if type(cell) in self._type_formatters:
+            return self._type_formatters[type(cell)](cell)
         else:
-            resolved = {}
-            for col, value in itertools.zip_longest(self.__columns, row, fillvalue=""):
-                resolved[col["name"]] = value
-
-            self.__rows.append(resolved)
-
-    def fmt_type(self, cls: type):
-        def inner(func: t.Callable[[t.Any], str]):
-            self._type_formatters[cls] = func
-            return func
-
-        return inner
+            return self._cell_formatter(cell)
 
     @staticmethod
     def __resolve_columns(columns: ColumnInput) -> list[Column]:
