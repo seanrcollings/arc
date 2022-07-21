@@ -76,7 +76,46 @@ def _format_int(val: int):
     return colorize(str(val), fg.BLUE)
 
 
+_DEFAULT_TYPE_FORMATTERS: dict[type, TableFormatter] = {
+    bool: _format_bool,
+    int: _format_int,
+}
+
+
 class Table:
+    """Display information in a table
+
+    ```py
+    from arc.color import colorize, fg
+    from arc.present.table import Table
+
+    t = Table(["Name", "Age", "Stand"])
+    t.add_row(["Jonathen Joestar", 20, "-"])
+    t.add_row(["Joseph Joestar", 18, "Hermit Purple (in Part 3)"])
+    t.add_row(["Jotaro Kujo", 18, "Star Platinum"])
+    t.add_row(["Josuke Higashikata", 16, "Crazy Diamon"])
+    t.add_row(["Giorno Giovanna", 15, "Gold Experience"])
+    t.add_row(["Joylene Kujo", 19, "Stone Free"])
+
+
+    print(t)
+    ```
+
+    Will yield:
+    ```console
+    ┏━━━━━━━━━━━━━━━━━━━━┳━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+    ┃ Name               ┃ Age ┃ Stand                     ┃
+    ┡━━━━━━━━━━━━━━━━━━━━╇━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+    │ Jonathen Joestar   │ 20  │ -                         │
+    │ Joseph Joestar     │ 18  │ Hermit Purple (in Part 3) │
+    │ Jotaro Kujo        │ 18  │ Star Platinum             │
+    │ Josuke Higashikata │ 16  │ Crazy Diamon              │
+    │ Giorno Giovanna    │ 15  │ Gold Experience           │
+    │ Joylene Kujo       │ 19  │ Stone Free                │
+    └────────────────────┴─────┴───────────────────────────┘
+    ```
+    """
+
     def __init__(self, columns: ColumnInput, default_formatting: bool = True) -> None:
         self.__columns: t.Sequence[Column] = self.__resolve_columns(columns)
         self.__rows: list[Row] = []
@@ -87,12 +126,7 @@ class Table:
         )
         self._cell_formatter: TableFormatter = _format_cell
         self._type_formatters: dict[type, TableFormatter] = (
-            {
-                bool: _format_bool,
-                int: _format_int,
-            }
-            if default_formatting
-            else {}
+            _DEFAULT_TYPE_FORMATTERS if default_formatting else {}
         )
 
     def __str__(self):
