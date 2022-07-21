@@ -1,6 +1,15 @@
 import typing as t
 
 
+justify = {
+    "left": "<",
+    "center": "^",
+    "right": ">",
+}
+
+Justification = t.Literal["left", "center", "right"]
+
+
 class BorderCorners(t.TypedDict):
     top_left: str
     top_right: str
@@ -59,7 +68,6 @@ BORDER_LIGHT_ROUNDED: Border = {
     },
 }
 
-
 BORDER_HEAVY: Border = {
     "horizontal": "━",
     "vertical": "┃",
@@ -70,7 +78,7 @@ BORDER_HEAVY: Border = {
         "bot_right": "┛",
     },
     "intersect": {
-        "cross": "┼",
+        "cross": "╋",
         "vert_left": "┣",
         "vert_right": "┫",
         "hori_top": "┳",
