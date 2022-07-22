@@ -1,9 +1,11 @@
 from __future__ import annotations
 import typing as t
 from dataclasses import dataclass, field
+from arc import logging
 import arc.typing as at
 from arc.color import fg
 from arc.prompt import Prompt
+from arc.logging import logger, mode_map
 
 
 @dataclass
@@ -102,3 +104,6 @@ def configure(
     for key, value in data.items():
         if value is not None:
             setattr(config, key, value)
+
+    if env := data["environment"]:
+        logger.setLevel(mode_map.get(env, logging.WARNING))  # type: ignore

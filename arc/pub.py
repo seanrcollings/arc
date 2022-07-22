@@ -1,12 +1,11 @@
 from __future__ import annotations
 import sys
 import typing as t
-import shutil
 from arc.context import Context
 from arc.types.type_info import TypeInfo
 from arc.types.helpers import convert_type
 from arc.errors import ArcError
-from arc.utils import ansi_clean
+from arc import utils
 
 
 def convert(value: str, type: type, context: Context | None = None):
@@ -19,12 +18,10 @@ def convert(value: str, type: type, context: Context | None = None):
     converted = convert_type(info.resolved_type, value, info, context)  # type: ignore
 
     for middleware in info.middleware:
-        converted = middleware(converted)
+        converted = utils.dispatch_args(middleware, converted, context, None)
 
     return converted
 
-
-print()
 
 T = t.TypeVar("T", contravariant=True)
 
@@ -47,6 +44,6 @@ def arc_print(
     file = file or sys.stdout
 
     if file and not file.isatty():
-        values = tuple(ansi_clean(str(v)) for v in values)
+        values = tuple(utils.ansi_clean(str(v)) for v in values)
 
     print(*values, sep=sep, end=end, file=file, flush=flush)

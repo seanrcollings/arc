@@ -1,5 +1,5 @@
 import pytest
-from arc.transforms import size
+from arc.types.transforms import size
 
 
 def test_truncate():

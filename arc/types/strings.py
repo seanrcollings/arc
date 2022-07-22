@@ -1,6 +1,6 @@
 import typing as t
 from arc.prompt.prompts import password_prompt
-from arc.validators.size import Len
+from arc.types.validators import Len
 
 __all__ = ["Char", "Password"]
 

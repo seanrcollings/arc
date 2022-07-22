@@ -1,4 +1,5 @@
 from __future__ import annotations
+from logging import Logger
 import typing as t
 import contextlib
 
@@ -7,6 +8,11 @@ from arc import _command
 from arc.color import colorize, fg
 from arc.config import config
 from arc.types.state import State
+from arc.logging import logger
+
+if t.TYPE_CHECKING:
+    from arc._command.param.param import ValueOrigin
+
 
 T = t.TypeVar("T")
 
@@ -18,8 +24,10 @@ class Context:
     _stack_count: int
     args: dict[str, t.Any]
     rest: list[str]
+    arg_origins: dict[str, ValueOrigin]
 
     config = config
+    logger: Logger = logger
     state: State = State()
 
     def __init__(
@@ -32,11 +40,14 @@ class Context:
         self.rest = []
         self._stack_count = 0
         self._exit_stack = contextlib.ExitStack()
+        self.arg_origins = {}
 
     def __repr__(self):
         return f"Context({self.command!r})"
 
     def __enter__(self):
+        if self._stack_count == 0:
+            self.logger.debug(f"Entering Context: {self!r}")
         self._stack_count += 1
         Context.push(self)
         return self
@@ -45,6 +56,7 @@ class Context:
         self._stack_count -= 1
         Context.pop()
         if self._stack_count == 0:
+            self.logger.debug(f"Closing Context: {self!r}")
             self.close()
 
     @classmethod

@@ -1,3 +1,4 @@
+from typing import Annotated
 import pytest
 import arc
 from arc import errors
@@ -61,3 +62,12 @@ def test_short_name():
         return val
 
     assert command("-v")
+
+
+def test_annotation():
+    @arc.command()
+    def command(val: Annotated[bool, 1]):
+        return val
+
+    assert command("") == False
+    assert command("--val")

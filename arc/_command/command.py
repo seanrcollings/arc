@@ -60,7 +60,7 @@ class SubcommandsDict(dict[K, V]):
 class Command(
     ParamMixin,
     utils.Display,
-    members=["name", "callback", "params", "subcommands"],
+    members=["name"],
 ):
     callback: at.CommandCallback
     name: str

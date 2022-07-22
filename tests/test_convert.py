@@ -1,7 +1,8 @@
 import typing as t
 import pytest
 import arc
-from arc import errors, validators
+from arc import errors
+from arc.types import validators
 
 
 class TestType:

@@ -5,6 +5,7 @@ import inspect
 from arc import errors, utils
 from arc.config import config
 from arc.constants import MISSING
+from arc.types.type_info import TypeInfo
 from .param import Action, InjectedParam, Param, FlagParam, ArgumentParam, OptionParam
 from .param_group import ParamGroup
 from arc.params import ParamInfo
@@ -47,7 +48,8 @@ class ParamBuilder:
         return default
 
     def create_param(self, param: inspect.Parameter) -> Param:
-        info = self.get_param_info(param)
+        type_info = TypeInfo.analyze(param.annotation)
+        info = self.get_param_info(param, type_info)
 
         annotation = param.annotation
         if annotation is param.empty:
@@ -62,12 +64,14 @@ class ParamBuilder:
             **info.dict(),
         )
 
-    def get_param_info(self, param: inspect.Parameter) -> ParamInfo:
+    def get_param_info(
+        self, param: inspect.Parameter, type_info: TypeInfo
+    ) -> ParamInfo:
         if isinstance(param.default, ParamInfo):
             info = param.default
             param_cls = info.param_cls
         else:
-            param_cls = self.get_param_cls(param)
+            param_cls = self.get_param_cls(param, type_info)
             info = ParamInfo(
                 param_cls,
                 default=param.default if param.default is not param.empty else MISSING,
@@ -79,13 +83,13 @@ class ParamBuilder:
             else:
                 info.action = Action.STORE_FALSE
 
-        if hasattr(param.annotation, "__depends__"):
+        if hasattr(type_info.origin, "__depends__"):
             if param.default is not param.empty:
                 raise errors.ParamError(
                     f"type {param.annotation} is a special type used for dependancy injection. "
                     "As such, it cannot be provided with a default value or parameter value"
                 )
-            info.callback = param.annotation.__depends__
+            info.callback = type_info.origin.__depends__
 
         # A default of false is always assumed with flags, so they
         # are always optional
@@ -94,11 +98,14 @@ class ParamBuilder:
 
         return info
 
-    def get_param_cls(self, param: inspect.Parameter) -> type[Param]:
-        if hasattr(param.annotation, "__depends__"):
+    def get_param_cls(
+        self, param: inspect.Parameter, type_info: TypeInfo
+    ) -> type[Param]:
+        origin = type_info.origin
+        if hasattr(origin, "__depends__"):
             return InjectedParam
 
-        elif param.annotation is bool or isinstance(param.default, bool):
+        elif origin is bool or isinstance(param.default, bool):
             return FlagParam
 
         elif param.kind is param.POSITIONAL_ONLY:

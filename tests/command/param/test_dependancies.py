@@ -1,3 +1,4 @@
+from typing import Annotated
 import pytest
 import arc
 from arc import errors
@@ -30,6 +31,13 @@ class TestTypeDependancies:
             @arc.command()
             def command(val: DependableType = 1):  # type: ignore
                 return val
+
+    def test_annotation(self):
+        @arc.command()
+        def command(val: Annotated[DependableType, 1]):
+            return val
+
+        assert command("") == "DependableType"
 
 
 def dep1(ctx):

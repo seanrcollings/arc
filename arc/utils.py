@@ -1,6 +1,7 @@
 from __future__ import annotations
 import contextlib
 import functools
+import inspect
 import os
 import re
 import shlex
@@ -71,13 +72,16 @@ def dispatch_args(func: t.Callable, *args):
     # 1 2
     ```
     """
+    # TODO: I haven't tested if this will capture
+    # all callables, but it should hopefully.
     if isinstance(func, MethodType):
-        unwrapped = func.__func__
+        arg_count = func.__func__.__code__.co_argcount - 1
+    elif inspect.isfunction(func):
+        arg_count = func.__code__.co_argcount
     else:
-        unwrapped = func  # type: ignore
+        arg_count = func.__call__.__func__.__code__.co_argcount - 1  # type: ignore
 
-    arg_count = unwrapped.__code__.co_argcount
-    args = args[0 : arg_count - 1]
+    args = args[0:arg_count]
     return func(*args)
 
 

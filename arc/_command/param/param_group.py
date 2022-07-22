@@ -5,7 +5,7 @@ import collections
 from arc.constants import MISSING
 from arc import errors
 import arc.typing as at
-from .param import Param
+from .param import InjectedParam, Param
 
 if t.TYPE_CHECKING:
     from arc.context import Context
@@ -83,9 +83,10 @@ class ParamGroup(collections.UserList[Param]):
             if not param.is_injected:
                 continue
 
-            injected[param.argument_name] = (
-                param.callback(ctx) if param.callback else None
-            )
+            param = t.cast(InjectedParam, param)
+
+            value = param.get_injected_value(ctx)
+            injected[param.argument_name] = value
 
         if self.sub_groups:
             inst = args[self.name]

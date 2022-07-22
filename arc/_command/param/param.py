@@ -36,6 +36,7 @@ class ValueOrigin(enum.Enum):
     ENV = "env"
     PROMPT = "prompt"
     DEFAULT = "default"
+    INJECTED = "injected"
 
 
 class Param(
@@ -195,6 +196,8 @@ class Param(
     ) -> T | MissingType:
         value, origin = self.get_value(res, ctx)
 
+        ctx.arg_origins[self.argument_name] = origin
+
         if self.is_required and value is None:
             raise errors.MissingArgError(
                 f"argument {colorize(self.cli_name, fg.YELLOW)} expected 1 argument",
@@ -249,7 +252,7 @@ class Param(
     def run_middleware(self, value: t.Any, ctx: Context):
         for middleware in self.type.middleware:
             try:
-                value = middleware(value)
+                value = utils.dispatch_args(middleware, value, ctx, self)
             except errors.ValidationError as e:
                 message = self._fmt_error(e)
                 raise errors.InvalidArgValue(message, ctx) from e
@@ -342,5 +345,17 @@ class InjectedParam(Param):
 
     callback: t.Callable
 
+    def get_injected_value(self, ctx: Context) -> t.Any:
+        value = self.callback(ctx) if self.callback else None
+        ctx.arg_origins[self.argument_name] = ValueOrigin.INJECTED
+
+        value = self.run_middleware(value, ctx)
+
+        if iscontextmanager(value) and not value is ctx:
+            value = ctx.resource(value)
+
+        return value
+
+    @property
     def is_injected(self):
         return True

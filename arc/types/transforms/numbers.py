@@ -4,6 +4,10 @@ import typing as t
 class Round:
     """Type Tranformation to round given input to `ndigits`
 
+    ## Type Contraints
+    - Reports `round()`
+
+    ## Example
     ```py
     import arc
     from arc.transforms import Round
