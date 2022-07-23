@@ -7,6 +7,30 @@ if t.TYPE_CHECKING:
 
 
 class Log:
+    """Type middleware to log the value provided
+
+    ## Example
+    ```py
+    import typing as t
+    import arc
+    from arc.types.middleware import Log
+
+    arc.configure(environment="development")
+
+
+    @arc.command()
+    def command(
+        val: t.Annotated[int, Log()],
+        flag_name: t.Annotated[bool, Log()],
+        ctx: t.Annotated[arc.Context, Log()],
+    ):
+        print("hello there!")
+
+
+    command()
+    ```
+    """
+
     def __init__(self, name_kind: t.Literal["arg", "param", "cli"] = "arg") -> None:
         self.name_kind = name_kind
 

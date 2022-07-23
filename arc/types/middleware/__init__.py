@@ -1,1 +1,1 @@
-from .log import Log
+from .dev import Log
