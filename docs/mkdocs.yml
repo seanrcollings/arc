@@ -45,14 +45,19 @@ nav:
       - Colored Output: usage/colored-output.md
       - Command Decorators: usage/decorators.md
       - Error Handlers: usage/error-handlers.md
-      - Command Autoloading: usage/command-autoloading.md
       - Command State: usage/command-state.md
-      - Shell Completions: usage/shell-completions.md
+  - Advanced Usage:
+      - Type Middleware: advanced-usage/type-middleware.md
+      - Custom Types: advanced-usage/custom-types.md
+      - Parameter Sources: advanced-usage/parameter-sources.md
+      - Command Autoloading: advanced-usage/command-autoloading.md
+      - Shell Completions: advanced-usage/shell-completions.md
   - Examples:
       - Grep Clone: examples/grep-clone.md
   - Reference:
       - arc.config: reference/config.md
       - arc.color: reference/color.md
-      - arc.transforms: reference/transforms.md
-      - arc.validators: reference/validators.md
+      - arc.types:
+          - arc.types.transforms: reference/transforms.md
+          - arc.types.validators: reference/validators.md
   - Changelog: changelog.md

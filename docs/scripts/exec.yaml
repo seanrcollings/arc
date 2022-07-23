@@ -82,3 +82,5 @@
   out: parameter_count
 - file: from_env.py
   exec: ["10", ""]
+- file: context_manager.py
+  exec: "1"

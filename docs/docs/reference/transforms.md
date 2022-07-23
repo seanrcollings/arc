@@ -1,2 +1,2 @@
-:::arc.transforms.size
-:::arc.transforms.numbers
+:::arc.types.transforms.size
+:::arc.types.transforms.numbers

@@ -1,2 +1,2 @@
-::: arc.validators.size
-::: arc.validators.misc
+::: arc.types.validators.size
+::: arc.types.validators.misc
