@@ -314,6 +314,12 @@ class KeywordParam(Param[T]):
 
 
 class OptionParam(KeywordParam[t.Any]):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.type.is_iterable_type:
+            self.action = Action.APPEND
+
     @property
     def is_option(self):
         return True
@@ -326,6 +332,22 @@ class OptionParam(KeywordParam[t.Any]):
 
 
 class FlagParam(KeywordParam[bool]):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # A default of false is always assumed with flags, so they
+        # are always optional
+        if self.default is MISSING:
+            self.default = False
+
+        # Explictly checks for bools because Count()
+        # users a differnt action
+        if self.action == Action.STORE:
+            if self.default is True:
+                self.action = Action.STORE_FALSE
+            elif self.default is False:
+                self.action = Action.STORE_TRUE
+
     @property
     def is_flag(self):
         return True

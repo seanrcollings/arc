@@ -37,7 +37,7 @@ class Parser(argparse.ArgumentParser):
         kwargs: dict[str, t.Any] = {}
 
         kwargs["action"] = (
-            param.action.value if isinstance(param.action, enum.Enum) else param.action
+            param.action.value if isinstance(param.action, Action) else param.action
         )
 
         if (default := param.parser_default) is not None:

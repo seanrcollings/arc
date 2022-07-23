@@ -1,3 +1,4 @@
+import collections
 import pytest
 import arc
 from arc import errors
@@ -60,3 +61,18 @@ def test_short_name():
         return val
 
     assert command("-v val") == "val"
+
+
+class CustomCollection(collections.UserList):
+    @classmethod
+    def __convert__(cls, values):
+        return cls((int(v) for v in values))
+
+
+@pytest.mark.parametrize("cls", [list[int], set[int], tuple[int, ...], CustomCollection])  # type: ignore
+def test_collections(cls):
+    @arc.command()
+    def command(*, val: cls):
+        return val
+
+    assert command("--val 1 --val 2 --val 3") == cls((1, 2, 3))

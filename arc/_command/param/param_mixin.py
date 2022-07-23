@@ -8,7 +8,7 @@ from arc.autocompletions import completions
 from arc.config import config
 from arc.parser import CustomAutocompleteAction, CustomHelpAction, CustomVersionAction
 
-from .param import Action, FlagParam, OptionParam, Param
+from .param import FlagParam, OptionParam, Param
 from .param_group import ParamGroup
 from .param_builder import ParamBuilder
 

@@ -119,31 +119,6 @@ def Option(
     )
 
 
-def CollectOption(
-    *,
-    name: str = None,
-    short: str = None,
-    default: t.Any = constants.MISSING,
-    description: str = None,
-    callback: t.Callable = None,
-    prompt: str = None,
-    envvar: str = None,
-    complete: at.CompletionFunc = None,
-) -> t.Any:
-    return ParamInfo(
-        param_cls=param.OptionParam,
-        param_name=name,
-        short=short,
-        default=default,
-        description=description,
-        callback=callback,
-        prompt=prompt,
-        envvar=envvar,
-        complete=complete,
-        action=param.Action.APPEND,
-    )
-
-
 def Flag(
     *,
     name: str = None,

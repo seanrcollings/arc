@@ -32,8 +32,8 @@ class ParamBuilder:
         return groups
 
     def build_param_group(self, param: inspect.Parameter) -> ParamGroup:
-        if isinstance(param.default, ParamInfo):
-            raise errors.ParamError("Canot define ParamInfo here", param)
+        if param.default is not param.empty:
+            raise errors.ParamError("Param groups cannot have a default value", param)
 
         cls = param.annotation
         if hasattr(cls, "__param_group__"):
@@ -48,6 +48,7 @@ class ParamBuilder:
         return default
 
     def create_param(self, param: inspect.Parameter) -> Param:
+        # TODO: pass this type_info into the param, instead of creating it twice
         type_info = TypeInfo.analyze(param.annotation)
         info = self.get_param_info(param, type_info)
 
@@ -77,12 +78,6 @@ class ParamBuilder:
                 default=param.default if param.default is not param.empty else MISSING,
             )
 
-        if param_cls is FlagParam and info.action is None:
-            if info.default is MISSING or not info.default:
-                info.action = Action.STORE_TRUE
-            else:
-                info.action = Action.STORE_FALSE
-
         if hasattr(type_info.origin, "__depends__"):
             if param.default is not param.empty:
                 raise errors.ParamError(
@@ -90,11 +85,6 @@ class ParamBuilder:
                     "As such, it cannot be provided with a default value or parameter value"
                 )
             info.callback = type_info.origin.__depends__
-
-        # A default of false is always assumed with flags, so they
-        # are always optional
-        if info.default is MISSING and param_cls is FlagParam:
-            info.default = False
 
         return info
 

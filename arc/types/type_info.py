@@ -5,6 +5,7 @@ from arc.types.aliases import Alias
 from arc.types.type_arg import TypeArg
 
 import arc.typing as at
+from arc.utils import safe_issubclass
 
 
 T = t.TypeVar("T")
@@ -62,6 +63,13 @@ class TypeInfo(t.Generic[T]):
             self.origin is t.Union
             and len(self.sub_types) == 2
             and self.sub_types[-1].original_type is type(None)
+        )
+
+    @property
+    def is_iterable_type(self) -> bool:
+        """Type can substitue for `list`"""
+        return hasattr(self.origin, "__iter__") and not safe_issubclass(
+            self.origin, str
         )
 
     @classmethod

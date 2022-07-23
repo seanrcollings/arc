@@ -178,7 +178,7 @@ class TestTuple:
         def not_enough_opt(*, val: tuple[int, int]):
             return val
 
-        with pytest.raises(errors.ParserError):
+        with pytest.raises(errors.InvalidArgValue):
             cli("not-enough-opt --val 1")
 
 

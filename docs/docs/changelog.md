@@ -1,3 +1,11 @@
+## `7.0.0`
+- Rewirte of core components: `Context`, `Command`, `Param`, `ParamBuilder`, etc...
+- Removed the `#!python CLI()` object. `#!python @arc.command()` can now handle subcommands.
+- Renamed *arc* callbacks to *arc* decorators
+- Using `argparse` to perform parsing instead of a custom (and limited) solution
+- Added [Type Middleware](advanced-usage/type-middleware.md)
+
+
 ## `6.4.0`
 - [Shell Completions](./usage/shell-completions.md) now enabled with `arc.configure()`
 - Callbacks are no longer required to `yield` to be valid
