@@ -4,6 +4,7 @@ import typing as t
 from arc.autocompletions import CompletionInfo, Completion
 
 if t.TYPE_CHECKING:
+    from arc.context import Context
     from arc._command.param import Param
 
 
@@ -24,6 +25,8 @@ CompareReturn = t.Literal[-1, 0, 1]
 CompletionFunc = t.Callable[
     [CompletionInfo, "Param"], t.Union[list[Completion], Completion, None]
 ]
+
+GetterFunc = t.Callable[["Context", "Param"], t.Any]
 
 
 @t.runtime_checkable

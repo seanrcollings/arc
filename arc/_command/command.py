@@ -353,6 +353,18 @@ class Command(
 
         raise errors.ParamError(f"No parameter with name: {param_name}")
 
+    def get(self, param_name: str):
+        param = self.get_param(param_name)
+        if param:
+
+            def inner(func: at.GetterFunc):
+                param.getter_func = func # type: ignore
+                return func
+
+            return inner
+
+        raise errors.ParamError(f"No parameter with name: {param_name}")
+
     def autoload(self, *paths: str):
         Autoload(paths, self).load()
 

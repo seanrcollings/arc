@@ -37,6 +37,7 @@ class ValueOrigin(enum.Enum):
     PROMPT = "prompt"
     DEFAULT = "default"
     INJECTED = "injected"
+    GETTER = "getter"
 
 
 class Param(
@@ -73,6 +74,9 @@ class Param(
     This is useful when the parameter's side effects are desired, but the value
     doesn't matter. This is used to implment the `--version` and `--help` flags"""
     comp_func: at.CompletionFunc | None
+    """Function that can provide shell completions for the parameter"""
+    getter_func: at.GetterFunc | None
+    """Function that can retrieve a value not provided on the command line"""
 
     def __init__(
         self,
@@ -88,6 +92,7 @@ class Param(
         action: Action | t.Type[argparse.Action] | None = None,
         expose: bool = True,
         comp_func: at.CompletionFunc | None = None,
+        getter_func: at.GetterFunc | None = None,
     ):
         self.argument_name = argument_name
         self.param_name = param_name or argument_name
@@ -101,6 +106,7 @@ class Param(
         self.type = TypeInfo.analyze(annotation)
         self.expose = expose
         self.comp_func = comp_func
+        self.getter_func = getter_func
 
         if self.type.is_union_type:
             for sub in self.type.sub_types:
@@ -167,7 +173,7 @@ class Param(
     @property
     def prompt_string(self):
         if self.default is not MISSING:
-            return self.prompt + colorize(f"({self.default})", fg.GREY)
+            return self.prompt + colorize(f" ({self.default})", fg.GREY)
         return self.prompt
 
     @property
@@ -231,9 +237,14 @@ class Param(
             if self.envvar and (env := self.get_env_value(ctx)):
                 value = env
                 origin = ValueOrigin.ENV
-            elif self.prompt and (prompt := self.get_prompt_value(ctx)):
+            elif self.prompt and (prompt := self.get_prompt_value(ctx)) != MISSING:
                 value = prompt
                 origin = ValueOrigin.PROMPT
+            elif (
+                self.getter_func and (gotten := self.getter_func(ctx, self)) != MISSING
+            ):
+                value = gotten
+                origin = ValueOrigin.GETTER
             else:
                 value = self.default
                 origin = ValueOrigin.DEFAULT

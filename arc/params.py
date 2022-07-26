@@ -19,6 +19,7 @@ class ParamInfo:
         prompt: str = None,
         envvar: str = None,
         complete: at.CompletionFunc = None,
+        getter_func: at.GetterFunc = None,
     ):
         self.param_cls = param_cls
         self.param_name = param_name
@@ -30,6 +31,7 @@ class ParamInfo:
         self.prompt = prompt
         self.envvar = envvar
         self.complete = complete
+        self.getter_func = getter_func
 
     def dict(self):
         """Used to pass to `Param()` as **kwargs"""
@@ -43,6 +45,7 @@ class ParamInfo:
             "envvar": self.envvar,
             "action": self.action,
             "comp_func": self.complete,
+            "getter_func": self.getter_func,
         }
 
 
@@ -54,6 +57,8 @@ def Argument(
     callback: t.Callable = None,
     prompt: str = None,
     envvar: str = None,
+    get: at.GetterFunc = None,
+    complete: at.CompletionFunc = None,
 ) -> t.Any:
     """A CLI Paramater. Input will be passed in positionally.
 
@@ -77,6 +82,8 @@ def Argument(
         callback=callback,
         prompt=prompt,
         envvar=envvar,
+        getter_func=get,
+        complete=complete,
     )
 
 
@@ -89,6 +96,7 @@ def Option(
     callback: t.Callable = None,
     prompt: str = None,
     envvar: str = None,
+    get: at.GetterFunc = None,
     complete: at.CompletionFunc = None,
 ) -> t.Any:
     """A (generally optional) keyword parameter.
@@ -115,6 +123,7 @@ def Option(
         callback=callback,
         prompt=prompt,
         envvar=envvar,
+        getter_func=get,
         complete=complete,
     )
 
