@@ -230,6 +230,20 @@ def test_collections():
         val: list[int],
         val2: tuple[int, int],
         val3: list[int] = [],
-        val4: tuple[int, int] = tuple(),
+        val4: tuple[int, int] = tuple(),  # type: ignore
     ):
-        ...
+        assert utils.ansi_clean(command.doc.help) == (
+            """\
+USAGE
+    cli.py [-h] [--] val [val...] val2 val2 [val3 [val3...]] [val4] [val4]
+
+ARGUMENTS
+    val
+    val2
+    val3
+    val4
+
+OPTIONS
+    --help (-h)  Displays this help message
+"""
+        )
