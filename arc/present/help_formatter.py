@@ -1,4 +1,5 @@
 from __future__ import annotations
+from itertools import repeat
 
 import typing as t
 import textwrap
@@ -136,10 +137,8 @@ class HelpFormatter(TextFormatter):
             key_params,
             key=lambda p: not p["optional"],
         ):
-            if param["kind"] == "argument":
-                continue
-
-            formatted.append(self.format_single_param(param))
+            if param["kind"] != "argument":
+                formatted.append(self.format_single_param(param))
 
         if len(formatted) > 0 and len(arg_params) > 0:
             formatted.append("[--]")
@@ -151,32 +150,41 @@ class HelpFormatter(TextFormatter):
         return Joiner.with_space(formatted, remove_falsey=True)
 
     def format_single_param(self, param: ParamDoc):
-        name = ""
-        if param["kind"] == "argument":
-            name = param["name"]
+        fmt = ""
+        kind = param["kind"]
+        name = param["name"]
+        optional = param["optional"]
+
+        if kind == "argument":
+            fmt = name
 
             nargs = param["nargs"]
             if isinstance(nargs, int) and nargs:
-                name += f" {name}" * (nargs - 1)
+                if optional:
+                    fmt = Joiner.with_space(repeat(f"[{fmt}]", nargs))
+                else:
+                    fmt = Joiner.with_space(repeat(fmt, nargs))
+            elif nargs == "*":
+                fmt += f" [{fmt}...]"
+                if optional:
+                    fmt = f"[{fmt}]"
+            else:
+                if optional:
+                    fmt = f"[{fmt}]"
+
         else:
             if param["short_name"] is not None:
-                name = f"-{param['short_name']}"
+                fmt = f"-{param['short_name']}"
             else:
-                name = f"--{param['name']}"
+                fmt = f"--{name}"
 
-            if param["kind"] == "option":
-                value = f" {param['name'].upper()}"
+            if kind == "option":
+                fmt += f" {param['name'].upper()}"
 
-                nargs = param["nargs"]
-                if isinstance(nargs, int) and nargs:
-                    value += value * (nargs - 1)
+            if optional:
+                fmt = f"[{fmt}]"
 
-                name += value
-
-        if param["optional"]:
-            name = f"[{name}]"
-
-        return name
+        return fmt
 
     def get_params(self, params: t.Collection[ParamDoc]):
         data = []

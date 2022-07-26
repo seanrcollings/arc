@@ -10,6 +10,7 @@ import arc.typing as at
 
 
 if t.TYPE_CHECKING:
+    from arc.types.type_info import TypeInfo
     from arc._command.command import Command
 
 

@@ -222,3 +222,14 @@ def test_argument_desc_in_docstring():
         """
 
     assert utils.ansi_clean(command.doc.help()) == ARGS_STR
+
+
+def test_collections():
+    @arc.command()
+    def command(
+        val: list[int],
+        val2: tuple[int, int],
+        val3: list[int] = [],
+        val4: tuple[int, int] = tuple(),
+    ):
+        ...
