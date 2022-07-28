@@ -1,14 +1,16 @@
 from __future__ import annotations
+import itertools
 from logging import Logger
 import typing as t
 import contextlib
 
-from arc import errors
+from arc import errors, utils
 from arc import _command
 from arc.color import colorize, fg
 from arc.config import config
 from arc.types.state import State
 from arc.logging import logger
+from arc.present import Joiner
 
 if t.TYPE_CHECKING:
     from arc._command.param.param import ValueOrigin
@@ -148,9 +150,15 @@ class Context:
             parsed, rest = self.command.parse_args(args, self)
 
             if rest and not self.config.allow_unrecognized_args:
-                raise errors.UnrecognizedArgError(
-                    f"Unrecognized arguments: {' '.join(rest)}", self
+                message = f"Unrecognized arguments: {Joiner.with_space(rest, style=fg.YELLOW)}"
+
+                message += self.__get_suggestions(rest)
+                list(
+                    itertools.chain(
+                        *[param.get_param_names() for param in self.command.key_params]
+                    )
                 )
+                raise errors.UnrecognizedArgError(message, self)
             else:
                 self.rest = rest
         else:
@@ -178,3 +186,47 @@ class Context:
     def exit(self, code: int = 0) -> t.NoReturn:
         """Exits the app with code `code`"""
         raise errors.Exit(code)
+
+    def __get_suggestions(self, rest: list[str]):
+        message = ""
+
+        if self.config.suggestions["suggest_commands"]:
+
+            message += self.__fmt_suggestions(
+                rest[0:1],
+                list(
+                    itertools.chain(
+                        *[com.all_names for com in self.command.subcommands.values()]
+                    )
+                ),
+                "subcommand",
+            )
+
+        if self.config.suggestions["suggest_params"]:
+            message += self.__fmt_suggestions(
+                rest,
+                list(
+                    itertools.chain(
+                        *[param.get_param_names() for param in self.command.key_params]
+                    )
+                ),
+                "argument",
+            )
+
+        return message
+
+    def __fmt_suggestions(self, rest: list[str], possibilities: list[str], kind: str):
+        message = ""
+
+        suggestions = utils.string_suggestions(
+            rest, possibilities, self.config.suggestions["distance"]
+        )
+
+        for param_name, param_sug in suggestions.items():
+            if param_sug:
+                message += (
+                    f"\nUnrecognized {kind} {colorize(param_name, fg.YELLOW)}, "
+                    f"did you mean: {Joiner.with_or(param_sug, style=fg.YELLOW)}"
+                )
+
+        return message

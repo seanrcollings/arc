@@ -211,6 +211,12 @@ class Command(
 
         return command
 
+    @property
+    def all_names(self):
+        names = [self.name]
+        names += self.parent.subcommands.aliases_for(self.name)
+        return names
+
     # Subcommands ----------------------------------------------------------------
 
     def subcommand(self, name: at.CommandName = None, description: str | None = None):
@@ -358,7 +364,7 @@ class Command(
         if param:
 
             def inner(func: at.GetterFunc):
-                param.getter_func = func # type: ignore
+                param.getter_func = func  # type: ignore
                 return func
 
             return inner
