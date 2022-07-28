@@ -173,8 +173,8 @@ SUBCOMMANDS
 
 ARGS_STR = """\
 USAGE
-    command [-h] [--key-opt KEY-OPT] [--flag] --key-req KEY-REQ [--] pos-req [pos-
-    opt]
+    command [-h] [--key-opt KEY-OPT] [--flag] --key-req KEY-REQ [--] pos-req
+    [pos-opt]
 
 ARGUMENTS
     pos-req      positional required

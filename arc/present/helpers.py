@@ -16,7 +16,10 @@ class Joiner:
 
         style = style or []
 
-        return string.join(colorize(v, *style) for v in values)
+        if style:
+            return string.join(colorize(v, *style) for v in values)
+
+        return string.join(values)
 
     @staticmethod
     def with_space(values: t.Iterable, *args, **kwargs):

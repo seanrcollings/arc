@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import enum
 import pathlib
+import types
 import typing as t
 import ipaddress
 import dataclasses
@@ -45,7 +46,7 @@ class Alias:
     """
 
     aliases: dict[Annotation, type[TypeProtocol]] = {}
-    alias_for: t.ClassVar[AliasFor] = None  # type: ignore
+    alias_for: t.ClassVar[AliasFor | tuple[AliasFor]] = None  # type: ignore
     name: t.ClassVar[t.Optional[str]] = None
     convert: t.Callable
     g_convert: t.Callable
@@ -62,7 +63,7 @@ class Alias:
 
         return obj
 
-    def __init_subclass__(cls, of: t.Optional[AliasFor] = None):
+    def __init_subclass__(cls, of: t.Optional[AliasFor | tuple[AliasFor]] = None):
         if of:
             cls.alias_for = of
 
@@ -105,11 +106,6 @@ class Alias:
 
 
 class StringAlias(Alias, str, of=str):
-    max_length: t.ClassVar[t.Optional[int]] = None
-    min_length: t.ClassVar[t.Optional[int]] = None
-    length: t.ClassVar[t.Optional[int]] = None
-    matches: t.ClassVar[t.Optional[str]] = None
-
     @classmethod
     def convert(cls, value: str, info: TypeInfo[str]) -> str:
         try:
@@ -271,10 +267,16 @@ class DictAlias(dict, Alias, of=dict):
         return elements
 
 
+class NoneAlias(Alias, of=types.NoneType):
+    @classmethod
+    def convert(self, value: t.Any):
+        raise errors.ConversionError(value, "")
+
+
 # Typing types ---------------------------------------------------------------------------------
 
-# TODO: improve error hanlding
-class UnionAlias(Alias, of=t.Union):
+
+class UnionAlias(Alias, of=(t.Union, types.UnionType)):  # type: ignore
     @classmethod
     def g_convert(cls, value: t.Any, info: TypeInfo, ctx):
 
@@ -284,9 +286,12 @@ class UnionAlias(Alias, of=t.Union):
             except Exception:
                 ...
 
+        options = Joiner.with_or(
+            list(sub.name for sub in info.sub_types if sub.origin is not types.NoneType)
+        )
         raise errors.ConversionError(
             value,
-            f"must be a {Joiner.with_or(list(sub.name for sub in info.sub_types))}",
+            f"must be a {options}",
         )
 
 

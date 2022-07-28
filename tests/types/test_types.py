@@ -14,19 +14,34 @@ def cli():
     return arc.namespace("cli")
 
 
-def test_optional(cli: arc.Command):
-    @cli.subcommand()
-    def non(val: Optional[int]):
-        return val
+class TestNone:
+    def test_optional(self, cli: arc.Command):
+        @cli.subcommand()
+        def non(val: Optional[int]):
+            return val
 
-    assert cli("non") == None
-    assert cli("non 1") == 1
+        assert cli("non") == None
+        assert cli("non 1") == 1
 
-    # @cli.subcommand()
-    # def non2(val: Optional[list[int]]):
-    #     return val
-    # assert cli("non2") == None
-    # assert cli("non2 1 2 3") == [1, 2, 3]
+        # @cli.subcommand()
+        # def non2(val: Optional[list[int]]):
+        #     return val
+        # assert cli("non2") == None
+        # assert cli("non2 1 2 3") == [1, 2, 3]
+
+    def test_none(self, cli: arc.Command):
+        @cli.subcommand()
+        def non(val: int | None):
+            return val
+
+        assert cli("non") == None
+        assert cli("non 1") == 1
+
+        # @cli.subcommand()
+        # def non2(val: Optional[list[int]]):
+        #     return val
+        # assert cli("non2") == None
+        # assert cli("non2 1 2 3") == [1, 2, 3]
 
 
 @pytest.mark.parametrize(
@@ -283,6 +298,14 @@ class TestUnion:
             @cli.subcommand()
             def un2(val: Union[list[int], list[str]]):
                 return val
+
+    def test_310_type(self, cli: arc.Command):
+        @cli.subcommand()
+        def un(val: float | int):
+            return val
+
+        assert cli("un 2") == 2
+        assert cli("un 2.0") == 2.0
 
 
 def test_literal(cli: arc.Command):

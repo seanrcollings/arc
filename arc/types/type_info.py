@@ -1,5 +1,6 @@
 from __future__ import annotations
 from functools import cached_property
+import types
 import typing as t
 from arc.types.aliases import Alias
 from arc.types.type_arg import TypeArg
@@ -54,13 +55,13 @@ class TypeInfo(t.Generic[T]):
     @property
     def is_union_type(self) -> bool:
         """The type is `Union[T...]`"""
-        return self.origin is t.Union
+        return self.origin in (t.Union, types.UnionType)  # type: ignore
 
     @property
     def is_optional_type(self) -> bool:
         """The type is `Optional[T]`"""
         return (
-            self.origin is t.Union
+            self.origin in (t.Union, types.UnionType)  # type: ignore
             and len(self.sub_types) == 2
             and self.sub_types[-1].original_type is type(None)
         )
