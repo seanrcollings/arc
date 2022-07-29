@@ -14,4 +14,4 @@ MISSING = MissingType()
 
 NO_CONVERT = {None, bool, t.Any, MISSING}
 
-COLLECTION_TYPES = {list, set, tuple}
+COLLECTION_TYPES = (list, set, tuple)

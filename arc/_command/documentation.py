@@ -30,6 +30,7 @@ class ParamDoc(t.TypedDict):
     kind: ParamKinds
     optional: bool
     nargs: at.NArgs
+    default: t.Any
 
 
 class Documentation:
@@ -90,6 +91,7 @@ class Documentation:
                 "kind": KIND_MAPPING[type(param)],
                 "optional": param.is_optional,
                 "nargs": param.nargs,
+                "default": param.default,
             }
             for param in command.cli_params
         ]

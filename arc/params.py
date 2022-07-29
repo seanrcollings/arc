@@ -13,7 +13,7 @@ class ParamInfo:
         param_name: str = None,
         short: str = None,
         default: t.Any = constants.MISSING,
-        description: str = None,
+        desc: str = None,
         callback: t.Callable = None,
         action: param.Action = None,
         prompt: str = None,
@@ -25,7 +25,7 @@ class ParamInfo:
         self.param_name = param_name
         self.short_name = short
         self.default = default
-        self.description = description
+        self.desc = desc
         self.callback = callback
         self.action = action
         self.prompt = prompt
@@ -39,7 +39,7 @@ class ParamInfo:
             "param_name": self.param_name,
             "short_name": self.short_name,
             "default": self.default,
-            "description": self.description,
+            "description": self.desc,
             "callback": self.callback,
             "prompt": self.prompt,
             "envvar": self.envvar,
@@ -53,7 +53,7 @@ def Argument(
     *,
     name: str = None,
     default: t.Any = constants.MISSING,
-    description: str = None,
+    desc: str = None,
     callback: t.Callable = None,
     prompt: str = None,
     envvar: str = None,
@@ -78,7 +78,7 @@ def Argument(
         param_cls=param.ArgumentParam,
         param_name=name,
         default=default,
-        description=description,
+        desc=desc,
         callback=callback,
         prompt=prompt,
         envvar=envvar,
@@ -92,7 +92,7 @@ def Option(
     name: str = None,
     short: str = None,
     default: t.Any = constants.MISSING,
-    description: str = None,
+    desc: str = None,
     callback: t.Callable = None,
     prompt: str = None,
     envvar: str = None,
@@ -119,7 +119,7 @@ def Option(
         param_name=name,
         short=short,
         default=default,
-        description=description,
+        desc=desc,
         callback=callback,
         prompt=prompt,
         envvar=envvar,
@@ -133,7 +133,7 @@ def Flag(
     name: str = None,
     short: str = None,
     default: bool = False,
-    description: str = None,
+    desc: str = None,
     callback: t.Callable = None,
 ) -> t.Any:
     """An option that represents a boolean value.
@@ -157,7 +157,7 @@ def Flag(
         param_name=name,
         short=short,
         default=default,
-        description=description,
+        desc=desc,
         callback=callback,
     )
 
@@ -167,7 +167,7 @@ def Count(
     name: str = None,
     short: str = None,
     default: int = 0,
-    description: str = None,
+    desc: str = None,
     callback: t.Callable = None,
 ) -> t.Any:
     """A Flag that counts it's number of apperances on the command line
@@ -193,7 +193,7 @@ def Count(
         param_name=name,
         short=short,
         default=default,
-        description=description,
+        desc=desc,
         callback=callback,
         action=param.Action.COUNT,
     )

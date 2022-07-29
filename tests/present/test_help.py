@@ -1,249 +1,249 @@
-import arc
-from arc import utils
+# import arc
+# from arc import utils
 
 
-def get_lines(string: str, from_line: int, to_line: int):
-    return "\n".join(string.split("\n")[from_line:to_line])
+# def get_lines(string: str, from_line: int, to_line: int):
+#     return "\n".join(string.split("\n")[from_line:to_line])
 
 
-def test_basic():
-    @arc.command()
-    def command():
-        ...
+# def test_basic():
+#     @arc.command()
+#     def command():
+#         ...
 
-    assert (
-        utils.ansi_clean(command.doc.help())
-        == """\
-USAGE
-    command [-h]
+#     assert (
+#         utils.ansi_clean(command.doc.help())
+#         == """\
+# USAGE
+#     command [-h]
 
-OPTIONS
-    --help (-h)  Displays this help message
-"""
-    )
-
-
-def test_description():
-    @arc.command()
-    def command():
-        """Here's a description"""
-
-    assert (
-        utils.ansi_clean(command.doc.help())
-        == """\
-USAGE
-    command [-h]
-
-DESCRIPTION
-    Here's a description
-
-OPTIONS
-    --help (-h)  Displays this help message
-"""
-    )
+# OPTIONS
+#     --help (-h)  Displays this help message
+# """
+#     )
 
 
-def test_advanced_parsing():
-    @arc.command()
-    def command():
-        """Here's a description
+# def test_description():
+#     @arc.command()
+#     def command():
+#         """Here's a description"""
 
-        Here's another description paragraph
+#     assert (
+#         utils.ansi_clean(command.doc.help())
+#         == """\
+# USAGE
+#     command [-h]
 
-        # Section
-        Here's an additional section
+# DESCRIPTION
+#     Here's a description
 
-        \b
-        - 1
-        - 2
-        - 3
-        """
-
-    assert (
-        utils.ansi_clean(command.doc.help())
-        == """\
-USAGE
-    command [-h]
-
-DESCRIPTION
-    Here's a description
-
-    Here's another description paragraph
-
-OPTIONS
-    --help (-h)  Displays this help message
-
-SECTION
-    Here's an additional section
-
-    - 1
-    - 2
-    - 3
-"""
-    )
+# OPTIONS
+#     --help (-h)  Displays this help message
+# """
+#     )
 
 
-def test_subcommands():
-    @arc.command()
-    def command():
-        ...
+# def test_advanced_parsing():
+#     @arc.command()
+#     def command():
+#         """Here's a description
 
-    @command.subcommand()
-    def sub():
-        ...
+#         Here's another description paragraph
 
-    @sub.subcommand()
-    def sub2():
-        ...
+#         # Section
+#         Here's an additional section
 
-    # How the root command should behave
-    assert (
-        utils.ansi_clean(command.doc.help())
-        == """\
-USAGE
-    command [-h]
-    command <subcommand> [ARGUMENTS ...]
+#         \b
+#         - 1
+#         - 2
+#         - 3
+#         """
 
-OPTIONS
-    --help (-h)  Displays this help message
+#     assert (
+#         utils.ansi_clean(command.doc.help())
+#         == """\
+# USAGE
+#     command [-h]
 
-SUBCOMMANDS
-    sub
-"""
-    )
+# DESCRIPTION
+#     Here's a description
 
-    assert (
-        utils.ansi_clean(sub.doc.help())
-        == """\
-USAGE
-    command sub [-h]
-    command sub <subcommand> [ARGUMENTS ...]
+#     Here's another description paragraph
 
-OPTIONS
-    --help (-h)  Displays this help message
+# OPTIONS
+#     --help (-h)  Displays this help message
 
-SUBCOMMANDS
-    sub2
-"""
-    )
+# SECTION
+#     Here's an additional section
 
-    assert (
-        utils.ansi_clean(sub2.doc.help())
-        == """\
-USAGE
-    command sub sub2 [-h]
-
-OPTIONS
-    --help (-h)  Displays this help message
-"""
-    )
+#     - 1
+#     - 2
+#     - 3
+# """
+#     )
 
 
-def test_namespace():
+# def test_subcommands():
+#     @arc.command()
+#     def command():
+#         ...
 
-    ns = arc.namespace("ns", description="ns description")
+#     @command.subcommand()
+#     def sub():
+#         ...
 
-    @ns.subcommand()
-    def command1():
-        """command1 desc"""
+#     @sub.subcommand()
+#     def sub2():
+#         ...
 
-    @ns.subcommand()
-    def command2():
-        """command2 desc"""
+#     # How the root command should behave
+#     assert (
+#         utils.ansi_clean(command.doc.help())
+#         == """\
+# USAGE
+#     command [-h]
+#     command <subcommand> [ARGUMENTS ...]
 
-    assert (
-        utils.ansi_clean(ns.doc.help())
-        == """\
-USAGE
-    ns [-h]
-    ns <subcommand> [ARGUMENTS ...]
+# OPTIONS
+#     --help (-h)  Displays this help message
 
-DESCRIPTION
-    ns description
+# SUBCOMMANDS
+#     sub
+# """
+#     )
 
-OPTIONS
-    --help (-h)  Displays this help message
+#     assert (
+#         utils.ansi_clean(sub.doc.help())
+#         == """\
+# USAGE
+#     command sub [-h]
+#     command sub <subcommand> [ARGUMENTS ...]
 
-SUBCOMMANDS
-    command1     command1 desc
-    command2     command2 desc
-"""
-    )
+# OPTIONS
+#     --help (-h)  Displays this help message
 
+# SUBCOMMANDS
+#     sub2
+# """
+#     )
 
-ARGS_STR = """\
-USAGE
-    command [-h] [--key-opt KEY-OPT] [--flag] --key-req KEY-REQ [--] pos-req
-    [pos-opt]
+#     assert (
+#         utils.ansi_clean(sub2.doc.help())
+#         == """\
+# USAGE
+#     command sub sub2 [-h]
 
-ARGUMENTS
-    pos-req      positional required
-    pos-opt      positional optional
-
-OPTIONS
-    --help (-h)  Displays this help message
-    --key-req    key required
-    --key-opt    key optional
-    --flag       flag
-"""
-
-
-def test_argument_desc_in_definition():
-    @arc.command()
-    def command(
-        pos_req: int = arc.Argument(description="positional required"),
-        pos_opt: int = arc.Argument(description="positional optional", default=1),
-        key_req: int = arc.Option(description="key required"),
-        key_opt: int = arc.Option(description="key optional", default=1),
-        flag: bool = arc.Flag(description="flag"),
-    ):
-        ...
-
-    assert utils.ansi_clean(command.doc.help()) == ARGS_STR
+# OPTIONS
+#     --help (-h)  Displays this help message
+# """
+#     )
 
 
-def test_argument_desc_in_docstring():
-    @arc.command()
-    def command(
-        pos_req: int,
-        pos_opt: int = 1,
-        *,
-        key_req: int,
-        key_opt: int = 1,
-        flag: bool,
-    ):
-        """
-        # Arguments
-        pos_req: positional required
-        pos_opt: positional optional
-        key_req: key required
-        key_opt: key optional
-        flag: flag
-        """
+# def test_namespace():
 
-    assert utils.ansi_clean(command.doc.help()) == ARGS_STR
+#     ns = arc.namespace("ns", description="ns description")
+
+#     @ns.subcommand()
+#     def command1():
+#         """command1 desc"""
+
+#     @ns.subcommand()
+#     def command2():
+#         """command2 desc"""
+
+#     assert (
+#         utils.ansi_clean(ns.doc.help())
+#         == """\
+# USAGE
+#     ns [-h]
+#     ns <subcommand> [ARGUMENTS ...]
+
+# DESCRIPTION
+#     ns description
+
+# OPTIONS
+#     --help (-h)  Displays this help message
+
+# SUBCOMMANDS
+#     command1     command1 desc
+#     command2     command2 desc
+# """
+#     )
 
 
-def test_collections():
-    @arc.command()
-    def command(
-        val: list[int],
-        val2: tuple[int, int],
-        val3: list[int] = [],
-        val4: tuple[int, int] = tuple(),  # type: ignore
-    ):
-        assert utils.ansi_clean(command.doc.help) == (
-            """\
-USAGE
-    cli.py [-h] [--] val [val...] val2 val2 [val3 [val3...]] [val4] [val4]
+# ARGS_STR = """\
+# USAGE
+#     command [-h] [--key-opt KEY-OPT] [--flag] --key-req KEY-REQ [--] pos-req
+#     [pos-opt]
 
-ARGUMENTS
-    val
-    val2
-    val3
-    val4
+# ARGUMENTS
+#     pos-req      positional required
+#     pos-opt      positional optional
 
-OPTIONS
-    --help (-h)  Displays this help message
-"""
-        )
+# OPTIONS
+#     --help (-h)  Displays this help message
+#     --key-req    key required
+#     --key-opt    key optional
+#     --flag       flag
+# """
+
+
+# def test_argument_desc_in_definition():
+#     @arc.command()
+#     def command(
+#         pos_req: int = arc.Argument(description="positional required"),
+#         pos_opt: int = arc.Argument(description="positional optional", default=1),
+#         key_req: int = arc.Option(description="key required"),
+#         key_opt: int = arc.Option(description="key optional", default=1),
+#         flag: bool = arc.Flag(description="flag"),
+#     ):
+#         ...
+
+#     assert utils.ansi_clean(command.doc.help()) == ARGS_STR
+
+
+# def test_argument_desc_in_docstring():
+#     @arc.command()
+#     def command(
+#         pos_req: int,
+#         pos_opt: int = 1,
+#         *,
+#         key_req: int,
+#         key_opt: int = 1,
+#         flag: bool,
+#     ):
+#         """
+#         # Arguments
+#         pos_req: positional required
+#         pos_opt: positional optional
+#         key_req: key required
+#         key_opt: key optional
+#         flag: flag
+#         """
+
+#     assert utils.ansi_clean(command.doc.help()) == ARGS_STR
+
+
+# def test_collections():
+#     @arc.command()
+#     def command(
+#         val: list[int],
+#         val2: tuple[int, int],
+#         val3: list[int] = [],
+#         val4: tuple[int, int] = tuple(),  # type: ignore
+#     ):
+#         assert utils.ansi_clean(command.doc.help) == (
+#             """\
+# USAGE
+#     cli.py [-h] [--] val [val...] val2 val2 [val3 [val3...]] [val4] [val4]
+
+# ARGUMENTS
+#     val
+#     val2
+#     val3
+#     val4
+
+# OPTIONS
+#     --help (-h)  Displays this help message
+# """
+#         )

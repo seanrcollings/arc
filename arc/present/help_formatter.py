@@ -3,6 +3,7 @@ from itertools import repeat
 
 import typing as t
 import textwrap
+from arc import constants
 
 from arc.color import colorize, fg, effects
 from arc.config import config
@@ -197,7 +198,21 @@ class HelpFormatter(TextFormatter):
                 if param["short_name"]:
                     name += colorize(f" (-{param['short_name']})", fg.GREY)
 
-            data.append((name, textwrap.dedent(param["description"] or "").strip("\n")))
+            desc = textwrap.dedent(param["description"] or "")
+            if (
+                param["default"] not in (None, constants.MISSING)
+                and param["kind"] != "flag"
+            ):
+                if isinstance(param["default"], constants.COLLECTION_TYPES):
+                    default = Joiner.with_comma(param["default"])
+                else:
+                    default = param["default"]
+
+                desc += colorize(f" (default: {default})", fg.GREY)
+
+            desc = desc.strip("\n")
+
+            data.append((name, desc))
 
         return data
 
@@ -208,7 +223,7 @@ class HelpFormatter(TextFormatter):
             desc = command.doc.short_description or ""
             aliases = parent.subcommands.aliases_for(command.name)
             if aliases:
-                name += colorize(" (" + ", ".join(aliases) + ")", fg.GREY)
+                name += colorize(f" ({Joiner.with_comma(aliases)})", fg.GREY)
 
             data.append((name, desc))
 

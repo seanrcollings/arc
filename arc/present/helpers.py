@@ -19,7 +19,7 @@ class Joiner:
         if style:
             return string.join(colorize(v, *style) for v in values)
 
-        return string.join(values)
+        return string.join(str(v) for v in values)
 
     @staticmethod
     def with_space(values: t.Iterable, *args, **kwargs):

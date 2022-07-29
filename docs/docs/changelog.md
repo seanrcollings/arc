@@ -1,3 +1,8 @@
+## `7.0.1`
+- Fixes to some formatting issues
+- Fixed issue with some types being considered collections when they shouldn't be
+
+
 ## `7.0.0`
 - Rewirte of core components: `Context`, `Command`, `Param`, `ParamBuilder`, etc...
 - Removed the `#!python CLI()` object. `#!python @arc.command()` can now handle subcommands.
