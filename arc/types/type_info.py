@@ -66,13 +66,6 @@ class TypeInfo(t.Generic[T]):
             and self.sub_types[-1].original_type is type(None)
         )
 
-    @property
-    def is_iterable_type(self) -> bool:
-        """Type can substitue for `list`"""
-        return hasattr(self.origin, "__iter__") and not safe_issubclass(
-            self.origin, str
-        )
-
     @classmethod
     def analyze(cls, annotation) -> TypeInfo:
         original_type = annotation

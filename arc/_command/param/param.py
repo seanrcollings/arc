@@ -6,6 +6,7 @@ import os
 import typing as t
 
 from arc import errors, utils
+from arc import constants
 from arc.autocompletions import CompletionInfo, get_completions
 from arc.color import colorize, effects, fg
 from arc.prompt.prompts import input_prompt
@@ -19,8 +20,6 @@ if t.TYPE_CHECKING:
 
 
 T = t.TypeVar("T")
-
-NO_CONVERT = {None, bool, t.Any, MISSING}
 
 
 class Action(enum.Enum):
@@ -328,7 +327,8 @@ class OptionParam(KeywordParam[t.Any]):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if self.type.is_iterable_type:
+
+        if self.type.origin in constants.COLLECTION_TYPES:
             self.action = Action.APPEND
 
     @property

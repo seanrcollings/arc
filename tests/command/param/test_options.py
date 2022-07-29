@@ -63,13 +63,7 @@ def test_short_name():
     assert command("-v val") == "val"
 
 
-class CustomCollection(collections.UserList):
-    @classmethod
-    def __convert__(cls, values):
-        return cls((int(v) for v in values))
-
-
-@pytest.mark.parametrize("cls", [list[int], set[int], tuple[int, ...], CustomCollection])  # type: ignore
+@pytest.mark.parametrize("cls", [list[int], set[int], tuple[int, ...]])  # type: ignore
 def test_collections(cls):
     @arc.command()
     def command(*, val: cls):

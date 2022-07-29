@@ -70,11 +70,9 @@ class ParamBuilder:
     ) -> ParamInfo:
         if isinstance(param.default, ParamInfo):
             info = param.default
-            param_cls = info.param_cls
         else:
-            param_cls = self.get_param_cls(param, type_info)
             info = ParamInfo(
-                param_cls,
+                param_cls=self.get_param_cls(param, type_info),
                 default=param.default if param.default is not param.empty else MISSING,
             )
 
@@ -92,19 +90,18 @@ class ParamBuilder:
         self, param: inspect.Parameter, type_info: TypeInfo
     ) -> type[Param]:
         origin = type_info.origin
-        if hasattr(origin, "__depends__"):
-            return InjectedParam
 
-        elif origin is bool or isinstance(param.default, bool):
-            return FlagParam
-
-        elif param.kind is param.POSITIONAL_ONLY:
+        if param.kind is param.POSITIONAL_ONLY:
             raise errors.ParamError(
                 "Positional only arguments are not allowed. "
                 "please remove the '/' from your function definition",
                 param,
             )
 
+        elif hasattr(origin, "__depends__"):
+            return InjectedParam
+        elif origin is bool or isinstance(param.default, bool):
+            return FlagParam
         elif param.kind is param.KEYWORD_ONLY:
             return OptionParam
         else:
