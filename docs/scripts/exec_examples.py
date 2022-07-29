@@ -50,12 +50,12 @@ def exec_examples(config: list[ExecConfig]):
         if entry.out:
             outfile = OUTPUT_DIR / entry.out
         else:
-            outfile = OUTPUT_DIR / entry.file.strip(".py")
+            outfile = OUTPUT_DIR / entry.file.rstrip(".py")
 
         outfile.parent.mkdir(parents=True, exist_ok=True)
         print(outfile)
 
-        with outfile.open("w") as f:
+        with outfile.open("w+") as f:
             with contextlib.redirect_stdout(f):
                 for arg in execs:
                     f.write(f"$ python {entry.file} {arg}\n")

@@ -12,11 +12,22 @@
   exec: --help
   out: docstring_example
 - file: parameter_argument.py
-  exec: Joseph Joestar
+  exec: Joseph
   out: parameter_argument
+- file: parameter_argument.py
+  exec: Joseph Joestar
+  out: parameter_argument_lastname
+- file: parameter_argument.py
+  exec: --help
+  out: parameter_argument_help
+- file: parameter_default.py
+  exec: [Sean, Sean Collings]
 - file: parameter_option.py
   exec: --firstname Joesph --lastname Joestar
   out: parameter_option
+- file: parameter_option.py
+  exec: --help
+  out: parameter_option_help
 - file: parameter_flag.py
   exec: [Joseph, Joseph --reverse]
   out: parameter_flag
@@ -71,9 +82,6 @@
 - file: docstring_example.py
   exec: --help
 - file: hello_world.py
-- file: parameter_argument.py
-  exec: Joseph Joestar
-  out: parameter_argument
 - file: parameter_option.py
   exec: --firstname Joesph --lastname Joestar
   out: parameter_option
@@ -87,3 +95,18 @@
   exec: ["10", ""]
 - file: context_manager.py
   exec: "1"
+- file: subcommand.py
+  exec: ""
+  out: subcommand_root
+- file: subcommand.py
+  exec: ["sub1", "sub2"]
+  out: subcommand
+- file: subcommand.py
+  exec: ["--help", "sub1 --help", "sub2 --help"]
+  out: subcommand_help
+- file: add.py
+  exec: 5 10
+- file: add.py
+  exec: 5 not-a-number
+  out: add_error
+  error_allowed: true

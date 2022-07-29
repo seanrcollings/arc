@@ -2,7 +2,7 @@ import arc
 
 
 @arc.command()
-def hello(firstname=arc.Argument(), reverse=arc.Flag()):
+def hello(firstname: str, reverse: bool):
     if reverse:
         firstname = firstname[::-1]
 

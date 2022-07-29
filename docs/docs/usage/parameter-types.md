@@ -2,7 +2,7 @@
 
 When Possible, *arc* uses builtin and standard library data types for arguments. But if no type is available, or the builtin types don't provide the neccessary functionality, *arc* may implement a custom type.
 
-## Standard Libary Types
+## Builtin Types
 
 `#!python str`
 
@@ -25,6 +25,8 @@ Used to denote a `Flag`
 Converted using `#!python v.encode()`
 
 ### Collection Types
+
+**TODO** move the info for collections to a different file, and just link to it here
 
 `#!python list`
 
@@ -84,6 +86,8 @@ Allows a list of comma-seperated key-value pairs. Can be typed generically on bo
 --8<-- "examples/outputs/dict_argument"
 ```
 
+## Standard Libary Types
+
 
 `#!python typing.Union`
 
@@ -138,6 +142,12 @@ Uses `#!python ipaddress.IPv4Address(v)` for conversion, so anything valid there
 `#!python ipaddress.IPv6Address`
 
 Same as above
+
+
+`#!python re.Pattern`
+
+Support for regular expression patterns
+
 
 ## Arc Types
 *arc* provides a variety of additional types exported from the `#!python arc.types` module:

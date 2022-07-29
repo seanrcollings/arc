@@ -413,7 +413,9 @@ class PatternAlias(Alias, of=re.Pattern):
         try:
             return re.compile(value, cls.flags(info))
         except re.error as e:
-            raise errors.ConversionError(value, "Not a valid regex pattern", e) from e
+            raise errors.ConversionError(
+                value, "Not a valid regular expression", e
+            ) from e
 
     @classmethod
     def flags(cls, info: TypeInfo):

@@ -60,9 +60,24 @@ def Argument(
     get: at.GetterFunc = None,
     complete: at.CompletionFunc = None,
 ) -> t.Any:
-    """A CLI Paramater. Input will be passed in positionally.
+    """A CLI argument. Input is passed positionally.
 
-    # Example
+
+    Args:
+        name (str, optional): The name to use for the parameter on the command line.
+        default (t.Any, optional): A default value for the parameter. If one is given,
+            the argument becomes optional, otherwise it is required.
+        desc (str, optional): A description of the parameter, will be added to the `--help` doc.
+        callback (t.Callable, optional): a Callable object that can be used to modify the value of this parameter.
+        prompt (str, optional): A string to provide the user with as a prompt to request input
+            from STDIN when none is provided from the command line.
+        envvar (str, optional): Name of an enviroment variable to obtain a value from if one is not
+            provided on the command line.
+        get (at.GetterFunc, optional): Callable object to retrive a possible value for the command if one
+            is not provided on the command line.
+        complete (at.CompletionFunc, optional): Function to provide shell completions for this parameter.
+
+    ## Example
     ```py
     @cli.command()
     def test(val: int = Argument()):
@@ -101,6 +116,21 @@ def Option(
 ) -> t.Any:
     """A (generally optional) keyword parameter.
 
+    Args:
+        name (str, optional): The name to use for the parameter on the command line.
+        short (str, optional): A single character name to refer to this parameter to on the command line (`--name` vs `-n`)
+        default (t.Any, optional): A default value for the parameter. If one is given,
+            the argument becomes optional, otherwise it is required.
+        desc (str, optional): A description of the parameter, will be added to the `--help` doc.
+        callback (t.Callable, optional): a Callable object that can be used to modify the value of this parameter.
+        prompt (str, optional): A string to provide the user with as a prompt to request input
+            from STDIN when none is provided from the command line.
+        envvar (str, optional): Name of an enviroment variable to obtain a value from if one is not
+            provided on the command line.
+        get (at.GetterFunc, optional): Callable object to retrive a possible value for the command if one
+            is not provided on the command line.
+        complete (at.CompletionFunc, optional): Function to provide shell completions for this parameter.
+
     # Example
     ```py
     @cli.command()
@@ -138,6 +168,14 @@ def Flag(
 ) -> t.Any:
     """An option that represents a boolean value.
 
+    Args:
+        name (str, optional): The name to use for the parameter on the command line.
+        short (str, optional): A single character name to refer to this parameter to on the command line (`--name` vs `-n`)
+        default (boolean, optional): A default value for the parameter. If one is given,
+            the argument becomes optional, otherwise it is required.
+        desc (str, optional): A description of the parameter, will be added to the `--help` doc.
+        callback (t.Callable, optional): a Callable object that can be used to modify the value of this parameter.
+
     # Example
     ```py
     @cli.command()
@@ -171,6 +209,13 @@ def Count(
     callback: t.Callable = None,
 ) -> t.Any:
     """A Flag that counts it's number of apperances on the command line
+
+    Args:
+        name (str, optional): The name to use for the parameter on the command line.
+        short (str, optional): A single character name to refer to this parameter to on the command line (`--name` vs `-n`)
+        default (int, optional): The starting point for the counter. Should be an integer.
+        desc (str, optional): A description of the parameter, will be added to the `--help` doc.
+        callback (t.Callable, optional): a Callable object that can be used to modify the value of this parameter.
 
     # Example
     ```py
