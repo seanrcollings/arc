@@ -5,9 +5,9 @@ cli = arc.namespace("cli")
 
 @cli.subcommand()
 def command1(
-    firstname: str = arc.Argument(description="Someone's first name"),
-    lastname: str = arc.Option(default="", description="Someone's last name. Optional"),
-    reverse: bool = arc.Flag(description="arc.print the name out in reverse"),
+    firstname: str = arc.Argument(desc="Someone's first name"),
+    lastname: str = arc.Option(default="", desc="Someone's last name. Optional"),
+    reverse: bool = arc.Flag(desc="arc.print the name out in reverse"),
 ):
     """Documentation using descriptions"""
 

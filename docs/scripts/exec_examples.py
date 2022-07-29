@@ -53,6 +53,7 @@ def exec_examples(config: list[ExecConfig]):
             outfile = OUTPUT_DIR / entry.file.strip(".py")
 
         outfile.parent.mkdir(parents=True, exist_ok=True)
+        print(outfile)
 
         with outfile.open("w") as f:
             with contextlib.redirect_stdout(f):

@@ -141,7 +141,7 @@
 
 # def test_namespace():
 
-#     ns = arc.namespace("ns", description="ns description")
+#     ns = arc.namespace("ns", desc="ns description")
 
 #     @ns.subcommand()
 #     def command1():
@@ -191,11 +191,11 @@
 # def test_argument_desc_in_definition():
 #     @arc.command()
 #     def command(
-#         pos_req: int = arc.Argument(description="positional required"),
-#         pos_opt: int = arc.Argument(description="positional optional", default=1),
-#         key_req: int = arc.Option(description="key required"),
-#         key_opt: int = arc.Option(description="key optional", default=1),
-#         flag: bool = arc.Flag(description="flag"),
+#         pos_req: int = arc.Argument(desc="positional required"),
+#         pos_opt: int = arc.Argument(desc="positional optional", default=1),
+#         key_req: int = arc.Option(desc="key required"),
+#         key_opt: int = arc.Option(desc="key optional", default=1),
+#         flag: bool = arc.Flag(desc="flag"),
 #     ):
 #         ...
 

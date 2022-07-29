@@ -1,9 +1,12 @@
-- file: arguments_documentation.py
-  exec: [command1 --help, command2 --help]
 - file: hello.py
   exec: Joseph
 - file: hello.py
   exec: --help
+  out: hello_help
+- file: hello_world.py
+  exec: ""
+- file: arguments_documentation.py
+  exec: [command1 --help, command2 --help]
   out: hello_help
 - file: docstring_example.py
   exec: --help
@@ -23,7 +26,7 @@
 - file: list_argument.py
   exec: ["", "Jonathen Joseph Jotaro"]
 - file: list_option.py
-  exec: ["", "--names Josuke Giorno Joylene"]
+  exec: ["", "--names Josuke --names Giorno --names Joylene"]
 - file: sum.py
   exec: 1 2 3 4 5 6 7 8 9
 - file: set_argument.py
