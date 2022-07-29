@@ -145,6 +145,15 @@ class TestList:
 
         assert cli("liu word 1") == ["word", 1]
 
+    def test_append(self, cli: arc.Command):
+        @cli.subcommand()
+        def li(*, val: list):
+            return val
+
+        assert cli("li --val 1") == ["1"]
+        # assert cli("li 1,2,3,4") == ["1", "2", "3", "4"]
+        assert cli("li --val 1 --val 2 --val 3 --val 4") == ["1", "2", "3", "4"]
+
 
 class TestTuple:
     def test_standard(self, cli: arc.Command):
