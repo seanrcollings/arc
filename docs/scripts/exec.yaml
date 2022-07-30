@@ -104,6 +104,9 @@
 - file: subcommand.py
   exec: ["--help", "sub1 --help", "sub2 --help"]
   out: subcommand_help
+- file: group.py
+  exec: ["--help", "Joseph --reverse"]
+  out: group
 - file: add.py
   exec: 5 10
 - file: add.py
