@@ -1,16 +1,15 @@
 #!/usr/bin/env python
+import logging
 import typing as t
 import sys
 from pathlib import Path
-import importlib
 import shlex
 import shutil
 import contextlib
-import io
 from dataclasses import dataclass
 
 import yaml
-import arc
+from arc.config import config as ac
 
 PARENT = Path(__file__).parent
 EXAMPLE_DIR = PARENT.parent / "examples"
@@ -40,6 +39,7 @@ def init():
 
 def exec_examples(config: list[ExecConfig]):
     for entry in config:
+        ac.version = None
         execs = entry.exec
         if isinstance(execs, str):
             execs = [execs]
@@ -53,11 +53,11 @@ def exec_examples(config: list[ExecConfig]):
             outfile = OUTPUT_DIR / entry.file.rstrip(".py")
 
         outfile.parent.mkdir(parents=True, exist_ok=True)
-        print(outfile)
 
         with outfile.open("w+") as f:
-            with contextlib.redirect_stdout(f):
+            with contextlib.redirect_stdout(f), contextlib.redirect_stderr(f):
                 for arg in execs:
+                    logging.root.handlers.clear()
                     f.write(f"$ python {entry.file} {arg}\n")
                     sys.argv = [entry.file, *shlex.split(arg)]
 

@@ -104,11 +104,20 @@
 - file: subcommand.py
   exec: ["--help", "sub1 --help", "sub2 --help"]
   out: subcommand_help
+- file: global_params.py
+  exec: ["sub", "--verbose sub"]
+- file: global_params.py
+  exec: --help
+  out: global_params_help
+- file: nested_subcommands.py
+  exec: ["sub1 nested1", "sub2 nested2"]
 - file: group.py
   exec: ["--help", "Joseph --reverse"]
   out: group
 - file: add.py
   exec: 5 10
+# This causes execution to stop, without erroring
+# new ones need to be placed above it
 - file: add.py
   exec: 5 not-a-number
   out: add_error

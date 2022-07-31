@@ -39,6 +39,7 @@ mode_map = {
 
 
 logger = logging.getLogger("arc")
+logger.setLevel(ERROR)
 handler = logging.StreamHandler()
 formatter = ArcFormatter("%(levelname)s%(name)s %(message)s")
 handler.setFormatter(formatter)

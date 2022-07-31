@@ -19,23 +19,74 @@ We can then execute each subcommand by referring to them by name.
 --8<-- "examples/outputs/subcommand"
 ```
 
+
 ### Documentation
 Subcommands also get their own `--help`
 ```console
 --8<-- "examples/outputs/subcommand_help"
 ```
-
 They're all pretty bare-bones right now, but they will fill out as the application grows.
 
-### Root Command
-When subcommands are added into the mix the root `#!python @arc.command()` object behaves a little bit differently.
+### Nesting Subcommands
+Subcommands can be arbitrarly nested
+```py title="examples/nested_subcommands.py"
+--8<-- "examples/nested_subcommands.py"
+```
 
-TODO: expound on:
+```console
+--8<-- "examples/outputs/nested_subcommands"
+```
 
-- Cannot have positional arguments
-- It's arguments are considered global
-- It will be executed for any subcommand that is executed
+## Global Parameters
+When you define subcommands for you application, the root `#!python @arc.command()` object becomes a callback for *global* parameters. This is useful for defining things that can apply to the entirety of your applcation. For example, logging configuration.
+
+```py title="examples/global_params.py"
+--8<-- "examples/global_params.py"
+```
+
+```console
+--8<-- "examples/outputs/global_params"
+```
+
+Global arguments **must** come before the name of the command for them to be interpreted correctly. You can see this reflected in the `--help`
+
+```console
+--8<-- "examples/outputs/global_params_help"
+```
+
+### Things to be aware of
+- The root object can no longer define [argument parameters](parameters/arguments.md), because *arc* doesn't have a way of knowing *what* is a positional parameter and *what* is the name of a command. **Note**: This may change in the future if I have time / care to change it.
+- The root callback will be executed before *every* subcommand, regardless of whether or not you actually provide any global arguments. If this behavior isn't desired, it can be changed with `#!python arc.configure(global_callback_execution="args_present")`
 
 ## Naming Subcommands
+By default, commands are the kebab-case version of the function they decorate. This can be modified to change the name
 
+```py
+import arc
+
+@arc.command()
+def command():
+    ...
+
+@command.subcommand("some-other-name")
+def sub():
+    ...
+
+command()
+```
+
+or provide *multiple* names, for a command.
+```py
+import arc
+
+@arc.command()
+def command():
+    ...
+
+@command.subcommand(("some-other-name", "another-name", "a-third-name"))
+def sub():
+    ...
+
+command()
+```
 ## Subcommands in other Files

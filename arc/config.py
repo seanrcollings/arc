@@ -29,7 +29,7 @@ class Config:
     version: t.Optional[str] = None
     autocomplete: bool = False
     allow_unrecognized_args: bool = False
-    global_callback_execution: t.Literal["always", "args_present"] = "args_present"
+    global_callback_execution: t.Literal["always", "args_present"] = "always"
     report_bug: str | None = None
 
 
