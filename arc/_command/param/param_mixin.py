@@ -17,8 +17,6 @@ class ParamMixin:
     SPECIAL_PARAMS = {"help", "version", "autocomplete"}
     callback: t.Callable
     parent: t.Any
-    is_namespace: bool
-    is_root: bool
 
     @cached_property
     def param_groups(self) -> list[ParamGroup]:
@@ -26,7 +24,7 @@ class ParamMixin:
         groups = builder.build()
 
         default = ParamGroup.get_default_group(groups)
-        if self.is_root and not self.is_namespace:
+        if self.is_root and not self.is_namespace:  # type: ignore
 
             if config.version:
                 self.__add_version_param(default)

@@ -20,71 +20,22 @@ Likewise, arc uses `#!python float(v)`. Ingeter values will be converted to a fl
 
 Used to denote a `Flag`
 
+```py title="examples/parameter_flag.py"
+--8<-- "examples/parameter_flag.py"
+```
+
+```console
+--8<-- "examples/outputs/parameter_flag"
+```
+
 `#!python bytes`
 
 Converted using `#!python v.encode()`
 
 ### Collection Types
 
-**TODO** move the info for collections to a different file, and just link to it here
+Collection types are used by *arc* to collect **multiple values** into a single argument. Check the [next](multiple-values.md) page for information on how that works
 
-`#!python list`
-
-Collection types (`#!python list`, `#!python set`, `#!python tuple`) can be used to gather multiple values into a single parameter.
-When used as a positional parameter `#!python list` acts similarly to `#!python *args`
-```py title="list_argument.py"
---8<-- "examples/list_argument.py"
-```
-```console
---8<-- "examples/outputs/list_argument"
-```
-Because `list` can accept any number of values, you won't be able to add additional arguments after `names`. Any other positional arguments would have to come before `names`.
-
-When used as an option, it allows the option to be used multiple times:
-```py title="list_option.py"
---8<-- "examples/list_option.py"
-```
-```console
---8<-- "examples/outputs/list_option"
-```
-Collections can be sub-typed so that each item will be converted to the proper type:
-```py title="sum.py"
---8<-- "examples/sum.py"
-```
-```console
---8<-- "examples/outputs/sum"
-```
-
-`#!python set`
-
-Similar to `list`, but will filter out any non-unique elements.
-
-```py title="set_argument.py"
---8<-- "examples/set_argument.py"
-```
-```console
---8<-- "examples/outputs/set_argument"
-```
-
-`#!python tuple`
-
-Similar to `list`, but with some additional functionality.
-
-According to PEP 484:
-
-- `#!python tuple` represents an arbitrarily sized tuple of any type. In *arc*, this will behave the same as `#!python list`
-- `#!python tuple[int, ...]` represents an arbitrarily sized tuple of integers. In *arc*, this will behave the same as `#!python list[int]`
-- `#!python tuple[int, int]` represents a size-two tuple of integers. In *arc*, this behavior is unique to `#!python tuple` as the parameter will only select 2 values from input.
-
-`#!python dict`
-
-Allows a list of comma-seperated key-value pairs. Can be typed generically on both keys and values.
-```py title="dict_argument.py"
---8<-- "examples/dict_argument.py"
-```
-```console
---8<-- "examples/outputs/dict_argument"
-```
 
 ## Standard Libary Types
 
@@ -92,7 +43,7 @@ Allows a list of comma-seperated key-value pairs. Can be typed generically on bo
 `#!python typing.Union`
 
 Allows the input to be multiple different types.
-```py title="union_argument.py"
+```py title="examples/union_argument.py"
 --8<-- "examples/union_argument.py"
 ```
 ```console
@@ -107,7 +58,7 @@ arc will attempt to coerce the input into each type, from left to right. The fir
 `#!python typing.Literal`
 
 Enforces that the input must be a specific sub-set of values
-```py title="literal_argument.py"
+```py title="examples/literal_argument.py"
 --8<-- "examples/literal_argument.py"
 ```
 ```console
@@ -128,7 +79,7 @@ Path won't perform any validation checks to assert that the input is a valid pat
 `#!python enum.Enum`
 
 Similar to `#!python typing.Literal`, restricts the input to a specific sub-set of values
-```py title="paint.py"
+```py title="examples/paint.py"
 --8<-- "examples/paint.py"
 ```
 ```console
@@ -149,7 +100,7 @@ Same as above
 Support for regular expression patterns
 
 
-## Arc Types
+## `arc` Types
 *arc* provides a variety of additional types exported from the `#!python arc.types` module:
 
 ???+ warning

@@ -1,8 +1,5 @@
 import logging
-import typing as t
 from arc.color import colorize, effects, bg
-import arc.typing as at
-
 
 DEBUG = logging.DEBUG
 INFO = logging.INFO

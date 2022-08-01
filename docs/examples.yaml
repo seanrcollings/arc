@@ -6,7 +6,6 @@
 - file: hello_world.py
   exec: ""
 - file: arguments_documentation.py
-  out: hello_help
   exec:
     - command1 --help
     - command2 --help

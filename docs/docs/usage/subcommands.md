@@ -90,3 +90,34 @@ def sub():
 command()
 ```
 ## Subcommands in other Files
+Breaking up your CLI interface into multiple files in *arc* is a very straightforward process.
+
+=== "subcommand.py"
+
+    ``` py
+    import arc
+
+    @arc.command()
+    def sub():
+        print("This is the subcommand")
+
+    # Notice, no call to sub()
+    ```
+
+=== "cli.py"
+
+    ``` py
+    import arc
+    from subcommand import sub
+
+
+    @arc.command()
+    def cli():
+        print('hello there!')
+
+    # Here we add sub as a subcommand to cli
+    cli.add_command(sub)
+
+    cli()
+    ```
+

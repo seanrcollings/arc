@@ -9,10 +9,10 @@ class Color(Enum):
 
 
 @arc.command()
-def paint(color: Color = arc.Argument()):
-    if color == Color.RED:
+def paint(color: Color):
+    if color is Color.RED:
         arc.print("You painted the walls the bloodiest of reds")
-    elif color == Color.YELLOW:
+    elif color is Color.YELLOW:
         arc.print("You painted the walls the most fabulous yellow")
     else:
         arc.print("You painted the walls the deepest of greens")

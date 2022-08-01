@@ -27,15 +27,17 @@ K = t.TypeVar("K")
 V = t.TypeVar("V")
 
 
-class SubcommandsDict(dict[K, V]):
-    aliases: dict[K, K]
+class AliasDict(dict[K, V]):
+    """Dict subclass for storing aliases to keys alongside the actual key"""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.aliases = {}
+        self.aliases: dict[K, K] = {}
+        """Maps aliases to the cannonical key"""
 
     def get(self, key: K, default=None):
+        """Wraps `dict.get()` but also checks for aliases"""
         if super().__contains__(key):
             return self[key]
         if key in self.aliases:
@@ -47,9 +49,11 @@ class SubcommandsDict(dict[K, V]):
         return super().__contains__(key) or key in self.aliases
 
     def add_alias(self, key: K, alias: K):
+        """Add an `alias` for `key`"""
         self.aliases[alias] = key
 
     def add_aliases(self, key: K, *aliases: K):
+        """Add an several `aliass` for `key`"""
         for alias in aliases:
             self.add_alias(key, alias)
 
@@ -65,7 +69,7 @@ class Command(
     callback: at.CommandCallback
     name: str
     parent: Command | None
-    subcommands: SubcommandsDict[str, Command]
+    subcommands: AliasDict[str, Command]
     param_groups: list[ParamGroup]
     doc: Documentation
     explicit_name: bool
@@ -85,12 +89,13 @@ class Command(
             self.callback = classful.wrap_class_callback(
                 t.cast(type[at.ClassCallback], callback)
             )
+
         else:
             self.callback = callback
 
         self.name = name or callback.__name__
         self.parent = parent
-        self.subcommands = SubcommandsDict()
+        self.subcommands = AliasDict()
         self.doc = Documentation(self, description)
         self.explicit_name = explicit_name
         self.decorators = DecoratorStack()
@@ -99,7 +104,24 @@ class Command(
         if config.environment == "development":
             self.param_groups
 
-    def __call__(self, input_args: at.InputArgs = None, state: dict = None):
+    def __call__(self, input_args: at.InputArgs = None, state: dict = None) -> t.Any:
+        """Entry point for a command, call to execute your command object
+
+        Args:
+            input_args (str | list[str], optional): The input you wish to be processed.
+                If none is provided, `sys.argv` is used.
+            state (dict, optional): Execution State.
+
+        Raises:
+            errors.CommandError: If certain validations are not met
+            errors.Exit: Issues an `Exit()` if an external error occurs
+                (i.e: the input is not passed properly)
+            errors.InternalError: Issues an `InternalError()` when there
+                is a bug in the callback code, or in `arc` itself
+
+        Returns:
+            result (Any): The value that the command's callback returns
+        """
         if not self.explicit_name:
             self.name = utils.discover_name()
         args = self.get_args(input_args)
@@ -188,7 +210,8 @@ class Command(
         return []
 
     @property
-    def schema(self):
+    def schema(self) -> dict[str, t.Any]:
+        """Schema for the command and all it's subcommands"""
         return {
             "name": self.name,
             "params": [param.schema for param in self.params],
@@ -196,15 +219,18 @@ class Command(
         }
 
     @property
-    def is_namespace(self):
+    def is_namespace(self) -> bool:
+        """Whether or not this command was created using `arc.namespace()`"""
         return self.callback is namespace_callback
 
     @property
-    def is_root(self):
+    def is_root(self) -> bool:
+        """Whether or not this command is the root of the command tree"""
         return self.parent is None
 
     @property
-    def root(self):
+    def root(self) -> "Command":
+        """Retrieve the root of the command tree"""
         command = self
         while command.parent:
             command = command.parent
@@ -212,14 +238,27 @@ class Command(
         return command
 
     @property
-    def all_names(self):
+    def all_names(self) -> list[str]:
+        """A list of all the names that a command may be referred to as"""
         names = [self.name]
-        names += self.parent.subcommands.aliases_for(self.name)
+        if self.parent:
+            names += self.parent.subcommands.aliases_for(self.name)
         return names
 
     # Subcommands ----------------------------------------------------------------
 
-    def subcommand(self, name: at.CommandName = None, description: str | None = None):
+    def subcommand(
+        self, name: at.CommandName = None, description: str | None = None
+    ) -> t.Callable[[at.CommandCallback], Command]:
+        """Create a subcommand of this command
+
+        Args:
+            name (at.CommandName, optional): Name(s) of the command.
+                Name of the function is used if one is not provided
+            description (str | None, optional): Description of the command's functionaly.
+                Used in `--help` documentation.
+        """
+
         def inner(callback: at.CommandCallback):
             command_name, aliases = self.get_command_name(callback, name)
             command = Command(
@@ -234,6 +273,12 @@ class Command(
         return inner
 
     def add_command(self, command: Command, aliases: t.Sequence[str] | None = None):
+        """Add a command object as a subcommand
+
+        Args:
+            command (Command): The command to add
+            aliases (t.Sequence[str] | None, optional): Optional aliases to refter to the command by
+        """
         self.subcommands[command.name] = command
         command.parent = self
         self.inherit_decorators(command)
@@ -243,6 +288,7 @@ class Command(
         return command
 
     def add_commands(self, *commands: Command):
+        """Add multiple commands as subcommands"""
         return [self.add_command(command) for command in commands]
 
     def inherit_decorators(self, command: Command):
@@ -260,6 +306,11 @@ class Command(
         global_args, command, command_args = self.split_args(args)
 
         with self.create_ctx() as ctx:
+            if self.is_namespace:
+                if not global_args and command is self:
+                    global_res = ctx.run(global_args)
+                else:
+                    global_res = None
             if (
                 global_args
                 or command is self

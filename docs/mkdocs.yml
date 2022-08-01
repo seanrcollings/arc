@@ -36,7 +36,6 @@ markdown_extensions:
       permalink: true
 nav:
   - Home: index.md
-  - Features: features.md
   - Usage:
       - Intro: usage/intro.md
       - Command Parameters:
@@ -46,8 +45,9 @@ nav:
           - Flags: usage/parameters/flags.md
           - Parameter Groups: usage/parameters/parameter-groups.md
       - Subcommands: usage/subcommands.md
-      - Documentation Generation: usage/documentation-generation.md
       - Paramater Types: usage/parameter-types.md
+      - Multiple Values: usage/multiple-values.md
+      - Documentation Generation: usage/documentation-generation.md
       - Command Decorators: usage/decorators.md
       - Colored Output: usage/colored-output.md
       - Error Handlers: usage/error-handlers.md
@@ -67,4 +67,5 @@ nav:
       - arc.types:
           - arc.types.transforms: reference/transforms.md
           - arc.types.validators: reference/validators.md
+      - arc.command: reference/command.md
   - Changelog: changelog.md
