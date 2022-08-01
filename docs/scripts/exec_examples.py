@@ -20,8 +20,10 @@ OUTPUT_DIR = EXAMPLE_DIR / "outputs"
 class ExecConfig:
     file: str
     """The file to attempt to load"""
-    out: t.Optional[str] = None
+    out: Path
     """The name of the output file"""
+    name: str
+    """The name of the executable"""
     exit_code: int = 0
     """The expected exit code (if SystemExit is raised)"""
     error_allowed: bool = False
@@ -47,14 +49,10 @@ def exec_examples(config: list[ExecConfig]):
         with open(EXAMPLE_DIR / entry.file) as f:
             contents = f.read()
 
-        if entry.out:
-            outfile = OUTPUT_DIR / entry.out
-        else:
-            outfile = OUTPUT_DIR / entry.file.rstrip(".py")
+        entry.out.parent.mkdir(parents=True, exist_ok=True)
 
-        outfile.parent.mkdir(parents=True, exist_ok=True)
-
-        with outfile.open("w+") as f:
+        with entry.out.open("w+") as f:
+            print(entry.file, "->", entry.out)
             with contextlib.redirect_stdout(f), contextlib.redirect_stderr(f):
                 for arg in execs:
                     logging.root.handlers.clear()
@@ -75,9 +73,17 @@ def main():
     init()
 
     with open(PARENT / "exec.yaml", "r") as file:
-        config: list[ExecConfig] = [
-            ExecConfig(**item) for item in yaml.load(file.read(), yaml.CLoader)
-        ]
+        config: list[ExecConfig] = []
+        for item in yaml.load(file.read(), yaml.CLoader):
+            if not item.get("name", None):
+                item["name"] = item["file"]
+
+            if item.get("out", None):
+                item["out"] = Path(item["out"])
+            else:
+                item["out"] = Path(item["file"].rstrip(".py"))
+
+            config.append(ExecConfig(**item))
 
     exec_examples(config)
 
