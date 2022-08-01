@@ -11,8 +11,8 @@ from dataclasses import dataclass
 import yaml
 from arc.config import config as ac
 
-PARENT = Path(__file__).parent
-EXAMPLE_DIR = PARENT.parent / "examples"
+DOCS_DIR = Path(__file__).parent
+EXAMPLE_DIR = DOCS_DIR / "examples"
 OUTPUT_DIR = EXAMPLE_DIR / "outputs"
 
 
@@ -39,25 +39,42 @@ def init():
     OUTPUT_DIR.mkdir()
 
 
+def get_config(file):
+    config: list[ExecConfig] = []
+    with open(file, "r") as file:
+        for item in yaml.load(file.read(), yaml.CLoader):
+            if not item.get("name", None):
+                item["name"] = item["file"]
+
+            if item.get("out", None):
+                item["out"] = Path(item["out"])
+            else:
+                item["out"] = Path(item["file"].rstrip(".py"))
+
+            if isinstance(item.get("exec", None), str):
+                item["exec"] = [item["exec"]]
+
+            config.append(ExecConfig(**item))
+
+    return config
+
+
 def exec_examples(config: list[ExecConfig]):
     for entry in config:
         ac.version = None
-        execs = entry.exec
-        if isinstance(execs, str):
-            execs = [execs]
 
         with open(EXAMPLE_DIR / entry.file) as f:
             contents = f.read()
 
-        entry.out.parent.mkdir(parents=True, exist_ok=True)
+        (OUTPUT_DIR / entry.out).parent.mkdir(parents=True, exist_ok=True)
 
-        with entry.out.open("w+") as f:
+        with open(OUTPUT_DIR / entry.out, "w+") as f:
             print(entry.file, "->", entry.out)
             with contextlib.redirect_stdout(f), contextlib.redirect_stderr(f):
-                for arg in execs:
+                for args in entry.exec:
                     logging.root.handlers.clear()
-                    f.write(f"$ python {entry.file} {arg}\n")
-                    sys.argv = [entry.file, *shlex.split(arg)]
+                    f.write(f"$ python {entry.name} {args}\n")
+                    sys.argv = [entry.name, *shlex.split(args)]
 
                     try:
                         exec(contents, {})
@@ -71,20 +88,7 @@ def exec_examples(config: list[ExecConfig]):
 
 def main():
     init()
-
-    with open(PARENT / "exec.yaml", "r") as file:
-        config: list[ExecConfig] = []
-        for item in yaml.load(file.read(), yaml.CLoader):
-            if not item.get("name", None):
-                item["name"] = item["file"]
-
-            if item.get("out", None):
-                item["out"] = Path(item["out"])
-            else:
-                item["out"] = Path(item["file"].rstrip(".py"))
-
-            config.append(ExecConfig(**item))
-
+    config = get_config(DOCS_DIR / "examples.yaml")
     exec_examples(config)
 
 

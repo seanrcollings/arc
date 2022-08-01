@@ -6,38 +6,51 @@
 - file: hello_world.py
   exec: ""
 - file: arguments_documentation.py
-  exec: [command1 --help, command2 --help]
   out: hello_help
+  exec:
+    - command1 --help
+    - command2 --help
 - file: docstring_example.py
-  exec: --help
   out: docstring_example
-- file: parameter_argument.py
-  exec: Joseph
-  out: parameter_argument
-- file: parameter_argument.py
-  exec: Joseph Joestar
-  out: parameter_argument_lastname
-- file: parameter_argument.py
   exec: --help
+- file: parameter_argument.py
+  out: parameter_argument
+  exec: Joseph
+- file: parameter_argument.py
+  out: parameter_argument_lastname
+  exec: Joseph Joestar
+- file: parameter_argument.py
   out: parameter_argument_help
+  exec: --help
 - file: parameter_default.py
-  exec: [Sean, Sean Collings]
+  exec:
+    - Sean
+    - Sean Collings
 - file: parameter_option.py
-  exec: --firstname Joesph --lastname Joestar
   out: parameter_option
+  exec: --firstname Joesph --lastname Joestar
 - file: parameter_option.py
   exec: --help
   out: parameter_option_help
 - file: parameter_flag.py
-  exec: [Joseph, Joseph --reverse]
+  exec:
+    - Joseph
+    - Joseph --reverse
   out: parameter_flag
 - file: parameter_count.py
-  exec: [Joseph, Joseph --repeat, Joseph --repeat --repeat]
   out: parameter_count
+  exec:
+    - Joseph
+    - Joseph --repeat
+    - Joseph --repeat --repeat
 - file: list_argument.py
-  exec: ["", "Jonathen Joseph Jotaro"]
+  exec:
+    - ""
+    - Jonathen Joseph Jotaro
 - file: list_option.py
-  exec: ["", "--names Josuke --names Giorno --names Joylene"]
+  exec:
+    - ""
+    - --names Josuke --names Giorno --names Joylene
 - file: sum.py
   exec: 1 2 3 4 5 6 7 8 9
 - file: set_argument.py
@@ -45,75 +58,82 @@
 - file: dict_argument.py
   exec: one=1,two=2,three=3
 - file: union_argument.py
-  exec: ["5", "hello"]
+  exec:
+    - "5"
+    - hello
 - file: literal_argument.py
-  exec: [foo, "1", "other"]
+  exec:
+    - foo
+    - "1"
+    - other
   exit_code: 1
 - file: paint.py
-  exec: [red, blue]
   exit_code: 1
+  exec:
+    - red
+    - blue
 - file: custom_type.py
-  exec: ["2", string]
   exit_code: 1
-- file: hello_world.py
+  exec:
+    - "2"
+    - string
 - file: decorator_create.py
 - file: decorator_inherit.py
-  exec: ["", "sub"]
   exit_code: 1
+  exec:
+    - ""
+    - sub
 - file: from_env.py
-  exec: ["", "10"]
+  exec:
+    - ""
+    - "10"
 - file: hello_configuration.py
-  exec: [--help, --version]
+  exec:
+    - --help
+    - --version
 - file: grep_clone/1_grep_clone.py
-  exec: ["", "--help"]
-- file: grep_clone/1_grep_clone.py
-  exec: ["", "--help"]
+  name: grep.py
+  exec:
+    - ""
+    - "--help"
 - file: grep_clone/2_grep_clone.py
-  exec: ["^[\\d+] docs/index.md docs/features.md"]
+  name: grep.py
+  exec: ^[\\d+] docs/index.md docs/features.md
 - file: grep_clone/3_grep_clone.py
-  exec: ["arc docs/index.md docs/features.md"]
-- file: hello.py
-  exec: --help
-  out: hello_help
-- file: hello.py
-  exec: Joseph
-- file: hello_configuration.py
-  exec: [--help, --version]
-- file: docstring_example.py
-  exec: --help
-- file: hello_world.py
-- file: parameter_option.py
-  exec: --firstname Joesph --lastname Joestar
-  out: parameter_option
-- file: parameter_flag.py
-  exec: [Joseph, Joseph --reverse]
-  out: parameter_flag
-- file: parameter_count.py
-  exec: [Joseph, Joseph --repeat, Joseph --repeat --repeat]
-  out: parameter_count
-- file: from_env.py
-  exec: ["10", ""]
+  name: grep.py
+  exec: arc docs/index.md docs/features.md
 - file: context_manager.py
   exec: "1"
 - file: subcommand.py
   exec: ""
   out: subcommand_root
 - file: subcommand.py
-  exec: ["sub1", "sub2"]
   out: subcommand
+  exec:
+    - sub1
+    - sub2
 - file: subcommand.py
-  exec: ["--help", "sub1 --help", "sub2 --help"]
   out: subcommand_help
+  exec:
+    - --help
+    - sub1 --help
+    - sub2 --help
 - file: global_params.py
-  exec: ["sub", "--verbose sub"]
+  exec:
+    - sub
+    - --verbose sub
 - file: global_params.py
-  exec: --help
   out: global_params_help
+  exec: --help
 - file: nested_subcommands.py
-  exec: ["sub1 nested1", "sub2 nested2"]
+  exec:
+    - sub1 nested1
+    - sub2 nested2
 - file: group.py
-  exec: ["--help", "Joseph --reverse"]
   out: group
+  exec:
+    - --help
+    - Joseph --reverse
 - file: add.py
   exec: 5 10
 # This causes execution to stop, without erroring
