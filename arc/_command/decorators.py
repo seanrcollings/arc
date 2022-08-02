@@ -3,7 +3,7 @@ import types
 import typing as t
 import dataclasses as dc
 
-from arc import errors
+from arc import errors, utils
 
 if t.TYPE_CHECKING:
     from arc.context import Context
@@ -100,7 +100,7 @@ class DecoratorStack:
 
     def start(self, ctx: Context):
         for deco in reversed(self.__decos):
-            gen = deco.func(ctx)  # type: ignore
+            gen = utils.dispatch_args(deco.func, ctx)  # type: ignore
             if isinstance(gen, types.GeneratorType):
                 next(gen)
                 self.__gens.append(gen)  # type: ignore
@@ -154,3 +154,45 @@ class DecoratorStack:
 
         if not exception_handled:
             raise exception
+
+
+class DecoratorMixin:
+    decorators: DecoratorStack
+
+    def __init__(self) -> None:
+        self.decorators = DecoratorStack()
+
+    def decorate(
+        self, func: DecoratorFunc = None, *, inherit: bool = True
+    ) -> t.Callable[[DecoratorFunc], CommandDecorator]:
+        def inner(func: DecoratorFunc):
+            deco = t.cast(CommandDecorator, decorator(func, inherit=inherit))
+            self.decorators.add(deco)
+            return deco
+
+        if func:
+            return inner(func)
+
+        return inner
+
+    def handle(
+        self, *errors: type[Exception], inherit: bool = False
+    ) -> t.Callable[[ErrorHandlerFunc], CommandDecorator]:
+        from arc.context import Context
+
+        def inner(func: ErrorHandlerFunc):
+            def handle_errors(_ctx):
+                try:
+                    yield
+                except errors as e:
+                    utils.dispatch_args(func, e, Context.current())
+
+            deco = CommandDecorator(
+                name=func.__name__,
+                func=handle_errors,
+                inherit=inherit,
+            )
+            self.decorators.add(deco)
+            return deco
+
+        return inner

@@ -8,7 +8,7 @@ import arc
 from arc import errors, utils
 from arc._command import classful
 from arc._command.autoload import Autoload
-from arc._command.decorators import CommandDecorator, DecoratorStack
+from arc._command.decorators import DecoratorMixin, DecoratorStack
 from arc._command.documentation import Documentation
 from arc.color import colorize, fg
 from arc.config import config
@@ -63,6 +63,7 @@ class AliasDict(dict[K, V]):
 
 class Command(
     ParamMixin,
+    DecoratorMixin,
     utils.Display,
     members=["name"],
 ):
@@ -73,7 +74,6 @@ class Command(
     param_groups: list[ParamGroup]
     doc: Documentation
     explicit_name: bool
-    decorators: DecoratorStack
     __autoload__: bool
 
     def __init__(
@@ -85,6 +85,7 @@ class Command(
         explicit_name: bool = True,
         autoload: bool = False,
     ):
+        super().__init__()
         if inspect.isclass(callback):
             self.callback: at.CommandCallback = classful.wrap_class_callback(
                 t.cast(type[at.ClassCallback], callback)
@@ -97,7 +98,6 @@ class Command(
         self.subcommands = AliasDict()
         self.doc = Documentation(self, description)
         self.explicit_name = explicit_name
-        self.decorators = DecoratorStack()
         self.__autoload__ = autoload
 
         if config.environment == "development":

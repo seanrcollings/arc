@@ -135,3 +135,7 @@
   out: add_error
   error_allowed: true
   exit_code: 1
+- file: error_handlers.py
+  exec: ""
+- file: error_handlers_deco.py
+  exec: ""
