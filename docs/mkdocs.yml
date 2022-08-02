@@ -38,6 +38,7 @@ nav:
   - Home: index.md
   - Usage:
       - Intro: usage/intro.md
+      - Printing & Coloring Output: usage/printing.md
       - Command Parameters:
           - Parameters Intro: usage/parameters/parameters-intro.md
           - Arguments: usage/parameters/arguments.md
@@ -49,7 +50,6 @@ nav:
       - Multiple Values: usage/multiple-values.md
       - Documentation Generation: usage/documentation-generation.md
       - Command Decorators: usage/decorators.md
-      - Colored Output: usage/colored-output.md
       - Error Handlers: usage/error-handlers.md
       - Command State: usage/command-state.md
   - Advanced Usage:
