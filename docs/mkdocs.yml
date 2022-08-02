@@ -65,7 +65,8 @@ nav:
       - arc.color: reference/color.md
       - arc.params: reference/params.md
       - arc.types:
-          - arc.types.transforms: reference/transforms.md
-          - arc.types.validators: reference/validators.md
+          - transforms: reference/transforms.md
+          - validators: reference/validators.md
+          - file: reference/types/file.md
       - arc.command: reference/command.md
   - Changelog: changelog.md

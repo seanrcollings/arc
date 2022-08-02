@@ -37,6 +37,17 @@ Converted using `#!python v.encode()`
 Collection types are used by *arc* to collect **multiple values** into a single argument. Check the [next](multiple-values.md) page for information on how that works
 
 
+`#!python dict`
+
+Allows a list of comma-seperated key-value pairs. Can be typed generically on both keys and values.
+```py title="dict_argument.py"
+--8<-- "examples/dict_argument.py"
+```
+```console
+--8<-- "examples/outputs/dict_argument"
+```
+
+
 ## Standard Libary Types
 
 
@@ -54,6 +65,8 @@ arc will attempt to coerce the input into each type, from left to right. The fir
 
 !!! warning
     Currently *arc's* behavior with collections in union types is not defined. As such, it is not reccomended that you give an argument a type similar to `#!python typing.Union[list, ...]`
+
+Python 3.10's union syntax is also valid: `int | str`
 
 `#!python typing.Literal`
 
@@ -104,7 +117,10 @@ Support for regular expression patterns
 *arc* provides a variety of additional types exported from the `#!python arc.types` module:
 
 ???+ warning
-    Most custom *arc* types are usable as a valid *arc* parameter type and as a typical Python class. For example, you can create a `SemVar` object easily like so: `#!python SemVer.parse('1.2.3')`. In some particular instances, a type can *only* be used as a argument type and not as a valid constructor. These types will be denoted with `🛇` following the type name.
+    `arc` types are sort of weird in the general Python sense. While it will become
+    more aparent later as to why this is the case, know that you cannot usually
+    create the types on your own and have the expected behavior. If you do need / want
+    to do this, you can use: `#!python arc.convert(<value>, <type>)`
 
 `Context`
 
@@ -115,15 +131,9 @@ Gives you access to the current execution context instance which serves as a cen
 
 Reference [State](./command-state.md) for details
 
-
-`Range`
-
-TODO
-
-
 `SemVer`
 
-TODO
+A type to support semantically-versioned strings based on the spec found [here](https://semver.org/spec/v2.0.0.html)
 
 `User` (**UNIX ONLY**)
 
@@ -135,10 +145,10 @@ A representation of a unix group.
 
 ### File System Types
 
-
 `File`
 
-TODO
+Get access to an open IO object. Handles opening and closing the file descriptor for you. [See reference for full usage](../reference/types/file.md)
+
 
 `ValidPath`
 
@@ -152,13 +162,13 @@ Subclass of `ValidPath` but asserts that the path both exists and is a file
 
 `DirectoryPath`
 
-Subclass of `ValidPath` but assets that the path both exists and is a directory
+Subclass of `ValidPath` but asserts that the path both exists and is a directory
 
 ### Networking Types
 
-`IpAddress` 🛇
+`IpAddress`
 
-Can be either `IPv4Address` or `IPv6Address`. Equivelant to `#!python typing.Union[IPv4Address, IPv6Address]`
+Union type for `IPv4Address` and `IPv6Address`
 
 `Url`
 
@@ -204,7 +214,7 @@ Enforces that the float must be greater than 0
 
 Enforces that the float must be less than 0
 
-`AnyNumber` 🛇
+`AnyNumber`
 
 Accepts floats, and integers in any base.
 
@@ -217,6 +227,7 @@ Enforces that the string can only be a single character long
 `Password`
 
 
+When prompted for input, the user's input will not be echoed to the screen.
 
 
 

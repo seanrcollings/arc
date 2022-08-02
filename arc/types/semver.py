@@ -54,7 +54,7 @@ class SemVer:
         return string
 
     def __repr__(self):
-        return f"SemVar({str(self)!r})"
+        return f"SemVer({str(self)!r})"
 
     def __iter__(self):
         yield from (a for a in self.tuple() if a)

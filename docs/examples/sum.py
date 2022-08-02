@@ -2,14 +2,8 @@ import arc
 
 
 @arc.command()
-def main(nums: list[int] = []):
-    if not nums:
-        arc.print("Provide some integers to sum up")
-    else:
-        total = 0
-        for val in nums:
-            total += val
-        arc.print("The total is: ", total)
+def main(nums: list[int]):
+    arc.print("The total is: ", sum(nums))
 
 
 main()

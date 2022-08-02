@@ -365,18 +365,10 @@ class IOAlias(Alias, of=(_io._IOBase, t.IO)):
     @classmethod
     def convert(cls, value: str, info: TypeInfo) -> t.IO:
         try:
-            file: t.IO = open(value, **cls.open_args(info))
+            file: t.IO = open(value, **info.type_arg.dict())
             return file
         except FileNotFoundError as e:
             raise errors.ConversionError(value, f"No file named {value}") from e
-
-    @classmethod
-    def open_args(cls, info):
-        arg = info.annotations[0]
-        if isinstance(arg, str):
-            return {"mode": arg}
-        if dataclasses.is_dataclass(arg):
-            return dataclasses.asdict(arg)
 
     @classmethod
     def __completions__(cls, info: CompletionInfo, _param):

@@ -30,7 +30,7 @@ def content_file(tmp_path_factory: pytest.TempPathFactory):
     ],
 )
 def test_mode(mode, content_file: Path):
-    mode_str = t.get_args(mode)[-1]
+    args = t.get_args(mode)[-1]
 
     @arc.command()
     def command(file: mode):  # type: ignore
@@ -38,7 +38,7 @@ def test_mode(mode, content_file: Path):
 
     file = command(str(content_file))
     assert file.closed
-    assert file.mode == mode_str
+    assert file.mode == args.mode
 
 
 def test_read(content_file: Path):

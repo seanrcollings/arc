@@ -43,13 +43,9 @@
     - Joseph --repeat
     - Joseph --repeat --repeat
 - file: list_argument.py
-  exec:
-    - ""
-    - Jonathen Joseph Jotaro
+  exec: Jonathen Joseph Jotaro
 - file: list_option.py
-  exec:
-    - ""
-    - --names Josuke --names Giorno --names Joylene
+  exec: --names Josuke --names Giorno --names Joylene
 - file: sum.py
   exec: 1 2 3 4 5 6 7 8 9
 - file: set_argument.py
