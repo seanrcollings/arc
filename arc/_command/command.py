@@ -338,7 +338,7 @@ class Command(
                 # Call this to produce the same output as we do when
                 # running a namespace call.
                 namespace_callback(ctx)
-                ctx.exit(1)
+                raise errors.CommandError()
             # There is a command, so we want to execute the global callback
             elif args or (
                 config.global_callback_execution == "always" and not self.is_namespace

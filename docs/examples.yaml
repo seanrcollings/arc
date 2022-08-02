@@ -77,8 +77,10 @@
     - "2"
     - string
 - file: decorator_create.py
+  exec: ""
 - file: decorator_inherit.py
   exit_code: 1
+  error_allowed: true
   exec:
     - ""
     - sub
@@ -97,15 +99,12 @@
     - "--help"
 - file: grep_clone/2_grep_clone.py
   name: grep.py
-  exec: ^[\\d+] docs/index.md docs/features.md
+  exec: ^[\\d+] docs/index.md docs/usage/intro.md
 - file: grep_clone/3_grep_clone.py
   name: grep.py
-  exec: arc docs/index.md docs/features.md
+  exec: arc docs/index.md docs/usage/intro.md
 - file: context_manager.py
   exec: "1"
-- file: subcommand.py
-  exec: ""
-  out: subcommand_root
 - file: subcommand.py
   out: subcommand
   exec:
@@ -135,9 +134,8 @@
     - Joseph --reverse
 - file: add.py
   exec: 5 10
-# This causes execution to stop, without erroring
-# new ones need to be placed above it
 - file: add.py
   exec: 5 not-a-number
   out: add_error
   error_allowed: true
+  exit_code: 1

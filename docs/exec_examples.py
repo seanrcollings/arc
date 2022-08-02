@@ -70,6 +70,7 @@ def exec_examples(config: list[ExecConfig]):
 
         with open(OUTPUT_DIR / entry.out, "w+") as f:
             print(entry.file, "->", entry.out)
+            stderr = sys.stderr
             with contextlib.redirect_stdout(f), contextlib.redirect_stderr(f):
                 for args in entry.exec:
                     logging.root.handlers.clear()
@@ -80,10 +81,16 @@ def exec_examples(config: list[ExecConfig]):
                         exec(contents, {})
                     except SystemExit as e:
                         if e.code != entry.exit_code:
+                            stderr.write(
+                                f"{entry.file} exited with {str(e)} exit code\n"
+                            )
                             raise
-                    except Exception:
+                    except Exception as e:
                         if not entry.error_allowed:
+                            stderr.write(str(e))
                             raise
+
+    print("\nFinished!")
 
 
 def main():
