@@ -62,3 +62,6 @@ class Suggestions(t.TypedDict, total=False):
 
 T = t.TypeVar("T")
 MiddlewareCallable = t.Callable[[T], T]
+
+DecoratorFunc = t.Callable[["Context"], t.Optional[t.Generator[None, t.Any, None]]]
+ErrorHandlerFunc = t.Callable[[Exception, "Context"], None]

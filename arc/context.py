@@ -8,9 +8,11 @@ from arc import errors, utils
 from arc import _command
 from arc.color import colorize, fg
 from arc.config import config
+from arc.prompt.prompt import Prompt
 from arc.types.state import State
 from arc.logging import logger
 from arc.present import Joiner
+import arc.typing as at
 
 if t.TYPE_CHECKING:
     from arc._command.param.param import ValueOrigin
@@ -44,17 +46,17 @@ class Context:
         self._exit_stack = contextlib.ExitStack()
         self.arg_origins = {}
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Context({self.command!r})"
 
-    def __enter__(self):
+    def __enter__(self) -> Context:
         if self._stack_count == 0:
             self.logger.debug(f"Entering Context: {self!r}")
         self._stack_count += 1
         Context.push(self)
         return self
 
-    def __exit__(self, exc_type, exc_value, trace):
+    def __exit__(self, exc_type, exc_value, trace) -> None:
         self._stack_count -= 1
         Context.pop()
         if self._stack_count == 0:
@@ -62,7 +64,7 @@ class Context:
             self.close()
 
     @classmethod
-    def __depends__(self, ctx: Context):
+    def __depends__(self, ctx: Context) -> Context:
         return ctx
 
     @classmethod
@@ -84,7 +86,7 @@ class Context:
         return cls._stack[-1]
 
     @property
-    def root(self):
+    def root(self) -> Context:
         """Retrieves the root context object"""
         curr = self
         while curr.parent:
@@ -93,13 +95,13 @@ class Context:
         return curr
 
     @property
-    def prompt(self):
+    def prompt(self) -> Prompt:
         return self.config.prompt
 
-    def close(self):
+    def close(self) -> None:
         self._exit_stack.close()
 
-    def run(self, args: list[str]):
+    def run(self, args: list[str]) -> t.Any:
         parsed = self.parse_args(args)
         processed, missing = self.command.process_parsed_result(parsed, self)
 
@@ -111,19 +113,22 @@ class Context:
 
         self.command.inject_dependancies(processed, self)
         self.args = processed
-        self.command.decorators.start(self)
+        decostack = self.command.decorators()
+        decostack.start(self)
 
         try:
             res = self.execute(self.command.callback, **processed)
         except Exception as e:
             res = None
-            self.command.decorators.throw(e)
+            decostack.throw(e)
         else:
-            self.command.decorators.close()
+            decostack.close()
 
         return res
 
-    def execute(self, callback: t.Union[_command.Command, t.Callable], **kwargs):
+    def execute(
+        self, callback: t.Union[_command.Command, t.Callable], **kwargs
+    ) -> t.Any:
         """Can be called in two ways
 
         1. if `callback` is a function / callable, all other kwargs
@@ -145,7 +150,7 @@ class Context:
         with ctx:
             return callback(**kwargs)
 
-    def parse_args(self, args: list[str]):
+    def parse_args(self, args: list[str]) -> at.ParseResult:
         if args:
             parsed, rest = self.command.parse_args(args, self)
 
@@ -187,7 +192,7 @@ class Context:
         """Exits the app with code `code`"""
         raise errors.Exit(code)
 
-    def __get_suggestions(self, rest: list[str]):
+    def __get_suggestions(self, rest: list[str]) -> str:
         message = ""
 
         if self.config.suggestions["suggest_commands"]:

@@ -1,3 +1,4 @@
+from ast import Call
 import pytest
 from arc import Context, errors, decorator
 import arc
@@ -100,7 +101,7 @@ def test_deco_inheritance():
     def sub():
         ...
 
-    assert cb1 in sub.decorators
+    assert cb1 in sub.decorators()
 
 
 def test_decorator_order():
@@ -189,3 +190,31 @@ def test_non_inheritable():
         command("sub1")
 
     command("sub1 sub2")
+
+
+def test_install_order():
+    @arc.decorator()
+    def deco(ctx):
+        raise CallbackException(ctx)
+
+    @arc.command()
+    def command():
+        ...
+
+    @deco
+    @command.subcommand()
+    def sub():
+        ...
+
+    @arc.command()
+    def sub2():
+        ...
+
+    @sub2.subcommand()
+    def sub3():
+        ...
+
+    sub.add_command(sub2)
+
+    with pytest.raises(CallbackException):
+        command("sub sub2 sub3")

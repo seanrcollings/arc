@@ -1,4 +1,5 @@
 from __future__ import annotations
+from functools import cached_property
 import inspect
 import sys
 import typing as t
@@ -63,7 +64,7 @@ class AliasDict(dict[K, V]):
 
 class Command(
     ParamMixin,
-    DecoratorMixin,
+    DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc],
     utils.Display,
     members=["name"],
 ):
@@ -250,6 +251,18 @@ class Command(
             names += self.parent.subcommands.aliases_for(self.name)
         return names
 
+    @property
+    def command_chain(self) -> list[Command]:
+        """Retrieve the chain of commands from root -> self"""
+        command = self
+        chain = [self]
+        while command.parent:
+            command = command.parent
+            chain.append(command)
+
+        chain.reverse()
+        return chain
+
     # Subcommands ----------------------------------------------------------------
 
     def subcommand(
@@ -288,7 +301,7 @@ class Command(
         """
         self.subcommands[command.name] = command
         command.parent = self
-        self.inherit_decorators(command)
+        # self.inherit_decorators(command)
         if aliases:
             self.subcommands.add_aliases(command.name, *aliases)
 
@@ -298,14 +311,14 @@ class Command(
         """Add multiple commands as subcommands"""
         return [self.add_command(command) for command in commands]
 
-    def inherit_decorators(self, command: Command):
-        decos, command.decorators = command.decorators, DecoratorStack()
+    # def inherit_decorators(self, command: Command):
+    #     decos, command.decorators = command.decorators, DecoratorStack()
 
-        for deco in self.decorators:
-            if deco.inherit:
-                command.decorators.add(deco)
-        for deco in decos:
-            command.decorators.add(deco)
+    #     for deco in self.decorators:
+    #         if deco.inherit:
+    #             command.decorators.add(deco)
+    #     for deco in decos:
+    #         command.decorators.add(deco)
 
     # Execution ------------------------------------------------------------------
 
@@ -449,6 +462,10 @@ class Command(
 
     def autoload(self, *paths: str):
         Autoload(paths, self).load()
+
+    def decorators(self) -> DecoratorStack[at.DecoratorFunc | at.ErrorHandlerFunc]:
+        lst = t.cast(list[DecoratorMixin], self.command_chain)
+        return DecoratorMixin.create_decostack(lst)
 
     def create_ctx(self, **kwargs) -> Context:
         return Context(self, **kwargs)

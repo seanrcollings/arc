@@ -10,79 +10,78 @@ if t.TYPE_CHECKING:
     from arc._command import Command
 
 
-DecoratorFunc = t.Callable[["Context"], t.Optional[t.Generator[None, t.Any, None]]]
+D = t.TypeVar("D", bound=t.Callable)
+E = t.TypeVar("E", bound=t.Callable)
 
 
-@dc.dataclass(frozen=True)
-class CommandDecorator:
-    name: str
-    func: DecoratorFunc
-    inherit: bool = True
+class DecoratorMixin(t.Generic[D, E]):
+    def __init__(self) -> None:
+        self._decorators: list[Decorator[D] | Decorator[E]] = []
+        self._removed_decorators: set[Decorator[D] | Decorator[E]] = set()
 
-    def __call__(self, command: Command) -> Command:
-        command.decorators.add(self)
-        return command
+    def decorate(self, inherit: bool = True) -> t.Callable[[D], Decorator[D]]:
+        def inner(func: D) -> Decorator[D]:
+            deco: Decorator[D] = decorator(inherit=inherit)(func)
+            self.add_decorator(deco)
+            return deco
 
-    def remove(self, command: Command) -> Command:
-        """Removes the callback from the decorated `command`"""
-        command.decorators.remove(self)
-        return command
+        return inner
 
+    def handle(
+        self, *errors: type[Exception], inherit: bool = False
+    ) -> t.Callable[[E], Decorator]:
+        from arc.context import Context
 
-def decorator(
-    func: DecoratorFunc = None, *, inherit: bool = True
-) -> t.Callable[[DecoratorFunc], CommandDecorator]:
-    """Decorator that transforms the decorated function into a arc decorator"""
+        def inner(func: E):
+            def handle_errors(_ctx) -> t.Generator[None, None, None]:
+                try:
+                    yield
+                except errors as e:
+                    utils.dispatch_args(func, e, Context.current())
 
-    def inner(func: DecoratorFunc):
-        return CommandDecorator(
-            name=func.__name__,
-            func=func,
-            inherit=inherit,
-        )
+            deco: Decorator = Decorator(
+                name=func.__name__,
+                func=handle_errors,  # type: ignore
+                inherit=inherit,
+            )
+            self.add_decorator(deco)
+            return deco
 
-    if func:
-        return inner(func)
+        return inner
 
-    return inner
+    def add_decorator(self, deco: Decorator[D]) -> None:
+        self._decorators.append(deco)
 
+    def remove_decorator(self, deco: Decorator[D]) -> None:
+        self._removed_decorators.add(deco)
 
-def remove(*decos: CommandDecorator) -> t.Callable[[Command], Command]:
-    """Decorator that removes all `*decos` from the decorated `command`"""
+    @classmethod
+    def create_decostack(
+        cls, objs: t.Sequence[DecoratorMixin[D, E]]
+    ) -> DecoratorStack[D | E]:
+        """Creates a decorator stack for the current object, taking into account all of the
+        decorators in the list of objects, and of what decorators have been removed
+        in things higher in the list"""
 
-    def inner(command: Command) -> Command:
-        for dc in decos:
-            dc.remove(command)
+        stack: DecoratorStack = DecoratorStack()
+        last = objs[-1]
+        for obj in objs:
+            for added in obj._decorators:
+                if added.inherit or obj is last:
+                    stack.add(added)
 
-        return command
+            # TODO: Non optimal, is going to run in O(n^2).
+            for removed in obj._removed_decorators:
+                try:
+                    stack.remove(removed)
+                except ValueError:
+                    ...
 
-    return inner
-
-
-ErrorHandlerFunc = t.Callable[[Exception, "Context"], None]
-
-
-def error_handler(*errors: type[Exception], inherit: bool = False):
-    from arc.context import Context
-
-    def inner(func: ErrorHandlerFunc):
-        def handle_errors(_ctx):
-            try:
-                yield
-            except errors as e:
-                func(e, Context.current())
-
-        return CommandDecorator(
-            name=func.__name__,
-            func=handle_errors,
-            inherit=inherit,
-        )
-
-    return inner
+        return stack
 
 
-class DecoratorStack:
-    __decos: list[CommandDecorator]
+class DecoratorStack(t.Generic[D]):
+    __decos: list[Decorator[D]]
     __gens: list[t.Generator[None, t.Any, None]]
 
     def __repr__(self):
@@ -113,10 +112,10 @@ class DecoratorStack:
             except StopIteration:
                 ...
 
-    def add(self, deco: CommandDecorator):
+    def add(self, deco: Decorator[D]):
         self.__decos.append(deco)
 
-    def remove(self, deco: CommandDecorator):
+    def remove(self, deco: Decorator[D]):
         self.__decos.remove(deco)
 
     def throw(self, exception: Exception):
@@ -156,43 +155,64 @@ class DecoratorStack:
             raise exception
 
 
-class DecoratorMixin:
-    decorators: DecoratorStack
+A = t.TypeVar("A", bound=DecoratorMixin)
 
-    def __init__(self) -> None:
-        self.decorators = DecoratorStack()
 
-    def decorate(
-        self, func: DecoratorFunc = None, *, inherit: bool = True
-    ) -> t.Callable[[DecoratorFunc], CommandDecorator]:
-        def inner(func: DecoratorFunc):
-            deco = t.cast(CommandDecorator, decorator(func, inherit=inherit))
-            self.decorators.add(deco)
-            return deco
+@dc.dataclass(frozen=True)
+class Decorator(t.Generic[D]):
+    name: str
+    func: D
+    inherit: bool = True
 
-        if func:
-            return inner(func)
+    def __call__(self, command: A) -> A:
+        command.add_decorator(self)
+        return command
 
-        return inner
+    def remove(self, command: A) -> A:
+        """Removes the callback from the decorated `command`"""
+        command.remove_decorator(self)
+        return command
 
-    def handle(
-        self, *errors: type[Exception], inherit: bool = False
-    ) -> t.Callable[[ErrorHandlerFunc], CommandDecorator]:
-        from arc.context import Context
 
-        def inner(func: ErrorHandlerFunc):
-            def handle_errors(_ctx):
-                try:
-                    yield
-                except errors as e:
-                    utils.dispatch_args(func, e, Context.current())
+def decorator(inherit: bool = True) -> t.Callable[[D], Decorator[D]]:
+    """Decorator that transforms the decorated function into a arc decorator"""
 
-            deco = CommandDecorator(
-                name=func.__name__,
-                func=handle_errors,
-                inherit=inherit,
-            )
-            self.decorators.add(deco)
-            return deco
+    def inner(func: D) -> Decorator[D]:
+        return Decorator(
+            name=func.__name__,
+            func=func,
+            inherit=inherit,
+        )
 
-        return inner
+    return inner
+
+
+def remove(*decos: Decorator) -> t.Callable[[Command], Command]:
+    """Decorator that removes all `*decos` from the decorated `command`"""
+
+    def inner(command: Command) -> Command:
+        for dc in decos:
+            dc.remove(command)
+
+        return command
+
+    return inner
+
+
+def error_handler(*errors: type[Exception], inherit: bool = False):
+    from arc.context import Context
+
+    def inner(func: D) -> Decorator[t.Callable[[], t.Generator[None, t.Any, None]]]:
+        def handle_errors(*args, **kwargs) -> t.Generator[None, t.Any, None]:
+            try:
+                yield
+            except errors as e:
+                func(e, Context.current())
+
+        return Decorator(
+            name=func.__name__,
+            func=handle_errors,
+            inherit=inherit,
+        )
+
+    return inner
