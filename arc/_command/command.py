@@ -86,10 +86,9 @@ class Command(
         autoload: bool = False,
     ):
         if inspect.isclass(callback):
-            self.callback = classful.wrap_class_callback(
+            self.callback: at.CommandCallback = classful.wrap_class_callback(
                 t.cast(type[at.ClassCallback], callback)
             )
-
         else:
             self.callback = callback
 
@@ -151,7 +150,9 @@ class Command(
 
             raise
 
-    def __completions__(self, info: CompletionInfo, *_args, **_kwargs):
+    def __completions__(
+        self, info: CompletionInfo, *_args, **_kwargs
+    ) -> list[Completion]:
         # TODO: it does not take into
         # account that collection types can include more than 1 positional
         # argument.
@@ -176,20 +177,24 @@ class Command(
             else:
                 return command.__complete_positional_value(info, args)
 
-    def __complete_subcommands(self, info: CompletionInfo):
+    def __complete_subcommands(self, info: CompletionInfo) -> list[Completion]:
         return [Completion(command.name) for command in self.subcommands.values()]
 
-    def __complete_option(self, info: CompletionInfo):
+    def __complete_option(self, info: CompletionInfo) -> list[Completion]:
         return [Completion(param.cli_name) for param in self.key_params]
 
-    def __complete_param_value(self, info: CompletionInfo, param_name: str):
+    def __complete_param_value(
+        self, info: CompletionInfo, param_name: str
+    ) -> list[Completion]:
         param = self.get_param(param_name)
         if not param:
             return []
 
         return get_completions(param, info)
 
-    def __complete_positional_value(self, info: CompletionInfo, args: list[str]):
+    def __complete_positional_value(
+        self, info: CompletionInfo, args: list[str]
+    ) -> list[Completion]:
         # TODO: This approach does not take into consideration positonal
         # arguments that are peppered in between options. It only counts ones
         # at the end of the command line.
@@ -272,7 +277,9 @@ class Command(
 
         return inner
 
-    def add_command(self, command: Command, aliases: t.Sequence[str] | None = None):
+    def add_command(
+        self, command: Command, aliases: t.Sequence[str] | None = None
+    ) -> Command:
         """Add a command object as a subcommand
 
         Args:
@@ -287,7 +294,7 @@ class Command(
 
         return command
 
-    def add_commands(self, *commands: Command):
+    def add_commands(self, *commands: Command) -> list[Command]:
         """Add multiple commands as subcommands"""
         return [self.add_command(command) for command in commands]
 
@@ -306,23 +313,41 @@ class Command(
         global_args, command, command_args = self.split_args(args)
 
         with self.create_ctx() as ctx:
-            if self.is_namespace:
-                if not global_args and command is self:
-                    global_res = ctx.run(global_args)
-                else:
-                    global_res = None
-            if (
-                global_args
-                or command is self
-                or config.global_callback_execution == "always"
-            ):
-                global_res = ctx.run(global_args)
-
-                if command is self:
-                    return global_res
+            res = self._global_main(ctx, command, global_args)
+            if command is self:
+                return res
 
             with command.create_ctx(parent=ctx) as commandctx:
                 return commandctx.run(command_args)
+
+    def _global_main(self, ctx: Context, command: Command, args: list[str]) -> t.Any:
+        # The behavior of this is a little weird because it handles the odd intersection
+        # between single-commands and root commands with subcommands
+
+        # If we have subcommands we are considered the root command object
+        # and we only execute under certain conditions
+        if self.subcommands:
+            # There isn't any command associated with this execution string
+            # we want to error, because this isn't valid. But we can't right away
+            if command is self:
+                # We run the parser over the arguments to take care of the --help
+                # and other special-case parameters that are embedded directly
+                # in the parser. If any of those are found, they will handle
+                # exiting early, so the rest of this block doesn't run
+                ctx.parse_args(args)
+                # Call this to produce the same output as we do when
+                # running a namespace call.
+                namespace_callback(ctx)
+                ctx.exit(1)
+            # There is a command, so we want to execute the global callback
+            elif args or (
+                config.global_callback_execution == "always" and not self.is_namespace
+            ):
+                return ctx.run(args)
+
+        # This command doesn't have any sub-commands and should just be executed
+        # normally. This will get returned early  in the caller
+        return ctx.run(args)
 
     def parse_args(
         self, args: list[str], ctx: Context
@@ -463,7 +488,7 @@ def command(name: str | None = None, description: str | None = None):
 def namespace_callback(ctx: Context):
     arc.print(ctx.command.doc.usage())
     command = colorize(
-        f"{ctx.command.root.name} {Joiner.with_space(ctx.command.doc.fullname)} --help",
+        f"{ctx.command.root.name} {Joiner.with_space(ctx.command.doc.fullname)}--help",
         fg.YELLOW,
     )
     arc.print(f"{command} for more information")

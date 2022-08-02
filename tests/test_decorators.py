@@ -127,13 +127,22 @@ def test_decorator_order():
     }
 
 
+# We don't annotate the root object in these cases
+# because they will always execute their decorators when
+# the global parameters get validated.
+
+
 def test_remove_decorator():
     @arc.decorator()
     def cb(ctx):
         raise CallbackException(ctx)
 
-    @cb
     @arc.command()
+    def root():
+        ...
+
+    @cb
+    @root.subcommand()
     def c1():
         ...
 
@@ -151,14 +160,11 @@ def test_remove_decorator():
         ...
 
     with pytest.raises(CallbackException):
-        c1("")
-
-    with pytest.raises(CallbackException):
-        c1("sub1")
+        root("c1 sub1")
 
     # Shouldn't raise, because the decorator isn't present
-    c1("c2")
-    c1("c2 sub2")
+    root("c1 c2")
+    root("c1 c2 sub2")
 
 
 def test_non_inheritable():
@@ -166,16 +172,20 @@ def test_non_inheritable():
     def cb(ctx):
         raise CallbackException(ctx)
 
-    @cb
     @arc.command()
     def command():
         ...
 
+    @cb
     @command.subcommand()
-    def sub():
+    def sub1():
+        ...
+
+    @sub1.subcommand()
+    def sub2():
         ...
 
     with pytest.raises(CallbackException):
-        command("")
+        command("sub1")
 
-    command("sub")
+    command("sub1 sub2")
