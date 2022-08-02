@@ -6,7 +6,7 @@ authors = ["Sean Collings <seanrcollings@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/seanrcollings/arc"
-documentation = "https://github.com/seanrcollings/arc/wiki"
+documentation = "https://arc.seanrcollings.com"
 keywords = ["CLI", "extendable", "easy", "arc"]
 classifiers= [
     "Intended Audience :: Developers",

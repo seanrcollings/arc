@@ -98,7 +98,7 @@ class ParamBuilder:
                 param,
             )
 
-        elif hasattr(origin, "__depends__"):
+        if hasattr(origin, "__depends__"):
             return InjectedParam
         elif origin is bool or isinstance(param.default, bool):
             return FlagParam
