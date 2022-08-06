@@ -1,7 +1,7 @@
 ## `7.0.1`
 - Fixes to some formatting issues
 - Fixed issue with some types being considered collections when they shouldn't be
-
+- Decorators now get inherited at execution, rather than declaration time
 
 ## `7.0.0`
 - Rewirte of core components: `Context`, `Command`, `Param`, `ParamBuilder`, etc...
