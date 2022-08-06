@@ -21,21 +21,14 @@ def safe_issubclass(typ, classes: type | tuple[type, ...]) -> bool:
         return False
 
 
-class Display:
-    __display_members: list[str]
-
-    def __init_subclass__(cls, members: list[str] | None = None) -> None:
-        if members:
-            cls.__display_members = members
-
+def display(*members: str):
     def __repr__(self):
         values = ", ".join(
-            [
-                f"{member}={repr(getattr(self, member))}"
-                for member in self.__display_members
-            ]
+            [f"{member}={repr(getattr(self, member))}" for member in members]
         )
         return f"{type(self).__name__}({values})"
+
+    return __repr__
 
 
 def isgroup(cls: type):

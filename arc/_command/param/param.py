@@ -39,11 +39,7 @@ class ValueOrigin(enum.Enum):
     GETTER = "getter"
 
 
-class Param(
-    t.Generic[T],
-    utils.Display,
-    members=["argument_name", "type"],
-):
+class Param(t.Generic[T]):
     argument_name: str
     """The cannonical name of the function's argument"""
     param_name: str
@@ -123,6 +119,8 @@ class Param(
                 f"Parameter {self.param_name}'s shortened name is longer than 1 character",
                 self,
             )
+
+    __repr__ = utils.display("argument_name", "type")
 
     def __completions__(self, info: CompletionInfo, *args, **kwargs):
         if self.comp_func:
@@ -288,10 +286,7 @@ class Param(
         )
 
 
-class ArgumentParam(
-    Param[t.Any],
-    members=["argument_name", "type"],
-):
+class ArgumentParam(Param[t.Any]):
     @property
     def is_argument(self):
         return True

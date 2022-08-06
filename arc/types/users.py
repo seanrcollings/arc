@@ -7,9 +7,7 @@ import pathlib
 from arc import errors, utils, autocompletions as ac
 
 
-class User(
-    utils.Display, members=["name", "id", "group_id", "gecos", "directory", "shell"]
-):
+class User:
     def __init__(
         self,
         name: str,
@@ -27,6 +25,8 @@ class User(
         self.gecos = gecos
         self.directory = pathlib.Path(directory)
         self.shell = pathlib.Path(shell)
+
+    __repr__ = utils.display("name", "id", "group_id", "gecos", "directory", "shell")
 
     @classmethod
     def __convert__(cls, value):
@@ -61,7 +61,7 @@ class User(
         return [Group(*g) for g in grp.getgrall() if self.name in g.gr_mem]
 
 
-class Group(utils.Display, members=["name", "id", "members"]):
+class Group:
     def __init__(
         self, name: str, password: str | None, gid: int, mem: list[str] = None
     ) -> None:
@@ -69,6 +69,8 @@ class Group(utils.Display, members=["name", "id", "members"]):
         self.password = password
         self.id = gid
         self._mem = mem or []
+
+    __repr__ = utils.display("name", "id", "members")
 
     @classmethod
     def __convert__(cls, value):

@@ -62,12 +62,7 @@ class AliasDict(dict[K, V]):
         return [alias for alias, val in self.aliases.items() if val == key]
 
 
-class Command(
-    ParamMixin,
-    DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc],
-    utils.Display,
-    members=["name"],
-):
+class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc]):
     callback: at.CommandCallback
     name: str
     parent: Command | None
@@ -103,6 +98,8 @@ class Command(
 
         if config.environment == "development":
             self.param_groups
+
+    __repr__ = utils.display("name")
 
     def __call__(self, input_args: at.InputArgs = None, state: dict = None) -> t.Any:
         """Entry point for a command, call to execute your command object
@@ -311,15 +308,6 @@ class Command(
         """Add multiple commands as subcommands"""
         return [self.add_command(command) for command in commands]
 
-    # def inherit_decorators(self, command: Command):
-    #     decos, command.decorators = command.decorators, DecoratorStack()
-
-    #     for deco in self.decorators:
-    #         if deco.inherit:
-    #             command.decorators.add(deco)
-    #     for deco in decos:
-    #         command.decorators.add(deco)
-
     # Execution ------------------------------------------------------------------
 
     def __main(self, args: list[str]):
@@ -352,11 +340,14 @@ class Command(
                 # running a namespace call.
                 namespace_callback(ctx)
                 raise errors.CommandError()
+
             # There is a command, so we want to execute the global callback
             elif args or (
                 config.global_callback_execution == "always" and not self.is_namespace
             ):
                 return ctx.run(args)
+            else:
+                return None
 
         # This command doesn't have any sub-commands and should just be executed
         # normally. This will get returned early  in the caller
