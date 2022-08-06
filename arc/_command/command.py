@@ -314,14 +314,16 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         global_args, command, command_args = self.split_args(args)
 
         with self.create_ctx() as ctx:
-            res = self._global_main(ctx, command, global_args)
+            res = self._exec_root_callback(ctx, command, global_args)
             if command is self:
                 return res
 
             with command.create_ctx(parent=ctx) as commandctx:
                 return commandctx.run(command_args)
 
-    def _global_main(self, ctx: Context, command: Command, args: list[str]) -> t.Any:
+    def _exec_root_callback(
+        self, ctx: Context, command: Command, args: list[str]
+    ) -> t.Any:
         # The behavior of this is a little weird because it handles the odd intersection
         # between single-commands and root commands with subcommands
 
@@ -339,9 +341,11 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
                 # Call this to produce the same output as we do when
                 # running a namespace call.
                 namespace_callback(ctx)
-                raise errors.CommandError()
+                ctx.exit(1)
 
             # There is a command, so we want to execute the global callback
+            # we don't do this if it's a namespace because they can only ever be
+            # called directly
             elif args or (
                 config.global_callback_execution == "always" and not self.is_namespace
             ):
