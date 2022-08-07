@@ -456,7 +456,7 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         raise errors.ParamError(f"No parameter with name: {param_name}")
 
     def autoload(self, *paths: str):
-        Autoload(paths, self).load()
+        Autoload(paths, self, config.autoload_overwrite).load()
 
     def decorators(self) -> DecoratorStack[at.DecoratorFunc | at.ErrorHandlerFunc]:
         lst = t.cast(list[DecoratorMixin], self.command_chain)

@@ -11,17 +11,20 @@ if t.TYPE_CHECKING:
 
 
 class Autoload:
-    def __init__(self, paths: t.Iterable[str], parent: Command):
+    def __init__(
+        self, paths: t.Iterable[str], parent: Command, allow_overrite: bool = False
+    ) -> None:
         self.paths = paths
         self.parent = parent
+        self.allow_overwrite = allow_overrite
 
-    def load(self):
+    def load(self) -> None:
         for path in self.__load_files(self.paths):
             for command in self.__load_commands(path):
-                if command.name in self.parent.subcommands:
+                if command.name in self.parent.subcommands and not self.allow_overwrite:
                     raise CommandError(
-                        f"Namespace {command.name} already exists on {self.parent}\n"
-                        "Autoloaded namespaces cannot overwrite prexisting namespaces"
+                        f"Command {command.name} already exists on {self.parent}\n"
+                        "Autoloaded command cannot overwrite prexisting commands"
                     )
 
                 self.parent.add_command(command)

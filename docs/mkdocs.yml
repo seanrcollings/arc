@@ -44,6 +44,7 @@ nav:
           - Arguments: usage/parameters/arguments.md
           - Options: usage/parameters/options.md
           - Flags: usage/parameters/flags.md
+          - Parameter Sources: usage/parameter-sources.md
           - Parameter Groups: usage/parameters/parameter-groups.md
       - Subcommands: usage/subcommands.md
       - Paramater Types: usage/parameter-types.md
@@ -55,7 +56,6 @@ nav:
   - Advanced Usage:
       - Type Middleware: advanced-usage/type-middleware.md
       - Custom Types: advanced-usage/custom-types.md
-      - Parameter Sources: advanced-usage/parameter-sources.md
       - Command Autoloading: advanced-usage/command-autoloading.md
       - Shell Completions: advanced-usage/shell-completions.md
   - Examples:
