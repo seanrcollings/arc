@@ -5,7 +5,7 @@ class Round:
     """Type Tranformation to round given input to `ndigits`
 
     ## Type Contraints
-    - Reports `round()`
+    - Supports `round()`
 
     ## Example
     ```py
