@@ -139,3 +139,10 @@
   exec: ""
 - file: error_handlers_deco.py
   exec: ""
+- file: state.py
+  exec: ""
+- file: state.py
+  out: state_help
+  exec: --help
+- file: state_inherit.py
+  exec: ""

@@ -47,3 +47,9 @@ def arc_print(
         values = tuple(utils.ansi_clean(str(v)) for v in values)
 
     print(*values, sep=sep, end=end, file=file, flush=flush)
+
+
+def exit(code: int = 0, ctx: Context | None = None) -> t.NoReturn:
+    """Exits the application with `code`"""
+    ctx = ctx or Context.current()
+    ctx.exit(code)

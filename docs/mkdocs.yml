@@ -61,6 +61,7 @@ nav:
   - Examples:
       - Grep Clone: examples/grep-clone.md
   - Reference:
+      - arc.context: reference/context.md
       - arc.config: reference/config.md
       - arc.color: reference/color.md
       - arc.params: reference/params.md
@@ -68,5 +69,4 @@ nav:
           - transforms: reference/transforms.md
           - validators: reference/validators.md
           - file: reference/types/file.md
-      - arc.command: reference/command.md
   - Changelog: changelog.md

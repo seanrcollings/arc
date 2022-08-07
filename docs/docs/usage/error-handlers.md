@@ -26,9 +26,9 @@ Under the hood, exception handlers *are* [decorators](./decorators.md.md). For e
 --8<-- "examples/outputs/error_handlers_deco"
 ```
 
-Error handlers are simply some *syntatic sugar* on top of callbacks to provide a slightly nicer interface. And as such, all of the principles about callbacks also apply to error handlers
+Error handlers are simply some *syntatic sugar* on top of decorators to provide a slightly nicer interface. And as such, all of the principles about decorators also apply to error handlers
 
-Like callbacks, error handlers are inherited
+Like decorators, error handlers are inherited
 
 - Can be disabled with `#!python @command.handle(*exceptions, inherit=False)`
 - Can be removed with `#!python @handler.remove`

@@ -22,6 +22,8 @@ T = t.TypeVar("T")
 
 
 class Context:
+    """Context tracks all the information relevant to the execution of a command"""
+
     _stack: list[Context] = []
     command: _command.Command
     _exit_stack: contextlib.ExitStack

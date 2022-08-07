@@ -483,12 +483,12 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         return names[0], tuple(names[1:])
 
 
-def command(name: str | None = None, description: str | None = None):
+def command(name: str | None = None, desc: str | None = None):
     def inner(callback: at.CommandCallback):
         return Command(
             callback=callback,
             name=Command.get_command_name(callback, name)[0],
-            description=description,
+            description=desc,
             parent=None,
             explicit_name=bool(name),
             autoload=True,
@@ -506,11 +506,11 @@ def namespace_callback(ctx: Context):
     arc.print(f"{command} for more information")
 
 
-def namespace(name: str, description: str | None = None):
+def namespace(name: str, desc: str | None = None):
     return Command(
         callback=namespace_callback,
         name=name,
-        description=description,
+        description=desc,
         parent=None,
         autoload=True,
     )

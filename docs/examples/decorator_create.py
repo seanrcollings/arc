@@ -2,7 +2,7 @@ import arc
 
 
 @arc.decorator()
-def cb(ctx):
+def cb():
     arc.print("before execution")
     yield
     arc.print("after execution")

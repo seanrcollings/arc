@@ -19,9 +19,13 @@ class DecoratorMixin(t.Generic[D, E]):
         self._decorators: list[Decorator[D] | Decorator[E]] = []
         self._removed_decorators: set[Decorator[D] | Decorator[E]] = set()
 
-    def decorate(self, inherit: bool = True) -> t.Callable[[D], Decorator[D]]:
+    def decorate(
+        self, inherit: bool = True, children_only: bool = False
+    ) -> t.Callable[[D], Decorator[D]]:
         def inner(func: D) -> Decorator[D]:
-            deco: Decorator[D] = decorator(inherit=inherit)(func)
+            deco: Decorator[D] = decorator(
+                inherit=inherit, children_only=children_only
+            )(func)
             self.add_decorator(deco)
             return deco
 
@@ -33,11 +37,11 @@ class DecoratorMixin(t.Generic[D, E]):
         from arc.context import Context
 
         def inner(func: E):
-            def handle_errors(_ctx) -> t.Generator[None, None, None]:
+            def handle_errors(ctx) -> t.Generator[None, None, None]:
                 try:
                     yield
                 except errors as e:
-                    utils.dispatch_args(func, e, Context.current())
+                    utils.dispatch_args(func, e, ctx)
 
             deco: Decorator = Decorator(
                 name=func.__name__,
@@ -67,8 +71,12 @@ class DecoratorMixin(t.Generic[D, E]):
         last = objs[-1]
         for obj in objs:
             for added in obj._decorators:
-                if added.inherit or obj is last:
-                    stack.add(added)
+                if obj is last:
+                    if not added.children_only:
+                        stack.add(added)
+                else:
+                    if added.inherit:
+                        stack.add(added)
 
             # TODO: Non optimal, is going to run in O(n^2).
             for removed in obj._removed_decorators:
@@ -163,6 +171,7 @@ class Decorator(t.Generic[D]):
     name: str
     func: D
     inherit: bool = True
+    children_only: bool = False
 
     def __call__(self, command: A) -> A:
         command.add_decorator(self)
@@ -174,7 +183,9 @@ class Decorator(t.Generic[D]):
         return command
 
 
-def decorator(inherit: bool = True) -> t.Callable[[D], Decorator[D]]:
+def decorator(
+    inherit: bool = True, children_only: bool = False
+) -> t.Callable[[D], Decorator[D]]:
     """Decorator that transforms the decorated function into a arc decorator"""
 
     def inner(func: D) -> Decorator[D]:
@@ -182,6 +193,7 @@ def decorator(inherit: bool = True) -> t.Callable[[D], Decorator[D]]:
             name=func.__name__,
             func=func,
             inherit=inherit,
+            children_only=children_only,
         )
 
     return inner
@@ -202,12 +214,14 @@ def remove(*decos: Decorator) -> t.Callable[[Command], Command]:
 def error_handler(*errors: type[Exception], inherit: bool = False):
     from arc.context import Context
 
-    def inner(func: D) -> Decorator[t.Callable[[], t.Generator[None, t.Any, None]]]:
-        def handle_errors(*args, **kwargs) -> t.Generator[None, t.Any, None]:
+    def inner(
+        func: D,
+    ) -> Decorator[t.Callable[[Context], t.Generator[None, t.Any, None]]]:
+        def handle_errors(ctx) -> t.Generator[None, t.Any, None]:
             try:
                 yield
             except errors as e:
-                func(e, Context.current())
+                utils.dispatch_args(func, e, ctx)
 
         return Decorator(
             name=func.__name__,

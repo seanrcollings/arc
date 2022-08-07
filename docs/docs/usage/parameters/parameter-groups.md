@@ -19,7 +19,7 @@ For example, let's take this example from the previous page:
 
 and convert it to use a parameter group instead.
 
-For this example, the transfre is very straight forward, we can just take the argument list definition, and add it to the class body:
+For this example, the transfer is very straight forward, we can just take the argument list definition, and add it to the class body:
 
 ```py
 @arc.group

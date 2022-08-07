@@ -1,125 +1,26 @@
-`arc.types.State` is *arc's* primary way for sharing global data all throughout your application.
+`#!python arc.State` is *arc's* primary way for sharing global data all throughout your application.
 
-State is a dictionary of key-value pairs that you pass when creating the CLI, a namespace, or subcommand. *arc* knows what argument to map the state to by specifying the type of the argument to be `State`
-```py
-from arc import CLI, State
-
-cli = CLI(state={'test': 1})
-
-@cli.command()
-def state_example(state: State):
-    # can be accessed like a dictionary or an attribute
-    arc.print(state.test)
-    arc.print(state['test'])
-
-cli()
+State is a dictionary of key-value pairs that you pass when executing you application. A command can then request access to the state object by annotating a argument with `State`
+```py title="examples/state.py"
+--8<-- "examples/state.py"
 ```
 
+```console
+--8<-- "examples/outputs/state"
 ```
-$ python example.py state-example
-1
-1
-```
+
 Note that because the `State` type has a special meaning it will not be exposed to the external interface
 ```
-$ python example.py state-example --help
-USAGE
-    example.py state-example [--help] [--]
-
-ARGUMENTS
-    --help (-h)  Shows help documentation
+--8<-- "examples/outputs/state_help"
 ```
 
-## State Propagation
-State can be declared at any level of command decleration, and is passed down from parent commands. At each level, the parent's state and the current state are merged, with the current state taking precedent over the parent's state if keys overlap.
+## Subclassing `State`
+State may also be sub-classed, and still maintain the same unique behavior. This is useful for providing additional functionality via attached methods, or provide type hinting support for static analyzers like mypy.
 
-```py
-from arc import CLI, State, namespace
-
-foo = namespace("foo", state={'test2': 2}) # declare the namespace's state
-cli = CLI(state={'test': 1})
-# when it's installed, it
-# inherits it's parents state, so foo's state
-# would be : {'test': 1, 'test2': 2}
-cli.install_command(foo)
-
-# this also inherit's it's parent's state
-# but overwrites a key
-@foo.subcommand(state={"test": 5})
-def state_example(state: State):
-
-    arc.print(state.test)
-    arc.print(state.test2)
-
-cli()
+```py title="examples/state_inherit.py"
+--8<-- "examples/state_inherit.py"
 ```
 
-```
-$ python example.py foo:state-example
-5
-2
-```
-
-## State Sharing
-State is shared amongst commands, so it's an easy way to share objects / data when executing a command *within* another command.
-```py
-import contextlib
-from arc import CLI, State, Context
-
-cli = CLI()
-
-
-@contextlib.contextmanager
-def open_db():
-    obj = object()
-    try:
-        yield obj
-    finally:
-        del obj
-
-
-@cli.command()
-def command1(state: State, ctx: Context):
-    # ctx.resource() opens context managers and
-    # ensures they get closed
-    state.db = ctx.resource(open_db())
-    ctx.execute(command2)
-
-
-@cli.command()
-def command2(state: State):
-    arc.print(state.db)  # object is accessible here!
-
-
-cli()
-
-```
-
-## State Inheritance
-State can also be subclassed for additional functionality.
-
-```py
-from arc import CLI, State
-
-
-class MyState(State):
-    def punch(self):
-        arc.print(f"ORA ORA, {self.name}")
-
-
-cli = CLI(state={"name": "DIO"})
-
-
-@cli.command()
-def punch(state: MyState):
-    state.punch()
-
-
-cli()
-```
-
-
-```
-$ python example.py punch
-ORA ORA, DIO
+```console
+--8<-- "examples/outputs/state_inherit"
 ```

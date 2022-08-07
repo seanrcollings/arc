@@ -1,4 +1,4 @@
-An *arc* option is a (usually optional) parameter that is refernced by name on the command line.
+An *arc* option is a (usually optional) parameter that is referenced by name on the command line.
 
 We can take the example from the [previous page](./arguments.md) and convert both of the arguments to options by only adding 2 characters:
 ```py title="examples/parameter_option.py"

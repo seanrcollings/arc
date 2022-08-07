@@ -128,13 +128,37 @@ def test_decorator_order():
     }
 
 
+def test_children_only():
+    @arc.decorator(children_only=True)
+    def cb(ctx):
+        raise CallbackException(ctx)
+
+    @arc.command()
+    def command():
+        ...
+
+    @cb
+    @command.subcommand()
+    def sub1():
+        ...
+
+    @sub1.subcommand()
+    def sub2():
+        ...
+
+    command("sub1")
+
+    with pytest.raises(CallbackException):
+        command("sub1 sub2")
+
+
 # We don't annotate the root object in these cases
 # because they will always execute their decorators when
 # the global parameters get validated.
 
 
 def test_remove_decorator():
-    @arc.decorator()
+    @arc.decorator(children_only=True)
     def cb(ctx):
         raise CallbackException(ctx)
 
