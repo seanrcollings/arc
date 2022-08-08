@@ -10,20 +10,13 @@ from arc.logging import logger, mode_map
 
 @dataclass
 class Config:
-    """Arc Config object. All arguments have default values,
-    so the configuration file is not required by default"""
+    """arc's Config object. A single global instance
+    of this class is created, then used where it is needed"""
 
     environment: at.Env = "production"
     default_section_name: str = "description"
     transform_snake_case: bool = True
     brand_color: str = fg.ARC_BLUE
-    suggestions: at.Suggestions = field(  # type: ignore
-        default_factory=lambda: {
-            "suggest_params": True,
-            "suggest_commands": True,
-            "distance": 2,
-        }
-    )
     env_prefix: str = ""
     prompt: Prompt = Prompt(" ")
     version: t.Optional[str] = None
@@ -32,6 +25,13 @@ class Config:
     global_callback_execution: t.Literal["always", "args_present"] = "always"
     report_bug: str | None = None
     autoload_overwrite: bool = True
+    suggestions: at.Suggestions = field(
+        default_factory=lambda: at.Suggestions(
+            suggest_params=True,
+            suggest_commands=True,
+            distance=2,
+        )
+    )
 
 
 config = Config()
