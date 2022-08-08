@@ -7,7 +7,7 @@ import sys
 from arc.errors import CommandError
 
 if t.TYPE_CHECKING:
-    from arc._command import Command
+    from arc.core import Command
 
 
 class Autoload:

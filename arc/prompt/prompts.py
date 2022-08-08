@@ -6,7 +6,7 @@ from arc.prompt import select
 from arc import constants
 
 if t.TYPE_CHECKING:
-    from arc._command.param.param import Param
+    from arc.core.param.param import Param
     from arc.context import Context
 
 

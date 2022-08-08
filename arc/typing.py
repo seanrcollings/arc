@@ -5,7 +5,7 @@ from arc.autocompletions import CompletionInfo, Completion
 
 if t.TYPE_CHECKING:
     from arc.context import Context
-    from arc._command.param import Param
+    from arc.core.param import Param
 
 
 Annotation = t.Union[t._SpecialForm, type]

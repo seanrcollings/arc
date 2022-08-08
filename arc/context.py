@@ -5,7 +5,7 @@ import typing as t
 import contextlib
 
 from arc import errors, utils
-from arc import _command
+from arc import core
 from arc.color import colorize, fg
 from arc.config import config
 from arc.prompt.prompt import Prompt
@@ -15,7 +15,7 @@ from arc.present import Joiner
 import arc.typing as at
 
 if t.TYPE_CHECKING:
-    from arc._command.param.param import ValueOrigin
+    from arc.core.param.param import ValueOrigin
 
 
 T = t.TypeVar("T")
@@ -25,7 +25,7 @@ class Context:
     """Context tracks all the information relevant to the execution of a command"""
 
     _stack: list[Context] = []
-    command: _command.Command
+    command: core.Command
     _exit_stack: contextlib.ExitStack
     _stack_count: int
     args: dict[str, t.Any]
@@ -38,7 +38,7 @@ class Context:
 
     def __init__(
         self,
-        command: _command.Command,
+        command: core.Command,
         parent: Context | None = None,
     ) -> None:
         self.command = command
@@ -128,9 +128,7 @@ class Context:
 
         return res
 
-    def execute(
-        self, callback: t.Union[_command.Command, t.Callable], **kwargs
-    ) -> t.Any:
+    def execute(self, callback: t.Union[core.Command, t.Callable], **kwargs) -> t.Any:
         """Can be called in two ways
 
         1. if `callback` is a function / callable, all other kwargs
@@ -140,7 +138,7 @@ class Context:
         will be used initially
         """
 
-        if isinstance(callback, _command.Command):
+        if isinstance(callback, core.Command):
             ctx = self.create_child(callback)
             cmd = callback
             callback = cmd.callback
@@ -173,7 +171,7 @@ class Context:
 
         return parsed
 
-    def create_child(self, command: _command.Command) -> Context:
+    def create_child(self, command: core.Command) -> Context:
         """Creates a new context that is the child of the current context"""
         return type(self)(command, parent=self)
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 import typing as t
 
 if t.TYPE_CHECKING:
-    from arc._command.param import Param
+    from arc.core.param import Param
     from arc import Context
 
 

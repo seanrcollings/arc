@@ -1,8 +1,8 @@
 import typing as t
 
 from arc import constants
-from arc._command.classful import lazy_class_signature
-from arc._command.param import param
+from arc.core.classful import lazy_class_signature
+from arc.core.param import param
 import arc.typing as at
 
 

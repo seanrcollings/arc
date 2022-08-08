@@ -7,10 +7,10 @@ import shlex
 
 import arc
 from arc import errors, utils
-from arc._command import classful
-from arc._command.autoload import Autoload
-from arc._command.decorators import DecoratorMixin, DecoratorStack
-from arc._command.documentation import Documentation
+from arc.core import classful
+from arc.autoload import Autoload
+from arc.core.decorators import DecoratorMixin, DecoratorStack
+from arc.core.documentation import Documentation
 from arc.color import colorize, fg
 from arc.config import config
 from arc.parser import Parser
