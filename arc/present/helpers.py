@@ -49,7 +49,7 @@ class Joiner:
         )
 
     @staticmethod
-    def with_and(values: t.Sequence):
+    def with_and(values: t.Sequence) -> str:
         """Joins a Sequence of items with commas
         and an "and" at the end
 
@@ -57,12 +57,12 @@ class Joiner:
             values (Sequence): Values to join
 
         Returns:
-            str: joined values
+            string: joined values
         """
         return Joiner.with_last(values, ", ", " and ")
 
     @staticmethod
-    def with_or(values: t.Sequence, *args, **kwargs):
+    def with_or(values: t.Sequence, *args, **kwargs) -> str:
         """Joins a Sequence of items with commas
         and an or at the end
 
@@ -72,7 +72,7 @@ class Joiner:
             values (Sequence): Values to join
 
         Returns:
-            str: joined values
+            string: joined values
         """
 
         return Joiner.with_last(values, ", ", " or ", *args, **kwargs)

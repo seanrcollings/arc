@@ -1,2 +1,2 @@
-from .command import Command, command, namespace
+from .command import Command
 from .decorators import decorator, remove, error_handler

@@ -16,7 +16,7 @@ If the handler can't handle a particular error, you can `raise` the exception ag
 
 
 ## Relationship to Decorators
-Under the hood, exception handlers *are* [decorators](./decorators.md.md). For example, we could take the example from above and convert it to a decorator.
+Under the hood, exception handlers *are* [decorators](./decorators.md). For example, we could take the example from above and convert it to a decorator.
 
 ```py title="examples/error_handlers_deco.py"
 --8<-- "examples/error_handlers_deco.py"

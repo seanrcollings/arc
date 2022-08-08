@@ -141,7 +141,7 @@ class effects:
 # fmt: on
 
 
-def colorize(string: str, *codes: str, clear: bool = True):
+def colorize(string: str, *codes: str, clear: bool = True) -> str:
     """Applies colors / effects to an entire string
 
     Args:
@@ -153,6 +153,6 @@ def colorize(string: str, *codes: str, clear: bool = True):
             to True
 
     Returns:
-        str: The colorized string
+        string: The colorized string
     """
     return f"{''.join(str(code) for code in codes)}{string}{effects.CLEAR if clear else ''}"

@@ -16,9 +16,7 @@ SEMVAR_REGEX = re.compile(
 
 # Partialy inspired by: https://github.com/python-semver/python-semver
 class SemVer:
-    """Read-only representation a semantically versioned string.
-    Reference: https://semver.org/spec/v2.0.0.html
-    """
+    """Read-only representation a semantically versioned string. Reference: https://semver.org/spec/v2.0.0.html"""
 
     _prerelease_prefix = "-"
     _build_prefix = "+"
@@ -89,7 +87,7 @@ class SemVer:
 
         Returns:
             at.CompareReturn: is negative if self < other,
-             zero if self == other and strictly positive if self > other
+                zero if self == other and strictly positive if self > other
         """
 
         if not isinstance(other, SemVer):

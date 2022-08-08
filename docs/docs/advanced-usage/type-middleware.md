@@ -22,7 +22,7 @@ def round2(val: float):
 ```
 
 ???+ tip
-    *arc* already ships with a [`Round()`](../reference/transforms.md#arc.types.transforms.numbers.Round)
+    *arc* already ships with a [`Round()`](../reference/types/transforms.md#arc.types.transforms.numbers.Round)
     middleware, so you wouldn't actually need to implement this one yourself.
 
 ## Using a Type Middleware
@@ -47,5 +47,5 @@ Type Middleware are *attched* to a type using an [Annotated Type](https://docs.p
 ## Builtin Middlewares
 *arc* ships with a set of general-use builtin middlewares
 
-- [Validators](../reference/validators.md)
-- [Transforms](../reference/transforms.md.md)
+- [Validators](../reference/types/validators.md)
+- [Transforms](../reference/types/transforms.md)

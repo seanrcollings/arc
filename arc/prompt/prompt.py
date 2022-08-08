@@ -101,7 +101,7 @@ class Prompt:
         self._previous_answers.append(answer)
         return answer
 
-    def confirm(self, *args, **kwargs) -> bool:
+    def confirm(self, desc: str) -> bool:
         """Request a Y/N answer from the user
 
         Args:
@@ -110,7 +110,7 @@ class Prompt:
         Returns:
             bool: The user's answer to the question
         """
-        question = ConfirmQuestion(*args, **kwargs)
+        question = ConfirmQuestion(desc)
         return self.ask(question)
 
     def input(

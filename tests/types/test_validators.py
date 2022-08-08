@@ -66,3 +66,12 @@ def test_between():
 
     with pytest.raises(errors.ValidationError):
         validator(100)
+
+
+def test_matches():
+    matcher = validators.Matches(r"[A-za-z]")
+
+    assert matcher("word") == "word"
+
+    with pytest.raises(errors.ValidationError):
+        matcher("1234")
