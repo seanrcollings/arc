@@ -1,4 +1,4 @@
-__version__ = "7.0.1"
+__version__ = "7.0.2"
 
 from arc.core import Command, decorator, remove, error_handler
 from arc.params import Argument, Option, Flag, Count, Depends, group
