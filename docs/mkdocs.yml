@@ -18,6 +18,7 @@ theme:
 plugins:
   - search
   - mkdocstrings
+  - awesome-pages
 watch: [../arc, examples]
 repo_url: https://github.com/seanrcollings/arc
 repo_name: seanrcollings/arc
@@ -59,15 +60,5 @@ nav:
       - Custom Types: advanced-usage/custom-types.md
       - Command Autoloading: advanced-usage/command-autoloading.md
       - Shell Completions: advanced-usage/shell-completions.md
-  - Examples:
-      - Grep Clone: examples/grep-clone.md
-  - Reference:
-      - arc.context: reference/context.md
-      - arc.config: reference/config.md
-      - arc.color: reference/color.md
-      - arc.params: reference/params.md
-      - arc.types:
-          - transforms: reference/transforms.md
-          - validators: reference/validators.md
-          - file: reference/types/file.md
+  - ...
   - Changelog: changelog.md

@@ -18,6 +18,7 @@ packages=[{ include = "arc" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+mkdocs-awesome-pages-plugin = "^2.8.0"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"

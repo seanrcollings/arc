@@ -1,3 +1,4 @@
+"""Module contains custom type defintions that arc uses"""
 from __future__ import annotations
 import typing as t
 
@@ -6,6 +7,8 @@ from arc.autocompletions import CompletionInfo, Completion
 if t.TYPE_CHECKING:
     from arc.context import Context
     from arc.core.param import Param
+
+T = t.TypeVar("T")
 
 
 Annotation = t.Union[t._SpecialForm, type]
@@ -28,6 +31,12 @@ CompletionFunc = t.Callable[
 
 GetterFunc = t.Callable[["Context", "Param"], t.Any]
 
+MiddlewareCallable = t.Callable[[T], T]
+
+DecoratorFunc = t.Callable[["Context"], t.Optional[t.Generator[None, t.Any, None]]]
+
+ErrorHandlerFunc = t.Callable[[Exception, "Context"], None]
+
 
 @t.runtime_checkable
 class ClassCallback(t.Protocol):
@@ -36,9 +45,31 @@ class ClassCallback(t.Protocol):
 
 
 CommandCallback = t.Union[t.Callable, type[ClassCallback]]
+"""The type of a command's callback.
+
+May be a function
+```py
+@arc.command()
+def command(name: str):
+    print(f"Hello {name}!")
+```
+
+Or a class
+```py
+@arc.command()
+class command:
+    name: str
+
+    def handle(self):
+        print(f"Hello {self.name}!")
+
+```
+"""
 
 
 class CompletionProtocol(t.Protocol):
+    """Protocal that objects need to implement if they are expected to provide completions"""
+
     def __completions__(
         self, info: CompletionInfo, *args, **kwargs
     ) -> list[Completion] | Completion | None:
@@ -58,10 +89,3 @@ class Suggestions(t.TypedDict, total=False):
     distance: int
     suggest_params: bool
     suggest_commands: bool
-
-
-T = t.TypeVar("T")
-MiddlewareCallable = t.Callable[[T], T]
-
-DecoratorFunc = t.Callable[["Context"], t.Optional[t.Generator[None, t.Any, None]]]
-ErrorHandlerFunc = t.Callable[[Exception, "Context"], None]

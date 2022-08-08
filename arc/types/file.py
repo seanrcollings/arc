@@ -39,7 +39,7 @@ class File(t.IO, abc.ABC):
 
     ## Example
     ```py
-    @cli.command()
+    @arc.command()
     def command(file: File.Read):
         arc.print(file.read())
     ```
@@ -52,7 +52,7 @@ class File(t.IO, abc.ABC):
     it with an `Annotated` type.
 
     ```py
-    @cli.command()
+    @arc.command()
     def command(file: Annotated[File, File.Args(...)]):
         arc.print(file.read())
     ```

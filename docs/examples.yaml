@@ -95,10 +95,10 @@
     - "--help"
 - file: grep_clone/2_grep_clone.py
   name: grep.py
-  exec: ^[\\d+] docs/index.md docs/usage/intro.md
+  exec: ^[\\d+] docs/docs/index.md docs/docs/usage/intro.md
 - file: grep_clone/3_grep_clone.py
   name: grep.py
-  exec: arc docs/index.md docs/usage/intro.md
+  exec: arc docs/docs/index.md docs/docs/usage/intro.md
 - file: context_manager.py
   exec: "1"
 - file: subcommand.py

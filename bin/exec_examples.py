@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import logging
 import typing as t
 import sys
@@ -11,7 +10,8 @@ from dataclasses import dataclass
 import yaml
 from arc.config import config as ac
 
-DOCS_DIR = Path(__file__).parent
+ROOT_DIR = Path(".")
+DOCS_DIR = ROOT_DIR / "docs"
 EXAMPLE_DIR = DOCS_DIR / "examples"
 OUTPUT_DIR = EXAMPLE_DIR / "outputs"
 
@@ -94,6 +94,7 @@ def exec_examples(config: list[ExecConfig]):
 
 
 def main():
+    print("--- EXECUTING EXAMPLES ---")
     init()
     config = get_config(DOCS_DIR / "examples.yaml")
     exec_examples(config)
