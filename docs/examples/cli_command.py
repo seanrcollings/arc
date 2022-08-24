@@ -3,7 +3,7 @@ import arc
 
 @arc.command()
 def command():
-    print("CLI Command Example")
+    arc.print("CLI Command Example")
 
 
 # Do not execute command() in here

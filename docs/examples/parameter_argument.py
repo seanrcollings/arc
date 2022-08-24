@@ -2,8 +2,12 @@ import arc
 
 
 @arc.command()
-def hello(firstname=arc.Argument(), lastname=arc.Argument(default="")):
-    print(f"Hello, {firstname} {lastname}! Hope you have a wonderful day!")
+def hello(firstname: str, lastname: str | None):
+    name = firstname
+    if lastname:
+        name += f" {lastname}"
+
+    arc.print(f"Hello, {name}! Hope you have a wonderful day!")
 
 
 hello()

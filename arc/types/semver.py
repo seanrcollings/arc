@@ -16,9 +16,7 @@ SEMVAR_REGEX = re.compile(
 
 # Partialy inspired by: https://github.com/python-semver/python-semver
 class SemVer:
-    """Read-only representation a semantically versioned string.
-    Reference: https://semver.org/spec/v2.0.0.html
-    """
+    """Read-only representation a semantically versioned string. Reference: https://semver.org/spec/v2.0.0.html"""
 
     _prerelease_prefix = "-"
     _build_prefix = "+"
@@ -54,7 +52,7 @@ class SemVer:
         return string
 
     def __repr__(self):
-        return f"SemVar({str(self)!r})"
+        return f"SemVer({str(self)!r})"
 
     def __iter__(self):
         yield from (a for a in self.tuple() if a)
@@ -81,7 +79,7 @@ class SemVer:
 
     # Comparison Operators --------------------------------------------------------------------
 
-    def compare(self, other: SemVer) -> at.CompareReturn:
+    def compare(self, other: object) -> at.CompareReturn:
         """Compares `self` with `other`
 
         Args:
@@ -89,8 +87,11 @@ class SemVer:
 
         Returns:
             at.CompareReturn: is negative if self < other,
-             zero if self == other and strictly positive if self > other
+                zero if self == other and strictly positive if self > other
         """
+
+        if not isinstance(other, SemVer):
+            return NotImplemented
 
         tup1, tup2 = self.tuple(), other.tuple()
 
@@ -122,7 +123,9 @@ class SemVer:
 
         return cmp(len(pr1), len(pr2))
 
-    def _cmp_prerelease_tag(self, a: t.Union[str, int], b: t.Union[str, int]):
+    def _cmp_prerelease_tag(
+        self, a: t.Union[str, int], b: t.Union[str, int]
+    ) -> at.CompareReturn:
         """Compares two prerelease tags given the following conditions:
         - Identifiers consisting of only digits are compared numerically.
         - Identifiers with letters or hyphens are compared lexically in ASCII sort order.

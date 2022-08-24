@@ -1,35 +1,33 @@
 from __future__ import annotations
+import collections
 import typing as t
-from arc.params import special
+
 
 if t.TYPE_CHECKING:
     from arc.context import Context
 
 
-@special(default={})
-class State(dict):
-    """State object, extends `dict`"""
+class State(collections.UserDict):
+    """State object"""
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({super().__repr__()})"
+        values = ", ".join(f"{key}={value}" for key, value in self.data.items())
+        return f"{self.__class__.__name__}({values})"
 
     def __getattr__(self, attr):
         try:
-            return self[attr]
+            return self.data[attr]
         except KeyError as e:
             raise AttributeError(str(e)) from e
 
     def __setattr__(self, name: str, value):
-        self[name] = value
-
-    def __or__(self, other: t.Mapping[t.Any, t.Any]):
-        return type(self)(super().__or__(other))
+        if name == "data":
+            super().__setattr__(name, value)
+        else:
+            self.data[name] = value
 
     @classmethod
-    def __convert__(cls, _value, _info, ctx: Context):
-        # To account for State subclassing we create a new
-        # State object with cls(), then set that, as the
-        # context's state object
-        state = cls(ctx.state)
-        ctx.state = state
+    def __depends__(cls, ctx: Context):
+        state = cls()
+        state.data = ctx.state.data
         return state

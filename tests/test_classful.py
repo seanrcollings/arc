@@ -1,50 +1,46 @@
-from typing import Annotated
 import pytest
-from arc import CLI, errors
-from arc import Param, Argument, Option, Flag
+import arc
 
 
-def test_basic(cli: CLI):
-    @cli.subcommand()
-    class Test:
+def test_basic():
+    @arc.command()
+    class command:
+        def handle(self):
+            return True
+
+    assert command("") is True
+
+
+def test_no_handle():
+    with pytest.raises(arc.errors.CommandError):
+
+        @arc.command()
+        class command:
+            ...
+
+
+def test_arguments():
+    @arc.command()
+    class command:
+        val: int
+        opt: int = arc.Option()
+        flag: bool = arc.Flag()
+
+        def handle(self):
+            return (self.val, self.opt, self.flag)
+
+    assert command("1 --opt 2 --flag") == (1, 2, True)
+
+
+def test_other_methods():
+    @arc.command()
+    class command:
         val: int
 
         def handle(self):
+            return self.helper()
+
+        def helper(self):
             return self.val
 
-    assert cli("Test 2") == 2
-
-    with pytest.raises(errors.MissingArgError):
-        cli("Test")
-
-
-def test_default(cli: CLI):
-    @cli.subcommand()
-    class Test:
-        val: int = 2
-
-        def handle(self):
-            return self.val
-
-    assert cli("Test") == 2
-    assert cli("Test --val 3") == 3
-
-
-def test_short_args(cli: CLI):
-    @cli.subcommand()
-    class Test:
-        val: int = Option(short="v")
-
-        def handle(self):
-            return self.val
-
-    assert cli("Test --val 3") == 3
-    assert cli("Test -v 3") == 3
-
-
-def test_no_handle(cli: CLI):
-    with pytest.raises(errors.CommandError):
-
-        @cli.subcommand()
-        class Test:
-            ...
+    assert command("1") == 1

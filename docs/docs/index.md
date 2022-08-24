@@ -2,7 +2,7 @@
 title: Home
 ---
 # Overview
-*arc* is a tool for building declartive, and highly extendable CLI applications for Python ^3.9 based on Pyton type-hints
+*arc* is a tool for building declartive, and highly extendable CLI applications for Python ^3.10 based on Python type-hints
 
 *arc's* features include:
 
@@ -31,7 +31,7 @@ To start off, here's a simple example application that can be used to greet some
 
 
 ```console
---8<-- "examples/outputs/hello_exec"
+--8<-- "examples/outputs/hello"
 ```
 
 ### Automatic Documentation

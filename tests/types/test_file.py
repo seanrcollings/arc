@@ -2,18 +2,16 @@ import os
 import typing as t
 from pathlib import Path
 import pytest
-from arc import CLI
+import arc
 from arc.types import File
 
 
-@pytest.fixture(scope="module", autouse=True)
-def create_file():
-    with open("tests/test-file", "w") as f:
+@pytest.fixture(scope="function")
+def content_file(tmp_path_factory: pytest.TempPathFactory):
+    path = tmp_path_factory.mktemp("data") / "content"
+    with path.open("w") as f:
         f.write("content")
-
-    yield
-
-    os.remove("tests/test-file")
+    return path
 
 
 @pytest.mark.parametrize(
@@ -31,51 +29,47 @@ def create_file():
         File.BinaryAppendRead,
     ],
 )
-def test_mode(cli: CLI, mode, tmp_path: Path):
-    mode_str = t.get_args(mode)[-1]
-    name = tmp_path / "test_mode"
-    name.touch()
+def test_mode(mode, content_file: Path):
+    args = t.get_args(mode)[-1]
 
-    @cli.command()
+    @arc.command()
     def command(file: mode):  # type: ignore
         return file
 
-    file = cli(f"command {name}")
+    file = command(str(content_file))
     assert file.closed
-    assert file.mode == mode_str
+    assert file.mode == args.mode
 
 
-def test_read(cli: CLI):
-    @cli.command()
-    def read(file: File.Read):
+def test_read(content_file: Path):
+    @arc.command()
+    def command(file: File.Read):
         return file, file.read()
 
-    file, contents = cli("read tests/test-file")
+    file, contents = command(str(content_file))
     assert file.closed
     assert file.mode == "r"
     assert contents == "content"
 
 
-def test_binary_read(cli: CLI):
-    @cli.command()
-    def read(file: File.BinaryRead):
+def test_binary_read(content_file: Path):
+    @arc.command()
+    def command(file: File.BinaryRead):
         return file, file.read()
 
-    file, contents = cli("read tests/test-file")
+    file, contents = command(str(content_file))
     assert file.closed
     assert file.mode == "rb"
     assert contents == b"content"
 
 
-def test_write(cli: CLI, tmp_path: Path):
-    @cli.command()
-    def write(file: File.Write):
+def test_write(content_file: Path):
+    @arc.command()
+    def command(file: File.Write):
         file.write("test")
         return file
 
-    name = tmp_path / "test_write"
+    assert command(str(content_file)).closed
 
-    assert cli(f"write {name}").closed
-
-    with open(name) as f:
+    with content_file.open() as f:
         assert f.read() == "test"

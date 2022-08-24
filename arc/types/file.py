@@ -3,6 +3,9 @@ import typing as t
 from dataclasses import dataclass
 import types
 import sys
+from arc.types.default import Default
+
+from arc.types.type_arg import TypeArg
 
 
 __all__ = ["File", "Stdin"]
@@ -36,9 +39,9 @@ class File(t.IO, abc.ABC):
 
     ## Example
     ```py
-    @cli.command()
+    @arc.command()
     def command(file: File.Read):
-        print(file.read())
+        arc.print(file.read())
     ```
 
     There are constants defined on `File` (like `File.Read` above) for
@@ -49,9 +52,9 @@ class File(t.IO, abc.ABC):
     it with an `Annotated` type.
 
     ```py
-    @cli.command()
+    @arc.command()
     def command(file: Annotated[File, File.Args(...)]):
-        print(file.read())
+        arc.print(file.read())
     ```
 
     `File.Args`'s call signature matches that of `open` (minus the filename), so
@@ -60,40 +63,59 @@ class File(t.IO, abc.ABC):
     `File` is Abstract and cannot be instantiated on it's own
     """
 
-    @dataclass
-    class Args:
-        mode: str = "r"
-        buffering: int = -1
-        encoding: t.Optional[str] = None
-        errors: OpenErrors = None
-        newline: OpenNewline = None
-        closefd: bool = True
-        opener: t.Optional[t.Callable] = None
+    class Args(TypeArg):
+        __slots__ = (
+            "mode",
+            "buffering",
+            "encoding",
+            "errors",
+            "newline",
+            "closefd",
+            "opener",
+        )
 
-    Read = t.Annotated[t.TextIO, "r"]
+        def __init__(
+            self,
+            mode: str = Default("r"),
+            buffering: int = Default(-1),
+            encoding: t.Optional[str] = Default(None),
+            errors: OpenErrors = Default(None),
+            newline: OpenNewline = Default(None),
+            closefd: bool = Default(True),
+            opener: t.Optional[t.Callable] = Default(None),
+        ):
+            self.mode = mode
+            self.buffering = buffering
+            self.encoding = encoding
+            self.errors = errors
+            self.newline = newline
+            self.closefd = closefd
+            self.opener = opener
+
+    Read = t.Annotated[t.TextIO, Args(mode="r")]
     """Equivalent to `open(filename, "r")"""
-    Write = t.Annotated[t.TextIO, "w"]
+    Write = t.Annotated[t.TextIO, Args(mode="w")]
     """Equivalent to `open(filename, "w")"""
-    ReadWrite = t.Annotated[t.TextIO, "r+"]
+    ReadWrite = t.Annotated[t.TextIO, Args(mode="r+")]
     """Equivalent to `open(filename, "r+")"""
-    CreateWrite = t.Annotated[t.TextIO, "x"]
+    CreateWrite = t.Annotated[t.TextIO, Args(mode="x")]
     """Equivalent to `open(filename, "x")"""
-    Append = t.Annotated[t.TextIO, "a"]
+    Append = t.Annotated[t.TextIO, Args(mode="a")]
     """Equivalent to `open(filename, "a")"""
-    AppendRead = t.Annotated[t.TextIO, "a+"]
+    AppendRead = t.Annotated[t.TextIO, Args(mode="a+")]
     """Equivalent to `open(filename, "a+")"""
 
-    BinaryRead = t.Annotated[t.BinaryIO, "rb"]
+    BinaryRead = t.Annotated[t.BinaryIO, Args("rb")]
     """Equivalent to `open(filename, "rb")"""
-    BinaryWrite = t.Annotated[t.BinaryIO, "wb"]
+    BinaryWrite = t.Annotated[t.BinaryIO, Args("wb")]
     """Equivalent to `open(filename, "wb")"""
-    BinaryReadWrite = t.Annotated[t.BinaryIO, "rb+"]
+    BinaryReadWrite = t.Annotated[t.BinaryIO, Args("rb+")]
     """Equivalent to `open(filename, "rb+")"""
-    BinaryCreateWrite = t.Annotated[t.BinaryIO, "xb"]
+    BinaryCreateWrite = t.Annotated[t.BinaryIO, Args("xb")]
     """Equivalent to `open(filename, "xb")"""
-    BinaryAppend = t.Annotated[t.BinaryIO, "ab"]
+    BinaryAppend = t.Annotated[t.BinaryIO, Args("ab")]
     """Equivalent to `open(filename, "ab")"""
-    BinaryAppendRead = t.Annotated[t.BinaryIO, "ab+"]
+    BinaryAppendRead = t.Annotated[t.BinaryIO, Args("ab+")]
     """Equivalent to `open(filename, "ab+")"""
 
 

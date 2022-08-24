@@ -1,37 +1,56 @@
 import pytest
-from arc import CLI, errors, config
+from arc import errors
+import arc
 
 
-def test_transform(cli: CLI):
-    @cli.subcommand()
+def test_transform():
+    command = arc.namespace("command")
+
+    @command.subcommand()
     def two_words(*, first_name: str = "", other_arg: str = ""):
         return first_name
 
-    assert cli("two-words --first-name sean") == "sean"
-    assert cli("two-words --first-name sean --other-arg hi") == "sean"
+    assert command("two-words --first-name sean") == "sean"
+    assert command("two-words --first-name sean --other-arg hi") == "sean"
 
-    with pytest.raises(errors.CommandNotFound):
-        cli("two_words")
+    with pytest.raises(errors.ArgumentError):
+        command("two_words")
 
-    with pytest.raises(errors.UsageError):
-        cli("two-words --first_name sean")
+    with pytest.raises(errors.UnrecognizedArgError):
+        command("two-words --first_name sean")
 
 
-def test_disable_transform(cli: CLI):
+def test_disable_transform():
     try:
-        config.transform_snake_case = False
+        arc.configure(transform_snake_case=False)
 
-        @cli.subcommand()
+        command = arc.namespace("command")
+
+        @command.subcommand()
         def two_words(*, first_name: str = "", other_arg: str = ""):
             return first_name
 
-        assert cli("two_words --first_name sean") == "sean"
-        assert cli("two_words --first_name sean --other_arg hi") == "sean"
+        assert command("two_words --first_name sean") == "sean"
+        assert command("two_words --first_name sean --other_arg hi") == "sean"
 
-        with pytest.raises(errors.CommandNotFound):
-            cli("two-words")
+        with pytest.raises(errors.UnrecognizedArgError):
+            command("two-words")
 
-        with pytest.raises(errors.UsageError):
-            cli("two_words --first-name sean --other-arg hi")
+        with pytest.raises(errors.UnrecognizedArgError):
+            command("two_words --first-name sean --other-arg hi")
     finally:
-        config.transform_snake_case = True
+        arc.configure(transform_snake_case=True)
+
+
+def test_explicit_names():
+    command = arc.namespace("command")
+
+    @command.subcommand("two_words")
+    def two_words(
+        *,
+        first_name: str = arc.Option(name="first_name"),
+        other_arg: str = arc.Option(name="other_arg")
+    ):
+        return first_name
+
+    assert command("two_words --first_name sean --other_arg hi") == "sean"

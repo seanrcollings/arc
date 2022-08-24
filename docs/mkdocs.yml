@@ -3,6 +3,7 @@ theme:
   name: material
   features:
     - navigation.instant
+    - navigation.tabs
   palette:
     - scheme: default
       primary: blue
@@ -16,8 +17,9 @@ theme:
         name: Switch to light mode
 plugins:
   - search
-  - mkdocstrings:
-      watch: [../arc]
+  - mkdocstrings
+  - awesome-pages
+watch: [../arc, examples]
 repo_url: https://github.com/seanrcollings/arc
 repo_name: seanrcollings/arc
 markdown_extensions:
@@ -35,24 +37,28 @@ markdown_extensions:
       permalink: true
 nav:
   - Home: index.md
-  - Features: features.md
   - Usage:
       - Intro: usage/intro.md
-      - Command Paramaters: usage/command-parameters.md
+      - Printing & Coloring Output: usage/printing.md
+      - Command Parameters:
+          - Parameters Intro: usage/parameters/parameters-intro.md
+          - Arguments: usage/parameters/arguments.md
+          - Options: usage/parameters/options.md
+          - Flags: usage/parameters/flags.md
+          - Parameter Sources: usage/parameter-sources.md
+          - Parameter Groups: usage/parameters/parameter-groups.md
+      - Subcommands: usage/subcommands.md
       - Paramater Types: usage/parameter-types.md
-      - Using the CLI: usage/cli.md
+      - Multiple Values: usage/multiple-values.md
       - Documentation Generation: usage/documentation-generation.md
-      - Colored Output: usage/colored-output.md
-      - Callbacks: usage/callbacks.md
+      - Command Decorators: usage/decorators.md
       - Error Handlers: usage/error-handlers.md
-      - Command Autoloading: usage/command-autoloading.md
       - Command State: usage/command-state.md
-      - Shell Completions: usage/shell-completions.md
-  - Examples:
-      - Grep Clone: examples/grep-clone.md
-  - Reference:
-      - arc.cli: reference/cli.md
-      - arc.color: reference/color.md
-      - arc.command: reference/command.md
-      - arc.config: reference/config.md
+  - Advanced Usage:
+      - Type Middleware: advanced-usage/type-middleware.md
+      - Dependancy Injection: advanced-usage/dependancy-injection.md
+      - Custom Types: advanced-usage/custom-types.md
+      - Command Autoloading: advanced-usage/command-autoloading.md
+      - Shell Completions: advanced-usage/shell-completions.md
+  - ...
   - Changelog: changelog.md

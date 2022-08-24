@@ -22,7 +22,7 @@ And create a file called `grep_clone.py` that contains the following:
 ```
 This is just some simple scaffolding to get us started. Run it to make sure eveything is in order.
 ```console
---8<-- "examples/outputs/1_grep_clone"
+--8<-- "examples/outputs/grep_clone/1_grep_clone"
 ```
 
 ## 2. Arguments
@@ -33,7 +33,7 @@ Next, we're going to want to add arguments to the command. For now, we'll only b
 ```
 
 ```console
---8<-- "examples/outputs/2_grep_clone"
+--8<-- "examples/outputs/grep_clone/2_grep_clone"
 ```
 
 As you can see, we've already got a validated regex pattern, and file handles to each of the specified files.
@@ -47,5 +47,5 @@ With type handling / data validation *already* out of the way, the implentation 
 ```
 Let's run this over a couple of *arc's* documentation files searching for references to *arc*
 ```console
---8<-- "examples/outputs/3_grep_clone"
+--8<-- "examples/outputs/grep_clone/3_grep_clone"
 ```

@@ -1,111 +1,87 @@
-"""Public API for hanlding parameter modification"""
-from __future__ import annotations
 import typing as t
-from arc._command import param
+
 from arc import constants
-from arc import typing as at
+from arc.core.classful import lazy_class_signature
+from arc.core.param import param
+import arc.typing as at
 
 
 class ParamInfo:
     def __init__(
         self,
-        param_cls: type[param.Param] = None,
-        arg_alias: str = None,
+        param_cls: type[param.Param],
+        param_name: str = None,
         short: str = None,
         default: t.Any = constants.MISSING,
-        description: str = None,
+        desc: str = None,
         callback: t.Callable = None,
-        action: param.ParamAction = None,
+        action: param.Action = None,
         prompt: str = None,
         envvar: str = None,
         complete: at.CompletionFunc = None,
+        getter_func: at.GetterFunc = None,
     ):
         self.param_cls = param_cls
-        self.arg_alias = arg_alias
-        self.short = short
+        self.param_name = param_name
+        self.short_name = short
         self.default = default
-        self.description = description
+        self.desc = desc
         self.callback = callback
         self.action = action
         self.prompt = prompt
         self.envvar = envvar
         self.complete = complete
+        self.getter_func = getter_func
 
     def dict(self):
         """Used to pass to `Param()` as **kwargs"""
         return {
-            "arg_alias": self.arg_alias,
-            "short": self.short,
+            "param_name": self.param_name,
+            "short_name": self.short_name,
             "default": self.default,
-            "description": self.description,
+            "description": self.desc,
             "callback": self.callback,
-            "action": self.action,
             "prompt": self.prompt,
             "envvar": self.envvar,
+            "action": self.action,
             "comp_func": self.complete,
+            "getter_func": self.getter_func,
         }
-
-
-def Param(
-    *,
-    name: str = None,
-    short: str = None,
-    default: t.Any = constants.MISSING,
-    description: str = None,
-    callback: t.Callable = None,
-    prompt: str = None,
-    envvar: str = None,
-    complete: at.CompletionFunc = None,
-) -> t.Any:
-    """A CLI Paramater. Automatically decides whether it is
-    a `positional`, `option` or `flag`
-
-    # Example
-    ```py
-    @cli.command()
-    def test(val: int = Param(), *, val2: int = Param(), flag: bool = Param()):
-        print(val, val2, flag)
-    ```
-    Each Param type will be determined as follows:
-    - `val`:  Positional argument because it precedes the bare `*`.
-    - `val2`: Option argument because  it proceeds the bare `*`.
-              Python considers this a "keyword only" argument, and so does arc
-    - `flag`: Flag argument because it has `bool` type
-
-    ```
-    $ python example.py test --val2 3 --flag -- 2
-    2 3 True
-    ```
-    """
-    return ParamInfo(
-        arg_alias=name,
-        short=short,
-        default=default,
-        description=description,
-        callback=callback,
-        prompt=prompt,
-        envvar=envvar,
-        complete=complete,
-    )
 
 
 def Argument(
     *,
     name: str = None,
     default: t.Any = constants.MISSING,
-    description: str = None,
+    desc: str = None,
     callback: t.Callable = None,
     prompt: str = None,
     envvar: str = None,
+    get: at.GetterFunc = None,
     complete: at.CompletionFunc = None,
 ) -> t.Any:
-    """A CLI Paramater. Input will be passed in positionally.
+    """A CLI argument. Input is passed positionally.
 
-    # Example
+
+    Args:
+        name (str, optional): The name to use for the parameter on the command line.
+        default (t.Any, optional): A default value for the parameter. If one is given,
+            the argument becomes optional, otherwise it is required.
+        desc (str, optional): A description of the parameter, will be added to the `--help` doc.
+        callback (t.Callable, optional): a Callable object that can be used to modify the value of this parameter.
+        prompt (str, optional): A string to provide the user with as a prompt to request input
+            from STDIN when none is provided from the command line.
+        envvar (str, optional): Name of an enviroment variable to obtain a value from if one is not
+            provided on the command line.
+        get (at.GetterFunc, optional): Callable object to retrive a possible value for the command if one
+            is not provided on the command line.
+        complete (at.CompletionFunc, optional): Function to provide shell completions for this parameter.
+
+    ## Example
     ```py
     @cli.command()
     def test(val: int = Argument()):
-        print(val)
+        arc.print(val)
     ```
 
     ```
@@ -114,13 +90,14 @@ def Argument(
     ```
     """
     return ParamInfo(
-        param_cls=param.Argument,
-        arg_alias=name,
+        param_cls=param.ArgumentParam,
+        param_name=name,
         default=default,
-        description=description,
+        desc=desc,
         callback=callback,
         prompt=prompt,
         envvar=envvar,
+        getter_func=get,
         complete=complete,
     )
 
@@ -130,19 +107,35 @@ def Option(
     name: str = None,
     short: str = None,
     default: t.Any = constants.MISSING,
-    description: str = None,
+    desc: str = None,
     callback: t.Callable = None,
     prompt: str = None,
     envvar: str = None,
+    get: at.GetterFunc = None,
     complete: at.CompletionFunc = None,
 ) -> t.Any:
     """A (generally optional) keyword parameter.
 
-      # Example
+    Args:
+        name (str, optional): The name to use for the parameter on the command line.
+        short (str, optional): A single character name to refer to this parameter to on the command line (`--name` vs `-n`)
+        default (t.Any, optional): A default value for the parameter. If one is given,
+            the argument becomes optional, otherwise it is required.
+        desc (str, optional): A description of the parameter, will be added to the `--help` doc.
+        callback (t.Callable, optional): a Callable object that can be used to modify the value of this parameter.
+        prompt (str, optional): A string to provide the user with as a prompt to request input
+            from STDIN when none is provided from the command line.
+        envvar (str, optional): Name of an enviroment variable to obtain a value from if one is not
+            provided on the command line.
+        get (at.GetterFunc, optional): Callable object to retrive a possible value for the command if one
+            is not provided on the command line.
+        complete (at.CompletionFunc, optional): Function to provide shell completions for this parameter.
+
+    # Example
     ```py
     @cli.command()
     def test(val: int = Option()):
-        print(val)
+        arc.print(val)
     ```
 
     ```
@@ -150,15 +143,17 @@ def Option(
     2
     ```
     """
+
     return ParamInfo(
-        param_cls=param.Option,
-        arg_alias=name,
+        param_cls=param.OptionParam,
+        param_name=name,
         short=short,
         default=default,
-        description=description,
+        desc=desc,
         callback=callback,
         prompt=prompt,
         envvar=envvar,
+        getter_func=get,
         complete=complete,
     )
 
@@ -168,16 +163,24 @@ def Flag(
     name: str = None,
     short: str = None,
     default: bool = False,
-    description: str = None,
+    desc: str = None,
     callback: t.Callable = None,
 ) -> t.Any:
     """An option that represents a boolean value.
+
+    Args:
+        name (str, optional): The name to use for the parameter on the command line.
+        short (str, optional): A single character name to refer to this parameter to on the command line (`--name` vs `-n`)
+        default (boolean, optional): A default value for the parameter. If one is given,
+            the argument becomes optional, otherwise it is required.
+        desc (str, optional): A description of the parameter, will be added to the `--help` doc.
+        callback (t.Callable, optional): a Callable object that can be used to modify the value of this parameter.
 
     # Example
     ```py
     @cli.command()
     def test(val: bool = Flag()):
-        print(val)
+        arc.print(val)
     ```
 
     ```
@@ -188,11 +191,11 @@ def Flag(
     ```
     """
     return ParamInfo(
-        param_cls=param.Flag,
-        arg_alias=name,
+        param_cls=param.FlagParam,
+        param_name=name,
         short=short,
         default=default,
-        description=description,
+        desc=desc,
         callback=callback,
     )
 
@@ -202,16 +205,23 @@ def Count(
     name: str = None,
     short: str = None,
     default: int = 0,
-    description: str = None,
+    desc: str = None,
     callback: t.Callable = None,
 ) -> t.Any:
     """A Flag that counts it's number of apperances on the command line
+
+    Args:
+        name (str, optional): The name to use for the parameter on the command line.
+        short (str, optional): A single character name to refer to this parameter to on the command line (`--name` vs `-n`)
+        default (int, optional): The starting point for the counter. Should be an integer.
+        desc (str, optional): A description of the parameter, will be added to the `--help` doc.
+        callback (t.Callable, optional): a Callable object that can be used to modify the value of this parameter.
 
     # Example
     ```py
     @cli.command()
     def test(val: int = Count(short="v")):
-        print(val)
+        arc.print(val)
     ```
 
     ```
@@ -224,77 +234,24 @@ def Count(
     ```
     """
     return ParamInfo(
-        param_cls=param.Flag,
-        arg_alias=name,
+        param_cls=param.FlagParam,
+        param_name=name,
         short=short,
         default=default,
-        description=description,
+        desc=desc,
         callback=callback,
-        action=param.ParamAction.COUNT,
+        action=param.Action.COUNT,
     )
 
 
-def SpecialParam(
-    name: str = None,
-    short: str = None,
-    default: t.Any = constants.MISSING,
-    description: str = None,
-    callback: t.Callable = None,
-    prompt: str = None,
-    envvar: str = None,
-) -> t.Any:
-    """Params marked as "Special" are not exposed to the command line
-    interface and cannot recieve user input. As such, they're values
-    are expected to come from elsewhere. This allows commands to recieve
-    their values like regular params, but still have them act in a particular
-    way.
-
-    It is primarly used for some builtin-types like `State` and `Context`.
-    """
-    return ParamInfo(
-        param_cls=param.SpecialParam,
-        arg_alias=name,
-        short=short,
-        default=default,
-        description=description,
-        callback=callback,
-        prompt=prompt,
-        envvar=envvar,
-    )
+def Depends(callback: t.Callable) -> t.Any:
+    return ParamInfo(param_cls=param.InjectedParam, callback=callback)
 
 
-T = t.TypeVar("T")
+G = t.TypeVar("G", bound=type)
 
 
-def __cls_deco_factory(param_cls: type[param.Param]):
-    def decorator(
-        name: str = None,
-        short: str = None,
-        default: t.Any = constants.MISSING,
-        description: str = None,
-        overwrite: bool = False,
-    ):
-        def inner(cls: T) -> T:
-            setattr(
-                cls,
-                "__param_info__",
-                {
-                    "param_cls": param_cls,
-                    "arg_alias": name,
-                    "short": short,
-                    "default": default,
-                    "description": description,
-                    "overwrite": overwrite,
-                },
-            )
-            return cls
-
-        return inner
-
-    return decorator
-
-
-argument = __cls_deco_factory(param.Argument)
-option = __cls_deco_factory(param.Option)
-flag = __cls_deco_factory(param.Flag)
-special = __cls_deco_factory(param.SpecialParam)
+def group(cls: G) -> G:
+    setattr(cls, "__arc_group__", True)
+    lazy_class_signature(cls)
+    return cls

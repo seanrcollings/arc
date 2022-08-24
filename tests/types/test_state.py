@@ -1,113 +1,77 @@
 import pytest
-from arc import CLI, namespace, errors
+import arc
+from arc import namespace, errors
 from arc.context import Context
 from arc.types import State
 
 
 @pytest.fixture(scope="function")
-def scli(cli: CLI):
-    cli.state = {"test": 1}
-    return cli
+def cli():
+    arc.configure(global_callback_execution="always")
+
+    @arc.command()
+    def cli(state: State):
+        state.test = 1
+
+    yield cli
+
+    arc.configure(global_callback_execution="args_present")
 
 
-def test_parent_state(scli: CLI):
-    @scli.subcommand()
+def test_parent_state(cli: arc.Command):
+    @cli.subcommand()
     def parent_state(val: int, state: State):
         return val, state
 
-    @scli.subcommand()
+    @cli.subcommand()
     def ignore_parent_state(val: int):
         return val
 
-    val, state = scli("parent-state 2")
+    val, state = cli("parent-state 2")
     assert val == 2
     assert state.test == 1
-    assert scli("ignore-parent-state 2") == 2
+    assert cli("ignore-parent-state 2") == 2
 
 
-def test_my_state(scli: CLI):
-    @scli.subcommand(state={"test2": 3})
-    def local_state(state: State):
-        return state
-
-    state = scli("local-state")
-    assert state.test == 1
-    assert state.test2 == 3
-
-
-def test_state_name(scli: CLI):
-    @scli.subcommand()
+def test_state_name(cli: arc.Command):
+    @cli.subcommand()
     def other_state_name(foo: State):
         return foo
 
-    state = scli("other-state-name")
+    state = cli("other-state-name")
     assert state.test == 1
 
 
-def test_propagate(scli: CLI):
-    ns = namespace("ns")
-
-    @ns.subcommand(state={"test2": 2})
-    def test(state: State):
-        return state
-
-    scli.install_command(ns)
-    state = scli("ns:test")
-    assert state.test == 1
-    assert state.test2 == 2
-
-
-def test_custom_state(scli: CLI):
+def test_custom_state(cli: arc.Command):
     class CustomState(State):
         ...
 
-    @scli.subcommand()
+    @cli.subcommand()
     def custom(state: CustomState):
         return state
 
-    state = scli("custom")
+    state = cli("custom")
     assert isinstance(state, CustomState)
     assert state.test == 1
 
 
-def test_override(scli: CLI):
-    @scli.subcommand()
-    def override(state: State):
+def test_override(cli: arc.Command):
+    @cli.subcommand()
+    def override(*, state: State):
         ...
 
     with pytest.raises(errors.UnrecognizedArgError):
-        scli("override --state 2")
+        cli("override --state 2")
 
 
-def test_state_retained(scli: CLI):
-    @scli.subcommand()
+def test_state_retained(cli: arc.Command):
+    @cli.subcommand()
     def c1(ctx: Context, state: State):
         state.val = 2
         return ctx.execute(c2)
 
-    @scli.subcommand()
+    @cli.subcommand()
     def c2(state: State):
         return state
 
-    assert scli("c1").val == 2
-
-
-def test_state_persitance(scli: CLI):
-    class CustomState(State):
-        ...
-
-    @scli.options
-    def options(state: CustomState):
-        state.o_val = 1
-
-    @scli.callback()
-    def callback(_args, ctx):
-        ctx.state.ca_val = 1
-        yield
-
-    @scli.subcommand()
-    def c1(state: CustomState):
-        state.co_val = 1
-        return state
-
-    assert scli("c1") == CustomState(o_val=1, ca_val=1, co_val=1, test=1)
+    assert cli("c1").val == 2

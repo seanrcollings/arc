@@ -1,34 +1,35 @@
-from typing import Iterable, Optional, Generator
+from __future__ import annotations
+import typing as t
 from importlib import import_module
 from pathlib import Path
 import sys
 
-from arc import logging
-from arc._command import Command
-from arc.color import fg, effects
 from arc.errors import CommandError
 
-logger = logging.getArcLogger("atl")
+if t.TYPE_CHECKING:
+    from arc.core import Command
 
 
 class Autoload:
-    def __init__(self, paths: Iterable[str], parent: Command):
+    def __init__(
+        self, paths: t.Iterable[str], parent: Command, allow_overrite: bool = False
+    ) -> None:
         self.paths = paths
         self.parent = parent
+        self.allow_overwrite = allow_overrite
 
-    def load(self):
+    def load(self) -> None:
         for path in self.__load_files(self.paths):
-            logger.debug("Autoloading %s%s%s", fg.YELLOW, path, effects.CLEAR)
             for command in self.__load_commands(path):
-                if command.name in self.parent.subcommands:
+                if command.name in self.parent.subcommands and not self.allow_overwrite:
                     raise CommandError(
-                        f"Namespace {command.name} already exists on {self.parent}\n"
-                        "Autoloaded namespaces cannot overwrite prexisting namespaces"
+                        f"Command {command.name} already exists on {self.parent}\n"
+                        "Autoloaded command cannot overwrite prexisting commands"
                     )
 
-                self.parent.install_command(command)
+                self.parent.add_command(command)
 
-    def __load_files(self, paths: Iterable[str]):
+    def __load_files(self, paths: t.Iterable[str]):
         for filepath in paths:
             path = self.path(filepath)
             if not path:
@@ -42,7 +43,7 @@ class Autoload:
             else:
                 yield path
 
-    def __load_commands(self, path: Path) -> Generator[Command, None, None]:
+    def __load_commands(self, path: Path) -> t.Generator[Command, None, None]:
         sys.path.append(str(path.parent))
         module = import_module(path.stem)
         module_objects = (
@@ -53,13 +54,13 @@ class Autoload:
                 continue
 
             try:
-                if Command in obj.__class__.mro() and obj.__autoload__:
+                if obj.__autoload__:
                     yield obj
             except AttributeError:
                 continue
 
     @staticmethod
-    def path(filepath: str) -> Optional[Path]:
+    def path(filepath: str) -> t.Optional[Path]:
         path = Path(filepath)
         path = path.expanduser().resolve()
         if path.exists():

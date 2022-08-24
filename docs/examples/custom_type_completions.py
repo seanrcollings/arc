@@ -26,7 +26,7 @@ class CustomType:
 
 @arc.command()
 def main(foo: CustomType):
-    print(foo)
+    arc.print(foo)
 
 
 main()

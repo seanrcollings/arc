@@ -1,30 +1,32 @@
 import os
 import pytest
-from arc import types, CLI, errors
 import pwd
 import grp
 
+import arc
+from arc import types, errors
+
 
 class TestUsage:
-    def test_user(self, cli: CLI):
-        @cli.command()
-        def test_user(user: types.User):
+    def test_user(self):
+        @arc.command()
+        def command(user: types.User):
             return user
 
-        assert cli("test-user root").name == "root"
+        assert command("root").name == "root"
 
-        with pytest.raises(errors.InvalidParamaterError):
-            cli("test-user invalid")
+        with pytest.raises(errors.InvalidArgValue):
+            command("invalid")
 
-    def test_group(self, cli: CLI):
-        @cli.command()
-        def test_group(user: types.Group):
+    def test_group(self):
+        @arc.command()
+        def command(user: types.Group):
             return user
 
-        assert cli("test-group root").name == "root"
+        assert command("root").name == "root"
 
-        with pytest.raises(errors.InvalidParamaterError):
-            cli("test-group invalid")
+        with pytest.raises(errors.InvalidArgValue):
+            command("invalid")
 
 
 class TestUtilites:

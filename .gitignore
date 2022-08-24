@@ -6,6 +6,7 @@ dist
 .mypy_cache
 
 manage.py
+cli.py
 *.txt
 !requirements.txt
 .venv
@@ -13,3 +14,4 @@ manage.py
 docs/examples/outputs
 docs/site
 out
+docs/docs/reference

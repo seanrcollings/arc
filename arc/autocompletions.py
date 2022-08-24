@@ -3,21 +3,20 @@ import typing as t
 import os
 import enum
 import dataclasses as dc
-from arc import utils, logging, errors
+from arc import errors
+from arc.present.helpers import Joiner
 
 if t.TYPE_CHECKING:
     from arc.context import Context
     from arc.typing import CompletionProtocol
 
 
-logger = logging.getArcLogger("comp")
-
-
 def completions(shell: str, ctx: Context):
+
     info = CompletionInfo.from_env()
     if shell not in shells:
         raise errors.ArgumentError(
-            f"Unsupported shell: {shell}. Supported shells: {', '.join(shells)}"
+            f"Unsupported shell: {shell}. Supported shells: {Joiner.with_comma(shells)}"
         )
     comp: ShellCompletion = shells[shell](ctx, info)
     return comp.complete() if comp.should_complete() else comp.source()
@@ -74,12 +73,15 @@ class ShellCompletion:
         self.ctx = ctx
         self.command = ctx.command
         self.info = info
-        self.command_name = self.command.name or utils.discover_name().replace(".", "_")
+        self.command_name = self.command.name
 
     @property
     def completion_vars(self) -> dict:
         return {
-            "name": self.command_name,
+            "name_exe": "python cli.py"
+            if os.getenv("ARC_DEVELOPMENT")
+            else self.command_name,
+            "name_com": self.command_name,
             "func_name": f"_{self.command_name}_completions".replace("-", "_"),
             "completion_var": self.completion_var,
         }
@@ -194,7 +196,7 @@ class FishCompletion(ShellCompletion):
     template = """\
 function {func_name}
     set -l completions (env {completion_var}=true COMP_WORDS=(commandline -cp) \
-        COMP_CURRENT=(commandline -t) {name} --autocomplete fish)
+        COMP_CURRENT=(commandline -t) {name_exe} --autocomplete fish)
 
     for comp in $completions
         set -l parsed (string split '|' $comp)
@@ -220,7 +222,7 @@ function {func_name}
 
 end
 
-complete -f -c {name} -a "({func_name})";
+complete -f -c {name_com} -a "({func_name})";
 """
 
     def complete(self) -> str:

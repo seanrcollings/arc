@@ -4,7 +4,7 @@ import arc
 
 @arc.command()
 def main(number: Union[int, str]):
-    print(type(number))
+    arc.print(type(number))
 
 
 main()

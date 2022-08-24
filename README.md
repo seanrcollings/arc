@@ -17,20 +17,19 @@ import arc
 @arc.command()
 def hello(name: str):
     """My first arc program!"""
-    print(f"Hello {name}!")
+    arc.arc.print(f"Hello {name}!")
 
 hello()
 ```
 
 ```
-$ python example.py hello Sean
+$ python hello.py Sean
 Hello, Sean!
 ```
 
 ```
-$ python example.py --help
 USAGE
-    manage.py [--help] [--] <name>
+    hello.py [-h] [--] name
 
 DESCRIPTION
     My first arc program!
@@ -39,7 +38,7 @@ ARGUMENTS
     name
 
 OPTIONS
-    --help (-h)  Shows help documentation
+    --help (-h)  Displays this help message
 ```
 
 # Installation

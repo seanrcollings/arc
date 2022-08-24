@@ -1,96 +1,94 @@
 from __future__ import annotations
-import contextlib
-import os
+import itertools
+from logging import Logger
 import typing as t
-import types
+import contextlib
 
-from arc import errors, logging
-from arc.callback import Callback, CallbackStack
+from arc import errors, utils
+from arc import core
+from arc.color import colorize, fg
 from arc.config import config
-from arc import _command
-from arc.params import special
+from arc.prompt.prompt import Prompt
 from arc.types.state import State
-from arc.prompt import Prompt
-
+from arc.logging import logger
+from arc.present import Joiner
+import arc.typing as at
 
 if t.TYPE_CHECKING:
-    from arc._command import Command
-
-logger = logging.getArcLogger("ctx")
+    from arc.core.param.param import ValueOrigin
 
 
 T = t.TypeVar("T")
 
 
-@special(default=object())
 class Context:
-    """Context holds all state relevant to a command execution
+    """Context tracks all the information relevant to the execution of a command"""
 
-    The current context can be accessed with `Context.current()`. If
-    you want acces to it inside of a command, you can do so easily
-    by simply annotating an argument with this type.
-
-    Attributes:
-        command (Command): The command for this context
-        parent (Context, optional): The parent Context.
-        fullname (str, optional): The most descriptive name for this invocation.
-        args (dict[str, typing.Any]): mapping of argument names to parsed values
-        extra (list[str]): extra input that may not have been parsed
-        command_chain (list[str]): The chain of commands between the executing command and the
-            `CLI` root. If a command is executing standalone, this will always be empty
-        execute_callbacks (bool): whether or not to execute command callbacks
-            when executing the command
-    """
-
-    # Each time a command is invoked,
-    # an instance of Context is pushed onto
-    # this stack. When execution completes, the
-    # context will be popped off the stack
     _stack: list[Context] = []
+    command: core.Command
+    _exit_stack: contextlib.ExitStack
+    _stack_count: int
+    args: dict[str, t.Any]
+    rest: list[str]
+    arg_origins: dict[str, ValueOrigin]
+
     config = config
-    _meta: dict[str, t.Any] = {}
+    logger: Logger = logger
+    state: State = State()
 
     def __init__(
         self,
-        command: Command,
-        fullname: str,
-        command_chain: list[Command] = None,
-        parent: Context = None,
-        execute_callbacks: bool = True,
-    ):
+        command: core.Command,
+        parent: Context | None = None,
+    ) -> None:
         self.command = command
-        self.fullname = fullname
-        self.command_chain = command_chain or [command]
         self.parent = parent
-        self.execute_callbacks = execute_callbacks
-        self.args: dict[str, t.Any] = {}
-        self.extra: list[str] = []
-        self.state: State = self.create_state()
-
-        # The result of the most recent execution
-        self.result: t.Any = None
-
-        # Keeps track of how many times this context has been pusehd onto the context
-        # stack. When it reaches zero, ctx.close() will be called
+        self.rest = []
         self._stack_count = 0
         self._exit_stack = contextlib.ExitStack()
+        self.arg_origins = {}
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Context({self.command!r})"
 
-    def __enter__(self):
+    def __enter__(self) -> Context:
+        if self._stack_count == 0:
+            self.logger.debug(f"Entering Context: {self!r}")
         self._stack_count += 1
         Context.push(self)
         return self
 
-    def __exit__(self, exc_type, exc_value, trace):
+    def __exit__(self, exc_type, exc_value, trace) -> None:
         self._stack_count -= 1
         Context.pop()
         if self._stack_count == 0:
+            self.logger.debug(f"Closing Context: {self!r}")
             self.close()
 
+    @classmethod
+    def __depends__(self, ctx: Context) -> Context:
+        return ctx
+
+    @classmethod
+    def push(cls, ctx: Context) -> None:
+        """Pushes a context onto the internal stack"""
+        cls._stack.append(ctx)
+
+    @classmethod
+    def pop(cls) -> Context:
+        """Pops a context off the internal stack"""
+        return cls._stack.pop()
+
+    @classmethod
+    def current(cls) -> Context:
+        """Returns the current context"""
+        if not cls._stack:
+            raise errors.ArcError("No contexts exist")
+
+        return cls._stack[-1]
+
     @property
-    def root(self):
+    def root(self) -> Context:
         """Retrieves the root context object"""
         curr = self
         while curr.parent:
@@ -102,43 +100,35 @@ class Context:
     def prompt(self) -> Prompt:
         return self.config.prompt
 
-    def create_state(self) -> State:
-        state: State = State()
-        if self.command_chain:
-            for cmd in self.command_chain:
-                state.update(cmd.state)
+    def close(self) -> None:
+        self._exit_stack.close()
+
+    def run(self, args: list[str]) -> t.Any:
+        parsed = self.parse_args(args)
+        processed, missing = self.command.process_parsed_result(parsed, self)
+
+        if missing:
+            params = ", ".join(colorize(param.cli_name, fg.YELLOW) for param in missing)
+            raise errors.MissingArgError(
+                f"The following arguments are required: {params}", self
+            )
+
+        self.command.inject_dependancies(processed, self)
+        self.args = processed
+        decostack = self.command.decorators()
+        decostack.start(self)
+
+        try:
+            res = self.execute(self.command.callback, **processed)
+        except Exception as e:
+            res = None
+            decostack.throw(e)
         else:
-            state = State(self.command.state)
+            decostack.close()
 
-        if self.parent and self.parent.state:
-            state = self.parent.state | state
+        return res
 
-        return state
-
-    def child_context(self, command: Command) -> Context:
-        """Creates a new context that is the child of the current context"""
-        return type(self)(command, parent=self, fullname=command.name)
-
-    def create_callback_stack(self, args) -> CallbackStack:
-        cb_stack = CallbackStack()
-        # Place all the callback in a dictionary so we can preserve order,
-        # but also remove repeats and removed_callbacks
-        cb_dict: dict[Callback, None] = {}
-        if self.execute_callbacks:
-            for command in self.command_chain:
-                for cb in command.inheritable_callbacks():
-                    cb_dict[cb] = None
-
-                for cb in command.removed_callbacks:
-                    cb_dict.pop(cb, None)
-
-            for cb in cb_dict:
-                v = cb.func(args, self)
-                if isinstance(v, types.GeneratorType):
-                    cb_stack.add(v)  # type: ignore
-        return cb_stack
-
-    def execute(self, callback: t.Union[Command, t.Callable], **kwargs):
+    def execute(self, callback: t.Union[core.Command, t.Callable], **kwargs) -> t.Any:
         """Can be called in two ways
 
         1. if `callback` is a function / callable, all other kwargs
@@ -148,32 +138,42 @@ class Context:
         will be used initially
         """
 
-        if isinstance(callback, _command.Command):
-            ctx = self.child_context(callback)
-            ctx.state = self.state | ctx.state
+        if isinstance(callback, core.Command):
+            ctx = self.create_child(callback)
             cmd = callback
-            callback = cmd._callback
-
-            for param in cmd.params:
-                if param.arg_name not in kwargs and param.expose:
-                    kwargs[param.arg_name] = param.convert(param.default, ctx)
+            callback = cmd.callback
+            cmd.inject_dependancies(kwargs, ctx)
 
         else:
             ctx = self
 
-        cb_stack = ctx.create_callback_stack(kwargs)
         with ctx:
-            try:
-                ctx.result = callback(**kwargs)
-            except Exception as e:
-                cb_stack.throw(e)
-            else:
-                cb_stack.close()
-                return ctx.result
+            return callback(**kwargs)
 
-    def close(self):
-        logger.debug("Closing %s", self)
-        self._exit_stack.close()
+    def parse_args(self, args: list[str]) -> at.ParseResult:
+        if args:
+            parsed, rest = self.command.parse_args(args, self)
+
+            if rest and not self.config.allow_unrecognized_args:
+                message = f"Unrecognized arguments: {Joiner.with_space(rest, style=fg.YELLOW)}"
+
+                message += self.__get_suggestions(rest)
+                list(
+                    itertools.chain(
+                        *[param.get_param_names() for param in self.command.key_params]
+                    )
+                )
+                raise errors.UnrecognizedArgError(message, self)
+            else:
+                self.rest = rest
+        else:
+            parsed = {}
+
+        return parsed
+
+    def create_child(self, command: core.Command) -> Context:
+        """Creates a new context that is the child of the current context"""
+        return type(self)(command, parent=self)
 
     def resource(self, resource: t.ContextManager[T]) -> T:
         """Opens a resource like you would with the `with` statement.
@@ -192,28 +192,46 @@ class Context:
         """Exits the app with code `code`"""
         raise errors.Exit(code)
 
-    def getenv(self, name: str, default):
-        return os.getenv(self.config.env_prefix + name, default)
+    def __get_suggestions(self, rest: list[str]) -> str:
+        message = ""
 
-    @classmethod
-    def push(cls, ctx: Context) -> None:
-        """Pushes a context onto the internal stack"""
-        cls._stack.append(ctx)
+        if self.config.suggestions["suggest_commands"]:
 
-    @classmethod
-    def pop(cls) -> Context:
-        """Pops a context off the internal stack"""
-        return cls._stack.pop()
+            message += self.__fmt_suggestions(
+                rest[0:1],
+                list(
+                    itertools.chain(
+                        *[com.all_names for com in self.command.subcommands.values()]
+                    )
+                ),
+                "subcommand",
+            )
 
-    @classmethod
-    def current(cls) -> Context:
-        """Returns the current context"""
-        if not cls._stack:
-            raise RuntimeError("No contexts exist")
+        if self.config.suggestions["suggest_params"]:
+            message += self.__fmt_suggestions(
+                rest,
+                list(
+                    itertools.chain(
+                        *[param.get_param_names() for param in self.command.key_params]
+                    )
+                ),
+                "argument",
+            )
 
-        return cls._stack[-1]
+        return message
 
-    @classmethod
-    def __convert__(cls, _value, _info, ctx: Context):
-        """Recieve access to the current ctx in commands"""
-        return ctx
+    def __fmt_suggestions(self, rest: list[str], possibilities: list[str], kind: str):
+        message = ""
+
+        suggestions = utils.string_suggestions(
+            rest, possibilities, self.config.suggestions["distance"]
+        )
+
+        for param_name, param_sug in suggestions.items():
+            if param_sug:
+                message += (
+                    f"\nUnrecognized {kind} {colorize(param_name, fg.YELLOW)}, "
+                    f"did you mean: {Joiner.with_or(param_sug, style=fg.YELLOW)}"
+                )
+
+        return message

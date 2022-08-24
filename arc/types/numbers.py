@@ -1,5 +1,10 @@
+from __future__ import annotations
 import typing as t
-from arc.types import aliases
+
+from arc.types.default import Default
+from arc.types.type_arg import TypeArg
+from arc.types.validators import GreaterThan, LessThan
+
 
 __all__ = [
     "Hex",
@@ -10,61 +15,21 @@ __all__ = [
     "PositiveFloat",
     "NegativeFloat",
     "AnyNumber",
-    "strictint",
-    "strictfloat",
 ]
-# Integers ----------------------------------------------------------------
-def strictint(
-    base: int = 10,
-    greater_than: t.Union[int, float] = float("-inf"),
-    less_than: t.Union[int, float] = float("inf"),
-    matches: str = None,
-    name: str = None,
-) -> type[aliases.IntAlias]:
-    return type(
-        name or "StrictInteger",
-        (aliases.IntAlias,),
-        {
-            "base": base,
-            "greater_than": greater_than,
-            "less_than": less_than,
-            "matches": matches,
-        },
-    )
 
 
-Binary = strictint(base=2, name="Binary")
-Oct = strictint(base=8, name="Oct")
-Hex = strictint(base=16, name="Hex")
-PositiveInt = strictint(greater_than=0, name="PositiveInt")
-NegativeInt = strictint(less_than=0, name="NegativeInt")
+class IntArgs(TypeArg):
+    __slots__: tuple[str, ...] = ("base",)
 
-# Floats -------------------------------------------------------------------
-def strictfloat(
-    greater_than: t.Union[int, float] = float("-inf"),
-    less_than: t.Union[int, float] = float("inf"),
-    matches: str = None,
-    min_precision: t.Optional[int] = None,
-    max_precision: t.Optional[int] = None,
-    precision: t.Optional[int] = None,
-    name: str = None,
-) -> type[aliases.FloatAlias]:
-    return type(
-        name or "StrictFloat",
-        (aliases.FloatAlias,),
-        {
-            "greater_than": greater_than,
-            "less_than": less_than,
-            "min_precision": min_precision,
-            "max_precision": max_precision,
-            "precision": precision,
-            "matches": matches,
-        },
-    )
+    def __init__(self, base: int = Default(10)) -> None:
+        self.base = base
 
 
-PositiveFloat = strictfloat(greater_than=0, name="PositiveFloat")
-NegativeFloat = strictfloat(less_than=0, name="NegativeFloat")
-
-
+Binary = t.Annotated[int, IntArgs(base=2)]
+Oct = t.Annotated[int, IntArgs(base=8)]
+Hex = t.Annotated[int, IntArgs(base=16)]
+PositiveInt = t.Annotated[int, GreaterThan(0)]
+NegativeInt = t.Annotated[int, LessThan(0)]
+PositiveFloat = t.Annotated[float, GreaterThan(0)]
+NegativeFloat = t.Annotated[float, LessThan(0)]
 AnyNumber = t.Union[float, Hex, Oct, Binary, int]

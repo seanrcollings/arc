@@ -3,7 +3,7 @@ import arc
 
 @arc.command()
 def command(numbers: dict[str, int]):
-    print(numbers)
+    arc.print(numbers)
 
 
 command()

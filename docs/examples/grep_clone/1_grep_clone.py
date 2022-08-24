@@ -3,7 +3,7 @@ import arc
 
 @arc.command()
 def command():
-    print("hello there!")
+    arc.print("hello there!")
 
 
 command()

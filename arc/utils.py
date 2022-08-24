@@ -1,28 +1,101 @@
+from __future__ import annotations
+import contextlib
 import functools
-import io
+import inspect
+import os
 import re
+import shlex
 import sys
-import time
 from types import MethodType
 import typing as t
-import os
+import arc.typing as at
 
-from arc import logging, typing as at
-from arc.color import fg, effects, colorize
-
-logger = logging.getArcLogger("util")
+if t.TYPE_CHECKING:
+    from arc.core import Command
 
 
-IDENT = r"[a-zA-Z-_0-9]+"
+def safe_issubclass(typ, classes: type | tuple[type, ...]) -> bool:
+    try:
+        return issubclass(typ, classes)
+    except TypeError:
+        return False
 
 
-def indent(string: str, distance="\t", split="\n"):
-    """Indents the block of text provided by the distance"""
-    return f"{distance}" + f"{split}{distance}".join(string.split(split))
+def display(*members: str):
+    def __repr__(self):
+        values = ", ".join(
+            [f"{member}={repr(getattr(self, member))}" for member in members]
+        )
+        return f"{type(self).__name__}({values})"
+
+    return __repr__
 
 
-def header(contents: str):
-    logger.debug(colorize(f"{contents:^35}", effects.UNDERLINE, effects.BOLD, fg.BLUE))
+def isgroup(cls: type):
+    return getattr(cls, "__arc_group__", False)
+
+
+noop = lambda: ...
+
+
+def cbreakpoint(cond: bool):
+    return breakpoint if cond else noop
+
+
+def isdunder(string: str, double_dunder: bool = False):
+    if double_dunder:
+        return string.startswith("__") and string.endswith("__")
+
+    return string.startswith("__")
+
+
+def dispatch_args(func: t.Callable, *args):
+    """Calls the given `func` with the maximum
+    slice of `*args` that it can accept. Handles
+    function and method types
+
+    For example:
+    ```py
+    def foo(bar, baz): # only accepts 2 args
+        arc.print(bar, baz)
+
+    # Will call the provided function with the first
+    # two arguments
+    dispatch_args(foo, 1, 2, 3, 4)
+    # 1 2
+    ```
+    """
+    # TODO: I haven't tested if this will capture
+    # all callables, but it should hopefully.
+    if isinstance(func, MethodType):
+        arg_count = func.__func__.__code__.co_argcount - 1
+    elif inspect.isfunction(func):
+        arg_count = func.__code__.co_argcount
+    else:
+        arg_count = func.__call__.__func__.__code__.co_argcount - 1  # type: ignore
+
+    args = args[0:arg_count]
+    return func(*args)
+
+
+def discover_name():
+    name = sys.argv[0]
+    return os.path.basename(name)
+
+
+def cmp(a, b) -> at.CompareReturn:
+    """Compare two values
+
+    Args:
+        a (Any): First value
+        b (Any): Second value
+
+    Returns:
+        - `a < b  => -1`
+        - `a == b =>  0`
+        - `a > b  =>  1`
+    """
+    return (a > b) - (a < b)
 
 
 ansi_escape = re.compile(r"(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]")
@@ -34,49 +107,50 @@ def ansi_clean(string: str):
     return ansi_escape.sub("", string)
 
 
-@functools.cache
 def ansi_len(string: str):
-    return len(ansi_clean(string))
+    length = 0
+    in_escape_code = False
+
+    for char in string:
+        if in_escape_code and char == "m":
+            in_escape_code = False
+        elif char == "\x1b" or in_escape_code:
+            in_escape_code = True
+        else:
+            length += 1
+
+    return length
 
 
-FuncT = t.TypeVar("FuncT", bound=t.Callable[..., t.Any])
+@contextlib.contextmanager
+def environ(**env: str):
+    copy = os.environ.copy()
+    os.environ.clear()
+    os.environ.update(env)
+    try:
+        yield
+    finally:
+        os.environ.clear()
+        os.environ.update(copy)
 
 
-def timer(name):
-    """Decorator for timing functions
-    will only time if config.debug is set to True
-    """
+def test_completions(command: Command, shell: str, cmd_line: list[str] | str):
+    if isinstance(cmd_line, str):
+        cmd_line = shlex.split(cmd_line)
 
-    def wrapper(func: FuncT) -> FuncT:
-        @functools.wraps(func)
-        def decorator(*args, **kwargs):
-
-            start_time = time.time()
-            try:
-
-                return_value = func(*args, **kwargs)
-            except BaseException as e:
-                raise
-            finally:
-                end_time = time.time()
-                logger.info(
-                    "%sCompleted %s in %ss%s",
-                    fg.GREEN,
-                    name,
-                    round(end_time - start_time, 5),
-                    effects.CLEAR,
-                )
-            return return_value
-
-        return t.cast(FuncT, decorator)
-
-    return wrapper
+    completions_var = f"_{command.name}_complete".upper().replace("-", "_")
+    env = {
+        completions_var: "true",
+        "COMP_WORDS": " ".join(cmd_line),
+        "COMP_CURRENT": cmd_line[-1],
+    }
+    with environ(**env):
+        command(f"--autocomplete {shell}")
 
 
 # https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
 def levenshtein(s1: str, s2: str):
     if len(s1) < len(s2):
-        # pylint: disable=arguments-out-of-order
         return levenshtein(s2, s1)
 
     # len(s1) >= len(s2)
@@ -98,75 +172,14 @@ def levenshtein(s1: str, s2: str):
     return previous_row[-1]
 
 
-def dispatch_args(func: t.Callable, *args):
-    """Calls the given `func` with the maximum
-    slice of `*args` that it can accept. Handles
-    function and method types
+def string_suggestions(
+    source: t.Iterable[str], possibilities: t.Iterable[str], max_distance: int
+):
+    suggestions: dict[str, list[str]] = {}
 
-    For example:
-    ```py
-    def foo(bar, baz): # only accepts 2 args
-        print(bar, baz)
+    for string in source:
+        suggestions[string] = [
+            p for p in possibilities if levenshtein(string, p) <= max_distance
+        ]
 
-    # Will call the provided function with the first
-    # two arguments
-    dispatch_args(foo, 1, 2, 3, 4)
-    # 1 2
-    ```
-    """
-    if isinstance(func, MethodType):
-        unwrapped = func.__func__
-    else:
-        unwrapped = func  # type: ignore
-
-    arg_count = unwrapped.__code__.co_argcount
-    args = args[0 : arg_count - 1]
-    return func(*args)
-
-
-def cmp(a, b) -> at.CompareReturn:
-    """Compare two values
-
-    Args:
-        a (Any): First value
-        b (Any): Second value
-
-    Returns:
-        - `a < b  => -1`
-        - `a == b =>  0`
-        - `a > b  =>  1`
-    """
-    return (a > b) - (a < b)
-
-
-def partition(item: t.Any, n: int):
-    """Partion `item` into a list of elements `n` long"""
-    return [item[index : index + n] for index in range(0, len(item), n)]
-
-
-def discover_name():
-    name = sys.argv[0]
-    return os.path.basename(name)
-
-
-class IoWrapper(io.StringIO):
-    """Wraps an IO object to handle colored text.
-    If the output looks to be a terminal, ansi-escape sequences will be allowed.
-    If it does not look like a terminal,  ansi-escape sequences will be removed.
-    """
-
-    def __init__(self, wrapped: t.TextIO):
-        self.wrapped = wrapped
-        super().__init__()
-
-    def write(self, message: str):
-        if not self.wrapped.isatty():
-            message = ansi_clean(message)
-
-        self.wrapped.write(message)
-
-    def flush(self):
-        self.wrapped.flush()
-
-    def __getattr__(self, attr: str):
-        return getattr(self.wrapped, attr)
+    return suggestions

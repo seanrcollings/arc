@@ -1,0 +1,1 @@
+In *arc*, command-line parameters are defined using Python function arguments. *arc* has several kinds of parameters and each of the next few sections are dedicated to talking about each of them.

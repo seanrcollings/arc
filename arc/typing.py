@@ -1,61 +1,91 @@
+"""Module contains custom type defintions that arc uses"""
 from __future__ import annotations
 import typing as t
 
+from arc.autocompletions import CompletionInfo, Completion
+
 if t.TYPE_CHECKING:
-    from arc.autocompletions import CompletionInfo, Completion
+    from arc.context import Context
+    from arc.core.param import Param
+
+T = t.TypeVar("T")
+
 
 Annotation = t.Union[t._SpecialForm, type]
 
+NArgs = t.Union[int, t.Literal["+", "*", "?"], None]
 
-@t.runtime_checkable
-class TypeProtocol(t.Protocol):
-    """Protocol that custom types need to conform to"""
+ParseResult = dict[str, t.Union[str, list[str], None]]
 
-    # name: t.ClassVar[t.Optional[str]]
+Env = t.Literal["production", "development"]
 
-    @classmethod
-    def __convert__(cls, value, *args):
-        ...
+CommandName = t.Union[str, t.Sequence[str], None]
 
-    # @classmethod
-    # def __prompt__(cls, ctx, param):
-    #     ...
-
+InputArgs = t.Union[str, t.Sequence[str], None]
 
 CompareReturn = t.Literal[-1, 0, 1]
+
+CompletionFunc = t.Callable[
+    [CompletionInfo, "Param"], t.Union[list[Completion], Completion, None]
+]
+
+GetterFunc = t.Callable[["Context", "Param"], t.Any]
+
+MiddlewareCallable = t.Callable[[T], T]
+
+DecoratorFunc = t.Callable[["Context"], t.Optional[t.Generator[None, t.Any, None]]]
+
+ErrorHandlerFunc = t.Callable[[Exception, "Context"], None]
 
 
 @t.runtime_checkable
 class ClassCallback(t.Protocol):
-    __name__: str
-
-    def handle(self) -> t.Any:
+    def handle(self):
         ...
 
 
-CollectionTypes = (list, set, tuple)
+CommandCallback = t.Union[t.Callable, type[ClassCallback]]
+"""The type of a command's callback.
 
+May be a function
+```py
+@arc.command()
+def command(name: str):
+    print(f"Hello {name}!")
+```
 
-class Suggestions(t.TypedDict, total=False):
-    distance: int
-    suggest_params: bool
-    suggest_commands: bool
+Or a class
+```py
+@arc.command()
+class command:
+    name: str
 
+    def handle(self):
+        print(f"Hello {self.name}!")
 
-Env = t.Literal["development", "production"]
-CallbackTime = t.Literal["before", "around", "after"]
-CompletionFunc: t.TypeAlias = (  # type: ignore
-    "t.Callable[[CompletionInfo], t.Union[list[Completion], Completion, None]]"
-)
+```
+"""
 
 
 class CompletionProtocol(t.Protocol):
+    """Protocal that objects need to implement if they are expected to provide completions"""
+
     def __completions__(
         self, info: CompletionInfo, *args, **kwargs
     ) -> list[Completion] | Completion | None:
         ...
 
 
-class SupportsStr(t.Protocol):
-    def __str__(self) -> str:
+@t.runtime_checkable
+class TypeProtocol(t.Protocol):
+    """Protocol that custom types need to conform to"""
+
+    @classmethod
+    def __convert__(cls, value, *args):
         ...
+
+
+class Suggestions(t.TypedDict, total=False):
+    distance: int
+    suggest_params: bool
+    suggest_commands: bool

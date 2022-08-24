@@ -5,32 +5,7 @@ import shutil
 from arc import color
 from arc.utils import ansi_clean
 from .data import justifications, Justification
-
-border_styles = {
-    "regular": {
-        "horizontal": "\u2500",
-        "vertical": "\u2502",
-        "corners": {
-            "top-left": "\u256D",
-            "top-right": "\u256E",
-            "bot-left": "\u2570",
-            "bot-right": "\u256F",
-        },
-    },
-    "heavy": {
-        "horizontal": "\u2501",
-        "vertical": "\u2503",
-        "corners": {
-            "top-left": "\u250F",
-            "top-right": "\u2513",
-            "bot-left": "\u2517",
-            "bot-right": "\u251B",
-        },
-    },
-}
-
-
-Border = Union[Literal["regular"], Literal["heavy"]]
+from .drawing import BORDER_HEAVY, BORDER_LIGHT, Border, borders
 
 
 class Box:
@@ -38,7 +13,7 @@ class Box:
 
     Examples:
     ```
-        print(Box('some cool text', padding=2, justify='center')) ->
+        arc.print(Box('some cool text', padding=2, justify='center')) ->
 
         ╭────────────────────╮
         │                    │
@@ -54,15 +29,15 @@ class Box:
     def __init__(
         self,
         string: str,
-        border: Border = "regular",
+        border: str = "light",
         padding: Union[int, dict[str, int]] = 0,
         justify: Justification = "left",
-        color: color.Ansi = color.fg.WHITE,
+        color: str = color.fg.WHITE,
     ):
         """
         Args:
             string: String to surround with a box - May be colored
-            border: Border style, either 'regular' or 'heavy' defaults to 'regular
+            border: Border style, either 'light' or 'heavy' defaults to 'light'
             padding: Dictionary containing the padding of each side of the string
                     defaults to: `{"top": 0, "left": 0, "bottom": 0, "right": 0}`
                     If all sides are going to have the same padding, can just pass
@@ -72,7 +47,7 @@ class Box:
                     Use `arc.color.fg` constants
         """
         self.string = string
-        self.__border = border_styles[border]
+        self.__border: Border = borders[border]
         self.__justify = justifications[justify]
         self.__padding = self.__get_padding(padding)
         self.__color = color
@@ -109,7 +84,7 @@ class Box:
 
     @border.setter
     def border(self, value):
-        self.__border = border_styles[value]
+        self.__border = borders[value]
 
     # Utils
 
@@ -117,9 +92,9 @@ class Box:
         return "".join(
             (
                 self.__color,
-                self.border["corners"][f"{side}-left"],
+                self.border["corner"][f"{side}_left"],
                 self.border["horizontal"] * (width - 2),
-                self.border["corners"][f"{side}-right"],
+                self.border["corner"][f"{side}_right"],
                 color.effects.CLEAR,
             )
         )

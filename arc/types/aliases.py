@@ -5,34 +5,33 @@ from __future__ import annotations
 
 import enum
 import pathlib
+import types
 import typing as t
 import ipaddress
 import dataclasses
 import re
+
 import _io  # type: ignore
 
-from arc import errors, logging, utils
+from arc import errors, utils
 from arc import autocompletions
 from arc.autocompletions import Completion, CompletionInfo, CompletionType
 from arc.color import colorize, fg
+from arc.present.helpers import Joiner
 from arc.types.helpers import (
-    TypeInfo,
-    join_and,
-    join_or,
-    match,
     safe_issubclass,
-    convert,
-    select_prompt,
-    validate,
+    convert_type,
 )
+from arc.prompt.prompts import select_prompt
+
 
 from arc.typing import Annotation, TypeProtocol
 
+from arc.types import type_info
+
 if t.TYPE_CHECKING:
+    from arc.types.type_info import TypeInfo
     from arc.context import Context
-
-
-logger = logging.getArcLogger("ali")
 
 
 AliasFor = t.Union[Annotation, t.Tuple[Annotation, ...]]
@@ -47,7 +46,7 @@ class Alias:
     """
 
     aliases: dict[Annotation, type[TypeProtocol]] = {}
-    alias_for: t.ClassVar[AliasFor] = None  # type: ignore
+    alias_for: t.ClassVar[AliasFor | tuple[AliasFor]] = None  # type: ignore
     name: t.ClassVar[t.Optional[str]] = None
     convert: t.Callable
     g_convert: t.Callable
@@ -55,24 +54,16 @@ class Alias:
     @classmethod
     def __convert__(cls, value, typ: TypeInfo, ctx: Context):
         if cls.name:
-            typ._name = cls.name
+            typ.name = cls.name
 
         if not typ.sub_types:
             obj = utils.dispatch_args(cls.convert, value, typ, ctx)
         else:
             obj = utils.dispatch_args(cls.g_convert, value, typ, ctx)
 
-        # Alias types that have an associated "strict" type
-        # will always return an instance of themselves, so all
-        # validations will execute. For the alias itself, we just
-        # want to return the type it aliases, so we convert it
-        # back to that type
-        if isinstance(obj, cls):
-            obj = cls.alias_for(obj)  # type: ignore # pylint: disable=not-callable
-
         return obj
 
-    def __init_subclass__(cls, of: t.Optional[AliasFor] = None):
+    def __init_subclass__(cls, of: t.Optional[AliasFor | tuple[AliasFor]] = None):
         if of:
             cls.alias_for = of
 
@@ -85,10 +76,8 @@ class Alias:
                 Alias.aliases[alias] = cls  # type: ignore
 
     @classmethod
-    def resolve(cls, annotation: t.Union[TypeInfo, type]) -> type[TypeProtocol]:
+    def resolve(cls, annotation: type) -> type[TypeProtocol]:
         """Handles resolving alias types"""
-        if isinstance(annotation, TypeInfo):
-            annotation = annotation.origin
 
         if safe_issubclass(annotation, TypeProtocol):
             return annotation
@@ -105,7 +94,7 @@ class Alias:
                     return cls.aliases[parent]
 
         name = colorize(annotation.__name__, fg.YELLOW)
-        raise errors.ArgumentError(
+        raise errors.ParamError(
             f"{name} is not a valid type. "
             f"Please ensure that {name} conforms to the custom type protocol "
             f"or that there is a alias type registered for it: "
@@ -116,32 +105,13 @@ class Alias:
 # Builtin Types ---------------------------------------------------------------------------------
 
 
-@validate
 class StringAlias(Alias, str, of=str):
-    max_length: t.ClassVar[t.Optional[int]] = None
-    min_length: t.ClassVar[t.Optional[int]] = None
-    length: t.ClassVar[t.Optional[int]] = None
-    matches: t.ClassVar[t.Optional[str]] = None
-
     @classmethod
-    def convert(cls, value: t.Any) -> str:
+    def convert(cls, value: str, info: TypeInfo[str]) -> str:
         try:
-            return cls(value)  # type: ignore
+            return str(value)
         except ValueError as e:
-            raise errors.ConversionError(value, str(e)) from e
-
-    def _validate(self):
-        if self.max_length and len(self) > self.max_length:
-            raise ValueError(f"maximum length is {self.max_length}")
-
-        if self.min_length and len(self) < self.min_length:
-            raise ValueError(f"minimum length is {self.min_length}")
-
-        if self.length and len(self) != self.length:
-            raise ValueError(f"must be {self.length} characters long")
-
-        if self.matches and (err := match(self.matches, self)).err:
-            raise ValueError(err.unwrap())
+            raise errors.ConversionError(value, str(e))
 
 
 class BytesAlias(bytes, Alias, of=bytes):
@@ -150,88 +120,27 @@ class BytesAlias(bytes, Alias, of=bytes):
         return str(value).encode()
 
 
-class _NumberBaseAlias(Alias):
-    alias_for: t.ClassVar[type]
-    greater_than: t.ClassVar[t.Union[int, float]] = float("-inf")
-    less_than: t.ClassVar[t.Union[int, float]] = float("inf")
-    matches: t.ClassVar[t.Optional[str]] = None
-
+class IntAlias(Alias, of=int):
     @classmethod
-    def convert(cls, value: t.Any) -> t.Any:
+    def convert(cls, value: str, info: TypeInfo[int]) -> int:
+        args = info.type_arg
         try:
-            converted = cls(value)  # type: ignore
+            if isinstance(value, str):
+                params = args.dict() if args else {}
+                return int(value, **params)
+            else:
+                return int(value)
         except ValueError as e:
-            raise errors.ConversionError(value, "invalid value", str(e)) from e
-
-        return converted
-
-    def _validate_shared(self):
-        if self > self.less_than:
-            raise ValueError(f"must be less than {self.less_than}")
-        if self < self.greater_than:
-            raise ValueError(f"must be greater than {self.greater_than}")
-
-        if self.matches:
-            if (err := match(self.matches, str(self))).err:
-                raise ValueError(str(err))
+            raise errors.ConversionError(value, "must be an integer", e)
 
 
-@validate
-class IntAlias(int, _NumberBaseAlias, of=int):
-    name = "integer"
-    base: t.ClassVar[int] = 10
-
-    def __new__(cls, value: t.Any):
-        if isinstance(value, str):
-            return int.__new__(cls, value, base=cls.base)
-        else:
-            return int.__new__(cls, value)
-
-
-@validate
-class FloatAlias(float, _NumberBaseAlias, of=float):
-    name = "float"
-    min_precision: t.ClassVar[t.Optional[int]] = None
-    max_precision: t.ClassVar[t.Optional[int]] = None
-    precision: t.ClassVar[t.Optional[int]] = None
-
-    def _validate(self):
-        _natural, fractional = str(self).split(".")
-
-        if self.min_precision and self.min_precision > len(fractional):
-            raise ValueError(
-                f"minimum decimal precision allowed is {self.min_precision}"
-            )
-
-        if self.max_precision and self.max_precision < len(fractional):
-            raise ValueError(
-                f"maximum decimal precision allowed is {self.min_precision}"
-            )
-
-        if self.precision and self.precision != len(fractional):
-            raise ValueError(f"decimal precision must be {self.precision}")
-
-
-TRUE_VALUES = {"true", "t", "yes", "1"}
-FALSE_VALUES = {"false", "f", "no", "0"}
-
-
-class BoolAlias(int, Alias, of=bool):
-    name = "boolean"
-
+class FloatAlias(Alias, of=float):
     @classmethod
-    def convert(cls, value: t.Any) -> bool:
-        if isinstance(value, str):
-            if value.isnumeric():
-                return bool(int(value))
-
-            value = value.lower()
-            if value in TRUE_VALUES:
-                return True
-            elif value in FALSE_VALUES:
-                return False
-
-        return bool(value)
+    def convert(cls, value, info: TypeInfo[float]) -> float:
+        try:
+            return info.origin(value)
+        except ValueError as e:
+            raise errors.ConversionError(value, "must be a float", e)
 
 
 class _CollectionAlias(Alias):
@@ -241,14 +150,13 @@ class _CollectionAlias(Alias):
     def convert(cls, value: t.Any):
         if isinstance(value, str):
             return cls.alias_for(value.split(","))
-        elif isinstance(value, list):
-            return cls.alias_for(value)
+        return cls.alias_for(value)
 
     @classmethod
     def g_convert(cls, value: str, typ: TypeInfo, ctx):
         lst = cls.convert(value)
         sub = typ.sub_types[0]
-        sub_type = Alias.resolve(sub)
+        sub_type = sub.resolved_type
 
         try:
             return cls.alias_for([sub_type.__convert__(v, sub, ctx) for v in lst])
@@ -288,7 +196,7 @@ class TupleAlias(tuple, _CollectionAlias, of=tuple):
             )
 
         return tuple(
-            convert(Alias.resolve(item_type), item, item_type, ctx)
+            convert_type(item_type.resolved_type, item, item_type, ctx)
             for item_type, item in zip(info.sub_types, tup)
         )
 
@@ -313,16 +221,16 @@ class DictAlias(dict, Alias, of=dict):
     def g_convert(cls, value, info: TypeInfo, ctx):
         dct: dict = cls.convert(value, info, ctx)
         key_sub = info.sub_types[0]
-        key_type = Alias.resolve(key_sub)
+        key_type = key_sub.resolved_type
         value_sub = info.sub_types[1]
-        value_type = Alias.resolve(value_sub)
+        value_type = value_sub.resolved_type
 
         try:
             return cls.alias_for(
                 [
                     (
-                        convert(key_type, k, key_sub, ctx),
-                        convert(value_type, v, value_sub, ctx),
+                        convert_type(key_type, k, key_sub, ctx),
+                        convert_type(value_type, v, value_sub, ctx),
                     )
                     for k, v in dct.items()
                 ]
@@ -332,7 +240,7 @@ class DictAlias(dict, Alias, of=dict):
                 value,
                 f"{value} is not a valid {info.name} of "
                 f"{key_sub.name} keys and {value_sub.name} values",
-                source=e,
+                e,
             ) from e
 
     @classmethod
@@ -343,12 +251,14 @@ class DictAlias(dict, Alias, of=dict):
                 raise errors.ConversionError(
                     elements,
                     f"{key} is not a valid key name. "
-                    f"Valid keys are: {join_and(list(hints.keys()))}",
+                    f"Valid keys are: {Joiner.with_and(list(hints.keys()))}",
                 )
 
-            sub_type = Alias.resolve(hints[key])
+            sub_info = type_info.TypeInfo.analyze(hints[key])
             try:
-                elements[key] = convert(sub_type, value, info, ctx)
+                elements[key] = convert_type(
+                    sub_info.resolved_type, value, sub_info, ctx
+                )
             except errors.ConversionError as e:
                 raise errors.ConversionError(
                     value, f"{value} is not a valid value for key {key}", e
@@ -357,23 +267,31 @@ class DictAlias(dict, Alias, of=dict):
         return elements
 
 
+class NoneAlias(Alias, of=types.NoneType):
+    @classmethod
+    def convert(self, value: t.Any):
+        raise errors.ConversionError(value, "")
+
+
 # Typing types ---------------------------------------------------------------------------------
 
 
-class UnionAlias(Alias, of=t.Union):
+class UnionAlias(Alias, of=(t.Union, types.UnionType)):  # type: ignore
     @classmethod
     def g_convert(cls, value: t.Any, info: TypeInfo, ctx):
 
         for sub in info.sub_types:
             try:
-                type_cls = Alias.resolve(sub)
-                return convert(type_cls, value, sub, ctx)
+                return convert_type(sub.resolved_type, value, sub, ctx)
             except Exception:
                 ...
 
+        options = Joiner.with_or(
+            list(sub.name for sub in info.sub_types if sub.origin is not types.NoneType)
+        )
         raise errors.ConversionError(
             value,
-            f"must be a {join_or(list(sub.name for sub in info.sub_types))}",
+            f"must be a {options}",
         )
 
 
@@ -381,23 +299,24 @@ class LiteralAlias(Alias, of=t.Literal):
     @classmethod
     def g_convert(cls, value: t.Any, info: TypeInfo):
         for sub in info.sub_types:
-            if str(sub.base) == value:
-                return sub.base
+            if str(sub.original_type) == value:
+                return sub.original_type
 
         raise errors.ConversionError(
-            value, f"must be {join_or(list(sub.base for sub in info.sub_types))}"
+            value,
+            f"must be {Joiner.with_or(list(sub.original_type for sub in info.sub_types))}",
         )
 
     @classmethod
     def __prompt__(cls, ctx, param):
         return select_prompt(
-            list(str(tp.base) for tp in param.type_info.sub_types), ctx, param
+            list(str(tp.origin) for tp in param.type.sub_types), ctx, param
         )
 
     @classmethod
     def __completions__(cls, info, param):
         return [
-            autocompletions.Completion(str(tp.base)) for tp in param.type_info.sub_types
+            autocompletions.Completion(str(tp.origin)) for tp in param.type.sub_types
         ]
 
 
@@ -415,7 +334,7 @@ class EnumAlias(Alias, of=enum.Enum):
         except ValueError as e:
             raise errors.ConversionError(
                 value,
-                f"must be {join_or([m.value for m in info.origin.__members__.values()])}",
+                f"must be {Joiner.with_or([m.value for m in info.origin.__members__.values()])}",
             ) from e
 
     @classmethod
@@ -446,18 +365,10 @@ class IOAlias(Alias, of=(_io._IOBase, t.IO)):
     @classmethod
     def convert(cls, value: str, info: TypeInfo) -> t.IO:
         try:
-            file: t.IO = open(value, **cls.open_args(info))
+            file: t.IO = open(value, **info.type_arg.dict())
             return file
         except FileNotFoundError as e:
             raise errors.ConversionError(value, f"No file named {value}") from e
-
-    @classmethod
-    def open_args(cls, info):
-        arg = info.annotations[0]
-        if isinstance(arg, str):
-            return {"mode": arg}
-        if dataclasses.is_dataclass(arg):
-            return dataclasses.asdict(arg)
 
     @classmethod
     def __completions__(cls, info: CompletionInfo, _param):
@@ -494,7 +405,9 @@ class PatternAlias(Alias, of=re.Pattern):
         try:
             return re.compile(value, cls.flags(info))
         except re.error as e:
-            raise errors.ConversionError(value, "Not a valid regex pattern", e) from e
+            raise errors.ConversionError(
+                value, "Not a valid regular expression", e
+            ) from e
 
     @classmethod
     def flags(cls, info: TypeInfo):

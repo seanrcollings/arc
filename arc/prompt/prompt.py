@@ -1,6 +1,7 @@
 from typing import Any, TypeVar
 from getpass import getpass
 
+import arc
 from arc.color import fg, effects
 from .helpers import write, PREVIOUS_LINE, clear_line
 from .questions import Question, QuestionError, ConfirmQuestion, InputQuestion
@@ -41,7 +42,7 @@ class Prompt:
             prompt (str, optional): What to display before the cursor when
                 asking a question. Defaults to `'> '`
             show_emojis (bool, optional): Whether or not to display the
-                icons / emojis when printing messages with the display
+                icons / emojis when arc.printing messages with the display
                 methods below. Defaults to True.
             color_output (bool, optional): [description]. Whether or not
                 do color the output of each of the display methods below.
@@ -100,7 +101,7 @@ class Prompt:
         self._previous_answers.append(answer)
         return answer
 
-    def confirm(self, *args, **kwargs) -> bool:
+    def confirm(self, desc: str) -> bool:
         """Request a Y/N answer from the user
 
         Args:
@@ -109,7 +110,7 @@ class Prompt:
         Returns:
             bool: The user's answer to the question
         """
-        question = ConfirmQuestion(*args, **kwargs)
+        question = ConfirmQuestion(desc)
         return self.ask(question)
 
     def input(
@@ -135,7 +136,7 @@ class Prompt:
         return self.ask(question)
 
     def beautify(self, message: str, color: str = "", emoji: str = "", **kwargs):
-        print(
+        arc.print(
             self.colored(color) + self.emoji(emoji) + message + effects.CLEAR, **kwargs
         )
 
@@ -160,7 +161,7 @@ class Prompt:
         self.beautify(message, fg.YELLOW, "🚧", **kwargs)
 
     def subtle(self, message: str, **kwargs):
-        """"Display a subtle (light grey) message to the user"""
+        """ "Display a subtle (light grey) message to the user"""
         self.beautify(message, fg.GREY, **kwargs)
 
     def snake(self, message: str, **kwargs):

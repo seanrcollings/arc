@@ -2,12 +2,9 @@ import arc
 
 
 @arc.command()
-def main(names: list = []):
-    if not names:
-        print("No names :(")
-    else:
-        for name in names:
-            print(name)
+def main(names: list):
+    for name in names:
+        arc.print(name)
 
 
 main()
