@@ -4,8 +4,10 @@ from dataclasses import dataclass
 import types
 import sys
 from arc.types.default import Default
+from arc.types.helpers import convert_type
 
 from arc.types.type_arg import TypeArg
+from arc.types.type_info import TypeInfo
 
 
 __all__ = ["File", "Stdin"]
@@ -119,27 +121,23 @@ class File(t.IO, abc.ABC):
     """Equivalent to `open(filename, "ab+")"""
 
 
-class StandardStream(str):
+T = t.TypeVar("T")
+
+
+class Stream(t.Generic[T]):
     _stream: t.ClassVar[t.TextIO]
 
-    @dataclass
-    class Args:
-        line_breaks: bool = False
+    def __init__(self, value: T) -> None:
+        self.value: T = value
 
     @classmethod
-    def __convert__(cls, value, info):
-        meta: StandardStream.Args = (  # pylint: disable=used-before-assignment
-            info.annotations[0] if len(info.annotations) >= 1 else cls.Args()
-        )
-
+    def __convert__(cls, value, info: TypeInfo, ctx):
         if value == "-":
-            if meta.line_breaks:
-                return cls._stream.readlines()
-            else:
-                return cls._stream.read()
-        else:
-            return cls(value)
+            value = cls._stream.read()
+
+        sub = info.sub_types[0]
+        return cls(convert_type(sub.resolved_type, value, sub, ctx))
 
 
-class Stdin(StandardStream):
+class Stdin(Stream[T]):
     _stream = sys.stdin

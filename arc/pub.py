@@ -33,7 +33,7 @@ def print(
     sep: str | None = None,
     end: str | None = None,
     file: t.IO | None = None,
-    flush: bool = False
+    flush: bool = False,
 ):
     """A wrapper around `print()` that handles removing escape
     codes when the output is not a TTY"""
@@ -43,6 +43,26 @@ def print(
         values = tuple(utils.ansi_clean(str(v)) for v in values)
 
     builtins.print(*values, sep=sep, end=end, file=file, flush=flush)
+
+
+def err(
+    *values: object,
+    sep: str | None = None,
+    end: str | None = None,
+    flush: bool = False,
+):
+    """Wrapper around `print()` that emits to stderr instead of stdout"""
+    print(*values, sep=sep, end=end, file=sys.stderr, flush=flush)
+
+
+def info(
+    *values: object,
+    sep: str | None = None,
+    end: str | None = None,
+    flush: bool = False,
+):
+    """Wrapper around `print()` that emits to stderr instead of stdout"""
+    print(*values, sep=sep, end=end, file=sys.stderr, flush=flush)
 
 
 def exit(code: int = 0, ctx: Context | None = None) -> t.NoReturn:

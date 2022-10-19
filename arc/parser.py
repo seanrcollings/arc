@@ -345,17 +345,17 @@ class CustomAction(argparse.Action):
 
 class CustomHelpAction(CustomAction, argparse._HelpAction):
     def __call__(self, *args, **kwargs):
-        arc.print(self.command.doc.help())
+        arc.info(self.command.doc.help())
         raise errors.Exit()
 
 
 class CustomVersionAction(CustomAction, argparse._VersionAction):
     def __call__(self, *args, **kwargs):
-        arc.print(config.version)
+        arc.info(config.version)
         raise errors.Exit()
 
 
 class CustomAutocompleteAction(CustomAction, argparse._StoreAction):
     def __call__(self, _parser, _ns, value, *args, **kwargs):
-        arc.print(completions(value, Context.current()), end="")
+        arc.info(completions(value, Context.current()), end="")
         raise errors.Exit()

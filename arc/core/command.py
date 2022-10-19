@@ -135,7 +135,7 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
             return self.__main(args)
         except errors.ExternalError as e:
             if config.environment == "production":
-                arc.print(e)
+                arc.err(e)
                 raise errors.Exit(1)
 
             raise
