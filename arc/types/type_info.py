@@ -49,7 +49,7 @@ class TypeInfo(t.Generic[T]):
         return [a for a in self.annotations if callable(a)]
 
     @cached_property
-    def resolved_type(self):
+    def resolved_type(self) -> type[at.TypeProtocol]:
         return Alias.resolve(self.origin)
 
     @property

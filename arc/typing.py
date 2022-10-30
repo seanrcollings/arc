@@ -85,7 +85,7 @@ class TypeProtocol(t.Protocol):
         ...
 
 
-class Suggestions(t.TypedDict, total=False):
+class Suggestions(t.TypedDict):
     distance: int
     suggest_params: bool
     suggest_commands: bool

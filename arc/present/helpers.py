@@ -15,7 +15,7 @@ class Joiner:
             values = [v for v in values if v]
 
         if style:
-            return string.join(colorize(v, *style) for v in values)
+            return string.join(colorize(v, style) for v in values)
 
         return string.join(str(v) for v in values)
 

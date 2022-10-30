@@ -17,10 +17,9 @@ def convert_type(
     protocol: type[TypeProtocol],
     value: Any,
     info: TypeInfo,
-    ctx: Context,
 ):
     """Uses `protocol` to convert `value`"""
-    return utils.dispatch_args(protocol.__convert__, value, info, ctx)
+    return utils.dispatch_args(protocol.__convert__, value, info)
 
 
 def safe_issubclass(typ, classes: Union[type, tuple[type, ...]]) -> bool:

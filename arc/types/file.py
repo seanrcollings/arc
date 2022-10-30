@@ -131,12 +131,12 @@ class Stream(t.Generic[T]):
         self.value: T = value
 
     @classmethod
-    def __convert__(cls, value, info: TypeInfo, ctx):
+    def __convert__(cls, value, info: TypeInfo):
         if value == "-":
             value = cls._stream.read()
 
         sub = info.sub_types[0]
-        return cls(convert_type(sub.resolved_type, value, sub, ctx))
+        return cls(convert_type(sub.resolved_type, value, sub))
 
 
 class Stdin(Stream[T]):

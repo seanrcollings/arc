@@ -13,10 +13,9 @@ from arc.core.decorators import DecoratorMixin, DecoratorStack
 from arc.core.documentation import Documentation
 from arc.color import colorize, fg
 from arc.config import config
-from arc.parser import Parser
 from arc.present.helpers import Joiner
 from .param import ParamMixin
-from arc.context import Context
+
 
 import arc.typing as at
 from arc.autocompletions import CompletionInfo, get_completions, Completion
@@ -63,7 +62,6 @@ class AliasDict(dict[K, V]):
 
 
 class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc]):
-    callback: at.CommandCallback
     name: str
     parent: Command | None
     subcommands: AliasDict[str, Command]
@@ -83,11 +81,11 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
     ):
         super().__init__()
         if inspect.isclass(callback):
-            self.callback: at.CommandCallback = classful.wrap_class_callback(
+            self.callback = classful.wrap_class_callback(  # type: ignore
                 t.cast(type[at.ClassCallback], callback)
             )
         else:
-            self.callback = callback
+            self.callback = callback  # type: ignore
 
         self.name = name or callback.__name__
         self.parent = parent
@@ -119,9 +117,10 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         Returns:
             result (Any): The value that the command's callback returns
         """
+        from .app import Arc
+
         if not self.explicit_name:
             self.name = utils.discover_name()
-        args = self.get_args(input_args)
 
         if self.is_root and self.subcommands and len(list(self.argument_params)) != 0:
             raise errors.CommandError(
@@ -129,10 +128,9 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
                 "have argument / positional parameters"
             )
 
-        Context.state.data = state or {}
-
         try:
-            return self.__main(args)
+            app = Arc(self, input=input_args)
+            return app()
         except errors.ExternalError as e:
             if config.environment == "production":
                 arc.err(e)
@@ -308,96 +306,7 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         """Add multiple commands as subcommands"""
         return [self.add_command(command) for command in commands]
 
-    # Execution ------------------------------------------------------------------
-
-    def __main(self, args: list[str]):
-        global_args, command, command_args = self.split_args(args)
-
-        with self.create_ctx() as ctx:
-            res = self._exec_root_callback(ctx, command, global_args)
-            if command is self:
-                return res
-
-            with command.create_ctx(parent=ctx) as commandctx:
-                return commandctx.run(command_args)
-
-    def _exec_root_callback(
-        self, ctx: Context, command: Command, args: list[str]
-    ) -> t.Any:
-        # The behavior of this is a little weird because it handles the odd intersection
-        # between single-commands and root commands with subcommands
-
-        # If we have subcommands we are considered the root command object
-        # and we only execute under certain conditions
-        if self.subcommands:
-            # There isn't any command associated with this execution string
-            # we want to error, because this isn't valid. But we can't right away
-            if command is self:
-                # We run the parser over the arguments to take care of the --help
-                # and other special-case parameters that are embedded directly
-                # in the parser. If any of those are found, they will handle
-                # exiting early, so the rest of this block doesn't run
-                ctx.parse_args(args)
-                # Call this to produce the same output as we do when
-                # running a namespace call.
-                namespace_callback(ctx)
-                ctx.exit(1)
-
-            # There is a command, so we want to execute the global callback
-            # we don't do this if it's a namespace because they can only ever be
-            # called directly
-            elif args or (
-                config.global_callback_execution == "always" and not self.is_namespace
-            ):
-                return ctx.run(args)
-            else:
-                return None
-
-        # This command doesn't have any sub-commands and should just be executed
-        # normally. This will get returned early  in the caller
-        return ctx.run(args)
-
-    def parse_args(
-        self, args: list[str], ctx: Context
-    ) -> tuple[at.ParseResult, list[str]]:
-        parser = self.create_parser()
-        try:
-            return parser.parse_known_intermixed_args(args)
-        except errors.ParserError as e:
-            e.ctx = ctx
-            raise
-
-    def process_parsed_result(
-        self, res: at.ParseResult, ctx: Context
-    ) -> tuple[dict[str, t.Any], list[Param]]:
-        processed: dict[str, t.Any] = {}
-        missing: list[Param] = []
-
-        for group in self.param_groups:
-            group_processed, group_missing = group.process_parsed_result(res, ctx)
-            missing.extend(group_missing)
-
-            if group.is_default:
-                processed.update(group_processed)
-            else:
-                processed[group.name] = group_processed
-
-        return processed, missing
-
-    def inject_dependancies(self, args: dict[str, t.Any], ctx: Context):
-        for group in self.param_groups:
-            group.inject_dependancies(args, ctx)
-
     # Argument Handling ---------------------------------------------------------
-
-    def get_args(self, args: at.InputArgs) -> list[str]:
-        if args is None:
-            args = sys.argv[1:]
-
-        if isinstance(args, str):
-            args = shlex.split(args)
-
-        return list(args)
 
     def split_args(self, args: list[str]) -> tuple[list[str], Command, list[str]]:
         """Seperates out a sequence of args into:
@@ -421,13 +330,6 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         command_args: list[str] = args[index + 1 :]
 
         return global_args, command, command_args
-
-    def create_parser(self) -> Parser:
-        parser = Parser(add_help=False)
-        for param in self.cli_params:
-            parser.add_param(param, self)
-
-        return parser
 
     # Helpers --------------------------------------------------------------------
 
@@ -462,9 +364,6 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         lst = t.cast(list[DecoratorMixin], self.command_chain)
         return DecoratorMixin.create_decostack(lst)
 
-    def create_ctx(self, **kwargs) -> Context:
-        return Context(self, **kwargs)
-
     @staticmethod
     def get_command_name(
         callback: at.CommandCallback, names: at.CommandName
@@ -483,10 +382,11 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         return names[0], tuple(names[1:])
 
 
-def namespace_callback(ctx: Context):
-    arc.print(ctx.command.doc.usage())
-    command = colorize(
-        f"{ctx.command.root.name} {Joiner.with_space(ctx.command.doc.fullname)}--help",
-        fg.YELLOW,
-    )
-    arc.print(f"{command} for more information")
+def namespace_callback():
+    print("namespace")
+    # arc.print(ctx.command.doc.usage())
+    # command = colorize(
+    #     f"{ctx.command.root.name} {Joiner.with_space(ctx.command.doc.fullname)}--help",
+    #     fg.YELLOW,
+    # )
+    # arc.print(f"{command} for more information")

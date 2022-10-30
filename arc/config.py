@@ -91,13 +91,13 @@ def configure(
         autoload_overwrite: allow / disallow a command that has been autoloaded to overwrite
             a pre-existing command object. Defaults to `True`
     """
-    data = {
+    data: dict = {
         "version": version,
         "environment": environment,
         "default_section_name": default_section_name,
         "transform_snake_case": transform_snake_case,
         "brand_color": brand_color,
-        "suggestions": config.suggestions | (suggestions or {}),
+        "suggestions": config.suggestions | (suggestions or {}),  # type: ignore
         "env_prefix": env_prefix,
         "prompt": prompt,
         "autocomplete": autocomplete,

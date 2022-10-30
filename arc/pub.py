@@ -20,7 +20,7 @@ def convert(value: str, type: type, context: Context | None = None):
         context = None
 
     info = TypeInfo.analyze(type)
-    converted = convert_type(info.resolved_type, value, info, context)  # type: ignore
+    converted = convert_type(info.resolved_type, value, info)
 
     for middleware in info.middleware:
         converted = utils.dispatch_args(middleware, converted, context, None)
