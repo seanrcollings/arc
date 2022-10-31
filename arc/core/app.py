@@ -1,3 +1,5 @@
+from __future__ import annotations
+import contextlib
 import itertools
 import os
 import shlex
@@ -14,21 +16,21 @@ from arc.present import Joiner
 from arc.color import fg, colorize
 from arc import utils
 from arc.prompt.prompts import input_prompt
-from arc.core.param.param_group import ParamGroup
-from arc.core import Command
+from arc.types.helpers import iscontextmanager
 
-
-Env = dict[str, t.Any]
+if t.TYPE_CHECKING:
+    from arc.core.param.param_group import ParamGroup
+    from arc.core import Command
 
 
 class Middleware:
-    def __init__(self, app: t.Callable[[Env], t.Any]):
+    def __init__(self, app: t.Callable[[at.ExecEnv], t.Any]):
         self.app = app
 
     def __repr__(self):
         return f"{type(self).__name__}({repr(self.app)})"
 
-    def __call__(self, env: Env):
+    def __call__(self, env: at.ExecEnv):
         return self.app(env)
 
 
@@ -48,33 +50,103 @@ class InputMiddleware(Middleware):
 
 
 class CommandFinderMiddleware(Middleware):
-    def __call__(self, env: Env):
+    def __call__(self, env: at.ExecEnv):
         args: list[str] = env["arc.input"]
         root: Command = env["arc.root"]
         global_args, command, command_args = root.split_args(args)
+        env["arc.input.global"] = global_args
         env["arc.command"] = command
-        env["arc.input"] = global_args if command is root else command_args
+        env["arc.input"] = command_args
+        env["arc.mode"] = self.get_mode(root, command)
+
         return self.app(env)
 
+    def get_mode(self, root: Command, command: Command) -> at.ExecMode:
+        if root is command:
+            if root.subcommands:
+                return "global"
+            else:
+                return "single"
+        else:
+            return "subcommand"
 
-class ArgParseMiddleware(Middleware):
-    def __call__(self, env: Env):
+
+class HandleGlobalCommandWeirdness(Middleware):
+    def __call__(self, env: at.ExecEnv):
+        mode: str = env["arc.mode"]
+        root: Command = env["arc.root"]
         command: Command = env["arc.command"]
         args: list[str] = env["arc.input"]
 
-        parser = Parser(add_help=False)
-        for param in command.cli_params:
-            parser.add_param(param, command)
+        if mode == "subcommands":
+            if root is command:
+                env["arc.command"] = root
+                env["arc.input"] = env["arc.input.global"]
+                self.app(env)
+            else:
+                env["arc.command"] = root
+                env["arc.input"] = env["arc.input.global"]
+                self.app(env)
 
-        result, extra = parser.parse_known_intermixed_args(args)
+                env["arc.command"] = command
+                env["arc.input"] = args
+                return self.app(env)
+        elif mode == "single":
+            env["arc.input"] = env["arc.input.global"]
+            return self.app(env)
+
+
+class ArgParseMiddleware(Middleware):
+    def __call__(self, env: at.ExecEnv):
+        command: Command = env["arc.command"]
+        args: list[str] = env["arc.input"]
+        global_args: list[str] = env["arc.input.global"]
+        root: Command = env["arc.root"]
+        mode: at.ExecMode = env["arc.mode"]
+
+        if mode == "single":
+            return self.run_command(command, global_args, env)
+        elif mode == "global":
+            self.parse_args(command, global_args)
+            arc.usage(command)
+            arc.exit(1)
+        elif mode == "subcommand":
+            if not root.is_namespace:
+                env["arc.command"] = root
+                self.run_command(root, global_args, env)
+                env["arc.command"] = command
+            return self.run_command(command, args, env)
+
+    def run_command(self, command: Command, args: list[str], env: at.ExecEnv):
+        result, extra = self.parse_args(command, args)
+
         env["arc.parse.result"] = result
         env["arc.parse.extra"] = extra
 
         return self.app(env)
 
+    def parse_args(self, command: Command, args: list[str]) -> tuple[dict, list[str]]:
+        parser = self.create_parser(command)
+
+        return parser.parse_known_intermixed_args(args)
+
+    def create_parser(self, command: Command) -> Parser:
+        parser = Parser(add_help=False)
+        for param in command.cli_params:
+            parser.add_param(param, command)
+
+        return parser
+
+
+class ExitStackMiddleware(Middleware):
+    def __call__(self, env: at.ExecEnv):
+        with contextlib.ExitStack() as stack:
+            env["arc.exitstack"] = stack
+            return self.app(env)
+
 
 class ParseResultCheckerMiddleware(Middleware):
-    def __call__(self, env: Env):
+    def __call__(self, env: at.ExecEnv):
         config: Config = env["arc.config"]
         extra: list[str] | None = env.get("arc.parse.extra")
         command: Command = env["arc.command"]
@@ -84,8 +156,7 @@ class ParseResultCheckerMiddleware(Middleware):
                 f"Unrecognized arguments: {Joiner.with_space(extra, style=fg.YELLOW)}"
             )
             message += self.__get_suggestions(extra, config, command)
-            env["arc.errors"].append(message)
-            return None
+            raise errors.UnrecognizedArgError(message)
 
         return self.app(env)
 
@@ -143,24 +214,15 @@ class ParseResultCheckerMiddleware(Middleware):
         return message
 
 
-class ContextCreationMiddleware(Middleware):
-    def __call__(self, env: Env) -> t.Any:
-        command: Command = env["arc.command"]
-        parent: arc.Context | None = env.get("arc.ctx")
-        ctx = arc.Context(command=command, parent=parent)
-        env["arc.ctx"] = ctx
-
-        with ctx:
-            return self.app(env)
-
-
 class ProcessParseResultMiddleware(Middleware):
     config: Config
+    exit_stack: contextlib.ExitStack
 
-    def __call__(self, env: Env) -> t.Any:
+    def __call__(self, env: at.ExecEnv) -> t.Any:
         command: Command = env["arc.command"]
         result: dict = env["arc.parse.result"]
         self.config = env["arc.config"]
+        self.exit_stack = env["arc.exitstack"]
         processed: dict[str, t.Any] = {}
         missing: list[tuple[tuple[str, ...], Param]] = []
 
@@ -206,7 +268,7 @@ class ProcessParseResultMiddleware(Middleware):
 
         for sub in group.sub_groups:
             processed[sub.name], sub_missing = self.process_param_group(
-                group, res, (*path, sub.name)
+                sub, res, (*path, sub.name)
             )
             missing.extend(sub_missing)
 
@@ -248,8 +310,8 @@ class ProcessParseResultMiddleware(Middleware):
         ):
             value = param.callback(value, param) or value
 
-        # if iscontextmanager(value) and not value is ctx:
-        #     value = ctx.resource(value)  # type: ignore
+        if iscontextmanager(value):
+            value = self.exit_stack.enter_context(value)  # type: ignore
 
         return value, origin
 
@@ -289,17 +351,18 @@ class ProcessParseResultMiddleware(Middleware):
 
 
 class DependancyInjectorMiddleware(Middleware):
-    def __call__(self, env: Env):
+    def __call__(self, env: at.ExecEnv):
         command: Command = env["arc.command"]
         args: dict = env["arc.args"]
 
         for group in command.param_groups:
-            self.inject_dependancies(group, args)
+            self.inject_dependancies(group, args, env)
 
         return self.app(env)
 
-    def inject_dependancies(self, group: ParamGroup, args: dict):
+    def inject_dependancies(self, group: ParamGroup, args: dict, env: at.ExecEnv):
         injected = {}
+        exit_stack: contextlib.ExitStack = env["arc.exitstack"]
 
         for param in group:
             if not param.is_injected:
@@ -307,13 +370,17 @@ class DependancyInjectorMiddleware(Middleware):
 
             param = t.cast(InjectedParam, param)
 
-            value = param.get_injected_value()
+            value = param.get_injected_value(env)
+
+            if iscontextmanager(value):
+                value = exit_stack.enter_context(value)
+
             injected[param.argument_name] = value
 
         if group.sub_groups:
             inst = args[group.name]
             for sub in group.sub_groups:
-                self.inject_dependancies(sub, {sub.name: getattr(inst, sub.name)})
+                self.inject_dependancies(sub, {sub.name: getattr(inst, sub.name)}, env)
 
         if group.cls:
             inst = args[group.name]
@@ -350,11 +417,11 @@ class DependancyInjectorMiddleware(Middleware):
 
 
 class DecoratorStackMiddleware(Middleware):
-    def __call__(self, env: Env):
+    def __call__(self, env: at.ExecEnv):
         command: Command = env["arc.command"]
 
         decostack = command.decorators()
-        decostack.start()
+        decostack.start(env)
 
         try:
             res = self.app(env)
@@ -368,7 +435,7 @@ class DecoratorStackMiddleware(Middleware):
 
 
 class ExecutionHandler(Middleware):
-    def __call__(self, env: Env):
+    def __call__(self, env: at.ExecEnv):
         command: Command = env["arc.command"]
         args: dict = env["arc.args"]
 
@@ -386,6 +453,7 @@ class Arc:
     ]
 
     DEFAULT_EXEC_MIDDLEWARES = [
+        ExitStackMiddleware,
         ProcessParseResultMiddleware,
         DependancyInjectorMiddleware,
         DecoratorStackMiddleware,
@@ -398,7 +466,7 @@ class Arc:
         init_middlewares: list[type[Middleware]] | None = None,
         exec_middlewares: list[type[Middleware]] | None = None,
         input: at.InputArgs = None,
-        env: Env | None = None,
+        env: at.ExecEnv | None = None,
     ) -> None:
         self.root: Command = root
         self.init_middleware_types: list[type[Middleware]] = (
@@ -407,20 +475,17 @@ class Arc:
         self.exec_middleware_types: list[type[Middleware]] = (
             exec_middlewares or self.DEFAULT_EXEC_MIDDLEWARES
         )
-        self.provided_env: Env = env or {}
+        self.provided_env: at.ExecEnv = env or {}
         self.input: at.InputArgs = input
-        self.env: Env = self.create_env()
+        self.env: at.ExecEnv = self.create_env()
+
+    __repr__ = utils.display("root")
 
     def __call__(self) -> t.Any:
-        self.init()
-        return self.execute()
+        first = self.build_middleware_stack(
+            self.init_middleware_types + self.exec_middleware_types
+        )
 
-    def init(self) -> t.Any:
-        first = self.build_middleware_stack(self.init_middleware_types)
-        return first(self.env)
-
-    def execute(self) -> t.Any:
-        first = self.build_middleware_stack(self.exec_middleware_types)
         return first(self.env)
 
     def subexecute(self, command: t.Optional[Command] = None) -> t.Any:
@@ -441,7 +506,7 @@ class Arc:
 
         return first
 
-    def create_env(self) -> Env:
+    def create_env(self) -> at.ExecEnv:
         return {
             "arc.root": self.root,
             "arc.input": self.input,
@@ -449,3 +514,7 @@ class Arc:
             "arc.errors": [],
             "arc.app": self,
         } | self.provided_env
+
+    @classmethod
+    def __depends__(cls, env):
+        return env["arc.app"]

@@ -4,8 +4,11 @@ from __future__ import annotations
 import builtins
 import sys
 import typing as t
+from arc import errors
+from arc.color import colorize, fg
 from arc.context import Context
 from arc.core.command import Command, namespace_callback
+from arc.present.helpers import Joiner
 from arc.types.type_info import TypeInfo
 from arc.types.helpers import convert_type
 from arc.errors import ArcError
@@ -65,10 +68,9 @@ def info(
     print(*values, sep=sep, end=end, file=sys.stderr, flush=flush)
 
 
-def exit(code: int = 0, ctx: Context | None = None) -> t.NoReturn:
+def exit(code: int = 0, message: str | None = None) -> t.NoReturn:
     """Exits the application with `code`"""
-    ctx = ctx or Context.current()
-    ctx.exit(code)
+    raise errors.Exit(code, message)
 
 
 def command(
@@ -128,3 +130,14 @@ def namespace(name: str, desc: str | None = None) -> Command:
         parent=None,
         autoload=True,
     )
+
+
+def usage(command: Command, help_prompt: bool = True):
+    info(command.doc.usage())
+
+    if help_prompt:
+        help_call = colorize(
+            f"{command.root.name} {Joiner.with_space(command.doc.fullname)}--help",
+            fg.YELLOW,
+        )
+        info(f"{help_call} for more information")

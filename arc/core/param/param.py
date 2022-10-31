@@ -309,15 +309,9 @@ class InjectedParam(Param):
 
     callback: t.Callable
 
-    def get_injected_value(self) -> t.Any:
-        value = self.callback() if self.callback else None
-        # ctx.arg_origins[self.argument_name] = ValueOrigin.INJECTED
-
+    def get_injected_value(self, env: dict) -> t.Any:
+        value = utils.dispatch_args(self.callback, env) if self.callback else None
         value = self.run_middleware(value)
-
-        # if iscontextmanager(value) and not value is ctx:
-        #     value = ctx.resource(value)
-
         return value
 
     @property

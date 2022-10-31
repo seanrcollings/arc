@@ -10,6 +10,9 @@ if t.TYPE_CHECKING:
 
 T = t.TypeVar("T")
 
+ExecEnv = dict[str, t.Any]
+
+ExecMode = t.Literal["global", "single", "subcommand"]
 
 Annotation = t.Union[t._SpecialForm, type]
 

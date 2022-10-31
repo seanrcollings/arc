@@ -7,15 +7,14 @@ import arc
 class CallbackException(Exception):
     """Used to assert that decorators are actually running"""
 
-    def __init__(self, ctx: Context, **kwargs):
-        self.ctx = ctx
+    def __init__(self, **kwargs):
         self.kwargs = kwargs
 
 
 def test_execute():
     @decorator()
-    def cb(ctx):
-        raise CallbackException(ctx)
+    def cb():
+        raise CallbackException()
 
     @cb
     @arc.command()
@@ -31,11 +30,11 @@ def test_execute():
 
 def test_exception():
     @decorator()
-    def cb(ctx):
+    def cb():
         try:
             yield
         except errors.ExecutionError:
-            raise CallbackException(ctx)
+            raise CallbackException()
 
     @cb
     @arc.command()
@@ -48,11 +47,11 @@ def test_exception():
 
 def test_final():
     @decorator()
-    def cb(ctx):
+    def cb():
         try:
             yield
         finally:
-            raise CallbackException(ctx)
+            raise CallbackException()
 
     @cb
     @arc.command()
@@ -75,8 +74,8 @@ def test_missing_yield():
     """A pure function should still execute"""
 
     @decorator()
-    def cb(ctx):
-        raise CallbackException(ctx)
+    def cb():
+        raise CallbackException()
 
     @cb
     @arc.command()
@@ -89,7 +88,9 @@ def test_missing_yield():
 
 def test_deco_inheritance():
     @arc.decorator()
-    def cb1(args, ctx):
+    def cb1(
+        args,
+    ):
         ...
 
     @cb1
@@ -105,33 +106,34 @@ def test_deco_inheritance():
 
 
 def test_decorator_order():
-    @arc.decorator()
-    def cb1(ctx):
-        ctx.state["cb_order"].append("cb1")
-        yield
-        ctx.state["cb_order"].append("cb1")
+    callback_order = []
 
     @arc.decorator()
-    def cb2(ctx):
-        ctx.state["cb_order"].append("cb2")
+    def cb1():
+        callback_order.append("cb1")
         yield
-        ctx.state["cb_order"].append("cb2")
+        callback_order.append("cb1")
+
+    @arc.decorator()
+    def cb2():
+        callback_order.append("cb2")
+        yield
+        callback_order.append("cb2")
 
     @cb1
     @cb2
     @arc.command()
-    def command(ctx: Context):
-        return ctx.state
+    def command():
+        ...
 
-    assert command("", state={"cb_order": []}) == {
-        "cb_order": ["cb1", "cb2", "cb2", "cb1"]
-    }
+    command()
+    assert callback_order == ["cb1", "cb2", "cb2", "cb1"]
 
 
 def test_children_only():
     @arc.decorator(children_only=True)
-    def cb(ctx):
-        raise CallbackException(ctx)
+    def cb():
+        raise CallbackException()
 
     @arc.command()
     def command():
@@ -159,8 +161,8 @@ def test_children_only():
 
 def test_remove_decorator():
     @arc.decorator(children_only=True)
-    def cb(ctx):
-        raise CallbackException(ctx)
+    def cb():
+        raise CallbackException()
 
     @arc.command()
     def root():
@@ -194,8 +196,8 @@ def test_remove_decorator():
 
 def test_non_inheritable():
     @arc.decorator(inherit=False)
-    def cb(ctx):
-        raise CallbackException(ctx)
+    def cb():
+        raise CallbackException()
 
     @arc.command()
     def command():
@@ -218,8 +220,8 @@ def test_non_inheritable():
 
 def test_install_order():
     @arc.decorator()
-    def deco(ctx):
-        raise CallbackException(ctx)
+    def deco():
+        raise CallbackException()
 
     @arc.command()
     def command():

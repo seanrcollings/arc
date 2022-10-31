@@ -3,7 +3,7 @@ import types
 import typing as t
 import dataclasses as dc
 
-from arc import errors, utils
+from arc import errors, utils, typing as at
 
 if t.TYPE_CHECKING:
     from arc.context import Context
@@ -105,7 +105,7 @@ class DecoratorStack(t.Generic[D]):
     def __contains__(self, value):
         return value in self.__decos
 
-    def start(self):
+    def start(self, env: at.ExecEnv):
         for deco in reversed(self.__decos):
             gen = deco.func()
             if isinstance(gen, types.GeneratorType):

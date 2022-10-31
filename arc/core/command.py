@@ -9,6 +9,7 @@ import arc
 from arc import errors, utils
 from arc.core import classful
 from arc.autoload import Autoload
+from arc.core.app import Arc
 from arc.core.decorators import DecoratorMixin, DecoratorStack
 from arc.core.documentation import Documentation
 from arc.color import colorize, fg
@@ -122,11 +123,11 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         if not self.explicit_name:
             self.name = utils.discover_name()
 
-        if self.is_root and self.subcommands and len(list(self.argument_params)) != 0:
-            raise errors.CommandError(
-                "Top-level command with subcommands cannot "
-                "have argument / positional parameters"
-            )
+        # if self.is_root and self.subcommands and len(list(self.argument_params)) != 0:
+        #     raise errors.CommandError(
+        #         "Top-level command with subcommands cannot "
+        #         "have argument / positional parameters"
+        #     )
 
         try:
             app = Arc(self, input=input_args)
@@ -382,11 +383,6 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         return names[0], tuple(names[1:])
 
 
-def namespace_callback():
-    print("namespace")
-    # arc.print(ctx.command.doc.usage())
-    # command = colorize(
-    #     f"{ctx.command.root.name} {Joiner.with_space(ctx.command.doc.fullname)}--help",
-    #     fg.YELLOW,
-    # )
-    # arc.print(f"{command} for more information")
+def namespace_callback(app: Arc):
+    command: Command = app.env["arc.command"]
+    arc.usage(command)
