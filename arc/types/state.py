@@ -1,10 +1,7 @@
 from __future__ import annotations
 import collections
 import typing as t
-
-
-if t.TYPE_CHECKING:
-    from arc.context import Context
+import arc.typing as at
 
 
 class State(collections.UserDict):
@@ -27,7 +24,7 @@ class State(collections.UserDict):
             self.data[name] = value
 
     @classmethod
-    def __depends__(cls, ctx: Context):
+    def __depends__(cls, env: at.ExecEnv):
         state = cls()
-        state.data = ctx.state.data
+        state.data = env["arc.state"]
         return state

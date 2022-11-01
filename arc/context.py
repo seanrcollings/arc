@@ -16,222 +16,247 @@ import arc.typing as at
 
 if t.TYPE_CHECKING:
     from arc.core.param.param import ValueOrigin
+    from arc.core.command import Command
+    from arc.core.app import Arc
 
 
 T = t.TypeVar("T")
 
 
 class Context:
-    """Context tracks all the information relevant to the execution of a command"""
+    """Context serves as a "view" into the execution enviroment"""
 
-    _stack: list[Context] = []
-    command: core.Command
-    _exit_stack: contextlib.ExitStack
-    _stack_count: int
-    args: dict[str, t.Any]
-    rest: list[str]
-    arg_origins: dict[str, ValueOrigin]
-
-    config = config
-    logger: Logger = logger
-    state: State = State()
-
-    def __init__(
-        self,
-        command: core.Command,
-        parent: Context | None = None,
-    ) -> None:
-        self.command = command
-        self.parent = parent
-        self.rest = []
-        self._stack_count = 0
-        self._exit_stack = contextlib.ExitStack()
-        self.arg_origins = {}
-
-    def __repr__(self) -> str:
-        return f"Context({self.command!r})"
-
-    def __enter__(self) -> Context:
-        if self._stack_count == 0:
-            self.logger.debug(f"Entering Context: {self!r}")
-        self._stack_count += 1
-        Context.push(self)
-        return self
-
-    def __exit__(self, exc_type, exc_value, trace) -> None:
-        self._stack_count -= 1
-        Context.pop()
-        if self._stack_count == 0:
-            self.logger.debug(f"Closing Context: {self!r}")
-            self.close()
-
-    @classmethod
-    def __depends__(self, ctx: Context) -> Context:
-        return ctx
-
-    @classmethod
-    def push(cls, ctx: Context) -> None:
-        """Pushes a context onto the internal stack"""
-        cls._stack.append(ctx)
-
-    @classmethod
-    def pop(cls) -> Context:
-        """Pops a context off the internal stack"""
-        return cls._stack.pop()
-
-    @classmethod
-    def current(cls) -> Context:
-        """Returns the current context"""
-        if not cls._stack:
-            raise errors.ArcError("No contexts exist")
-
-        return cls._stack[-1]
+    def __init__(self, env: at.ExecEnv) -> None:
+        self.env: at.ExecEnv = env
 
     @property
-    def root(self) -> Context:
-        """Retrieves the root context object"""
-        curr = self
-        while curr.parent:
-            curr = curr.parent
-
-        return curr
+    def command(self) -> Command:
+        return self.env["arc.command"]
 
     @property
-    def prompt(self) -> Prompt:
-        return self.config.prompt
+    def state(self) -> State:
+        return self.env["arc.state"]
 
-    def close(self) -> None:
-        self._exit_stack.close()
+    @property
+    def app(self) -> Arc:
+        return self.env["arc.app"]
 
-    def run(self, args: list[str]) -> t.Any:
-        parsed = self.parse_args(args)
-        processed, missing = self.command.process_parsed_result(parsed, self)
+    def execute(self, command: Command) -> t.Any:
+        """Execute a command within the context of another command"""
+        ...
 
-        if missing:
-            params = ", ".join(colorize(param.cli_name, fg.YELLOW) for param in missing)
-            raise errors.MissingArgError(
-                f"The following arguments are required: {params}", self
-            )
 
-        self.command.inject_dependancies(processed, self)
-        self.args = processed
-        decostack = self.command.decorators()
-        decostack.start(self)
+# class Context:
+#     """Context tracks all the information relevant to the execution of a command"""
 
-        try:
-            res = self.execute(self.command.callback, **processed)
-        except Exception as e:
-            res = None
-            decostack.throw(e)
-        else:
-            decostack.close()
+#     _stack: list[Context] = []
+#     command: core.Command
+#     _exit_stack: contextlib.ExitStack
+#     _stack_count: int
+#     args: dict[str, t.Any]
+#     rest: list[str]
+#     arg_origins: dict[str, ValueOrigin]
 
-        return res
+#     config = config
+#     logger: Logger = logger
+#     state: State = State()
 
-    def execute(self, callback: t.Union[core.Command, t.Callable], **kwargs) -> t.Any:
-        """Can be called in two ways
+#     def __init__(
+#         self,
+#         command: core.Command,
+#         parent: Context | None = None,
+#     ) -> None:
+#         self.command = command
+#         self.parent = parent
+#         self.rest = []
+#         self._stack_count = 0
+#         self._exit_stack = contextlib.ExitStack()
+#         self.arg_origins = {}
 
-        1. if `callback` is a function / callable, all other kwargs
-        will simply be forwarded to the function.
-        2. if `callback` is a command, kwargs will still be forwarded,
-        arc will fill in defaults, and the current execution's state
-        will be used initially
-        """
+#     def __repr__(self) -> str:
+#         return f"Context({self.command!r})"
 
-        if isinstance(callback, core.Command):
-            ctx = self.create_child(callback)
-            cmd = callback
-            callback = cmd.callback
-            cmd.inject_dependancies(kwargs, ctx)
+#     def __enter__(self) -> Context:
+#         if self._stack_count == 0:
+#             self.logger.debug(f"Entering Context: {self!r}")
+#         self._stack_count += 1
+#         Context.push(self)
+#         return self
 
-        else:
-            ctx = self
+#     def __exit__(self, exc_type, exc_value, trace) -> None:
+#         self._stack_count -= 1
+#         Context.pop()
+#         if self._stack_count == 0:
+#             self.logger.debug(f"Closing Context: {self!r}")
+#             self.close()
 
-        with ctx:
-            return callback(**kwargs)
+#     @classmethod
+#     def __depends__(self, ctx: Context) -> Context:
+#         return ctx
 
-    def parse_args(self, args: list[str]) -> at.ParseResult:
-        if args:
-            parsed, rest = self.command.parse_args(args, self)
+#     @classmethod
+#     def push(cls, ctx: Context) -> None:
+#         """Pushes a context onto the internal stack"""
+#         cls._stack.append(ctx)
 
-            if rest and not self.config.allow_unrecognized_args:
-                message = f"Unrecognized arguments: {Joiner.with_space(rest, style=fg.YELLOW)}"
+#     @classmethod
+#     def pop(cls) -> Context:
+#         """Pops a context off the internal stack"""
+#         return cls._stack.pop()
 
-                message += self.__get_suggestions(rest)
-                list(
-                    itertools.chain(
-                        *[param.get_param_names() for param in self.command.key_params]
-                    )
-                )
-                raise errors.UnrecognizedArgError(message, self)
-            else:
-                self.rest = rest
-        else:
-            parsed = {}
+#     @classmethod
+#     def current(cls) -> Context:
+#         """Returns the current context"""
+#         if not cls._stack:
+#             raise errors.ArcError("No contexts exist")
 
-        return parsed
+#         return cls._stack[-1]
 
-    def create_child(self, command: core.Command) -> Context:
-        """Creates a new context that is the child of the current context"""
-        return type(self)(command, parent=self)
+#     @property
+#     def root(self) -> Context:
+#         """Retrieves the root context object"""
+#         curr = self
+#         while curr.parent:
+#             curr = curr.parent
 
-    def resource(self, resource: t.ContextManager[T]) -> T:
-        """Opens a resource like you would with the `with` statement.
-        When this context is closed, all open resources will be closed
-        along with it
-        """
-        return self._exit_stack.enter_context(resource)
+#         return curr
 
-    def close_callback(
-        self, callback: t.Callable[..., t.Any]
-    ) -> t.Callable[..., t.Any]:
-        """Adds a callback that will be executed when this context is closed"""
-        return self._exit_stack.callback(callback)
+#     @property
+#     def prompt(self) -> Prompt:
+#         return self.config.prompt
 
-    def exit(self, code: int = 0) -> t.NoReturn:
-        """Exits the app with code `code`"""
-        raise errors.Exit(code)
+#     def close(self) -> None:
+#         self._exit_stack.close()
 
-    def __get_suggestions(self, rest: list[str]) -> str:
-        message = ""
+#     def run(self, args: list[str]) -> t.Any:
+#         parsed = self.parse_args(args)
+#         processed, missing = self.command.process_parsed_result(parsed, self)
 
-        if self.config.suggestions["suggest_commands"]:
+#         if missing:
+#             params = ", ".join(colorize(param.cli_name, fg.YELLOW) for param in missing)
+#             raise errors.MissingArgError(
+#                 f"The following arguments are required: {params}", self
+#             )
 
-            message += self.__fmt_suggestions(
-                rest[0:1],
-                list(
-                    itertools.chain(
-                        *[com.all_names for com in self.command.subcommands.values()]
-                    )
-                ),
-                "subcommand",
-            )
+#         self.command.inject_dependancies(processed, self)
+#         self.args = processed
+#         decostack = self.command.decorators()
+#         decostack.start(self)
 
-        if self.config.suggestions["suggest_params"]:
-            message += self.__fmt_suggestions(
-                rest,
-                list(
-                    itertools.chain(
-                        *[param.get_param_names() for param in self.command.key_params]
-                    )
-                ),
-                "argument",
-            )
+#         try:
+#             res = self.execute(self.command.callback, **processed)
+#         except Exception as e:
+#             res = None
+#             decostack.throw(e)
+#         else:
+#             decostack.close()
 
-        return message
+#         return res
 
-    def __fmt_suggestions(self, rest: list[str], possibilities: list[str], kind: str):
-        message = ""
+#     def execute(self, callback: t.Union[core.Command, t.Callable], **kwargs) -> t.Any:
+#         """Can be called in two ways
 
-        suggestions = utils.string_suggestions(
-            rest, possibilities, self.config.suggestions["distance"]
-        )
+#         1. if `callback` is a function / callable, all other kwargs
+#         will simply be forwarded to the function.
+#         2. if `callback` is a command, kwargs will still be forwarded,
+#         arc will fill in defaults, and the current execution's state
+#         will be used initially
+#         """
 
-        for param_name, param_sug in suggestions.items():
-            if param_sug:
-                message += (
-                    f"\nUnrecognized {kind} {colorize(param_name, fg.YELLOW)}, "
-                    f"did you mean: {Joiner.with_or(param_sug, style=fg.YELLOW)}"
-                )
+#         if isinstance(callback, core.Command):
+#             ctx = self.create_child(callback)
+#             cmd = callback
+#             callback = cmd.callback
+#             cmd.inject_dependancies(kwargs, ctx)
 
-        return message
+#         else:
+#             ctx = self
+
+#         with ctx:
+#             return callback(**kwargs)
+
+#     def parse_args(self, args: list[str]) -> at.ParseResult:
+#         if args:
+#             parsed, rest = self.command.parse_args(args, self)
+
+#             if rest and not self.config.allow_unrecognized_args:
+#                 message = f"Unrecognized arguments: {Joiner.with_space(rest, style=fg.YELLOW)}"
+
+#                 message += self.__get_suggestions(rest)
+#                 list(
+#                     itertools.chain(
+#                         *[param.get_param_names() for param in self.command.key_params]
+#                     )
+#                 )
+#                 raise errors.UnrecognizedArgError(message, self)
+#             else:
+#                 self.rest = rest
+#         else:
+#             parsed = {}
+
+#         return parsed
+
+#     def create_child(self, command: core.Command) -> Context:
+#         """Creates a new context that is the child of the current context"""
+#         return type(self)(command, parent=self)
+
+#     def resource(self, resource: t.ContextManager[T]) -> T:
+#         """Opens a resource like you would with the `with` statement.
+#         When this context is closed, all open resources will be closed
+#         along with it
+#         """
+#         return self._exit_stack.enter_context(resource)
+
+#     def close_callback(
+#         self, callback: t.Callable[..., t.Any]
+#     ) -> t.Callable[..., t.Any]:
+#         """Adds a callback that will be executed when this context is closed"""
+#         return self._exit_stack.callback(callback)
+
+#     def exit(self, code: int = 0) -> t.NoReturn:
+#         """Exits the app with code `code`"""
+#         raise errors.Exit(code)
+
+#     def __get_suggestions(self, rest: list[str]) -> str:
+#         message = ""
+
+#         if self.config.suggestions["suggest_commands"]:
+
+#             message += self.__fmt_suggestions(
+#                 rest[0:1],
+#                 list(
+#                     itertools.chain(
+#                         *[com.all_names for com in self.command.subcommands.values()]
+#                     )
+#                 ),
+#                 "subcommand",
+#             )
+
+#         if self.config.suggestions["suggest_params"]:
+#             message += self.__fmt_suggestions(
+#                 rest,
+#                 list(
+#                     itertools.chain(
+#                         *[param.get_param_names() for param in self.command.key_params]
+#                     )
+#                 ),
+#                 "argument",
+#             )
+
+#         return message
+
+#     def __fmt_suggestions(self, rest: list[str], possibilities: list[str], kind: str):
+#         message = ""
+
+#         suggestions = utils.string_suggestions(
+#             rest, possibilities, self.config.suggestions["distance"]
+#         )
+
+#         for param_name, param_sug in suggestions.items():
+#             if param_sug:
+#                 message += (
+#                     f"\nUnrecognized {kind} {colorize(param_name, fg.YELLOW)}, "
+#                     f"did you mean: {Joiner.with_or(param_sug, style=fg.YELLOW)}"
+#                 )
+
+#         return message

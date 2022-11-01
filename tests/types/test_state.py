@@ -2,6 +2,7 @@ import pytest
 import arc
 from arc import namespace, errors
 from arc.context import Context
+from arc.core.app import Arc
 from arc.types import State
 
 
@@ -33,15 +34,6 @@ def test_parent_state(cli: arc.Command):
     assert cli("ignore-parent-state 2") == 2
 
 
-def test_state_name(cli: arc.Command):
-    @cli.subcommand()
-    def other_state_name(foo: State):
-        return foo
-
-    state = cli("other-state-name")
-    assert state.test == 1
-
-
 def test_custom_state(cli: arc.Command):
     class CustomState(State):
         ...
@@ -66,9 +58,9 @@ def test_override(cli: arc.Command):
 
 def test_state_retained(cli: arc.Command):
     @cli.subcommand()
-    def c1(ctx: Context, state: State):
+    def c1(app: Arc, state: State):
         state.val = 2
-        return ctx.execute(c2)
+        return app.subexecute(c2)
 
     @cli.subcommand()
     def c2(state: State):

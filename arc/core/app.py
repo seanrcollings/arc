@@ -9,12 +9,12 @@ import arc
 from arc import constants
 from arc import errors
 from arc import typing as at
+from arc import utils
 from arc.core.param.param import InjectedParam, Param, ValueOrigin
 from arc.parser import Parser
 from arc.config import config, Config
 from arc.present import Joiner
 from arc.color import fg, colorize
-from arc import utils
 from arc.prompt.prompts import input_prompt
 from arc.types.helpers import iscontextmanager
 
@@ -115,6 +115,7 @@ class ArgParseMiddleware(Middleware):
                 env["arc.command"] = root
                 self.run_command(root, global_args, env)
                 env["arc.command"] = command
+                del env["arc.args"]
             return self.run_command(command, args, env)
 
     def run_command(self, command: Command, args: list[str], env: at.ExecEnv):
@@ -219,6 +220,9 @@ class ProcessParseResultMiddleware(Middleware):
     exit_stack: contextlib.ExitStack
 
     def __call__(self, env: at.ExecEnv) -> t.Any:
+        if env.get("arc.args") is not None:
+            return self.app(env)
+
         command: Command = env["arc.command"]
         result: dict = env["arc.parse.result"]
         self.config = env["arc.config"]
@@ -322,32 +326,42 @@ class ProcessParseResultMiddleware(Middleware):
         origin = ValueOrigin.CLI
 
         if value is constants.MISSING:
-            if param.envvar and (env := self.get_env_value(param)):
+            if (env := self.get_env_value(param)) != constants.MISSING:
                 value = env
                 origin = ValueOrigin.ENV
-            elif (
-                param.prompt
-                and (prompt := self.get_prompt_value(param)) != constants.MISSING
-            ):
+            elif (prompt := self.get_prompt_value(param)) != constants.MISSING:
                 value = prompt
                 origin = ValueOrigin.PROMPT
-            # elif param.getter_func and (gotten := param.getter_func(param)) != MISSING:
-            #     value = gotten
-            #     origin = ValueOrigin.GETTER
+            elif (gotten := self.get_getter_value(param)) != constants.MISSING:
+                value = gotten
+                origin = ValueOrigin.GETTER
             else:
                 value = param.default
                 origin = ValueOrigin.DEFAULT
 
         return (value, origin)
 
-    def get_env_value(self, param: Param) -> str | None:
-        return os.getenv(f"{self.config.env_prefix}{param.envvar}")
+    def get_env_value(self, param: Param) -> str | constants.MissingType:
+        if not param.envvar:
+            return constants.MISSING
+
+        return os.getenv(f"{self.config.env_prefix}{param.envvar}", constants.MISSING)
 
     def get_prompt_value(self, param: Param) -> str | constants.MissingType:
+        if not param.prompt:
+            return constants.MISSING
+
         if hasattr(param.type.resolved_type, "__prompt__"):
             return param.type.resolved_type.__prompt__(param)  # type: ignore
 
         return input_prompt(self.config.prompt, param)
+
+    def get_getter_value(self, param: Param) -> t.Any | constants.MissingType:
+        getter = param.getter_func
+        if not getter:
+            return constants.MISSING
+
+        return getter(param)
 
 
 class DependancyInjectorMiddleware(Middleware):
@@ -488,8 +502,10 @@ class Arc:
 
         return first(self.env)
 
-    def subexecute(self, command: t.Optional[Command] = None) -> t.Any:
-        print(f"Excute: {command}")
+    def subexecute(self, command: Command, **kwargs) -> t.Any:
+        env = self.create_env({"arc.command": command, "arc.args": kwargs or {}})
+        first = self.build_middleware_stack(self.exec_middleware_types)
+        return first(env)
 
     def build_middleware_stack(
         self, middlewares: t.Sequence[type[Middleware]]
@@ -506,14 +522,18 @@ class Arc:
 
         return first
 
-    def create_env(self) -> at.ExecEnv:
-        return {
-            "arc.root": self.root,
-            "arc.input": self.input,
-            "arc.config": config,
-            "arc.errors": [],
-            "arc.app": self,
-        } | self.provided_env
+    def create_env(self, data: dict = None) -> at.ExecEnv:
+        return (
+            {
+                "arc.root": self.root,
+                "arc.input": self.input,
+                "arc.config": config,
+                "arc.errors": [],
+                "arc.app": self,
+            }
+            | self.provided_env
+            | (data or {})
+        )
 
     @classmethod
     def __depends__(cls, env):

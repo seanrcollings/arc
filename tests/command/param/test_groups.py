@@ -43,24 +43,24 @@ def test_subgroup():
 
 
 def test_depenancies():
-    def depfunc1(ctx):
+    def depfunc1():
         return 1
 
-    def depfunc2(ctx):
+    def depfunc2():
         return 2
 
     @arc.group
     class Group:
         dep1 = arc.Depends(depfunc1)
         dep2 = arc.Depends(depfunc2)
-        ctx: arc.Context
+        ctx: arc.State
 
     @arc.command()
     def command(group: Group):
         return group
 
-    group = command("")
+    group = command("", state={"val": 1})
 
     assert group.dep1 == 1
     assert group.dep2 == 2
-    assert isinstance(group.ctx, arc.Context)
+    assert isinstance(group.ctx, arc.State)

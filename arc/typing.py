@@ -32,7 +32,7 @@ CompletionFunc = t.Callable[
     [CompletionInfo, "Param"], t.Union[list[Completion], Completion, None]
 ]
 
-GetterFunc = t.Callable[["Context", "Param"], t.Any]
+GetterFunc = t.Callable[["Param"], t.Any]
 
 MiddlewareCallable = t.Callable[[T], T]
 

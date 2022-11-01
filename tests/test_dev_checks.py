@@ -46,7 +46,7 @@ def test_depends_default():
     with pytest.raises(errors.ParamError):
 
         @arc.command()
-        def command(ctx: arc.Context = 2):  # type: ignore
+        def command(ctx: arc.State = 2):  # type: ignore
             ...
 
 

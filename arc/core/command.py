@@ -123,14 +123,14 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         if not self.explicit_name:
             self.name = utils.discover_name()
 
-        # if self.is_root and self.subcommands and len(list(self.argument_params)) != 0:
-        #     raise errors.CommandError(
-        #         "Top-level command with subcommands cannot "
-        #         "have argument / positional parameters"
-        #     )
+        if self.is_root and self.subcommands and len(list(self.argument_params)) != 0:
+            raise errors.CommandError(
+                "Top-level command with subcommands cannot "
+                "have argument / positional parameters"
+            )
 
         try:
-            app = Arc(self, input=input_args)
+            app = Arc(self, input=input_args, env={"arc.state": state or {}})
             return app()
         except errors.ExternalError as e:
             if config.environment == "production":

@@ -16,17 +16,12 @@ from arc import utils
 import arc.typing as at
 
 
-def convert(value: str, type: type, context: Context | None = None):
-    try:
-        context = context or Context.current()
-    except ArcError:
-        context = None
-
+def convert(value: str, type: type):
     info = TypeInfo.analyze(type)
     converted = convert_type(info.resolved_type, value, info)
 
     for middleware in info.middleware:
-        converted = utils.dispatch_args(middleware, converted, context, None)
+        converted = utils.dispatch_args(middleware, converted, None)
 
     return converted
 

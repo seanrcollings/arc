@@ -5,6 +5,7 @@ import pytest
 import arc
 from arc import Argument, Option, errors, configure
 from arc import constants
+from arc.core.param.param import Param
 from tests.utils import environ  # type: ignore
 from arc.prompt.helpers import ARROW_DOWN
 
@@ -84,7 +85,7 @@ class TestPrompt:
 
 class TestGetter:
     def test_basic(self):
-        def _get(ctx, param):
+        def _get(param: Param):
             return 2
 
         @arc.command()
@@ -99,7 +100,7 @@ class TestGetter:
             return val
 
         @getter.get("val")
-        def get_val(ctx, param):
+        def get_val(param):
             return 2
 
         assert getter("") == 2
@@ -110,7 +111,7 @@ class TestGetter:
             return val
 
         @getter.get("val")
-        def get_val(ctx, param):
+        def get_val(param):
             return constants.MISSING
 
         with pytest.raises(errors.MissingArgError):
@@ -122,7 +123,7 @@ class TestGetter:
             return val
 
         @getter.get("val")
-        def get_val(ctx, param):
+        def get_val(param):
             return constants.MISSING
 
         assert getter("") == 1
