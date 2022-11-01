@@ -35,17 +35,17 @@ def test_in_groups():
 
 def test_with_last():
     assert Joiner.with_last([1, 2, 3, 4], ", ", " last ") == "1, 2, 3 last 4"
-    assert Joiner.with_last([1], ", ", " last ") == " last 1"
+    assert Joiner.with_last([1], ", ", " last ") == "1"
     assert Joiner.with_last([], ", ", " last ") == ""
 
 
 def test_with_and():
     assert Joiner.with_and([1, 2, 3, 4]) == "1, 2, 3 and 4"
-    assert Joiner.with_and([1]) == " and 1"
+    assert Joiner.with_and([1]) == "1"
     assert Joiner.with_and([]) == ""
 
 
 def test_with_or():
     assert Joiner.with_or([1, 2, 3, 4]) == "1, 2, 3 or 4"
-    assert Joiner.with_or([1]) == " or 1"
+    assert Joiner.with_or([1]) == "1"
     assert Joiner.with_or([]) == ""

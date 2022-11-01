@@ -146,6 +146,15 @@ class ExitStackMiddleware(Middleware):
             return self.app(env)
 
 
+class AddUsageErrorInfoMiddleware(Middleware):
+    def __call__(self, env: at.ExecEnv):
+        try:
+            return self.app(env)
+        except errors.UsageError as e:
+            e.command = env["arc.command"]
+            raise
+
+
 class ParseResultCheckerMiddleware(Middleware):
     def __call__(self, env: at.ExecEnv):
         config: Config = env["arc.config"]
@@ -404,32 +413,6 @@ class DependancyInjectorMiddleware(Middleware):
             args.update(injected)
 
 
-# def nested_update(dct: dict, path: t.Sequence[str], value: t.Any):
-#     for p in path[0:-1]:
-#         dct = dct[p]
-
-#     dct[path[-1]] = value
-
-
-# class EnvArgFillerMiddleware(Middleware):
-#     def __call__(self, env: Env):
-#         args: dict = env["arc.args"]
-#         config: Config = env["arc.config"]
-#         missing: list[tuple[tuple[str, ...], Param]] = env["arc.args.missing"]
-#         next_missing = []
-
-#         for path, param in missing:
-#             if param.envvar:
-#                 value = os.getenv(f"{config.env_prefix}{param.envvar}")
-#                 if value:
-#                     nested_update(args, path, value)
-#                 else:
-#                     next_missing.append((path, param))
-
-#         env["arc.args.missing"] = next_missing
-#         return self.app(env)
-
-
 class DecoratorStackMiddleware(Middleware):
     def __call__(self, env: at.ExecEnv):
         command: Command = env["arc.command"]
@@ -460,6 +443,7 @@ class ExecutionHandler(Middleware):
 
 class Arc:
     DEFAULT_INIT_MIDDLEWARES = [
+        AddUsageErrorInfoMiddleware,
         InputMiddleware,
         CommandFinderMiddleware,
         ArgParseMiddleware,

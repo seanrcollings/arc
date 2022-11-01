@@ -4,6 +4,7 @@ import typing as t
 
 if t.TYPE_CHECKING:
     from arc.context import Context
+    from arc.core import Command
 
 
 class Exit(SystemExit):
@@ -42,16 +43,16 @@ class ConversionError(ArgumentError):
 
 class UsageError(ExternalError):
     """Indicates that the command was used incorrectly.
-    If a ctx is provided, the command's usage will be arc.printed,
+    If a command is provided, the command's usage will be printed,
     along with the provided error message"""
 
-    def __init__(self, message: str, ctx: Context = None):
+    def __init__(self, message: str, command: Command = None):
         self.message = message
-        self.ctx = ctx
+        self.command = command
 
     def __str__(self):
-        if self.ctx:
-            usage = self.ctx.command.doc.usage()
+        if self.command:
+            usage = self.command.doc.usage()
             return f"{usage}\n{self.message}"
 
         return self.message

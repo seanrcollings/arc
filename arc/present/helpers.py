@@ -37,7 +37,6 @@ class Joiner:
         **kwargs
     ) -> str:
         """Joins two groups objects with `string`, then joins the two groups together with `between`"""
-
         return Joiner.join(
             (
                 Joiner.join(first, string, *args, **kwargs),
@@ -60,6 +59,9 @@ class Joiner:
         """
         if len(values) == 0:
             return ""
+
+        if len(values) == 1:
+            return Joiner.join(values, "", *args, **kwargs)
 
         return Joiner.in_groups(
             values[:-1], [values[-1]], string, last_string, *args, **kwargs
