@@ -12,11 +12,12 @@ from arc import typing as at
 from arc import utils
 from arc.core.param.param import InjectedParam, Param, ValueOrigin
 from arc.parser import Parser
-from arc.config import config, Config
+from arc.config import Config
 from arc.present import Joiner
 from arc.color import fg, colorize
 from arc.prompt.prompts import input_prompt
 from arc.types.helpers import iscontextmanager
+from arc.logging import logger
 
 if t.TYPE_CHECKING:
     from arc.core.param.param_group import ParamGroup
@@ -139,6 +140,12 @@ class ArgParseMiddleware(Middleware):
         return parser
 
 
+class ContextInjectorMiddleware(Middleware):
+    def __call__(self, env: at.ExecEnv):
+        env["arc.ctx"] = arc.Context(env)
+        return self.app(env)
+
+
 class ExitStackMiddleware(Middleware):
     def __call__(self, env: at.ExecEnv):
         with contextlib.ExitStack() as stack:
@@ -226,16 +233,22 @@ class ParseResultCheckerMiddleware(Middleware):
 
 class ProcessParseResultMiddleware(Middleware):
     config: Config
-    exit_stack: contextlib.ExitStack
+    exit_stack: contextlib.ExitStack | None
 
     def __call__(self, env: at.ExecEnv) -> t.Any:
+        self.origins: dict[str, ValueOrigin] = {}
+        env["arc.args.origins"] = self.origins
+
         if env.get("arc.args") is not None:
             return self.app(env)
 
         command: Command = env["arc.command"]
         result: dict = env["arc.parse.result"]
         self.config = env["arc.config"]
-        self.exit_stack = env["arc.exitstack"]
+
+        self.exit_stack = env.get("arc.exitstack")
+        self.ctx = env.get("arc.ctx")
+
         processed: dict[str, t.Any] = {}
         missing: list[tuple[tuple[str, ...], Param]] = []
 
@@ -259,7 +272,7 @@ class ProcessParseResultMiddleware(Middleware):
             )
 
         env["arc.args"] = processed
-        # env["arc.args.missing"] = missing
+
         return self.app(env)
 
     def process_param_group(
@@ -273,7 +286,8 @@ class ProcessParseResultMiddleware(Middleware):
             if param.is_injected:
                 continue
 
-            value, origin = self.process_param(param, res)
+            value = self.process_param(param, res)
+
             if value is constants.MISSING:
                 missing.append(((*path, param.argument_name), param))
             if param.expose:
@@ -290,12 +304,13 @@ class ProcessParseResultMiddleware(Middleware):
             for key, value in processed.items():
                 setattr(inst, key, value)
 
-            return (inst, missing)
+            return inst, missing
 
         return processed, missing
 
     def process_param(self, param: Param, res: at.ParseResult):
         value, origin = self.get_param_value(param, res)
+        self.origins[param.argument_name] = origin
 
         if param.is_required and value is None:
             raise errors.MissingArgError(
@@ -314,7 +329,7 @@ class ProcessParseResultMiddleware(Middleware):
             value = param.convert(value)
 
         if value not in (None, constants.MISSING):
-            value = param.run_middleware(value)
+            value = param.run_middleware(value, self.ctx)
 
         if (
             param.callback
@@ -323,10 +338,10 @@ class ProcessParseResultMiddleware(Middleware):
         ):
             value = param.callback(value, param) or value
 
-        if iscontextmanager(value):
+        if self.exit_stack and iscontextmanager(value):
             value = self.exit_stack.enter_context(value)  # type: ignore
 
-        return value, origin
+        return value
 
     def get_param_value(
         self, param: Param, res: at.ParseResult
@@ -385,7 +400,8 @@ class DependancyInjectorMiddleware(Middleware):
 
     def inject_dependancies(self, group: ParamGroup, args: dict, env: at.ExecEnv):
         injected = {}
-        exit_stack: contextlib.ExitStack = env["arc.exitstack"]
+        exit_stack: contextlib.ExitStack | None = env.get("arc.exitstack")
+        ctx = env.get("arc.ctx")
 
         for param in group:
             if not param.is_injected:
@@ -393,9 +409,10 @@ class DependancyInjectorMiddleware(Middleware):
 
             param = t.cast(InjectedParam, param)
 
-            value = param.get_injected_value(env)
+            env["arc.args.origins"][param.argument_name] = ValueOrigin.INJECTED
+            value = param.get_injected_value(ctx)
 
-            if iscontextmanager(value):
+            if exit_stack and iscontextmanager(value):
                 value = exit_stack.enter_context(value)
 
             injected[param.argument_name] = value
@@ -416,9 +433,10 @@ class DependancyInjectorMiddleware(Middleware):
 class DecoratorStackMiddleware(Middleware):
     def __call__(self, env: at.ExecEnv):
         command: Command = env["arc.command"]
+        ctx = env.get("arc.ctx")
 
         decostack = command.decorators()
-        decostack.start(env)
+        decostack.start(ctx)
 
         try:
             res = self.app(env)
@@ -451,6 +469,7 @@ class Arc:
     ]
 
     DEFAULT_EXEC_MIDDLEWARES = [
+        ContextInjectorMiddleware,
         ExitStackMiddleware,
         ProcessParseResultMiddleware,
         DependancyInjectorMiddleware,
@@ -461,12 +480,14 @@ class Arc:
     def __init__(
         self,
         root: Command,
+        config: Config,
         init_middlewares: list[type[Middleware]] | None = None,
         exec_middlewares: list[type[Middleware]] | None = None,
         input: at.InputArgs = None,
         env: at.ExecEnv | None = None,
     ) -> None:
         self.root: Command = root
+        self.config: Config = config
         self.init_middleware_types: list[type[Middleware]] = (
             init_middlewares or self.DEFAULT_INIT_MIDDLEWARES
         )
@@ -483,10 +504,26 @@ class Arc:
         first = self.build_middleware_stack(
             self.init_middleware_types + self.exec_middleware_types
         )
+        try:
+            return first(self.env)
 
-        return first(self.env)
+        except errors.ExternalError as e:
+            if self.config.environment == "production":
+                arc.err(e)
+                raise errors.Exit(1)
 
-    def subexecute(self, command: Command, **kwargs) -> t.Any:
+            raise
+        except Exception as e:
+            if self.config.report_bug:
+                raise errors.InternalError(
+                    f"{self.root.name} has encountered a critical error. "
+                    f"Please file a bug report with the maintainer: {colorize(self.config.report_bug, fg.YELLOW)}"
+                ) from e
+
+            raise
+
+    def execute(self, command: Command, **kwargs) -> t.Any:
+        """"""
         env = self.create_env({"arc.command": command, "arc.args": kwargs or {}})
         first = self.build_middleware_stack(self.exec_middleware_types)
         return first(env)
@@ -511,14 +548,15 @@ class Arc:
             {
                 "arc.root": self.root,
                 "arc.input": self.input,
-                "arc.config": config,
+                "arc.config": self.config,
                 "arc.errors": [],
                 "arc.app": self,
+                "arc.logger": logger,
             }
             | self.provided_env
             | (data or {})
         )
 
     @classmethod
-    def __depends__(cls, env):
-        return env["arc.app"]
+    def __depends__(cls, ctx):
+        return ctx.env["arc.app"]

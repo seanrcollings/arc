@@ -58,9 +58,9 @@ def test_override(cli: arc.Command):
 
 def test_state_retained(cli: arc.Command):
     @cli.subcommand()
-    def c1(app: Arc, state: State):
+    def c1(ctx: Context, state: State):
         state.val = 2
-        return app.subexecute(c2)
+        return ctx.execute(c2)
 
     @cli.subcommand()
     def c2(state: State):

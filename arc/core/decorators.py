@@ -105,9 +105,9 @@ class DecoratorStack(t.Generic[D]):
     def __contains__(self, value):
         return value in self.__decos
 
-    def start(self, env: at.ExecEnv):
+    def start(self, value: t.Any):
         for deco in reversed(self.__decos):
-            gen = deco.func()
+            gen = utils.dispatch_args(deco.func, value)
             if isinstance(gen, types.GeneratorType):
                 next(gen)
                 self.__gens.append(gen)  # type: ignore

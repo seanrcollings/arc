@@ -129,23 +129,8 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
                 "have argument / positional parameters"
             )
 
-        try:
-            app = Arc(self, input=input_args, env={"arc.state": state or {}})
-            return app()
-        except errors.ExternalError as e:
-            if config.environment == "production":
-                arc.err(e)
-                raise errors.Exit(1)
-
-            raise
-        except Exception as e:
-            if config.report_bug:
-                raise errors.InternalError(
-                    f"{self.name} has encountered a critical error. "
-                    f"Please file a bug report with the maintainer: {colorize(config.report_bug, fg.YELLOW)}"
-                ) from e
-
-            raise
+        app = Arc(self, config, input=input_args, env={"arc.state": state or {}})
+        return app()
 
     def __completions__(
         self, info: CompletionInfo, *_args, **_kwargs

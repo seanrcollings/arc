@@ -203,10 +203,10 @@ class Param(t.Generic[T]):
                 message += colorize(f" ({e.details})", fg.GREY)
             raise errors.InvalidArgValue(message) from e
 
-    def run_middleware(self, value: t.Any):
+    def run_middleware(self, value: t.Any, ctx: t.Any):
         for middleware in self.type.middleware:
             try:
-                value = utils.dispatch_args(middleware, value, self)
+                value = utils.dispatch_args(middleware, value, ctx, self)
             except errors.ValidationError as e:
                 message = self._fmt_error(e)
                 raise errors.InvalidArgValue(message) from e
@@ -309,9 +309,9 @@ class InjectedParam(Param):
 
     callback: t.Callable
 
-    def get_injected_value(self, env: dict) -> t.Any:
-        value = utils.dispatch_args(self.callback, env) if self.callback else None
-        value = self.run_middleware(value)
+    def get_injected_value(self, ctx: t.Any) -> t.Any:
+        value = utils.dispatch_args(self.callback, ctx) if self.callback else None
+        value = self.run_middleware(value, ctx)
         return value
 
     @property

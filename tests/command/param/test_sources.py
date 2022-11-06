@@ -5,7 +5,7 @@ import pytest
 import arc
 from arc import Argument, Option, errors, configure
 from arc import constants
-from arc.core.param.param import Param
+from arc.core.param.param import Param, ValueOrigin
 from tests.utils import environ  # type: ignore
 from arc.prompt.helpers import ARROW_DOWN
 
@@ -60,6 +60,16 @@ class TestEnv:
 
             assert env("--key 10") == (2, 10)
 
+    def test_get_origin(self):
+        @arc.command()
+        def env(ctx: arc.Context, val: int = Argument(envvar="VAL")):
+            return ctx.get_origin("val")
+
+        assert env("2") == ValueOrigin.CLI
+
+        with environ(VAL="2"):
+            assert env("") == ValueOrigin.ENV
+
 
 class TestPrompt:
     def test_basic(self, monkeypatch: pytest.MonkeyPatch):
@@ -81,6 +91,14 @@ class TestPrompt:
 
         monkeypatch.setattr("sys.stdin", io.StringIO("\n"))
         assert pr("") == 10
+
+    def test_get_origin(self, monkeypatch: pytest.MonkeyPatch):
+        @arc.command()
+        def pr(ctx: arc.Context, val: int = Argument(prompt="Val")):
+            return ctx.get_origin("val")
+
+        monkeypatch.setattr("sys.stdin", io.StringIO("2"))
+        assert pr("") == ValueOrigin.PROMPT
 
 
 class TestGetter:
@@ -127,6 +145,17 @@ class TestGetter:
             return constants.MISSING
 
         assert getter("") == 1
+
+    def test_get_origin(self):
+        @arc.command()
+        def getter(ctx: arc.Context, val: int = Argument(default=1)):
+            return ctx.get_origin("val")
+
+        @getter.get("val")
+        def get_val(param):
+            return 2
+
+        assert getter("") == ValueOrigin.GETTER
 
 
 def test_precedence(monkeypatch: pytest.MonkeyPatch):

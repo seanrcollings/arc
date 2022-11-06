@@ -7,5 +7,5 @@ from arc.types import State
 from arc.context import Context
 from arc.config import configure
 from arc import errors
-from arc.errors import ConversionError, ExecutionError
+from arc.errors import ConversionError, ExecutionError, ValidationError
 from arc.pub import convert, print, exit, command, namespace, err, info, usage

@@ -1,6 +1,8 @@
 from __future__ import annotations
 import typing as t
 
+from arc.core.param import ValueOrigin
+
 if t.TYPE_CHECKING:
     from arc.core.param import Param
     from arc import Context
@@ -46,7 +48,8 @@ class Log:
                 "param": param.param_name,
                 "cli": param.cli_name,
             }
-            origin = ctx.arg_origins[param.argument_name]
+
+            origin = ctx.get_origin(param.argument_name, ValueOrigin.DEFAULT)
             ctx.logger.debug(
                 f"{names.get(self.name_kind, param.argument_name)} = {value} ({origin.value})"
             )
