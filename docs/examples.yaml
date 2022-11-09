@@ -25,6 +25,11 @@
   exec:
     - Sean
     - Sean Collings
+- file: parameter_default.py
+  out: parameter_default_error
+  exec: ""
+  error_allowed: true
+  exit_code: 1
 - file: parameter_option.py
   out: parameter_option
   exec: --firstname Joesph --lastname Joestar
@@ -148,3 +153,9 @@
   exec: ""
 - file: type_middleware_round.py
   exec: "1.123456789"
+- file: from_getter.py
+  exec:
+    - Sean
+    - ""
+- file: command_string.py
+  exec: ""

@@ -45,7 +45,8 @@ nav:
           - Arguments: usage/parameters/arguments.md
           - Options: usage/parameters/options.md
           - Flags: usage/parameters/flags.md
-          - Parameter Sources: usage/parameter-sources.md
+          - Counter: usage/parameters/counter.md
+          - Parameter Sources: usage/parameters/parameter-sources.md
           - Parameter Groups: usage/parameters/parameter-groups.md
       - Subcommands: usage/subcommands.md
       - Paramater Types: usage/parameter-types.md
@@ -55,6 +56,7 @@ nav:
       - Error Handlers: usage/error-handlers.md
       - Command State: usage/command-state.md
   - Advanced Usage:
+      - Using Context: advanced-usage/using-context.md
       - Type Middleware: advanced-usage/type-middleware.md
       - Dependancy Injection: advanced-usage/dependancy-injection.md
       - Custom Types: advanced-usage/custom-types.md

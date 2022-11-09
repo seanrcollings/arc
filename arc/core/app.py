@@ -29,14 +29,23 @@ class Middleware:
         self.app = app
 
     def __repr__(self):
-        return f"{type(self).__name__}({repr(self.app)})"
+        return f"{type(self).__name__}({self.app!r})"
 
     def __call__(self, env: at.ExecEnv):
         return self.app(env)
 
 
+class AddUsageErrorInfoMiddleware(Middleware):
+    def __call__(self, env: at.ExecEnv) -> t.Any:
+        try:
+            return self.app(env)
+        except errors.UsageError as e:
+            e.command = env["arc.command"]
+            raise
+
+
 class InputMiddleware(Middleware):
-    def __call__(self, env):
+    def __call__(self, env) -> t.Any:
         args: at.InputArgs = env.get("arc.input")
         if args is None:
             args = sys.argv[1:]
@@ -70,31 +79,6 @@ class CommandFinderMiddleware(Middleware):
                 return "single"
         else:
             return "subcommand"
-
-
-class HandleGlobalCommandWeirdness(Middleware):
-    def __call__(self, env: at.ExecEnv):
-        mode: str = env["arc.mode"]
-        root: Command = env["arc.root"]
-        command: Command = env["arc.command"]
-        args: list[str] = env["arc.input"]
-
-        if mode == "subcommands":
-            if root is command:
-                env["arc.command"] = root
-                env["arc.input"] = env["arc.input.global"]
-                self.app(env)
-            else:
-                env["arc.command"] = root
-                env["arc.input"] = env["arc.input.global"]
-                self.app(env)
-
-                env["arc.command"] = command
-                env["arc.input"] = args
-                return self.app(env)
-        elif mode == "single":
-            env["arc.input"] = env["arc.input.global"]
-            return self.app(env)
 
 
 class ArgParseMiddleware(Middleware):
@@ -151,15 +135,6 @@ class ExitStackMiddleware(Middleware):
         with contextlib.ExitStack() as stack:
             env["arc.exitstack"] = stack
             return self.app(env)
-
-
-class AddUsageErrorInfoMiddleware(Middleware):
-    def __call__(self, env: at.ExecEnv):
-        try:
-            return self.app(env)
-        except errors.UsageError as e:
-            e.command = env["arc.command"]
-            raise
 
 
 class ParseResultCheckerMiddleware(Middleware):
@@ -385,7 +360,7 @@ class ProcessParseResultMiddleware(Middleware):
         if not getter:
             return constants.MISSING
 
-        return getter(param)
+        return utils.dispatch_args(getter, param, self.ctx)
 
 
 class DependancyInjectorMiddleware(Middleware):

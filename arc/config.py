@@ -48,7 +48,7 @@ def configure(
     prompt: t.Optional[Prompt] = None,
     autocomplete: t.Optional[bool] = None,
     allow_unrecognized_args: t.Optional[bool] = None,
-    global_callback_execution: t.Optional[t.Literal["always", "args_present"]] = None,
+    # global_callback_execution: t.Optional[t.Literal["always", "args_present"]] = None,
     report_bug: str | None = None,
     autoload_overwrite: bool | None = None,
 ):
@@ -83,7 +83,6 @@ def configure(
             that arc does not recognize. Their values will bes tored in `Context.rest`
             defaults to `False`
 
-        global_callback_execution: ...
 
         report_bug: link to report a bug when an unhandled exception occurs within your
             application
@@ -102,7 +101,6 @@ def configure(
         "prompt": prompt,
         "autocomplete": autocomplete,
         "allow_unrecognized_args": allow_unrecognized_args,
-        "global_callback_execution": global_callback_execution,
         "report_bug": report_bug,
         "autoload_overwrite": autoload_overwrite,
     }

@@ -124,7 +124,7 @@ Support for regular expression patterns
 
 `Context`
 
-Gives you access to the current execution context instance which serves as a central data and functionality object
+Gives you access to the current execution context. [Check here for details](../advanced-usage/using-context.md). Does not expose the param on the command line.
 
 
 `State`

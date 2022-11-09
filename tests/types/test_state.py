@@ -8,15 +8,11 @@ from arc.types import State
 
 @pytest.fixture(scope="function")
 def cli():
-    arc.configure(global_callback_execution="always")
-
     @arc.command()
     def cli(state: State):
         state.test = 1
 
     yield cli
-
-    arc.configure(global_callback_execution="args_present")
 
 
 def test_parent_state(cli: arc.Command):

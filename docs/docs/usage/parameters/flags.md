@@ -2,9 +2,10 @@ Flags are similar to [options](./options.md) as they are referenced by name, but
 
 Flags are defined by annotating an argument with the `#!python bool` type.
 
-```py
+```py title="examples/parameter_flag.py"
 --8<-- "examples/parameter_flag.py"
 ```
+
 
 ```console
 --8<-- "examples/outputs/parameter_flag"
@@ -25,6 +26,6 @@ reverse: bool
 ```py
 reverse = arc.Flag()
 ```
-The `#!python bool` type is no longer required, but it's still generally reccomended
+The `#!python bool` type is no longer required, but it's still generally recommended
 
-[Check the reference for all the options that `arc.Flag()` can recieve](../../reference/params.md#flag)
+[Check the reference for all the options that `arc.Flag()` can recieve](../../reference/params.md#arc.params.Flag)
