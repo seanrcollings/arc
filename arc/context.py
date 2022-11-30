@@ -8,6 +8,7 @@ if t.TYPE_CHECKING:
     from arc.core.command import Command
     from arc.core.app import Arc
     from logging import Logger
+    from arc.config import Config
 
 
 T = t.TypeVar("T")
@@ -35,10 +36,13 @@ class Context:
     def app(self) -> Arc:
         return self.env["arc.app"]
 
+    @property
+    def config(self) -> Config:
+        return self.env["arc.config"]
+
     def execute(self, command: Command, **kwargs) -> t.Any:
         """Execute a command within the context of another command"""
-        app: Arc = self.env["arc.app"]
-        return app.execute(command, **kwargs)
+        return self.app.execute(command, **kwargs)
 
     @t.overload
     def get_origin(self, param_name: str) -> ValueOrigin | None:

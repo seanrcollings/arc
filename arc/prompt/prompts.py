@@ -21,9 +21,9 @@ def password_prompt(prompt: Prompt, param: Param):
     return input_prompt(prompt, param, sensitive=True)
 
 
-def select_prompt(values: list, config, param: Param, **kwargs):
+def select_prompt(values: list, param: Param, **kwargs):
     arc.print(param.prompt)
-    res = select(values, highlight_color=config.brand_color, **kwargs)
+    res = select(values, **kwargs)
 
     if res is None:
         return constants.MISSING

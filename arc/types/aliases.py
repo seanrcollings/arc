@@ -32,6 +32,7 @@ from arc.types import type_info
 if t.TYPE_CHECKING:
     from arc.types.type_info import TypeInfo
     from arc.context import Context
+    from arc.core.param import Param
 
 
 AliasFor = t.Union[Annotation, t.Tuple[Annotation, ...]]
@@ -210,7 +211,7 @@ class DictAlias(dict, Alias, of=dict):
     name = "dictionary"
 
     @classmethod
-    def convert(cls, value: str, info: TypeInfo):
+    def convert(cls, value: str, info: TypeInfo) -> dict[str, str]:
         dct = cls.alias_for(i.split("=") for i in value.split(","))
         if isinstance(info.origin, t._TypedDictMeta):  # type: ignore
             return cls.__typed_dict_convert(dct, info)
@@ -306,8 +307,12 @@ class LiteralAlias(Alias, of=t.Literal):
         )
 
     @classmethod
-    def __prompt__(cls, param):
-        return select_prompt(list(str(tp.origin) for tp in param.type.sub_types), param)
+    def __prompt__(cls, param: Param, ctx: Context):
+        return select_prompt(
+            list(str(tp.origin) for tp in param.type.sub_types),
+            param,
+            highlight_color=ctx.config.brand_color,
+        )
 
     @classmethod
     def __completions__(cls, info, param):
@@ -321,7 +326,7 @@ class LiteralAlias(Alias, of=t.Literal):
 
 class EnumAlias(Alias, of=enum.Enum):
     @classmethod
-    def convert(cls, value: t.Any, info: TypeInfo[enum.Enum]):
+    def convert(cls, value: t.Any, info: TypeInfo[enum.Enum]) -> t.Any:
         try:
             if issubclass(info.origin, enum.IntEnum):
                 return info.origin(int(value))
@@ -334,10 +339,12 @@ class EnumAlias(Alias, of=enum.Enum):
             ) from e
 
     @classmethod
-    def __prompt__(cls, param):
+    def __prompt__(cls, param: Param[enum.Enum], ctx: Context) -> t.Any:
+        enum_cls: type[enum.Enum] = param.type.origin
         return select_prompt(
-            list(str(m.value) for m in param.type_info.origin.__members__.values()),
+            list(str(m.value) for m in enum_cls.__members__.values()),
             param,
+            highlight_color=ctx.config.brand_color,
         )
 
     @classmethod

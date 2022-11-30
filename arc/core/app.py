@@ -1,3 +1,4 @@
+"""Contains all of arc's builtin middlewares, and the `Arc` class"""
 from __future__ import annotations
 import contextlib
 import itertools
@@ -36,15 +37,34 @@ class Middleware:
 
 
 class AddUsageErrorInfoMiddleware(Middleware):
+    """A utility middleware that catches `UsageError`s and adds information so they can generate a usage error
+
+    # Env Dependancies
+    - `arc.command` (optional): Usage information comes from the current executing [`Command`][arc.core.command.Command] object
+    # Env Additions
+    None
+    """
+
     def __call__(self, env: at.ExecEnv) -> t.Any:
         try:
             return self.app(env)
         except errors.UsageError as e:
-            e.command = env["arc.command"]
+            e.command = env.get("arc.command")
             raise
 
 
 class InputMiddleware(Middleware):
+    """Middleware that normalizes different input sources. If input is provided when
+    command is called, it will be normalized to an list. If input is not provided,
+    `sys.argv` is used.
+
+    # Env Dependancies
+    - `arc.input` (optional): Only exists if input was provided in the call to the command
+
+    # Env Additions
+    - `arc.input`: Adds it if it's not already there, normalizes it if it is there
+    """
+
     def __call__(self, env) -> t.Any:
         args: at.InputArgs = env.get("arc.input")
         if args is None:
@@ -125,12 +145,36 @@ class ArgParseMiddleware(Middleware):
 
 
 class ContextInjectorMiddleware(Middleware):
+    """Utility middleware that injects the [`Context`][arc.context.Context] object into the enviroment,
+    which is what is passed to other parts of `arc` when they need access to the
+    enviroment, but with a bit cleaner of an interface
+
+    # Env Dependancies
+    None
+
+    # Env Additions
+    - `arc.ctx`
+
+    """
+
     def __call__(self, env: at.ExecEnv):
         env["arc.ctx"] = arc.Context(env)
         return self.app(env)
 
 
 class ExitStackMiddleware(Middleware):
+    """Utility middleware that adds an instance of `contextlib.ExitStack` to the enviroment.
+    This can be used to open resources (like IO objects) that need to be closed when the program is exiting.
+
+    # Env Dependancies
+    None
+
+    # Env Additions
+    - `arc.exitstack`
+
+
+    """
+
     def __call__(self, env: at.ExecEnv):
         with contextlib.ExitStack() as stack:
             env["arc.exitstack"] = stack
@@ -138,6 +182,17 @@ class ExitStackMiddleware(Middleware):
 
 
 class ParseResultCheckerMiddleware(Middleware):
+    """Checks the results of the input parsing against configutation options.
+    Generates error messages for unrecognized arguments
+
+    # Env Dependancies
+    - `arc.config`
+    - `arc.command`
+    - `arc.parse.extra` (optional)
+
+    # Env Additions
+    """
+
     def __call__(self, env: at.ExecEnv):
         config: Config = env["arc.config"]
         extra: list[str] | None = env.get("arc.parse.extra")
@@ -351,7 +406,9 @@ class ProcessParseResultMiddleware(Middleware):
             return constants.MISSING
 
         if hasattr(param.type.resolved_type, "__prompt__"):
-            return param.type.resolved_type.__prompt__(param)  # type: ignore
+            return utils.dispatch_args(
+                param.type.resolved_type.__prompt__, param, self.ctx  # type: ignore
+            )
 
         return input_prompt(self.config.prompt, param)
 
@@ -498,7 +555,6 @@ class Arc:
             raise
 
     def execute(self, command: Command, **kwargs) -> t.Any:
-        """"""
         env = self.create_env({"arc.command": command, "arc.args": kwargs or {}})
         first = self.build_middleware_stack(self.exec_middleware_types)
         return first(env)

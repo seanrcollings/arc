@@ -46,7 +46,7 @@ class Param(t.Generic[T]):
     """The names used on the command line / for parsing"""
     short_name: str | None
     """Optional single-character name alternabive for keyword params"""
-    type: TypeInfo
+    type: TypeInfo[T]
     """Information on the type of the argument"""
     default: T | MissingType | None
     """Default value for this Param, will be used if no

@@ -1,6 +1,6 @@
 import typing as t
 
-from arc.color import colorize
+from arc import color
 
 
 class Joiner:
@@ -15,7 +15,7 @@ class Joiner:
             values = [v for v in values if v]
 
         if style:
-            return string.join(colorize(v, style) for v in values)
+            return string.join(color.colorize(v, style) for v in values)
 
         return string.join(str(v) for v in values)
 
