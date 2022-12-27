@@ -6,12 +6,10 @@ import sys
 import typing as t
 from arc import errors
 from arc.color import colorize, fg
-from arc.context import Context
 from arc.core.command import Command, namespace_callback
-from arc.present.helpers import Joiner
+from arc.present import Joiner, Ansi
 from arc.types.type_info import TypeInfo
 from arc.types.helpers import convert_type
-from arc.errors import ArcError
 from arc import utils
 import arc.typing as at
 
@@ -38,7 +36,7 @@ def print(
     file = file or sys.stdout
 
     if file and not file.isatty():
-        values = tuple(utils.ansi_clean(str(v)) for v in values)
+        values = tuple(Ansi.clean(str(v)) for v in values)
 
     builtins.print(*values, sep=sep, end=end, file=file, flush=flush)
 

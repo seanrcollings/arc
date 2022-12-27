@@ -23,7 +23,7 @@ def test_param_instantation():
         def command(val: int = 2):
             ...
 
-        assert command.__dict__.get("param_groups", None) is None
+        assert command.__dict__.get("param_def", None) is None
 
     with set_env("development"):
 
@@ -31,7 +31,7 @@ def test_param_instantation():
         def command(val: int = 2):
             ...
 
-        assert command.__dict__.get("param_groups", None) is not None
+        assert command.__dict__.get("param_def", None) is not None
 
 
 def test_no_pos_only():

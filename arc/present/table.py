@@ -2,11 +2,11 @@ from __future__ import annotations
 import functools
 import itertools
 import typing as t
-from arc.errors import ArcError
 
+from arc.errors import ArcError
 from arc.color import colorize, effects, fg
-from arc.utils import ansi_len
-from . import drawing
+from arc.present.ansi import Ansi
+from arc.present import drawing
 
 
 class ColumnBase(t.TypedDict):  # pylint: disable=inherit-non-class
@@ -135,7 +135,7 @@ class Table:
             cells.append(col["name"])
 
             col["width"] = max(
-                ansi_len(self._fmt_cell_contents(cell)) + 2 for cell in cells
+                Ansi.len(self._fmt_cell_contents(cell)) + 2 for cell in cells
             )
 
         table = ""
@@ -254,14 +254,14 @@ class Table:
     ):
         formatted_cell = self._fmt_cell_contents(cell, header)
         width = width - 2
-        padding = " " * (width - ansi_len(formatted_cell))
+        padding = " " * (width - Ansi.len(formatted_cell))
 
         if justify == "left":
             return " " + formatted_cell + padding + " "
         elif justify == "right":
             return " " + padding + formatted_cell + " "
         elif justify == "center":
-            padding_width, remainder = divmod(width - ansi_len(formatted_cell), 2)
+            padding_width, remainder = divmod(width - Ansi.len(formatted_cell), 2)
             padding = " " * padding_width
             return (
                 " " + padding + formatted_cell + padding + ("  " if remainder else " ")

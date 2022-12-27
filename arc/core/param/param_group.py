@@ -4,24 +4,20 @@ import collections
 
 from arc.constants import MISSING
 from arc import errors
-import arc.typing as at
-from .param import InjectedParam, Param
-
-if t.TYPE_CHECKING:
-    from arc.context import Context
+from .param import Param
 
 
-class ParamGroup(collections.UserList[Param]):
-    DEFAULT = "default"
-    """A group with name `DEFAULT` is the base group and
+class ParamDefinition(collections.UserList[Param]):
+    BASE = "__arc_param_group_base"
+    """A group with name `BASE` is the base group and
     gets spread into the function arguments"""
-    sub_groups: list[ParamGroup]
+    children: list[ParamDefinition]
 
     def __init__(self, name: str, cls: type | None = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.name = name
         self.cls = cls
-        self.sub_groups = []
+        self.children = []
 
     def __repr__(self):
         return f"ParamGroup(name={self.name!r}, params={self.data!r})"
@@ -30,18 +26,27 @@ class ParamGroup(collections.UserList[Param]):
         """Generator that yields all params in itself, and in it's sub groups recursivley"""
         yield from self.data
 
-        if self.sub_groups:
-            for sub in self.sub_groups:
-                yield from sub.all_params()
+        if self.children:
+            for child in self.children:
+                yield from child.all_params()
 
     @property
-    def is_default(self) -> bool:
-        return self.name == self.DEFAULT
+    def is_base(self) -> bool:
+        return self.name == self.BASE
 
     @classmethod
-    def get_default_group(cls, groups: list[ParamGroup]) -> ParamGroup:
+    def get_base_group(cls, groups: list[ParamDefinition]) -> ParamDefinition:
         for group in groups:
-            if group.is_default:
+            if group.is_base:
                 return group
 
-        raise errors.InternalError("No default param group found")
+        raise errors.InternalError("No base param group found")
+
+
+class ParamValueNode:
+    values: dict[str, t.Any]
+    cls: type
+    children: list[ParamValueNode]
+
+    def __init__(self):
+        ...

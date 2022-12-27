@@ -9,7 +9,7 @@ from arc.config import config
 from arc.parser import CustomAutocompleteAction, CustomHelpAction, CustomVersionAction
 
 from .param import FlagParam, OptionParam, Param
-from .param_group import ParamGroup
+from .param_group import ParamDefinition
 from .param_builder import ParamBuilder
 
 
@@ -19,11 +19,11 @@ class ParamMixin:
     parent: t.Any
 
     @cached_property
-    def param_groups(self) -> list[ParamGroup]:
+    def param_def(self) -> list[ParamDefinition]:
         builder = ParamBuilder(self.callback)
         groups = builder.build()
 
-        default = ParamGroup.get_default_group(groups)
+        default = ParamDefinition.get_base_group(groups)
         if self.is_root and not self.is_namespace:  # type: ignore
 
             if config.version:
@@ -38,7 +38,7 @@ class ParamMixin:
 
     @property
     def params(self):
-        for group in self.param_groups:
+        for group in self.param_def:
             yield from group.all_params()
 
     @property
@@ -85,7 +85,7 @@ class ParamMixin:
 
         return None
 
-    def __add_version_param(self, group: ParamGroup):
+    def __add_version_param(self, group: ParamDefinition):
         group.append(
             FlagParam(
                 "version",
@@ -98,7 +98,7 @@ class ParamMixin:
             ),
         )
 
-    def __add_help_param(self, group: ParamGroup):
+    def __add_help_param(self, group: ParamDefinition):
         group.insert(
             0,
             FlagParam(
@@ -112,7 +112,7 @@ class ParamMixin:
             ),
         )
 
-    def __add_autocomplete_param(self, group: ParamGroup):
+    def __add_autocomplete_param(self, group: ParamDefinition):
         annotation = t.Literal[1]
         annotation.__args__ = tuple(autocompletions.shells.keys())  # type: ignore
         group.append(

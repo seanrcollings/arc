@@ -1,28 +1,21 @@
 from __future__ import annotations
-from functools import cached_property
 import inspect
-import sys
 import typing as t
-import shlex
 
 import arc
 from arc import errors, utils
 from arc.core import classful
 from arc.autoload import Autoload
 from arc.core.app import Arc
-from arc.core.decorators import DecoratorMixin, DecoratorStack
+from arc.decorators import DecoratorMixin, DecoratorStack
 from arc.core.documentation import Documentation
-from arc.color import colorize, fg
 from arc.config import config
-from arc.present.helpers import Joiner
-from .param import ParamMixin
-
-
 import arc.typing as at
 from arc.autocompletions import CompletionInfo, get_completions, Completion
+from arc.core.param import ParamMixin
 
 if t.TYPE_CHECKING:
-    from .param import Param, ParamGroup
+    from .param import Param, ParamDefinition
 
 K = t.TypeVar("K")
 V = t.TypeVar("V")
@@ -66,7 +59,7 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
     name: str
     parent: Command | None
     subcommands: AliasDict[str, Command]
-    param_groups: list[ParamGroup]
+    param_def: list[ParamDefinition]
     doc: Documentation
     explicit_name: bool
     __autoload__: bool
@@ -96,7 +89,7 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         self.__autoload__ = autoload
 
         if config.environment == "development":
-            self.param_groups
+            self.param_def
 
     __repr__ = utils.display("name")
 
@@ -119,15 +112,6 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
             result (Any): The value that the command's callback returns
         """
         from .app import Arc
-
-        if not self.explicit_name:
-            self.name = utils.discover_name()
-
-        if self.is_root and self.subcommands and len(list(self.argument_params)) != 0:
-            raise errors.CommandError(
-                "Top-level command with subcommands cannot "
-                "have argument / positional parameters"
-            )
 
         app = Arc(self, config, input=input_args, env={"arc.state": state or {}})
         return app()

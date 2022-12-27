@@ -2,9 +2,15 @@ import functools
 import typing as t
 import inspect
 
-from arc.utils import isdunder
 import arc.typing as at
 from arc import errors
+
+
+def isdunder(string: str, double_dunder: bool = False):
+    if double_dunder:
+        return string.startswith("__") and string.endswith("__")
+
+    return string.startswith("__")
 
 
 def wrap_class_callback(cls: type[at.ClassCallback]):

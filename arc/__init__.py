@@ -1,6 +1,7 @@
 __version__ = "7.0.3"
 
-from arc.core import Command, decorator, remove, error_handler
+from arc.core import Arc, Command
+from arc.decorators import decorator, remove, error_handler
 from arc.params import Argument, Option, Flag, Count, Depends, group
 from arc import types
 from arc.types import State

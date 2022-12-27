@@ -1,5 +1,5 @@
 import arc
-from arc import utils
+from arc.present import Ansi
 
 
 def get_lines(string: str, from_line: int, to_line: int):
@@ -12,7 +12,7 @@ def test_basic():
         ...
 
     assert (
-        utils.ansi_clean(command.doc.help())
+        Ansi.clean(command.doc.help())
         == """\
 USAGE
     command [-h]
@@ -29,7 +29,7 @@ def test_description():
         """Here's a description"""
 
     assert (
-        utils.ansi_clean(command.doc.help())
+        Ansi.clean(command.doc.help())
         == """\
 USAGE
     command [-h]
@@ -60,7 +60,7 @@ def test_advanced_parsing():
         """
 
     assert (
-        utils.ansi_clean(command.doc.help())
+        Ansi.clean(command.doc.help())
         == """\
 USAGE
     command [-h]
@@ -98,7 +98,7 @@ def test_subcommands():
 
     # How the root command should behave
     assert (
-        utils.ansi_clean(command.doc.help())
+        Ansi.clean(command.doc.help())
         == """\
 USAGE
     command [-h]
@@ -113,7 +113,7 @@ SUBCOMMANDS
     )
 
     assert (
-        utils.ansi_clean(sub.doc.help())
+        Ansi.clean(sub.doc.help())
         == """\
 USAGE
     command sub [-h]
@@ -128,7 +128,7 @@ SUBCOMMANDS
     )
 
     assert (
-        utils.ansi_clean(sub2.doc.help())
+        Ansi.clean(sub2.doc.help())
         == """\
 USAGE
     command sub sub2 [-h]
@@ -152,7 +152,7 @@ def test_namespace():
         """command2 desc"""
 
     assert (
-        utils.ansi_clean(ns.doc.help())
+        Ansi.clean(ns.doc.help())
         == """\
 USAGE
     ns [-h]
@@ -199,7 +199,7 @@ def test_argument_desc_in_definition():
     ):
         ...
 
-    assert utils.ansi_clean(command.doc.help()) == ARGS_STR
+    assert Ansi.clean(command.doc.help()) == ARGS_STR
 
 
 def test_argument_desc_in_docstring():
@@ -221,7 +221,7 @@ def test_argument_desc_in_docstring():
         flag: flag
         """
 
-    assert utils.ansi_clean(command.doc.help()) == ARGS_STR
+    assert Ansi.clean(command.doc.help()) == ARGS_STR
 
 
 def test_collections():
@@ -232,7 +232,7 @@ def test_collections():
         val3: list[int] = [],
         val4: tuple[int, int] = tuple(),  # type: ignore
     ):
-        assert utils.ansi_clean(command.doc.help) == (
+        assert Ansi.clean(command.doc.help) == (
             """\
 USAGE
     cli.py [-h] [--] val [val...] val2 val2 [val3 [val3...]] [val4] [val4]

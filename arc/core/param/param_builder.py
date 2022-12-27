@@ -7,7 +7,7 @@ from arc.config import config
 from arc.constants import MISSING
 from arc.types.type_info import TypeInfo
 from .param import Action, InjectedParam, Param, FlagParam, ArgumentParam, OptionParam
-from .param_group import ParamGroup
+from .param_group import ParamDefinition
 from arc.params import ParamInfo
 
 
@@ -18,9 +18,9 @@ class ParamBuilder:
         for param in self.sig.parameters.values():
             param._annotation = annotations.get(param.name, param.annotation)  # type: ignore
 
-    def build(self) -> list[ParamGroup]:
-        groups: list[ParamGroup] = []
-        default_group = ParamGroup(ParamGroup.DEFAULT)
+    def build(self) -> list[ParamDefinition]:
+        groups: list[ParamDefinition] = []
+        default_group = ParamDefinition(ParamDefinition.BASE)
         groups.append(default_group)
 
         for param in self.sig.parameters.values():
@@ -31,7 +31,7 @@ class ParamBuilder:
 
         return groups
 
-    def build_param_group(self, param: inspect.Parameter) -> ParamGroup:
+    def build_param_group(self, param: inspect.Parameter) -> ParamDefinition:
         if param.default is not param.empty:
             raise errors.ParamError("Param groups cannot have a default value", param)
 
@@ -43,7 +43,7 @@ class ParamBuilder:
         default = param_groups[0]
         default.name = param.name
         default.cls = param.annotation
-        default.sub_groups = param_groups[1:]
+        default.children = param_groups[1:]
         setattr(cls, "__param_group__", default)
         return default
 
