@@ -1,7 +1,6 @@
 from __future__ import annotations
 import typing as t
 import contextlib
-import itertools
 import os
 
 import arc
@@ -19,7 +18,7 @@ from arc.core.param.param import InjectedParam, Param, ValueOrigin
 from arc.core.middleware.middleware import Middleware
 
 if t.TYPE_CHECKING:
-    from arc.core.param.param_group import ParamDefinition
+    from arc.core.param.param_definition import ParamDefinition
     from arc.core import Command
 
 
@@ -60,86 +59,6 @@ class ExitStackMiddleware(Middleware):
             return self.app(env)
 
 
-class ParseResultCheckerMiddleware(Middleware):
-    """Checks the results of the input parsing against configutation options.
-    Generates error messages for unrecognized arguments
-
-    # Env Dependancies
-    - `arc.config`
-    - `arc.command`
-    - `arc.parse.extra` (optional)
-
-    # Env Additions
-    """
-
-    def __call__(self, env: at.ExecEnv):
-        config: Config = env["arc.config"]
-        extra: list[str] | None = env.get("arc.parse.extra")
-        command: Command = env["arc.command"]
-
-        if extra and not config.allow_unrecognized_args:
-            message = (
-                f"Unrecognized arguments: {Joiner.with_space(extra, style=fg.YELLOW)}"
-            )
-            message += self.__get_suggestions(extra, config, command)
-            raise errors.UnrecognizedArgError(message)
-
-        return self.app(env)
-
-    def __get_suggestions(
-        self,
-        extra: list[str],
-        config: Config,
-        command: Command,
-    ) -> str:
-        message = ""
-
-        if config.suggestions["suggest_commands"]:
-
-            message += self.__fmt_suggestions(
-                extra[0:1],
-                itertools.chain(
-                    *[com.all_names for com in command.subcommands.values()]
-                ),
-                "subcommand",
-                config,
-            )
-
-        if config.suggestions["suggest_params"]:
-            message += self.__fmt_suggestions(
-                extra,
-                itertools.chain(
-                    *[param.get_param_names() for param in command.key_params]
-                ),
-                "argument",
-                config,
-            )
-
-        return message
-
-    def __fmt_suggestions(
-        self,
-        rest: t.Iterable[str],
-        possibilities: t.Iterable[str],
-        kind: str,
-        config: Config,
-    ) -> str:
-        message = ""
-
-        suggestions = utils.string_suggestions(
-            rest, possibilities, config.suggestions["distance"]
-        )
-
-        for param_name, param_sug in suggestions.items():
-            if param_sug:
-                message += (
-                    f"\nUnrecognized {kind} {colorize(param_name, fg.YELLOW)}, "
-                    f"did you mean: {Joiner.with_or(param_sug, style=fg.YELLOW)}"
-                )
-
-        return message
-
-
 class Thing(Middleware):
     ...
 
@@ -162,19 +81,11 @@ class ProcessParseResultMiddleware(Middleware):
         self.exit_stack = env.get("arc.exitstack")
         self.ctx = env.get("arc.ctx")
 
-        processed: dict[str, t.Any] = {}
-        missing: list[tuple[tuple[str, ...], Param]] = []
-
-        for group in command.param_def:
-            group_processed, group_missing = self.process_param_group(
-                group, result, tuple()
-            )
-            missing.extend(group_missing)
-
-            if group.is_base:
-                processed.update(group_processed)
-            else:
-                processed[group.name] = group_processed
+        processed: dict[str, t.Any]
+        missing: list[tuple[tuple[str, ...], Param]]
+        processed, missing = self.process_param_group(
+            command.param_def, result, tuple()
+        )
 
         if missing:
             params = Joiner.with_comma(
@@ -308,8 +219,7 @@ class DependancyInjectorMiddleware(Middleware):
         command: Command = env["arc.command"]
         args: dict = env["arc.args"]
 
-        for group in command.param_def:
-            self.inject_dependancies(group, args, env)
+        self.inject_dependancies(command.param_def, args, env)
 
         return self.app(env)
 
@@ -332,8 +242,9 @@ class DependancyInjectorMiddleware(Middleware):
 
             injected[param.argument_name] = value
 
-        if group.children:
+        if not group.is_base:
             inst = args[group.name]
+
             for sub in group.children:
                 self.inject_dependancies(sub, {sub.name: getattr(inst, sub.name)}, env)
 

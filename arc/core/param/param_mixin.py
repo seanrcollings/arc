@@ -1,16 +1,13 @@
 from __future__ import annotations
-import argparse
 import typing as t
 from functools import cached_property
 from arc import autocompletions
-from arc.autocompletions import completions
 
 from arc.config import config
 from arc.parser import CustomAutocompleteAction, CustomHelpAction, CustomVersionAction
 
 from .param import FlagParam, OptionParam, Param
-from .param_group import ParamDefinition
-from .param_builder import ParamBuilder
+from .param_definition import ParamDefinition, ParamDefinitionBuilder
 
 
 class ParamMixin:
@@ -19,61 +16,58 @@ class ParamMixin:
     parent: t.Any
 
     @cached_property
-    def param_def(self) -> list[ParamDefinition]:
-        builder = ParamBuilder(self.callback)
-        groups = builder.build()
+    def param_def(self) -> ParamDefinition:
+        root = ParamDefinition.from_function(self.callback)
 
-        default = ParamDefinition.get_base_group(groups)
         if self.is_root and not self.is_namespace:  # type: ignore
 
             if config.version:
-                self.__add_version_param(default)
+                self.__add_version_param(root)
 
             if config.autocomplete:
-                self.__add_autocomplete_param(default)
+                self.__add_autocomplete_param(root)
 
-        self.__add_help_param(default)
+        self.__add_help_param(root)
 
-        return groups
-
-    @property
-    def params(self):
-        for group in self.param_def:
-            yield from group.all_params()
+        return root
 
     @property
-    def cli_params(self):
+    def params(self) -> t.Generator[Param, None, None]:
+        yield from self.param_def.all_params()
+
+    @property
+    def cli_params(self) -> t.Generator[Param, None, None]:
         """All params that are available on the command line"""
         for param in self.params:
             if not param.is_injected:
                 yield param
 
     @property
-    def argument_params(self):
+    def argument_params(self) -> t.Generator[Param, None, None]:
         for param in self.params:
             if param.is_argument:
                 yield param
 
     @property
-    def key_params(self):
+    def key_params(self) -> t.Generator[Param, None, None]:
         for param in self.params:
             if param.is_keyword:
                 yield param
 
     @property
-    def option_params(self):
+    def option_params(self) -> t.Generator[Param, None, None]:
         for param in self.params:
             if param.is_option:
                 yield param
 
     @property
-    def flag_params(self):
+    def flag_params(self) -> t.Generator[Param, None, None]:
         for param in self.params:
             if param.is_flag:
                 yield param
 
     @property
-    def injected_params(self):
+    def injected_params(self) -> t.Generator[Param, None, None]:
         for param in self.params:
             if param.is_injected:
                 yield param

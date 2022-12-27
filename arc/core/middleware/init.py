@@ -2,12 +2,16 @@ from __future__ import annotations
 import typing as t
 import shlex
 import sys
+import itertools
 
 import arc
-from arc import errors
+from arc import errors, utils
 from arc import typing as at
+from arc.color import colorize, fg
 from arc.parser import Parser
 from arc.core.middleware.middleware import Middleware
+from arc.present import Joiner
+from arc.config import Config
 
 if t.TYPE_CHECKING:
     from arc.core import Command
@@ -132,3 +136,83 @@ class ArgParseMiddleware(Middleware):
             parser.add_param(param, command)
 
         return parser
+
+
+class ParseResultCheckerMiddleware(Middleware):
+    """Checks the results of the input parsing against configutation options.
+    Generates error messages for unrecognized arguments
+
+    # Env Dependancies
+    - `arc.config`
+    - `arc.command`
+    - `arc.parse.extra` (optional)
+
+    # Env Additions
+    """
+
+    def __call__(self, env: at.ExecEnv):
+        config: Config = env["arc.config"]
+        extra: list[str] | None = env.get("arc.parse.extra")
+        command: Command = env["arc.command"]
+
+        if extra and not config.allow_unrecognized_args:
+            message = (
+                f"Unrecognized arguments: {Joiner.with_space(extra, style=fg.YELLOW)}"
+            )
+            message += self.__get_suggestions(extra, config, command)
+            raise errors.UnrecognizedArgError(message)
+
+        return self.app(env)
+
+    def __get_suggestions(
+        self,
+        extra: list[str],
+        config: Config,
+        command: Command,
+    ) -> str:
+        message = ""
+
+        if config.suggestions["suggest_commands"]:
+
+            message += self.__fmt_suggestions(
+                extra[0:1],
+                itertools.chain(
+                    *[com.all_names for com in command.subcommands.values()]
+                ),
+                "subcommand",
+                config,
+            )
+
+        if config.suggestions["suggest_params"]:
+            message += self.__fmt_suggestions(
+                extra,
+                itertools.chain(
+                    *[param.get_param_names() for param in command.key_params]
+                ),
+                "argument",
+                config,
+            )
+
+        return message
+
+    def __fmt_suggestions(
+        self,
+        rest: t.Iterable[str],
+        possibilities: t.Iterable[str],
+        kind: str,
+        config: Config,
+    ) -> str:
+        message = ""
+
+        suggestions = utils.string_suggestions(
+            rest, possibilities, config.suggestions["distance"]
+        )
+
+        for param_name, param_sug in suggestions.items():
+            if param_sug:
+                message += (
+                    f"\nUnrecognized {kind} {colorize(param_name, fg.YELLOW)}, "
+                    f"did you mean: {Joiner.with_or(param_sug, style=fg.YELLOW)}"
+                )
+
+        return message

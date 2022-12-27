@@ -12,7 +12,6 @@ from arc.logging import logger
 from arc.core.middleware import *
 
 if t.TYPE_CHECKING:
-    from arc.core.param.param_group import ParamDefinition
     from arc.core import Command
 
 

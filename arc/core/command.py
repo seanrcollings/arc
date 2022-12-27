@@ -15,7 +15,7 @@ from arc.autocompletions import CompletionInfo, get_completions, Completion
 from arc.core.param import ParamMixin
 
 if t.TYPE_CHECKING:
-    from .param import Param, ParamDefinition
+    from .param import ParamDefinition
 
 K = t.TypeVar("K")
 V = t.TypeVar("V")
@@ -59,7 +59,7 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
     name: str
     parent: Command | None
     subcommands: AliasDict[str, Command]
-    param_def: list[ParamDefinition]
+    param_def: ParamDefinition
     doc: Documentation
     explicit_name: bool
     __autoload__: bool
