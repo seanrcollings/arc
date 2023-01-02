@@ -70,3 +70,37 @@ def class_signature(cls: type):
     # during the parameter building process
     setattr(cls, "__signature__", sig)
     return sig
+
+
+T = t.TypeVar("T", bound=type)
+
+
+def _default_init(inst: object, **kwargs):
+    for key, value in kwargs.items():
+        setattr(inst, key, value)
+
+
+def _default_repr(inst: object) -> str:
+    values = ", ".join(
+        [
+            f"{member}={repr(getattr(inst, member))}"
+            for member in inst.__signature__.parameters.keys()  # type: ignore
+        ]
+    )
+    return f"{type(inst).__name__}({values})"
+
+
+default_group_methods = {
+    "__init__": _default_init,
+    "__repr__": _default_repr,
+}
+
+
+def modify_group_cls(cls: T) -> T:
+    setattr(cls, "__arc_group__", True)
+    for name, func in default_group_methods.items():
+        if getattr(cls, name) is getattr(object, name):
+            setattr(cls, name, func)
+
+    lazy_class_signature(cls)
+    return cls

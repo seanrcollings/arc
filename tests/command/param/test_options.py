@@ -1,4 +1,3 @@
-import collections
 import pytest
 import arc
 from arc import errors

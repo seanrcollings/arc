@@ -311,7 +311,6 @@ class InjectedParam(Param):
 
     def get_injected_value(self, ctx: t.Any) -> t.Any:
         value = utils.dispatch_args(self.callback, ctx) if self.callback else None
-        value = self.run_middleware(value, ctx)
         return value
 
     @property

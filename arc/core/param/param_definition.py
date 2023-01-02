@@ -3,16 +3,26 @@ import typing as t
 import collections
 import inspect
 
-from arc import errors
 from arc import errors, utils
 from arc.config import config
 from arc.constants import MISSING
+from arc.core.param.param_tree import ParamTree, ParamValue
 from arc.types.type_info import TypeInfo
-from .param import InjectedParam, Param, FlagParam, ArgumentParam, OptionParam
 from arc.params import ParamInfo
+from arc.core.param.param import (
+    InjectedParam,
+    Param,
+    FlagParam,
+    ArgumentParam,
+    OptionParam,
+)
 
 
 class ParamDefinition(collections.UserList[Param]):
+    """A tree structure that represents how the parameters to a command look.
+    This represents the definition of a command's paramaters, and not a particular
+    execution of that comamnd with particular values"""
+
     BASE = "__arc_param_group_base"
     """A group with name `BASE` is the base group and
     gets spread into the function arguments"""
@@ -23,19 +33,37 @@ class ParamDefinition(collections.UserList[Param]):
         self.cls: type | None = cls
         self.children: list[ParamDefinition] = []
 
-    __repr__ = utils.display("name", "data")
+    __repr__ = utils.display("name", "data", "children")
+
+    @property
+    def is_base(self) -> bool:
+        return self.name == self.BASE
 
     def all_params(self) -> t.Generator[Param, None, None]:
-        """Generator that yields all params in itself, and in it's sub groups recursivley"""
+        """Generator that yields all params in the tree"""
         yield from self.data
 
         if self.children:
             for child in self.children:
                 yield from child.all_params()
 
-    @property
-    def is_base(self) -> bool:
-        return self.name == self.BASE
+    def create_instance(self) -> ParamTree:
+        return self.__create_param_instance(self)
+
+    def __create_param_instance(self, definition: ParamDefinition) -> ParamTree:
+        values: dict[str, ParamTree | ParamValue] = {
+            param.argument_name: ParamValue(MISSING, param)
+            for param in definition
+            # if param.expose
+        }
+
+        for child in definition.children:
+            values[child.name] = self.__create_param_instance(child)
+
+        return ParamTree(
+            values,
+            definition.cls or dict,
+        )
 
     @classmethod
     def from_function(cls, func: t.Callable) -> ParamDefinition:
