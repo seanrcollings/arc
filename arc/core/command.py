@@ -4,6 +4,7 @@ import typing as t
 
 import arc
 from arc import errors, utils
+from arc.context import Context
 from arc.core import classful
 from arc.autoload import Autoload
 from arc.core.app import App
@@ -13,6 +14,7 @@ from arc.config import config
 import arc.typing as at
 from arc.autocompletions import CompletionInfo, get_completions, Completion
 from arc.core.param import ParamMixin
+from arc.core.app import App
 
 if t.TYPE_CHECKING:
     from .param import ParamDefinition
@@ -72,7 +74,7 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         parent: Command | None = None,
         explicit_name: bool = True,
         autoload: bool = False,
-    ):
+    ) -> None:
         super().__init__()
         if inspect.isclass(callback):
             self.callback = classful.wrap_class_callback(  # type: ignore
@@ -111,7 +113,6 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         Returns:
             result (Any): The value that the command's callback returns
         """
-        from .app import App
 
         app = App(self, config, input=input_args, state=state or {})
         return app()
@@ -352,6 +353,5 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         return names[0], tuple(names[1:])
 
 
-def namespace_callback(app: App):
-    command: Command = app.env["arc.command"]
-    arc.usage(command)
+def namespace_callback(ctx: Context):
+    arc.usage(ctx.command)

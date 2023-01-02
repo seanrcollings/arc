@@ -130,7 +130,7 @@ def usage(command: Command, help_prompt: bool = True):
 
     if help_prompt:
         help_call = colorize(
-            f"{command.root.name} {Joiner.with_space(command.doc.fullname)}--help",
+            f"{command.root.name} {Joiner.with_space(command.doc.fullname)} --help",
             fg.YELLOW,
         )
         info(f"{help_call} for more information")

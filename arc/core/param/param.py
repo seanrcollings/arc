@@ -5,12 +5,11 @@ from functools import cached_property
 import os
 import typing as t
 
-from arc import config, errors, utils
+from arc import errors, utils
 from arc import constants
 from arc.autocompletions import CompletionInfo, get_completions
 from arc.color import colorize, effects, fg
-from arc.prompt.prompts import input_prompt
-from arc.types.helpers import convert_type, iscontextmanager
+from arc.types.helpers import convert_type
 from arc.types.type_info import TypeInfo
 import arc.typing as at
 from arc.constants import MISSING, MissingType

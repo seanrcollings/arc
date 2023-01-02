@@ -116,9 +116,10 @@ class HelpFormatter(TextFormatter):
                             remove_falsey=True,
                         )
                     )
+                    if self.doc.command.subcommands:
+                        self.write_paragraph()
 
                 if self.doc.command.subcommands:
-                    self.write_paragraph()
                     self.write_text(
                         Joiner.with_space(
                             [

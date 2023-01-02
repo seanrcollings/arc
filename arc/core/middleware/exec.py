@@ -19,7 +19,6 @@ from arc.core.param.param import InjectedParam, Param, ValueOrigin
 from arc.core.middleware.middleware import Middleware
 
 if t.TYPE_CHECKING:
-    from arc.core.param.param_definition import ParamDefinition
     from arc.core.param.param_tree import ParamTree
     from arc.core import Command
 
