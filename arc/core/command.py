@@ -6,7 +6,7 @@ import arc
 from arc import errors, utils
 from arc.core import classful
 from arc.autoload import Autoload
-from arc.core.app import Arc
+from arc.core.app import App
 from arc.decorators import DecoratorMixin, DecoratorStack
 from arc.core.documentation import Documentation
 from arc.config import config
@@ -111,9 +111,9 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         Returns:
             result (Any): The value that the command's callback returns
         """
-        from .app import Arc
+        from .app import App
 
-        app = Arc(self, config, input=input_args, env={"arc.state": state or {}})
+        app = App(self, config, input=input_args, state=state or {})
         return app()
 
     def __completions__(
@@ -352,6 +352,6 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         return names[0], tuple(names[1:])
 
 
-def namespace_callback(app: Arc):
+def namespace_callback(app: App):
     command: Command = app.env["arc.command"]
     arc.usage(command)

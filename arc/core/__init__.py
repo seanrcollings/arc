@@ -1,2 +1,2 @@
 from .command import Command
-from .app import Arc
+from .app import App

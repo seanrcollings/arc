@@ -51,8 +51,6 @@ class ExitStackMiddleware(Middleware):
 
     # Env Additions
     - `arc.exitstack`
-
-
     """
 
     def __call__(self, env: at.ExecEnv):

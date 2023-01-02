@@ -6,7 +6,7 @@ import arc.typing as at
 if t.TYPE_CHECKING:
     from arc.core.param.param import ValueOrigin
     from arc.core.command import Command
-    from arc.core.app import Arc
+    from arc.core.app import App
     from logging import Logger
     from arc.config import Config
 
@@ -33,7 +33,7 @@ class Context:
         return self.env["arc.logger"]
 
     @property
-    def app(self) -> Arc:
+    def app(self) -> App:
         return self.env["arc.app"]
 
     @property

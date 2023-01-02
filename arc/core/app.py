@@ -15,7 +15,7 @@ if t.TYPE_CHECKING:
     from arc.core import Command
 
 
-class Arc:
+class App:
     DEFAULT_INIT_MIDDLEWARES = [
         AddUsageErrorInfoMiddleware,
         InitChecksMiddleware,
@@ -51,6 +51,7 @@ class Arc:
         init_middlewares: list[type[Middleware]] | None = None,
         exec_middlewares: list[type[Middleware]] | None = None,
         input: at.InputArgs = None,
+        state: dict[str, t.Any] = None,
         env: at.ExecEnv | None = None,
     ) -> None:
         self.root: Command = root
@@ -63,7 +64,7 @@ class Arc:
         )
         self.provided_env: at.ExecEnv = env or {}
         self.input: at.InputArgs = input
-        self.env: at.ExecEnv = self.create_env()
+        self.state = state or {}
 
     __repr__ = utils.display("root")
 
@@ -76,7 +77,7 @@ class Arc:
             self.init_middleware_types + self.exec_middleware_types
         )
         try:
-            return first(self.env)
+            return first(self.create_env())
 
         except errors.ExternalError as e:
             if self.config.environment == "production":
@@ -122,6 +123,7 @@ class Arc:
                 "arc.errors": [],
                 "arc.app": self,
                 "arc.logger": logger,
+                "arc.state": self.state,
             }
             | self.provided_env
             | (data or {})

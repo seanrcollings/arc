@@ -2,7 +2,7 @@ import pytest
 import arc
 from arc import namespace, errors
 from arc.context import Context
-from arc.core.app import Arc
+from arc.core.app import App
 from arc.types import State
 
 
