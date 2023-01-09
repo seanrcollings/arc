@@ -3,7 +3,7 @@
 """
 from .helpers import convert_type
 from .type_info import TypeInfo
-from .file import File, Stdin
+from .file import File, Stream, Stdin
 
 from .aliases import Alias
 from .semver import SemVer

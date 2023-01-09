@@ -159,3 +159,5 @@
     - ""
 - file: command_string.py
   exec: ""
+- file: types/file.py
+  exec: "README.md"
