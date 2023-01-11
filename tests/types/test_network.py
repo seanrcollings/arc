@@ -1,7 +1,9 @@
+from typing import Annotated
 import pytest
 import ipaddress
 
 import arc
+from arc import errors
 from arc.types import network
 
 
@@ -126,46 +128,25 @@ class TestUrl:
 
     class TestValidators:
         def test_allowed_schemes(self):
-            assert network.HttpUrl.parse("http://example.com") == "http://example.com"
-            assert network.HttpUrl.parse("https://example.com") == "https://example.com"
-
-            with pytest.raises(ValueError):
-                network.HttpUrl.parse("scheme://example.com")
-
-        def test_strip_whitespace(self):
             assert (
-                network.Url.parse("    https://example.com    ")
-                == "https://example.com"
+                arc.convert("http://example.com", network.HttpUrl)
+                == "http://example.com"
             )
 
-            class NoStrip(network.Url):
-                strip_whitespace = False
+            with pytest.raises(errors.ValidationError):
+                arc.convert("scheme://example.com", network.HttpUrl)
 
+        def test_required_components(self):
+            RequiresUsername = Annotated[
+                network.Url, network.RequiredUrlComponents("username")
+            ]
             assert (
-                NoStrip.parse("    https://example.com    ")
-                == "    https://example.com    "
-            )
-
-        def test_user_required(self):
-            class UserRequired(network.Url):
-                user_required = True
-
-            assert (
-                UserRequired.parse("https://name@example.com")
+                arc.convert("https://name@example.com", RequiresUsername)
                 == "https://name@example.com"
             )
 
-            with pytest.raises(ValueError):
-                UserRequired.parse("https://example.com")
-
-        def test_host_required(self):
-            class HostRequired(network.Url):
-                host_required = True
-
-            assert HostRequired.parse("https://example.com") == "https://example.com"
-
-            with pytest.raises(ValueError):
-                HostRequired.parse("path/path")
+            with pytest.raises(errors.ValidationError):
+                arc.convert("https://example.com", RequiresUsername)
 
     class TestUsage:
         @pytest.mark.parametrize("value", URLS)
