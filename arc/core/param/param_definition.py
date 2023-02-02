@@ -68,22 +68,25 @@ class ParamDefinition(collections.UserList[Param]):
     @classmethod
     def from_function(cls, func: t.Callable) -> ParamDefinition:
         """Constructs a ParamDefinition from a callable signature"""
-        builder = ParamDefinitionBuilder(func)
-        root = builder.build()
+        builder = ParamDefinitionBuilder()
+        root = builder.build(func)
         return root
 
 
 class ParamDefinitionBuilder:
-    def __init__(self, obj: t.Callable | type):
-        self.sig = inspect.signature(obj)
+    def __init__(self):
+        self.param_names: set[str] = set()
+
+    def build(self, obj: t.Callable | type) -> ParamDefinition:
+        sig = inspect.signature(obj)
         annotations = t.get_type_hints(obj, include_extras=True)
-        for param in self.sig.parameters.values():
+
+        for param in sig.parameters.values():
             param._annotation = annotations.get(param.name, param.annotation)  # type: ignore
 
-    def build(self) -> ParamDefinition:
         root = ParamDefinition(ParamDefinition.BASE)
 
-        for param in self.sig.parameters.values():
+        for param in sig.parameters.values():
             if utils.isgroup(param.annotation):
                 root.children.append(self.build_param_definition(param))
             else:
@@ -101,13 +104,20 @@ class ParamDefinitionBuilder:
         if hasattr(cls, "__param_group__"):
             return getattr(cls, "__param_group__")
 
-        definition = type(self)(cls).build()
+        definition = self.build(cls)
         definition.name = param.name
         definition.cls = param.annotation
         setattr(cls, "__param_group__", definition)
         return definition
 
     def create_param(self, param: inspect.Parameter) -> Param:
+        if param.name in self.param_names:
+            raise errors.ParamError(
+                f"Parameter name '{param.name}' is non-unique. "
+                "All parameters for a given command must have a unique name"
+            )
+
+        self.param_names.add(param.name)
         # TODO: pass this type_info into the param, instead of creating it twice
         type_info = TypeInfo.analyze(param.annotation)
         info = self.get_param_info(param, type_info)
