@@ -366,11 +366,14 @@ class IOAlias(Alias, of=(_io._IOBase, t.IO)):
 
     @classmethod
     def convert(cls, value: str, info: TypeInfo) -> t.IO:
+        error_msg = f"Cannot access {value}:"
         try:
             file: t.IO = open(value, **info.type_arg.dict())
             return file
         except FileNotFoundError as e:
-            raise errors.ConversionError(value, f"No file named {value}") from e
+            raise errors.ConversionError(value, f"{error_msg} file not found") from e
+        except PermissionError as e:
+            raise errors.ConversionError(value, f"{error_msg} permission denied") from e
 
     @classmethod
     def __completions__(cls, info: CompletionInfo, _param):

@@ -1,5 +1,5 @@
 
-## Implment Your Own Type
+## Implement Your Own Type
 By implmenting a simple protocol, your custom classes can be easily used as the type of an *arc* parameter.
 
 ### Example

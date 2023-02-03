@@ -8,7 +8,10 @@ class DefaultValue:
         self.value = value
 
     def __str__(self):
-        return f"Default({self.value})"
+        return f"Default({self.value!r})"
+
+    def __repr__(self) -> str:
+        return str(self)
 
 
 def Default(value: t.Any) -> t.Any:
