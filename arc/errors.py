@@ -94,3 +94,7 @@ class ParamError(InternalError):
 
 class DecoratorError(InternalError):
     ...
+
+
+class TypeArgError(InternalError):
+    ...

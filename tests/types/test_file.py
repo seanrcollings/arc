@@ -1,9 +1,9 @@
-import os
+from io import StringIO
 import typing as t
 from pathlib import Path
 import pytest
 import arc
-from arc.types import File
+from arc.types import File, Stream
 
 
 @pytest.fixture(scope="function")
@@ -73,3 +73,25 @@ def test_write(content_file: Path):
 
     with content_file.open() as f:
         assert f.read() == "test"
+
+
+def test_stream():
+    io = StringIO("value")
+
+    @arc.command()
+    def command(contents: t.Annotated[Stream[str], Stream.Args(io)]):
+        return contents.value
+
+    assert command("-") == "value"
+    assert command("provided") == "provided"
+
+
+def test_stream_conversion():
+    io = StringIO("1")
+
+    @arc.command()
+    def command(contents: t.Annotated[Stream[int], Stream.Args(io)]):
+        return contents.value
+
+    assert command("-") == 1
+    assert command("2") == 2
