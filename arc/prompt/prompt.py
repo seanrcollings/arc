@@ -3,6 +3,7 @@ from getpass import getpass
 
 import arc
 from arc.color import fg, effects
+from arc.context import Context
 from .helpers import write, PREVIOUS_LINE, clear_line
 from .questions import Question, QuestionError, ConfirmQuestion, InputQuestion
 
@@ -97,7 +98,8 @@ class Prompt:
                 self.error(str(e), end="")
                 has_failed = True
 
-        write("\n")  # get past the error message
+        if has_failed:
+            write("\n")  # get past the error message
         self._previous_answers.append(answer)
         return answer
 
@@ -177,3 +179,7 @@ class Prompt:
         if self.color_output:
             return color
         return ""
+
+    @classmethod
+    def __depends__(self, ctx: Context) -> "Prompt":
+        return ctx.config.prompt
