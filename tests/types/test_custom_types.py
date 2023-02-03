@@ -41,7 +41,7 @@ def test_cleanup():
             self.value = value
 
         @classmethod
-        def __convert__(cls, value, info, state):
+        def __convert__(cls, value, info):
             return cls(value)
 
         def __enter__(self):

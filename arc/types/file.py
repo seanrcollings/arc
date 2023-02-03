@@ -3,7 +3,7 @@ import typing as t
 from dataclasses import dataclass
 import types
 import sys
-from arc.types.default import Default
+from arc.types.default import Default, unwrap
 from arc.types.helpers import convert_type
 
 from arc.types.type_arg import TypeArg
@@ -11,13 +11,6 @@ from arc.types.type_info import TypeInfo
 
 
 __all__ = ["File", "Stdin"]
-
-# TODO: What happens with t.Annotated[File.Read, File.Arg(...)]
-# Which expands to: t.Annotated[t.TextIO, "r", {...}]
-# Options:
-# - Ignore the second annotation argument
-# - Disallow the second annotation argument
-# - Allow it and merge the two
 
 
 OpenNewline = t.Literal[None, "", "\n", "\r", "\r\n"]
@@ -95,49 +88,55 @@ class File(t.IO, abc.ABC):
             self.opener = opener
 
     Read = t.Annotated[t.TextIO, Args(mode="r")]
-    """Equivalent to `open(filename, "r")"""
+    """Equivalent to `open(filename, "r")`"""
     Write = t.Annotated[t.TextIO, Args(mode="w")]
-    """Equivalent to `open(filename, "w")"""
+    """Equivalent to `open(filename, "w")`"""
     ReadWrite = t.Annotated[t.TextIO, Args(mode="r+")]
-    """Equivalent to `open(filename, "r+")"""
+    """Equivalent to `open(filename, "r+")`"""
     CreateWrite = t.Annotated[t.TextIO, Args(mode="x")]
-    """Equivalent to `open(filename, "x")"""
+    """Equivalent to `open(filename, "x")`"""
     Append = t.Annotated[t.TextIO, Args(mode="a")]
-    """Equivalent to `open(filename, "a")"""
+    """Equivalent to `open(filename, "a")`"""
     AppendRead = t.Annotated[t.TextIO, Args(mode="a+")]
-    """Equivalent to `open(filename, "a+")"""
+    """Equivalent to `open(filename, "a+")`"""
 
     BinaryRead = t.Annotated[t.BinaryIO, Args("rb")]
-    """Equivalent to `open(filename, "rb")"""
+    """Equivalent to `open(filename, "rb")`"""
     BinaryWrite = t.Annotated[t.BinaryIO, Args("wb")]
-    """Equivalent to `open(filename, "wb")"""
+    """Equivalent to `open(filename, "wb")`"""
     BinaryReadWrite = t.Annotated[t.BinaryIO, Args("rb+")]
-    """Equivalent to `open(filename, "rb+")"""
+    """Equivalent to `open(filename, "rb+")`"""
     BinaryCreateWrite = t.Annotated[t.BinaryIO, Args("xb")]
-    """Equivalent to `open(filename, "xb")"""
+    """Equivalent to `open(filename, "xb")`"""
     BinaryAppend = t.Annotated[t.BinaryIO, Args("ab")]
-    """Equivalent to `open(filename, "ab")"""
+    """Equivalent to `open(filename, "ab")`"""
     BinaryAppendRead = t.Annotated[t.BinaryIO, Args("ab+")]
-    """Equivalent to `open(filename, "ab+")"""
+    """Equivalent to `open(filename, "ab+")`"""
 
 
 T = t.TypeVar("T")
 
 
 class Stream(t.Generic[T]):
-    _stream: t.ClassVar[t.TextIO]
+    class Args(TypeArg):
+        __slots__ = ("stream", "char")
+
+        def __init__(self, stream: t.IO = sys.stdin, char: str = Default("-")):
+            self.stream = stream
+            self.char = char
 
     def __init__(self, value: T) -> None:
         self.value: T = value
 
     @classmethod
-    def __convert__(cls, value, info: TypeInfo, ctx):
-        if value == "-":
-            value = cls._stream.read()
+    def __convert__(cls, value, info: TypeInfo):
+        arg: Stream.Args = TypeArg.ensure(info.type_arg, cls.__name__)
+
+        if value == unwrap(arg.char):
+            value = arg.stream.read()
 
         sub = info.sub_types[0]
-        return cls(convert_type(sub.resolved_type, value, sub, ctx))
+        return cls(convert_type(sub.resolved_type, value, sub))
 
 
-class Stdin(Stream[T]):
-    _stream = sys.stdin
+Stdin = t.Annotated[Stream[T], Stream.Args(sys.stdin)]

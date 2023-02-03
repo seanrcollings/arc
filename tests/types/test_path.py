@@ -7,28 +7,32 @@ from arc.types import path
 
 class TestImpl:
     def test_valid(self):
-        assert path.ValidPath("tests/conftest.py") == pathlib.Path("tests/conftest.py")
+        assert arc.convert("tests/conftest.py", path.ValidPath) == pathlib.Path(
+            "tests/conftest.py"
+        )
 
-        with pytest.raises(ValueError):
-            path.ValidPath("doesntexist")
+        with pytest.raises(errors.ValidationError):
+            arc.convert("doesnotexist", path.ValidPath)
 
     def test_file(self):
-        assert path.FilePath("tests/conftest.py") == pathlib.Path("tests/conftest.py")
+        assert arc.convert("tests/conftest.py", path.FilePath) == pathlib.Path(
+            "tests/conftest.py"
+        )
 
-        with pytest.raises(ValueError):
-            path.FilePath("doesntexist")
+        with pytest.raises(errors.ValidationError):
+            arc.convert("doesnotexist", path.FilePath)
 
-        with pytest.raises(ValueError):
-            path.FilePath("arc")
+        with pytest.raises(errors.ValidationError):
+            arc.convert("arc", path.FilePath)
 
     def test_dir(self):
-        assert path.DirectoryPath("arc") == pathlib.Path("arc")
+        assert arc.convert("arc", path.DirectoryPath) == pathlib.Path("arc")
 
-        with pytest.raises(ValueError):
-            path.DirectoryPath("doesntexist")
+        with pytest.raises(errors.ValidationError):
+            arc.convert("doesntexist", path.DirectoryPath)
 
-        with pytest.raises(ValueError):
-            path.DirectoryPath("tests/conftest.py")
+        with pytest.raises(errors.ValidationError):
+            arc.convert("tests/conftest.py", path.DirectoryPath)
 
 
 def test_usage():

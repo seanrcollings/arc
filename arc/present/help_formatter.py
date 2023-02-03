@@ -8,8 +8,8 @@ from arc import constants
 from arc.color import colorize, fg, effects
 from arc.config import config
 from arc.present.helpers import Joiner
-from arc.utils import ansi_len
 from arc.present.formatters import TextFormatter
+from arc.present.ansi import Ansi
 
 if t.TYPE_CHECKING:
     from arc.core.documentation import Documentation, ParamDoc
@@ -50,7 +50,7 @@ class HelpFormatter(TextFormatter):
             self.command, self.command.subcommands.values()
         )
 
-        longest = max(map(ansi_len, (v[0] for v in args + options + subcommands))) + 2
+        longest = max(map(Ansi.len, (v[0] for v in args + options + subcommands))) + 2
 
         if args:
             self.write_section("ARGUMENTS", args, longest)
@@ -116,9 +116,10 @@ class HelpFormatter(TextFormatter):
                             remove_falsey=True,
                         )
                     )
+                    if self.doc.command.subcommands:
+                        self.write_paragraph()
 
                 if self.doc.command.subcommands:
-                    self.write_paragraph()
                     self.write_text(
                         Joiner.with_space(
                             [
@@ -232,7 +233,7 @@ class HelpFormatter(TextFormatter):
     def write_section(self, section: str, data: list[tuple[str, str]], longest: int):
         with self.section(section):
             for name, desc in data:
-                diff = longest - ansi_len(name)
+                diff = longest - Ansi.len(name)
 
                 self.write(
                     self.wrap_text(

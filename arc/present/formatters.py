@@ -3,8 +3,7 @@ import shutil
 from contextlib import contextmanager
 import textwrap
 import typing as t
-
-from arc.utils import ansi_len
+from .ansi import Ansi
 
 DEFAULT_MAX_WIDTH = 80
 
@@ -94,7 +93,7 @@ class TextFormatter:
                     + paragraph_seperator
                 )
             else:
-                width = width + (len(para) - ansi_len(para))
+                width = width + (len(para) - Ansi.len(para))
                 wrapper.width = width
                 wrapped += wrapper.fill(para) + paragraph_seperator
 

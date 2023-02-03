@@ -36,7 +36,7 @@ arc will format it as follows:
 ## Paramater Documentation
 Command parameters may be documented in two ways.
 
-1. Using the `description` argument of `Argument` / `Option` / `Flag` / `Param`. This option takes precedence if both are present.
+1. Using the `desc` argument of `Argument` / `Option` / `Flag`. This option takes precedence if both are present.
 2. Adding an `# Arguments` section to the docstring with the correct formatting.
 
 For example these two commands:

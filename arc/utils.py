@@ -35,20 +35,6 @@ def isgroup(cls: type):
     return getattr(cls, "__arc_group__", False)
 
 
-noop = lambda: ...
-
-
-def cbreakpoint(cond: bool):
-    return breakpoint if cond else noop
-
-
-def isdunder(string: str, double_dunder: bool = False):
-    if double_dunder:
-        return string.startswith("__") and string.endswith("__")
-
-    return string.startswith("__")
-
-
 def dispatch_args(func: t.Callable, *args):
     """Calls the given `func` with the maximum
     slice of `*args` that it can accept. Handles
@@ -78,11 +64,6 @@ def dispatch_args(func: t.Callable, *args):
     return func(*args)
 
 
-def discover_name():
-    name = sys.argv[0]
-    return os.path.basename(name)
-
-
 def cmp(a, b) -> at.CompareReturn:
     """Compare two values
 
@@ -96,30 +77,6 @@ def cmp(a, b) -> at.CompareReturn:
         - `a > b  =>  1`
     """
     return (a > b) - (a < b)
-
-
-ansi_escape = re.compile(r"(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]")
-
-
-@functools.cache
-def ansi_clean(string: str):
-    """Gets rid of escape sequences"""
-    return ansi_escape.sub("", string)
-
-
-def ansi_len(string: str):
-    length = 0
-    in_escape_code = False
-
-    for char in string:
-        if in_escape_code and char == "m":
-            in_escape_code = False
-        elif char == "\x1b" or in_escape_code:
-            in_escape_code = True
-        else:
-            length += 1
-
-    return length
 
 
 @contextlib.contextmanager

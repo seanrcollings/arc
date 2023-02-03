@@ -12,7 +12,7 @@ class MyGroup:
 ## Adding Parameters to a group
 Now, to make a group *useful*, we need to actually add parameters to it. To do so, we add class-variables with our desired parameter definitions.
 
-For example, let's take this example from the previous page:
+For example, let's take this example from the [flags](../flags) page:
 ```py title="examples/parameter_flag.py"
 --8<-- "examples/parameter_flag.py"
 ```

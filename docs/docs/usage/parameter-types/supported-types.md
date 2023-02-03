@@ -1,6 +1,6 @@
-*arc* uses [Python type hints](https://peps.python.org/pep-0484/) for data conversion / validation.
+This document outlines all of the types that *arc* supports for parameters.
 
-When Possible, *arc* uses builtin and standard library data types for arguments. But if no type is available, or the builtin types don't provide the neccessary functionality, *arc* may implement a custom type.
+When possible, *arc* uses builtin and standard library data types. But if no type is available, or the builtin types don't provide the neccessary functionality, *arc* may implement a custom type.
 
 ## Builtin Types
 
@@ -113,18 +113,18 @@ Same as above
 Support for regular expression patterns
 
 
-## `arc` Types
+## *arc* Types
 *arc* provides a variety of additional types exported from the `#!python arc.types` module:
 
 ???+ warning
-    `arc` types are sort of weird in the general Python sense. While it will become
+    *arc* types are sort of weird in the general Python sense. While it will become
     more aparent later as to why this is the case, know that you cannot usually
     create the types on your own and have the expected behavior. If you do need / want
     to do this, you can use: `#!python arc.convert(<value>, <type>)`
 
 `Context`
 
-Gives you access to the current execution context instance which serves as a central data and functionality object
+Gives you access to the current execution context. [Check here for details](../advanced-usage/using-context.md). Does not expose the param on the command line.
 
 
 `State`

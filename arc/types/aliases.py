@@ -32,6 +32,7 @@ from arc.types import type_info
 if t.TYPE_CHECKING:
     from arc.types.type_info import TypeInfo
     from arc.context import Context
+    from arc.core.param import Param
 
 
 AliasFor = t.Union[Annotation, t.Tuple[Annotation, ...]]
@@ -52,14 +53,14 @@ class Alias:
     g_convert: t.Callable
 
     @classmethod
-    def __convert__(cls, value, typ: TypeInfo, ctx: Context):
+    def __convert__(cls, value, typ: TypeInfo):
         if cls.name:
             typ.name = cls.name
 
         if not typ.sub_types:
-            obj = utils.dispatch_args(cls.convert, value, typ, ctx)
+            obj = utils.dispatch_args(cls.convert, value, typ)
         else:
-            obj = utils.dispatch_args(cls.g_convert, value, typ, ctx)
+            obj = utils.dispatch_args(cls.g_convert, value, typ)
 
         return obj
 
@@ -153,13 +154,13 @@ class _CollectionAlias(Alias):
         return cls.alias_for(value)
 
     @classmethod
-    def g_convert(cls, value: str, typ: TypeInfo, ctx):
+    def g_convert(cls, value: str, typ: TypeInfo):
         lst = cls.convert(value)
         sub = typ.sub_types[0]
         sub_type = sub.resolved_type
 
         try:
-            return cls.alias_for([sub_type.__convert__(v, sub, ctx) for v in lst])
+            return cls.alias_for([sub_type.__convert__(v, sub) for v in lst])
         except errors.ConversionError as e:
             if name := getattr(sub_type, "name"):
                 raise errors.ConversionError(
@@ -180,12 +181,12 @@ class SetAlias(set, _CollectionAlias, of=set):
 
 class TupleAlias(tuple, _CollectionAlias, of=tuple):
     @classmethod
-    def g_convert(cls, value: str, info: TypeInfo, ctx: Context):
+    def g_convert(cls, value: str, info: TypeInfo):
         tup = cls.convert(value)
 
         # Arbitraryily sized tuples
         if cls.any_size(info):
-            return super().g_convert(value, info, ctx)
+            return super().g_convert(value, info)
 
         # Statically sized tuples
         if len(info.sub_types) != len(tup):
@@ -196,7 +197,7 @@ class TupleAlias(tuple, _CollectionAlias, of=tuple):
             )
 
         return tuple(
-            convert_type(item_type.resolved_type, item, item_type, ctx)
+            convert_type(item_type.resolved_type, item, item_type)
             for item_type, item in zip(info.sub_types, tup)
         )
 
@@ -210,16 +211,16 @@ class DictAlias(dict, Alias, of=dict):
     name = "dictionary"
 
     @classmethod
-    def convert(cls, value: str, info: TypeInfo, ctx):
+    def convert(cls, value: str, info: TypeInfo) -> dict[str, str]:
         dct = cls.alias_for(i.split("=") for i in value.split(","))
         if isinstance(info.origin, t._TypedDictMeta):  # type: ignore
-            return cls.__typed_dict_convert(dct, info, ctx)
+            return cls.__typed_dict_convert(dct, info)
 
         return dct
 
     @classmethod
-    def g_convert(cls, value, info: TypeInfo, ctx):
-        dct: dict = cls.convert(value, info, ctx)
+    def g_convert(cls, value, info: TypeInfo):
+        dct: dict = cls.convert(value, info)
         key_sub = info.sub_types[0]
         key_type = key_sub.resolved_type
         value_sub = info.sub_types[1]
@@ -229,8 +230,8 @@ class DictAlias(dict, Alias, of=dict):
             return cls.alias_for(
                 [
                     (
-                        convert_type(key_type, k, key_sub, ctx),
-                        convert_type(value_type, v, value_sub, ctx),
+                        convert_type(key_type, k, key_sub),
+                        convert_type(value_type, v, value_sub),
                     )
                     for k, v in dct.items()
                 ]
@@ -244,7 +245,7 @@ class DictAlias(dict, Alias, of=dict):
             ) from e
 
     @classmethod
-    def __typed_dict_convert(cls, elements: dict[str, str], info: TypeInfo, ctx):
+    def __typed_dict_convert(cls, elements: dict[str, str], info: TypeInfo):
         hints = t.get_type_hints(info.origin, include_extras=True)
         for key, value in elements.items():
             if key not in hints:
@@ -256,9 +257,7 @@ class DictAlias(dict, Alias, of=dict):
 
             sub_info = type_info.TypeInfo.analyze(hints[key])
             try:
-                elements[key] = convert_type(
-                    sub_info.resolved_type, value, sub_info, ctx
-                )
+                elements[key] = convert_type(sub_info.resolved_type, value, sub_info)
             except errors.ConversionError as e:
                 raise errors.ConversionError(
                     value, f"{value} is not a valid value for key {key}", e
@@ -278,11 +277,11 @@ class NoneAlias(Alias, of=types.NoneType):
 
 class UnionAlias(Alias, of=(t.Union, types.UnionType)):  # type: ignore
     @classmethod
-    def g_convert(cls, value: t.Any, info: TypeInfo, ctx):
+    def g_convert(cls, value: t.Any, info: TypeInfo):
 
         for sub in info.sub_types:
             try:
-                return convert_type(sub.resolved_type, value, sub, ctx)
+                return convert_type(sub.resolved_type, value, sub)
             except Exception:
                 ...
 
@@ -308,9 +307,11 @@ class LiteralAlias(Alias, of=t.Literal):
         )
 
     @classmethod
-    def __prompt__(cls, ctx, param):
+    def __prompt__(cls, param: Param, ctx: Context):
         return select_prompt(
-            list(str(tp.origin) for tp in param.type.sub_types), ctx, param
+            list(str(tp.origin) for tp in param.type.sub_types),
+            param,
+            highlight_color=ctx.config.brand_color,
         )
 
     @classmethod
@@ -325,7 +326,7 @@ class LiteralAlias(Alias, of=t.Literal):
 
 class EnumAlias(Alias, of=enum.Enum):
     @classmethod
-    def convert(cls, value: t.Any, info: TypeInfo[enum.Enum]):
+    def convert(cls, value: t.Any, info: TypeInfo[enum.Enum]) -> t.Any:
         try:
             if issubclass(info.origin, enum.IntEnum):
                 return info.origin(int(value))
@@ -338,11 +339,12 @@ class EnumAlias(Alias, of=enum.Enum):
             ) from e
 
     @classmethod
-    def __prompt__(cls, ctx, param):
+    def __prompt__(cls, param: Param[enum.Enum], ctx: Context) -> t.Any:
+        enum_cls: type[enum.Enum] = param.type.origin
         return select_prompt(
-            list(str(m.value) for m in param.type_info.origin.__members__.values()),
-            ctx,
+            list(str(m.value) for m in enum_cls.__members__.values()),
             param,
+            highlight_color=ctx.config.brand_color,
         )
 
     @classmethod
@@ -364,11 +366,14 @@ class IOAlias(Alias, of=(_io._IOBase, t.IO)):
 
     @classmethod
     def convert(cls, value: str, info: TypeInfo) -> t.IO:
+        error_msg = f"Cannot access {value}:"
         try:
             file: t.IO = open(value, **info.type_arg.dict())
             return file
         except FileNotFoundError as e:
-            raise errors.ConversionError(value, f"No file named {value}") from e
+            raise errors.ConversionError(value, f"{error_msg} file not found") from e
+        except PermissionError as e:
+            raise errors.ConversionError(value, f"{error_msg} permission denied") from e
 
     @classmethod
     def __completions__(cls, info: CompletionInfo, _param):

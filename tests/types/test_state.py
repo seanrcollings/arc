@@ -2,20 +2,17 @@ import pytest
 import arc
 from arc import namespace, errors
 from arc.context import Context
+from arc.core.app import App
 from arc.types import State
 
 
 @pytest.fixture(scope="function")
 def cli():
-    arc.configure(global_callback_execution="always")
-
     @arc.command()
     def cli(state: State):
         state.test = 1
 
     yield cli
-
-    arc.configure(global_callback_execution="args_present")
 
 
 def test_parent_state(cli: arc.Command):
@@ -31,15 +28,6 @@ def test_parent_state(cli: arc.Command):
     assert val == 2
     assert state.test == 1
     assert cli("ignore-parent-state 2") == 2
-
-
-def test_state_name(cli: arc.Command):
-    @cli.subcommand()
-    def other_state_name(foo: State):
-        return foo
-
-    state = cli("other-state-name")
-    assert state.test == 1
 
 
 def test_custom_state(cli: arc.Command):

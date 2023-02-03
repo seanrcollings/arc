@@ -340,14 +340,6 @@ def test_any(cli: arc.Command, val):
     assert cli(f"an {val}") == str(val)
 
 
-def test_context(cli: arc.Command):
-    @cli.subcommand()
-    def ct(ctx: Context):
-        return ctx
-
-    assert isinstance(cli("ct"), Context)
-
-
 def test_pattern(cli: arc.Command):
     @cli.subcommand()
     def rg(pattern: re.Pattern):

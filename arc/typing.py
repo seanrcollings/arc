@@ -10,6 +10,9 @@ if t.TYPE_CHECKING:
 
 T = t.TypeVar("T")
 
+ExecEnv = dict[str, t.Any]
+
+ExecMode = t.Literal["global", "single", "subcommand"]
 
 Annotation = t.Union[t._SpecialForm, type]
 
@@ -29,7 +32,11 @@ CompletionFunc = t.Callable[
     [CompletionInfo, "Param"], t.Union[list[Completion], Completion, None]
 ]
 
-GetterFunc = t.Callable[["Context", "Param"], t.Any]
+GetterFunc = t.Union[
+    t.Callable[["Param", "Context"], t.Any],
+    t.Callable[["Param"], t.Any],
+    t.Callable[[], t.Any],
+]
 
 MiddlewareCallable = t.Callable[[T], T]
 
@@ -85,7 +92,7 @@ class TypeProtocol(t.Protocol):
         ...
 
 
-class Suggestions(t.TypedDict, total=False):
+class Suggestions(t.TypedDict):
     distance: int
     suggest_params: bool
     suggest_commands: bool

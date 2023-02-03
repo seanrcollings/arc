@@ -4,26 +4,22 @@ from __future__ import annotations
 import builtins
 import sys
 import typing as t
-from arc.context import Context
+from arc import errors
+from arc.color import colorize, fg
 from arc.core.command import Command, namespace_callback
+from arc.present import Joiner, Ansi
 from arc.types.type_info import TypeInfo
 from arc.types.helpers import convert_type
-from arc.errors import ArcError
 from arc import utils
 import arc.typing as at
 
 
-def convert(value: str, type: type, context: Context | None = None):
-    try:
-        context = context or Context.current()
-    except ArcError:
-        context = None
-
+def convert(value: str, type: type):
     info = TypeInfo.analyze(type)
-    converted = convert_type(info.resolved_type, value, info, context)  # type: ignore
+    converted = convert_type(info.resolved_type, value, info)
 
     for middleware in info.middleware:
-        converted = utils.dispatch_args(middleware, converted, context, None)
+        converted = utils.dispatch_args(middleware, converted, None)
 
     return converted
 
@@ -40,7 +36,7 @@ def print(
     file = file or sys.stdout
 
     if file and not file.isatty():
-        values = tuple(utils.ansi_clean(str(v)) for v in values)
+        values = tuple(Ansi.clean(str(v)) for v in values)
 
     builtins.print(*values, sep=sep, end=end, file=file, flush=flush)
 
@@ -65,10 +61,9 @@ def info(
     print(*values, sep=sep, end=end, file=sys.stderr, flush=flush)
 
 
-def exit(code: int = 0, ctx: Context | None = None) -> t.NoReturn:
+def exit(code: int = 0, message: str | None = None) -> t.NoReturn:
     """Exits the application with `code`"""
-    ctx = ctx or Context.current()
-    ctx.exit(code)
+    raise errors.Exit(code, message)
 
 
 def command(
@@ -128,3 +123,14 @@ def namespace(name: str, desc: str | None = None) -> Command:
         parent=None,
         autoload=True,
     )
+
+
+def usage(command: Command, help_prompt: bool = True):
+    info(command.doc.usage())
+
+    if help_prompt:
+        help_call = colorize(
+            f"{command.root.name} {Joiner.with_space(command.doc.fullname)} --help",
+            fg.YELLOW,
+        )
+        info(f"{help_call} for more information")
