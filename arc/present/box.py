@@ -3,9 +3,9 @@ import re
 import shutil
 
 from arc import color
-from arc.utils import ansi_clean
 from .data import justifications, Justification
 from .drawing import BORDER_HEAVY, BORDER_LIGHT, Border, borders
+from .ansi import Ansi
 
 
 class Box:
@@ -54,7 +54,7 @@ class Box:
 
     def __str__(self):
         cleaned = list(
-            self.pad_line(ansi_clean(string)) for string in self.string.split("\n")
+            self.pad_line(Ansi.clean(string)) for string in self.string.split("\n")
         )
         width = len(max(cleaned, key=len)) + 4
         term_width, _ = shutil.get_terminal_size()

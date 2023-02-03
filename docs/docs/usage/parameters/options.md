@@ -37,4 +37,4 @@ def hello(
 ```
 Note that the base `*` is no longer present. When `#!python arc.Option()` is present, it is no longer required because you are explictly telling *arc* what kind of parameter it is. However, it is still allowed.
 
-[Check the reference for a full rundown of the capabilities](../../reference/params.md#option)
+[Check the reference for a full rundown of the capabilities](../../reference/params.md#arc.params.Option)

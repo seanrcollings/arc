@@ -9,8 +9,7 @@ from arc import errors, utils
 from arc import constants
 from arc.autocompletions import CompletionInfo, get_completions
 from arc.color import colorize, effects, fg
-from arc.prompt.prompts import input_prompt
-from arc.types.helpers import convert_type, iscontextmanager
+from arc.types.helpers import convert_type
 from arc.types.type_info import TypeInfo
 import arc.typing as at
 from arc.constants import MISSING, MissingType
@@ -46,7 +45,7 @@ class Param(t.Generic[T]):
     """The names used on the command line / for parsing"""
     short_name: str | None
     """Optional single-character name alternabive for keyword params"""
-    type: TypeInfo
+    type: TypeInfo[T]
     """Information on the type of the argument"""
     default: T | MissingType | None
     """Default value for this Param, will be used if no
@@ -127,7 +126,7 @@ class Param(t.Generic[T]):
             return self.comp_func(info, self)
 
         if hasattr(self.type.resolved_type, "__completions__"):
-            return get_completions(self.type.resolved_type, info, self)
+            return get_completions(self.type.resolved_type, info, self)  # type: ignore
 
     @property
     def schema(self):
@@ -194,87 +193,24 @@ class Param(t.Generic[T]):
 
         return "?"  # Optional
 
-    def process_parsed_result(
-        self, res: at.ParseResult, ctx: Context
-    ) -> T | MissingType:
-        value, origin = self.get_value(res, ctx)
-
-        ctx.arg_origins[self.argument_name] = origin
-
-        if self.is_required and value is None:
-            raise errors.MissingArgError(
-                f"argument {colorize(self.cli_name, fg.YELLOW)} expected 1 argument",
-                ctx,
-            )
-
-        if value not in (None, MISSING, True, False) and self.type.origin not in (
-            bool,
-            t.Any,
-        ):
-            value = self.convert(value, ctx)
-
-        if value not in (None, MISSING):
-            value = self.run_middleware(value, ctx)
-
-        if self.callback and value is not MISSING and origin is not ValueOrigin.DEFAULT:
-            value = self.callback(value, ctx, self) or value
-
-        if iscontextmanager(value) and not value is ctx:
-            value = ctx.resource(value)  # type: ignore
-
-        return value
-
-    def get_value(
-        self, res: at.ParseResult, ctx: Context
-    ) -> tuple[t.Any | MissingType, ValueOrigin]:
-        value: t.Any = res.pop(self.argument_name, MISSING)
-        origin = ValueOrigin.CLI
-
-        if value is MISSING:
-            if self.envvar and (env := self.get_env_value(ctx)):
-                value = env
-                origin = ValueOrigin.ENV
-            elif self.prompt and (prompt := self.get_prompt_value(ctx)) != MISSING:
-                value = prompt
-                origin = ValueOrigin.PROMPT
-            elif (
-                self.getter_func and (gotten := self.getter_func(ctx, self)) != MISSING
-            ):
-                value = gotten
-                origin = ValueOrigin.GETTER
-            else:
-                value = self.default
-                origin = ValueOrigin.DEFAULT
-
-        return (value, origin)
-
-    def convert(self, value: t.Any, ctx: Context) -> T:
+    def convert(self, value: t.Any) -> T:
         try:
-            return convert_type(self.type.resolved_type, value, self.type, ctx)
+            return convert_type(self.type.resolved_type, value, self.type)
         except errors.ConversionError as e:
             message = self._fmt_error(e)
             if e.details:
                 message += colorize(f" ({e.details})", fg.GREY)
-            raise errors.InvalidArgValue(message, ctx) from e
+            raise errors.InvalidArgValue(message) from e
 
-    def run_middleware(self, value: t.Any, ctx: Context):
+    def run_middleware(self, value: t.Any, ctx: t.Any):
         for middleware in self.type.middleware:
             try:
                 value = utils.dispatch_args(middleware, value, ctx, self)
             except errors.ValidationError as e:
                 message = self._fmt_error(e)
-                raise errors.InvalidArgValue(message, ctx) from e
+                raise errors.InvalidArgValue(message) from e
 
         return value
-
-    def get_env_value(self, ctx: Context):
-        return os.getenv(f"{ctx.config.env_prefix}{self.envvar}")
-
-    def get_prompt_value(self, ctx: Context):
-        if hasattr(self.type.resolved_type, "__prompt__"):
-            return self.type.resolved_type.__prompt__(ctx, self)  # type: ignore
-
-        return input_prompt(ctx, self)
 
     def get_param_names(self) -> list[str]:
         return []
@@ -372,15 +308,8 @@ class InjectedParam(Param):
 
     callback: t.Callable
 
-    def get_injected_value(self, ctx: Context) -> t.Any:
-        value = self.callback(ctx) if self.callback else None
-        ctx.arg_origins[self.argument_name] = ValueOrigin.INJECTED
-
-        value = self.run_middleware(value, ctx)
-
-        if iscontextmanager(value) and not value is ctx:
-            value = ctx.resource(value)
-
+    def get_injected_value(self, ctx: t.Any) -> t.Any:
+        value = utils.dispatch_args(self.callback, ctx) if self.callback else None
         return value
 
     @property

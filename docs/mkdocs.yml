@@ -39,26 +39,28 @@ nav:
   - Home: index.md
   - Usage:
       - Intro: usage/intro.md
-      - Printing & Coloring Output: usage/printing.md
       - Command Parameters:
           - Parameters Intro: usage/parameters/parameters-intro.md
           - Arguments: usage/parameters/arguments.md
           - Options: usage/parameters/options.md
           - Flags: usage/parameters/flags.md
-          - Parameter Sources: usage/parameter-sources.md
+          - Counter: usage/parameters/counter.md
+          - Parameter Sources: usage/parameters/parameter-sources.md
           - Parameter Groups: usage/parameters/parameter-groups.md
+      - Parameter Types:
+          - Types Intro: usage/parameter-types/types-intro.md
+          - Supported Types: usage/parameter-types/supported-types.md
+          - Type Middleware: usage/parameter-types/type-middleware.md
+          - Custom Types: usage/parameter-types/custom-types.md
+      - Printing & Coloring Output: usage/printing.md
       - Subcommands: usage/subcommands.md
-      - Paramater Types: usage/parameter-types.md
       - Multiple Values: usage/multiple-values.md
+      - File Access: usage/file-access.md
       - Documentation Generation: usage/documentation-generation.md
       - Command Decorators: usage/decorators.md
       - Error Handlers: usage/error-handlers.md
       - Command State: usage/command-state.md
   - Advanced Usage:
-      - Type Middleware: advanced-usage/type-middleware.md
-      - Dependancy Injection: advanced-usage/dependancy-injection.md
-      - Custom Types: advanced-usage/custom-types.md
+      - Using Context: advanced-usage/using-context.md
       - Command Autoloading: advanced-usage/command-autoloading.md
       - Shell Completions: advanced-usage/shell-completions.md
-  - ...
-  - Changelog: changelog.md

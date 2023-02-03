@@ -58,6 +58,3 @@ Tests are written with `pytest`
 ```
 $ pytest
 ```
-
-# Attribution
-Much of arc's architecture is based on [click](https://click.palletsprojects.com/en/8.0.x/), though no code is lifted directly from click's source.

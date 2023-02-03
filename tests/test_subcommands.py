@@ -34,12 +34,12 @@ def test_aliases():
 
 def test_global_args():
     @arc.command()
-    def command(state: arc.types.State, *, val, val2):
+    def command(state: arc.State, *, val, val2):
         state["val"] = val
         state.val2 = val2
 
     @command.subcommand()
-    def sub(state: arc.types.State):
+    def sub(state: arc.State):
         return state
 
-    assert command("--val 2 --val2 2 sub") == arc.types.State(val="2", val2="2")
+    assert command("--val 2 --val2 2 sub") == arc.State(val="2", val2="2")

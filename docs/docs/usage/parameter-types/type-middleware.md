@@ -10,7 +10,7 @@ Middlewares fall into a couple of rough categories, and so *arc* uses specific t
 - **Transform**: A middleware that modifies the value and returns it.
 - **Middleware**: Anything that does not fall into the two above categories
 
-This terms will be used throughout the rest of this page.
+These terms will be used throughout the rest of this page.
 
 ## Creating a Type Middleware
 Because middleware are *just* callables, they are extremely simple to define.
@@ -29,12 +29,12 @@ def round2(val: float):
 
 Type Middleware are *attched* to a type using an [Annotated Type](https://docs.python.org/3.9/library/typing.html#typing.Annotated)
 
-```py title="examples/middleware.py"
---8<-- "examples/middleware.py"
+```py title="examples/type_middleware_round.py"
+--8<-- "examples/type_middleware_round.py"
 ```
 
 ```console
---8<-- "examples/outputs/middleware"
+--8<-- "examples/outputs/type_middleware_round"
 ```
 
 ???+ tip

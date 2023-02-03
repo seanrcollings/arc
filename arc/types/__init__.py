@@ -3,7 +3,7 @@
 """
 from .helpers import convert_type
 from .type_info import TypeInfo
-from .file import File, Stdin
+from .file import File, Stream, Stdin
 
 from .aliases import Alias
 from .semver import SemVer
@@ -14,3 +14,4 @@ from .path import *
 from .numbers import *
 from .strings import *
 from .users import *
+from arc.context import Context

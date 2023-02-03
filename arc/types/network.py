@@ -1,26 +1,53 @@
 from __future__ import annotations
 import ipaddress
 from urllib.parse import urlparse
-import webbrowser
 import typing as t
 
 from arc import errors
 from arc.present.helpers import Joiner
 
-__all__ = ["IPAddress", "Url", "HttpUrl", "PostgresUrl"]
+__all__ = [
+    "IPAddress",
+    "Url",
+    "HttpUrl",
+    "PostgresUrl",
+    "WebSocketUrl",
+    "FtpUrl",
+    "MysqlUrl",
+]
 
 IPAddress = t.Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
 
 
-class Url(str):
-    allowed_schemes: t.ClassVar[set[str]] = set()
-    strip_whitespace: t.ClassVar[bool] = True
-    host_required: t.ClassVar[bool] = False
-    user_required: t.ClassVar[bool] = False
+class AllowedUrlProtocols:
+    def __init__(self, *allowed: str) -> None:
+        self.allowed_protocols = set(allowed)
 
+    def __call__(self, value: Url) -> Url:
+        if value.protocol not in self.allowed_protocols:
+            raise errors.ValidationError(
+                f"protocol must be {Joiner.with_or(tuple(self.allowed_protocols))}"
+            )
+
+        return value
+
+
+class RequiredUrlComponents:
+    def __init__(self, *components: str) -> None:
+        self.components = components
+
+    def __call__(self, value: Url) -> Url:
+        for comp in self.components:
+            if getattr(value, comp) is None:
+                raise errors.ValidationError(f"{comp} is required in URL")
+
+        return value
+
+
+class Url(str):
     __slots__ = (
         "url",
-        "scheme",
+        "protocol",
         "netloc",
         "username",
         "password",
@@ -39,7 +66,7 @@ class Url(str):
         self,
         url: str,
         *,
-        scheme: str | None = None,
+        protocol: str | None = None,
         netloc: str | None = None,
         username: str | None = None,
         password: str | None = None,
@@ -52,7 +79,7 @@ class Url(str):
     ):
         super().__init__()
         self.url = url
-        self.scheme = scheme
+        self.protocol = protocol
         self.netloc = netloc
         self.username = username
         self.password = password
@@ -66,14 +93,13 @@ class Url(str):
     @classmethod
     def parse(cls, url: str):
 
-        if cls.strip_whitespace:
-            url = url.strip()
+        url = url.strip()
 
         result = urlparse(url.strip())
 
         parsed: Url = cls(
             url=url,
-            scheme=result.scheme,
+            protocol=result.scheme,
             netloc=result.netloc,
             username=result.username,
             password=result.password,
@@ -85,39 +111,23 @@ class Url(str):
             fragment=result.fragment,
         )
 
-        parsed._validate()
         return parsed
 
-    def _validate(self):
-        if self.allowed_schemes and self.scheme not in self.allowed_schemes:
-            raise ValueError(
-                f"scheme must be {Joiner.with_or(tuple(self.allowed_schemes))}"
-            )
-
-        if self.host_required and not self.host:
-            raise ValueError("hostname required")
-
-        if self.user_required and not self.username:
-            raise ValueError("username required")
-
     @classmethod
-    def __convert__(cls, value):
+    def __convert__(cls, value) -> Url:
         try:
             return cls.parse(value)
         except ValueError as e:
             raise errors.ConversionError(value, str(e)) from e
 
 
-class HttpUrl(Url):
-    allowed_schemes = {"http", "https"}
-
-    def open(self):
-        """Opens the url in the user's web browser"""
-        webbrowser.open_new_tab(self)
-
-
-class PostgresUrl(Url):
-    allowed_schemes = {
+HttpUrl = t.Annotated[Url, AllowedUrlProtocols("http", "https")]
+WebSocketUrl = t.Annotated[Url, AllowedUrlProtocols("wss")]
+FtpUrl = t.Annotated[Url, AllowedUrlProtocols("ftp")]
+MysqlUrl = t.Annotated[Url, AllowedUrlProtocols("mysql")]
+PostgresUrl = t.Annotated[
+    Url,
+    AllowedUrlProtocols(
         "postgresql",
         "postgres",
         "postgresql+asyncpg",
@@ -126,4 +136,5 @@ class PostgresUrl(Url):
         "postgresql+psycopg2cffi",
         "postgresql+py-postgresql",
         "postgresql+pygresql",
-    }
+    ),
+]

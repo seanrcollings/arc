@@ -1,7 +1,7 @@
 import typing as t
 
 from arc import constants
-from arc.core.classful import lazy_class_signature
+from arc.core.classful import modify_group_cls
 from arc.core.param import param
 import arc.typing as at
 
@@ -251,7 +251,17 @@ def Depends(callback: t.Callable) -> t.Any:
 G = t.TypeVar("G", bound=type)
 
 
-def group(cls: G) -> G:
-    setattr(cls, "__arc_group__", True)
-    lazy_class_signature(cls)
-    return cls
+@t.overload
+def group(*, repr: bool = True) -> t.Callable[[G], G]:
+    ...
+
+
+@t.overload
+def group(cls: G, /) -> G:
+    ...
+
+
+def group(cls=None, *, repr: bool = True):
+    if cls:
+        return modify_group_cls(cls)
+    return modify_group_cls
