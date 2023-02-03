@@ -62,5 +62,3 @@ nav:
       - Custom Types: advanced-usage/custom-types.md
       - Command Autoloading: advanced-usage/command-autoloading.md
       - Shell Completions: advanced-usage/shell-completions.md
-  - ...
-  - Changelog: changelog.md
