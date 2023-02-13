@@ -23,65 +23,47 @@ if t.TYPE_CHECKING:
     from arc.core import Command
 
 
-class ContextInjectorMiddleware(Middleware):
-    """Utility middleware that injects the [`Context`][arc.context.Context] object into the enviroment,
-    which is what is passed to other parts of `arc` when they need access to the
-    enviroment, but with a bit cleaner of an interface
-
-    # Env Dependancies
-    None
-
-    # Env Additions
-    - `arc.ctx`
-
-    """
-
-    def __call__(self, env: at.ExecEnv):
-        env["arc.ctx"] = arc.Context(env)
-        return self.app(env)
-
-
 class ExitStackMiddleware(Middleware):
-    """Utility middleware that adds an instance of `contextlib.ExitStack` to the enviroment.
+    """Utility middleware that adds an instance of `contextlib.ExitStack` to the context.
     This can be used to open resources (like IO objects) that need to be closed when the program is exiting.
 
-    # Env Dependancies
+    # Context Dependancies
     None
 
-    # Env Additions
+    # Context Additions
     - `arc.exitstack`
     """
 
-    def __call__(self, env: at.ExecEnv):
+    def __call__(self, ctx: Context):
         with contextlib.ExitStack() as stack:
-            env["arc.exitstack"] = stack
-            return self.app(env)
+            ctx["arc.exitstack"] = stack
+            return self.app(ctx)
 
 
 class SetupParamMiddleware(Middleware):
-    def __call__(self, env: at.ExecEnv) -> t.Any:
-        command: Command = env["arc.command"]
-        param_instance = command.param_def.create_instance()
-        env["arc.args.tree"] = param_instance
-        env["arc.args.origins"] = {}
-        return self.app(env)
+    def __call__(self, ctx: Context) -> t.Any:
+        command: Command = ctx["arc.command"]
+        if not ctx.get("arc.args.tree"):
+            param_instance = command.param_def.create_instance()
+            ctx["arc.args.tree"] = param_instance
+
+        ctx["arc.args.origins"] = {}
+        return self.app(ctx)
 
 
 class ParamProcessor(Middleware):
-    env: at.ExecEnv
+    ctx: Context
     param_tree: ParamTree
     config: Config
-    ctx: Context | None
     origins: dict[str, ValueOrigin]
 
     __IGNORE = object()
 
-    def __call__(self, env: at.ExecEnv):
-        self.env = env
-        self.param_tree: ParamTree = env["arc.args.tree"]
-        self.config = env["arc.config"]
-        self.ctx = env.get("arc.ctx")
-        self.origins = env["arc.args.origins"]
+    def __call__(self, ctx: Context):
+        self.ctx = ctx
+        self.param_tree: ParamTree = ctx["arc.args.tree"]
+        self.config = ctx["arc.config"]
+        self.origins = ctx["arc.args.origins"]
 
         for param_value in self.param_tree.values():
             if not self.skip(param_value.param, param_value.value):
@@ -100,8 +82,7 @@ class ParamProcessor(Middleware):
                 if updated is not self.__IGNORE:
                     param_value.value = updated
 
-        # print(type(self).__name__, self.instance.compile())
-        return self.app(env)
+        return self.app(ctx)
 
     def process(self, param: Param, value: t.Any) -> t.Any:
         return self.__IGNORE
@@ -122,13 +103,9 @@ class ParamProcessor(Middleware):
 class ApplyParseResultMiddleware(ParamProcessor):
     res: at.ParseResult
 
-    def __call__(self, env: at.ExecEnv):
-        if env.get("arc.args") is not None:
-            return self.app(env)
-
-        self.res = env["arc.parse.result"]
-
-        return super().__call__(env)
+    def __call__(self, ctx: Context):
+        self.res = ctx["arc.parse.result"]
+        return super().__call__(ctx)
 
     def process_missing(self, param: Param):
         value: t.Any = self.res.pop(param.argument_name, constants.MISSING)
@@ -242,13 +219,13 @@ class OpenResourceMiddleware(ParamProcessor):
         return value
 
     def open_resource(self, resource: t.ContextManager) -> t.Any:
-        stack: contextlib.ExitStack = self.env["arc.exitstack"]
+        stack: contextlib.ExitStack = self.ctx["arc.exitstack"]
         return stack.enter_context(resource)
 
 
 class MissingParamsCheckerMiddleware(Middleware):
-    def __call__(self, env: at.ExecEnv) -> t.Any:
-        tree: ParamTree = env["arc.args.tree"]
+    def __call__(self, ctx: Context) -> t.Any:
+        tree: ParamTree = ctx["arc.args.tree"]
         missing = [
             value.param
             for value in tree.values()
@@ -263,26 +240,25 @@ class MissingParamsCheckerMiddleware(Middleware):
                 f"The following arguments are required: {params}"
             )
 
-        return self.app(env)
+        return self.app(ctx)
 
 
 class CompileParamsMiddleware(Middleware):
-    def __call__(self, env: at.ExecEnv) -> t.Any:
-        instance: ParamTree = env["arc.args.tree"]
-        env["arc.args"] = instance.compile()
-        return self.app(env)
+    def __call__(self, ctx: Context) -> t.Any:
+        instance: ParamTree = ctx["arc.args.tree"]
+        ctx["arc.args"] = instance.compile()
+        return self.app(ctx)
 
 
 class DecoratorStackMiddleware(Middleware):
-    def __call__(self, env: at.ExecEnv):
-        command: Command = env["arc.command"]
-        ctx = env.get("arc.ctx")
+    def __call__(self, ctx: Context):
+        command: Command = ctx["arc.command"]
 
         decostack = command.decorators()
         decostack.start(ctx)
 
         try:
-            res = self.app(env)
+            res = self.app(ctx)
         except Exception as e:
             res = None
             decostack.throw(e)
@@ -293,9 +269,9 @@ class DecoratorStackMiddleware(Middleware):
 
 
 class ExecutionHandler(Middleware):
-    def __call__(self, env: at.ExecEnv):
-        command: Command = env["arc.command"]
-        args: dict = env["arc.args"]
+    def __call__(self, ctx: Context):
+        command: Command = ctx["arc.command"]
+        args: dict = ctx["arc.args"]
 
         res = command.callback(**args)
 

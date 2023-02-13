@@ -8,6 +8,7 @@ import arc
 from arc import errors, utils
 from arc import typing as at
 from arc.color import colorize, fg
+from arc.context import Context
 from arc.parser import Parser
 from arc.core.middleware.middleware import Middleware
 from arc.present import Joiner
@@ -18,8 +19,8 @@ if t.TYPE_CHECKING:
 
 
 class InitChecksMiddleware(Middleware):
-    def __call__(self, env: at.ExecEnv):
-        root: Command = env["arc.root"]
+    def __call__(self, ctx: Context):
+        root: Command = ctx["arc.root"]
 
         if root.subcommands and len(list(root.argument_params)) != 0:
             raise errors.CommandError(
@@ -27,23 +28,23 @@ class InitChecksMiddleware(Middleware):
                 "have argument / positional parameters"
             )
 
-        return self.app(env)
+        return self.app(ctx)
 
 
 class AddUsageErrorInfoMiddleware(Middleware):
     """A utility middleware that catches `UsageError`s and adds information so they can generate a usage error
 
-    # Env Dependancies
+    # ctx Dependancies
     - `arc.command` (optional): Usage information comes from the current executing [`Command`][arc.core.command.Command] object
-    # Env Additions
+    # ctx Additions
     None
     """
 
-    def __call__(self, env: at.ExecEnv) -> t.Any:
+    def __call__(self, ctx: Context) -> t.Any:
         try:
-            return self.app(env)
+            return self.app(ctx)
         except errors.UsageError as e:
-            e.command = env.get("arc.command")
+            e.command = ctx.get("arc.command")
             raise
 
 
@@ -52,15 +53,15 @@ class InputMiddleware(Middleware):
     command is called, it will be normalized to an list. If input is not provided,
     `sys.argv` is used.
 
-    # Env Dependancies
+    # ctx Dependancies
     - `arc.input` (optional): Only exists if input was provided in the call to the command
 
-    # Env Additions
+    # ctx Additions
     - `arc.input`: Adds it if it's not already there, normalizes it if it is there
     """
 
-    def __call__(self, env) -> t.Any:
-        args: at.InputArgs = env.get("arc.input")
+    def __call__(self, ctx) -> t.Any:
+        args: at.InputArgs = ctx.get("arc.input")
         if args is None:
             args = sys.argv[1:]
 
@@ -68,22 +69,22 @@ class InputMiddleware(Middleware):
             args = shlex.split(args)
 
         args = list(args)
-        env["arc.input"] = args
+        ctx["arc.input"] = args
 
-        return self.app(env)
+        return self.app(ctx)
 
 
 class CommandFinderMiddleware(Middleware):
-    def __call__(self, env: at.ExecEnv):
-        args: list[str] = env["arc.input"]
-        root: Command = env["arc.root"]
+    def __call__(self, ctx: Context):
+        args: list[str] = ctx["arc.input"]
+        root: Command = ctx["arc.root"]
         global_args, command, command_args = root.split_args(args)
-        env["arc.input.global"] = global_args
-        env["arc.command"] = command
-        env["arc.input"] = command_args
-        env["arc.mode"] = self.get_mode(root, command)
+        ctx["arc.input.global"] = global_args
+        ctx["arc.command"] = command
+        ctx["arc.input"] = command_args
+        ctx["arc.mode"] = self.get_mode(root, command)
 
-        return self.app(env)
+        return self.app(ctx)
 
     def get_mode(self, root: Command, command: Command) -> at.ExecMode:
         if root is command:
@@ -96,34 +97,34 @@ class CommandFinderMiddleware(Middleware):
 
 
 class ArgParseMiddleware(Middleware):
-    def __call__(self, env: at.ExecEnv):
-        command: Command = env["arc.command"]
-        args: list[str] = env["arc.input"]
-        global_args: list[str] = env["arc.input.global"]
-        root: Command = env["arc.root"]
-        mode: at.ExecMode = env["arc.mode"]
+    def __call__(self, ctx: Context):
+        command: Command = ctx["arc.command"]
+        args: list[str] = ctx["arc.input"]
+        global_args: list[str] = ctx["arc.input.global"]
+        root: Command = ctx["arc.root"]
+        mode: at.ExecMode = ctx["arc.mode"]
 
         if mode == "single":
-            return self.run_command(command, global_args, env)
+            return self.run_command(command, global_args, ctx)
         elif mode == "global":
             self.parse_args(command, global_args)
             arc.usage(command)
             arc.exit(1)
         elif mode == "subcommand":
             if not root.is_namespace:
-                env["arc.command"] = root
-                self.run_command(root, global_args, env)
-                env["arc.command"] = command
-                del env["arc.args"]
-            return self.run_command(command, args, env)
+                ctx["arc.command"] = root
+                self.run_command(root, global_args, ctx)
+                ctx["arc.command"] = command
+                del ctx["arc.args.tree"]
+            return self.run_command(command, args, ctx)
 
-    def run_command(self, command: Command, args: list[str], env: at.ExecEnv):
+    def run_command(self, command: Command, args: list[str], ctx: Context):
         result, extra = self.parse_args(command, args)
 
-        env["arc.parse.result"] = result
-        env["arc.parse.extra"] = extra
+        ctx["arc.parse.result"] = result
+        ctx["arc.parse.extra"] = extra
 
-        return self.app(env)
+        return self.app(ctx)
 
     def parse_args(self, command: Command, args: list[str]) -> tuple[dict, list[str]]:
         parser = self.create_parser(command)
@@ -142,18 +143,18 @@ class ParseResultCheckerMiddleware(Middleware):
     """Checks the results of the input parsing against configutation options.
     Generates error messages for unrecognized arguments
 
-    # Env Dependancies
+    # ctx Dependancies
     - `arc.config`
     - `arc.command`
     - `arc.parse.extra` (optional)
 
-    # Env Additions
+    # ctx Additions
     """
 
-    def __call__(self, env: at.ExecEnv):
-        config: Config = env["arc.config"]
-        extra: list[str] | None = env.get("arc.parse.extra")
-        command: Command = env["arc.command"]
+    def __call__(self, ctx: Context):
+        config: Config = ctx["arc.config"]
+        extra: list[str] | None = ctx.get("arc.parse.extra")
+        command: Command = ctx["arc.command"]
 
         if extra and not config.allow_unrecognized_args:
             message = (
@@ -162,7 +163,7 @@ class ParseResultCheckerMiddleware(Middleware):
             message += self.__get_suggestions(extra, config, command)
             raise errors.UnrecognizedArgError(message)
 
-        return self.app(env)
+        return self.app(ctx)
 
     def __get_suggestions(
         self,

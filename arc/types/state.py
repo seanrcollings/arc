@@ -9,7 +9,7 @@ class State(collections.UserDict):
     """State object"""
 
     def __repr__(self):
-        values = ", ".join(f"{key}={value}" for key, value in self.data.items())
+        values = ", ".join(f"{key}={value!r}" for key, value in self.data.items())
         return f"{self.__class__.__name__}({values})"
 
     def __getattr__(self, attr):
@@ -27,5 +27,5 @@ class State(collections.UserDict):
     @classmethod
     def __depends__(cls, ctx: Context):
         state = cls()
-        state.data = ctx.env["arc.state"]
+        state.data = ctx["arc.state"]
         return state

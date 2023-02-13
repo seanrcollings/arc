@@ -26,7 +26,6 @@ class App:
     ]
 
     DEFAULT_EXEC_MIDDLEWARES = [
-        ContextInjectorMiddleware,
         ExitStackMiddleware,
         SetupParamMiddleware,
         ApplyParseResultMiddleware,
@@ -77,7 +76,7 @@ class App:
             self.init_middleware_types + self.exec_middleware_types
         )
         try:
-            return first(self.create_env())
+            return first(self.create_ctx())
 
         except errors.ExternalError as e:
             if self.config.environment == "production":
@@ -95,9 +94,16 @@ class App:
             raise
 
     def execute(self, command: Command, **kwargs) -> t.Any:
-        env = self.create_env({"arc.command": command, "arc.args": kwargs or {}})
+        tree = command.param_def.create_instance()
+
+        for key, value in kwargs.items():
+            tree[key] = value
+
+        ctx = self.create_ctx(
+            {"arc.command": command, "arc.args.tree": tree, "arc.parse.result": {}}
+        )
         first = self.build_middleware_stack(self.exec_middleware_types)
-        return first(env)
+        return first(ctx)
 
     def build_middleware_stack(
         self, middlewares: t.Sequence[type[Middleware]]
@@ -114,8 +120,8 @@ class App:
 
         return first
 
-    def create_env(self, data: dict = None) -> at.ExecEnv:
-        return (
+    def create_ctx(self, data: dict = None) -> Context:
+        return Context(
             {
                 "arc.root": self.root,
                 "arc.input": self.input,
@@ -130,5 +136,5 @@ class App:
         )
 
     @classmethod
-    def __depends__(cls, ctx):
-        return ctx.env["arc.app"]
+    def __depends__(cls, ctx: Context):
+        return ctx.app

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import collections
 import typing as t
 
 import arc.typing as at
@@ -14,31 +15,28 @@ if t.TYPE_CHECKING:
 T = t.TypeVar("T")
 
 
-class Context:
+class Context(collections.UserDict[str, t.Any]):
     """Context serves as a "view" into the execution enviroment"""
-
-    def __init__(self, env: at.ExecEnv) -> None:
-        self.env: at.ExecEnv = env
 
     @property
     def command(self) -> Command:
-        return self.env["arc.command"]
+        return self["arc.command"]
 
     @property
     def state(self) -> dict:
-        return self.env["arc.state"]
+        return self["arc.state"]
 
     @property
     def logger(self) -> Logger:
-        return self.env["arc.logger"]
+        return self["arc.logger"]
 
     @property
     def app(self) -> App:
-        return self.env["arc.app"]
+        return self["arc.app"]
 
     @property
     def config(self) -> Config:
-        return self.env["arc.config"]
+        return self["arc.config"]
 
     def execute(self, command: Command, **kwargs) -> t.Any:
         """Execute a command within the context of another command"""
@@ -54,7 +52,7 @@ class Context:
 
     def get_origin(self, param_name: str, default=None):
         """Gets the origin of a paramter"""
-        origins: dict[str, ValueOrigin] | None = self.env.get("arc.args.origins")
+        origins: dict[str, ValueOrigin] | None = self.get("arc.args.origins")
 
         if not origins:
             return default
