@@ -43,10 +43,8 @@ class ExitStackMiddleware(Middleware):
 class SetupParamMiddleware(Middleware):
     def __call__(self, ctx: Context) -> t.Any:
         command: Command = ctx["arc.command"]
-        if not ctx.get("arc.args.tree"):
-            param_instance = command.param_def.create_instance()
-            ctx["arc.args.tree"] = param_instance
-
+        param_instance = command.param_def.create_instance()
+        ctx["arc.args.tree"] = param_instance
         ctx["arc.args.origins"] = {}
         return self.app(ctx)
 

@@ -94,14 +94,12 @@ class App:
             raise
 
     def execute(self, command: Command, **kwargs) -> t.Any:
-        tree = command.param_def.create_instance()
+        # tree = command.param_def.create_instance()
 
-        for key, value in kwargs.items():
-            tree[key] = value
+        # for key, value in kwargs.items():
+        #     tree[key] = value
 
-        ctx = self.create_ctx(
-            {"arc.command": command, "arc.args.tree": tree, "arc.parse.result": {}}
-        )
+        ctx = self.create_ctx({"arc.command": command, "arc.parse.result": kwargs})
         first = self.build_middleware_stack(self.exec_middleware_types)
         return first(ctx)
 

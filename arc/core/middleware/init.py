@@ -116,6 +116,7 @@ class ArgParseMiddleware(Middleware):
                 self.run_command(root, global_args, ctx)
                 ctx["arc.command"] = command
                 del ctx["arc.args.tree"]
+                del ctx["arc.args"]
             return self.run_command(command, args, ctx)
 
     def run_command(self, command: Command, args: list[str], ctx: Context):
