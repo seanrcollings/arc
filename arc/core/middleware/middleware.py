@@ -4,8 +4,8 @@ import arc.typing as at
 
 
 class Middleware:
-    def __init__(self, app: t.Callable[[Context], t.Any]) -> None:
-        self.app = app
+    def __init__(self) -> None:
+        self.app = lambda ctx: None
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.app!r})"

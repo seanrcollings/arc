@@ -111,12 +111,12 @@ class ArgParseMiddleware(Middleware):
             arc.usage(command)
             arc.exit(1)
         elif mode == "subcommand":
-            if not root.is_namespace:
-                ctx["arc.command"] = root
-                self.run_command(root, global_args, ctx)
-                ctx["arc.command"] = command
-                del ctx["arc.args.tree"]
-                del ctx["arc.args"]
+            # if not root.is_namespace:
+            #     ctx["arc.command"] = root
+            #     self.run_command(root, global_args, ctx)
+            #     ctx["arc.command"] = command
+            #     del ctx["arc.args.tree"]
+            #     del ctx["arc.args"]
             return self.run_command(command, args, ctx)
 
     def run_command(self, command: Command, args: list[str], ctx: Context):
@@ -218,3 +218,13 @@ class ParseResultCheckerMiddleware(Middleware):
                 )
 
         return message
+
+
+DEFAULT_INIT_MIDDLEWARES = [
+    AddUsageErrorInfoMiddleware,
+    InitChecksMiddleware,
+    InputMiddleware,
+    CommandFinderMiddleware,
+    ArgParseMiddleware,
+    ParseResultCheckerMiddleware,
+]

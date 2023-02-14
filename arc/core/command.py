@@ -4,10 +4,10 @@ import typing as t
 
 import arc
 from arc import errors, utils
-from arc.context import Context
 from arc.core import classful
 from arc.autoload import Autoload
-from arc.core.app import App
+from arc.core.alias import AliasDict
+from arc.core.app import App, MiddlewareContainer
 from arc.decorators import DecoratorMixin, DecoratorStack
 from arc.core.documentation import Documentation
 from arc.config import config
@@ -15,49 +15,14 @@ import arc.typing as at
 from arc.autocompletions import CompletionInfo, get_completions, Completion
 from arc.core.param import ParamMixin
 from arc.core.app import App
+from arc.core.middleware.exec import DEFAULT_EXEC_MIDDLEWARES
 
 if t.TYPE_CHECKING:
     from .param import ParamDefinition
-
-K = t.TypeVar("K")
-V = t.TypeVar("V")
+    from arc.context import Context
 
 
-class AliasDict(dict[K, V]):
-    """Dict subclass for storing aliases to keys alongside the actual key"""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.aliases: dict[K, K] = {}
-        """Maps aliases to the cannonical key"""
-
-    def get(self, key: K, default=None):
-        """Wraps `dict.get()` but also checks for aliases"""
-        if super().__contains__(key):
-            return self[key]
-        if key in self.aliases:
-            return self[self.aliases[key]]
-
-        return default
-
-    def __contains__(self, key: object):
-        return super().__contains__(key) or key in self.aliases
-
-    def add_alias(self, key: K, alias: K):
-        """Add an `alias` for `key`"""
-        self.aliases[alias] = key
-
-    def add_aliases(self, key: K, *aliases: K):
-        """Add an several `aliass` for `key`"""
-        for alias in aliases:
-            self.add_alias(key, alias)
-
-    def aliases_for(self, key: K) -> list[K]:
-        return [alias for alias, val in self.aliases.items() if val == key]
-
-
-class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc]):
+class Command(ParamMixin, MiddlewareContainer):
     name: str
     parent: Command | None
     subcommands: AliasDict[str, Command]
@@ -75,7 +40,11 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         explicit_name: bool = True,
         autoload: bool = False,
     ) -> None:
-        super().__init__()
+        ParamMixin.__init__(self)
+        MiddlewareContainer.__init__(
+            self,
+            [m() for m in DEFAULT_EXEC_MIDDLEWARES],
+        )
         if inspect.isclass(callback):
             self.callback = classful.wrap_class_callback(  # type: ignore
                 t.cast(type[at.ClassCallback], callback)
@@ -114,8 +83,15 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
             result (Any): The value that the command's callback returns
         """
 
-        app = App(self, config, input=input_args, state=state or {})
-        return app()
+        app = App(self, config, state=state or {})
+        return app(input_args)
+
+    def run(self, ctx: Context):
+        ctx = self._stack.start(ctx)
+        args = ctx["arc.args"]
+        res = self.callback(**args)
+        res = self._stack.close(res)
+        return res
 
     def __completions__(
         self, info: CompletionInfo, *_args, **_kwargs

@@ -274,3 +274,20 @@ class ExecutionHandler(Middleware):
         res = command.callback(**args)
 
         return res
+
+
+DEFAULT_EXEC_MIDDLEWARES = [
+    ExitStackMiddleware,
+    SetupParamMiddleware,
+    ApplyParseResultMiddleware,
+    GetEnvValueMiddleware,
+    GetPromptValueMiddleware,
+    GetterValueMiddleware,
+    ConvertValuesMiddleware,
+    DefaultValueMiddleware,
+    DependancyInjectorMiddleware,
+    RunTypeMiddlewareMiddleware,
+    OpenResourceMiddleware,
+    MissingParamsCheckerMiddleware,
+    CompileParamsMiddleware,
+]

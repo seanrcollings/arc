@@ -1,138 +1,160 @@
 from __future__ import annotations
+import types
 import typing as t
 
 import arc
-from arc import errors
-from arc import typing as at
-from arc import utils
-from arc.config import Config
-from arc.color import fg, colorize
-from arc.logging import logger
+import arc.typing as at
 
-from arc.core.middleware import *
 
 if t.TYPE_CHECKING:
     from arc.core import Command
+    from arc.context import Context
 
 
-class App:
-    DEFAULT_INIT_MIDDLEWARES = [
-        AddUsageErrorInfoMiddleware,
-        InitChecksMiddleware,
-        InputMiddleware,
-        CommandFinderMiddleware,
-        ArgParseMiddleware,
-        ParseResultCheckerMiddleware,
-    ]
+MiddlewareGenerator = t.Generator["Context", t.Any, t.Any]
+Middleware = t.Callable[["Context"], t.Union["Context", MiddlewareGenerator, None]]
 
-    DEFAULT_EXEC_MIDDLEWARES = [
-        ExitStackMiddleware,
-        SetupParamMiddleware,
-        ApplyParseResultMiddleware,
-        GetEnvValueMiddleware,
-        GetPromptValueMiddleware,
-        GetterValueMiddleware,
-        ConvertValuesMiddleware,
-        DefaultValueMiddleware,
-        DependancyInjectorMiddleware,
-        RunTypeMiddlewareMiddleware,
-        OpenResourceMiddleware,
-        MissingParamsCheckerMiddleware,
-        CompileParamsMiddleware,
-        DecoratorStackMiddleware,
-        ExecutionHandler,
-    ]
 
+class MiddlewareStack:
+    __middlewares: list[Middleware]
+    __gens: list[t.Generator[None, t.Any, None]]
+
+    def __repr__(self):
+        return f"MiddlewareStack({self.__middlewares!r})"
+
+    def __init__(self, middlewares: t.Sequence[Middleware] = None):
+        self.__middlewares = list(middlewares or [])
+
+    def __iter__(self):
+        yield from self.__middlewares
+
+    def __contains__(self, value):
+        return value in self.__decos
+
+    def start(self, ctx):
+        self.__gens = []
+
+        for middleware in self.__middlewares:
+            res = middleware(ctx)
+
+            if isinstance(res, types.GeneratorType):
+                self.__gens.append(res)
+                res = next(res)
+
+            if res is not None:
+                ctx = res
+
+        return ctx
+
+    def close(self, result: t.Any):
+        """Closes each callback by calling `next()` on them"""
+        for gen in reversed(self.__gens):
+            try:
+                gen.send(result)
+            except StopIteration as e:
+                if e.value is not None:
+                    result = e.value
+
+        return result
+
+    def add(self, deco: Middleware):
+        self.__middlewares.append(deco)
+
+    def remove(self, deco: Middleware):
+        self.__middlewares.remove(deco)
+
+    def throw(self, exception: Exception):
+        """Used if an error occurs in command execution.
+        Notifies each of the callbacks that an error occured.
+
+        Args:
+            exception: The exception that occured within the executing command
+
+        Raises:
+            exception: if none of the callbacks handle the exception, re-raises
+        """
+
+        exc_type = type(exception)
+        trace = exception.__traceback__
+
+        exception_handled = False
+
+        for gen in reversed(self.__gens):
+            try:
+                if exception_handled:
+                    try:
+                        next(gen)
+                    except StopIteration:
+                        ...
+                else:
+                    gen.throw(exc_type, exception, trace)
+            except StopIteration:
+                exception_handled = True
+            except Exception as e:
+                if isinstance(e, arc.errors.Exit):
+                    raise e
+
+                exception = e
+
+        if not exception_handled:
+            raise exception
+
+
+class MiddlewareContainer:
+    def __init__(self, middlewares: t.Sequence[Middleware]):
+        self._stack = MiddlewareStack(middlewares)
+
+    @t.overload
+    def use(self, callable: None) -> t.Callable[[Middleware], Middleware]:
+        ...
+
+    @t.overload
+    def use(self, callable: Middleware) -> Middleware:
+        ...
+
+    def use(self, callable: Middleware = None):
+        def inner(func: Middleware):
+            self._stack.add(func)
+            return func
+
+        if callable:
+            return inner(callable)
+
+        return inner
+
+
+class App(MiddlewareContainer):
     def __init__(
         self,
-        root: Command,
-        config: Config,
-        init_middlewares: list[type[Middleware]] | None = None,
-        exec_middlewares: list[type[Middleware]] | None = None,
-        input: at.InputArgs = None,
-        state: dict[str, t.Any] = None,
-        env: at.ExecEnv | None = None,
+        root,
+        config,
+        init_middlewares=None,
+        state=None,
+        ctx=None,
     ) -> None:
-        self.root: Command = root
-        self.config: Config = config
-        self.init_middleware_types: list[type[Middleware]] = (
-            init_middlewares or self.DEFAULT_INIT_MIDDLEWARES
-        )
-        self.exec_middleware_types: list[type[Middleware]] = (
-            exec_middlewares or self.DEFAULT_EXEC_MIDDLEWARES
-        )
-        self.provided_env: at.ExecEnv = env or {}
-        self.input: at.InputArgs = input
+        super().__init__(init_middlewares or [])
+        self.root = root
+        self.config = config
+        self.provided_ctx = ctx or {}
         self.state = state or {}
 
-    __repr__ = utils.display("root")
+    def __call__(self, input=None) -> t.Any:
+        ctx = self.create_ctx({"arc.input": input})
+        ctx = self._stack.start(ctx)
+        command: Command = ctx["arc.command"]
+        res = command.run(ctx)
+        res = self._stack.close(res)
+        return res
 
-    def __call__(self) -> t.Any:
-        if not self.root.explicit_name:
-            name = sys.argv[0]
-            self.root.name = os.path.basename(name)
-
-        first = self.build_middleware_stack(
-            self.init_middleware_types + self.exec_middleware_types
-        )
-        try:
-            return first(self.create_ctx())
-
-        except errors.ExternalError as e:
-            if self.config.environment == "production":
-                arc.err(e)
-                raise errors.Exit(1)
-
-            raise
-        except Exception as e:
-            if self.config.report_bug:
-                raise errors.InternalError(
-                    f"{self.root.name} has encountered a critical error. "
-                    f"Please file a bug report with the maintainer: {colorize(self.config.report_bug, fg.YELLOW)}"
-                ) from e
-
-            raise
-
-    def execute(self, command: Command, **kwargs) -> t.Any:
-        # tree = command.param_def.create_instance()
-
-        # for key, value in kwargs.items():
-        #     tree[key] = value
-
-        ctx = self.create_ctx({"arc.command": command, "arc.parse.result": kwargs})
-        first = self.build_middleware_stack(self.exec_middleware_types)
-        return first(ctx)
-
-    def build_middleware_stack(
-        self, middlewares: t.Sequence[type[Middleware]]
-    ) -> Middleware:
-        first: Middleware | None = None
-
-        for middleware_type in reversed(middlewares):
-            if first is None:
-                first = middleware_type(lambda env: env)
-            else:
-                first = middleware_type(first)
-
-        assert first is not None
-
-        return first
-
-    def create_ctx(self, data: dict = None) -> Context:
-        return Context(
+    def create_ctx(self, data: dict = None) -> arc.Context:
+        return arc.Context(
             {
                 "arc.root": self.root,
-                "arc.input": self.input,
                 "arc.config": self.config,
                 "arc.errors": [],
                 "arc.app": self,
-                "arc.logger": logger,
                 "arc.state": self.state,
             }
-            | self.provided_env
+            | self.provided_ctx
             | (data or {})
         )
-
-    @classmethod
-    def __depends__(cls, ctx: Context):
-        return ctx.app
