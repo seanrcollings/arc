@@ -16,14 +16,14 @@ from arc.prompt.prompts import input_prompt
 from arc.types.helpers import iscontextmanager
 
 from arc.core.param.param import InjectedParam, Param, ValueOrigin
-from arc.core.middleware.middleware import Middleware
+from arc.core.middleware.middleware import MiddlewareBase
 
 if t.TYPE_CHECKING:
     from arc.core.param.param_tree import ParamTree
     from arc.core import Command
 
 
-class ExitStackMiddleware(Middleware):
+class ExitStackMiddleware(MiddlewareBase):
     """Utility middleware that adds an instance of `contextlib.ExitStack` to the context.
     This can be used to open resources (like IO objects) that need to be closed when the program is exiting.
 
@@ -40,7 +40,7 @@ class ExitStackMiddleware(Middleware):
             return self.app(ctx)
 
 
-class SetupParamMiddleware(Middleware):
+class SetupParamMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context) -> t.Any:
         command: Command = ctx["arc.command"]
         param_instance = command.param_def.create_instance()
@@ -49,7 +49,7 @@ class SetupParamMiddleware(Middleware):
         return self.app(ctx)
 
 
-class ParamProcessor(Middleware):
+class ParamProcessor(MiddlewareBase):
     ctx: Context
     param_tree: ParamTree
     config: Config
@@ -221,7 +221,7 @@ class OpenResourceMiddleware(ParamProcessor):
         return stack.enter_context(resource)
 
 
-class MissingParamsCheckerMiddleware(Middleware):
+class MissingParamsCheckerMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context) -> t.Any:
         tree: ParamTree = ctx["arc.args.tree"]
         missing = [
@@ -241,14 +241,14 @@ class MissingParamsCheckerMiddleware(Middleware):
         return self.app(ctx)
 
 
-class CompileParamsMiddleware(Middleware):
+class CompileParamsMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context) -> t.Any:
         instance: ParamTree = ctx["arc.args.tree"]
         ctx["arc.args"] = instance.compile()
         return self.app(ctx)
 
 
-class DecoratorStackMiddleware(Middleware):
+class DecoratorStackMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context):
         command: Command = ctx["arc.command"]
 
@@ -266,7 +266,7 @@ class DecoratorStackMiddleware(Middleware):
         return res
 
 
-class ExecutionHandler(Middleware):
+class ExecutionHandler(MiddlewareBase):
     def __call__(self, ctx: Context):
         command: Command = ctx["arc.command"]
         args: dict = ctx["arc.args"]
@@ -277,17 +277,17 @@ class ExecutionHandler(Middleware):
 
 
 DEFAULT_EXEC_MIDDLEWARES = [
-    ExitStackMiddleware,
-    SetupParamMiddleware,
-    ApplyParseResultMiddleware,
-    GetEnvValueMiddleware,
-    GetPromptValueMiddleware,
-    GetterValueMiddleware,
-    ConvertValuesMiddleware,
-    DefaultValueMiddleware,
-    DependancyInjectorMiddleware,
-    RunTypeMiddlewareMiddleware,
-    OpenResourceMiddleware,
-    MissingParamsCheckerMiddleware,
-    CompileParamsMiddleware,
+    ExitStackMiddleware(),
+    SetupParamMiddleware(),
+    ApplyParseResultMiddleware(),
+    GetEnvValueMiddleware(),
+    GetPromptValueMiddleware(),
+    GetterValueMiddleware(),
+    ConvertValuesMiddleware(),
+    DefaultValueMiddleware(),
+    DependancyInjectorMiddleware(),
+    RunTypeMiddlewareMiddleware(),
+    OpenResourceMiddleware(),
+    MissingParamsCheckerMiddleware(),
+    CompileParamsMiddleware(),
 ]

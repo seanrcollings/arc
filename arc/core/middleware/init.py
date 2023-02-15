@@ -10,7 +10,7 @@ from arc import typing as at
 from arc.color import colorize, fg
 from arc.context import Context
 from arc.parser import Parser
-from arc.core.middleware.middleware import Middleware
+from arc.core.middleware.middleware import MiddlewareBase
 from arc.present import Joiner
 from arc.config import Config
 
@@ -18,7 +18,7 @@ if t.TYPE_CHECKING:
     from arc.core import Command
 
 
-class InitChecksMiddleware(Middleware):
+class InitChecksMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context):
         root: Command = ctx["arc.root"]
 
@@ -31,7 +31,7 @@ class InitChecksMiddleware(Middleware):
         return self.app(ctx)
 
 
-class AddUsageErrorInfoMiddleware(Middleware):
+class AddUsageErrorInfoMiddleware(MiddlewareBase):
     """A utility middleware that catches `UsageError`s and adds information so they can generate a usage error
 
     # ctx Dependancies
@@ -48,7 +48,7 @@ class AddUsageErrorInfoMiddleware(Middleware):
             raise
 
 
-class InputMiddleware(Middleware):
+class InputMiddleware(MiddlewareBase):
     """Middleware that normalizes different input sources. If input is provided when
     command is called, it will be normalized to an list. If input is not provided,
     `sys.argv` is used.
@@ -74,7 +74,7 @@ class InputMiddleware(Middleware):
         return self.app(ctx)
 
 
-class CommandFinderMiddleware(Middleware):
+class CommandFinderMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context):
         args: list[str] = ctx["arc.input"]
         root: Command = ctx["arc.root"]
@@ -96,7 +96,7 @@ class CommandFinderMiddleware(Middleware):
             return "subcommand"
 
 
-class ArgParseMiddleware(Middleware):
+class ArgParseMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context):
         command: Command = ctx["arc.command"]
         args: list[str] = ctx["arc.input"]
@@ -140,7 +140,7 @@ class ArgParseMiddleware(Middleware):
         return parser
 
 
-class ParseResultCheckerMiddleware(Middleware):
+class ParseResultCheckerMiddleware(MiddlewareBase):
     """Checks the results of the input parsing against configutation options.
     Generates error messages for unrecognized arguments
 
@@ -221,10 +221,10 @@ class ParseResultCheckerMiddleware(Middleware):
 
 
 DEFAULT_INIT_MIDDLEWARES = [
-    AddUsageErrorInfoMiddleware,
-    InitChecksMiddleware,
-    InputMiddleware,
-    CommandFinderMiddleware,
-    ArgParseMiddleware,
-    ParseResultCheckerMiddleware,
+    AddUsageErrorInfoMiddleware(),
+    InitChecksMiddleware(),
+    InputMiddleware(),
+    CommandFinderMiddleware(),
+    ArgParseMiddleware(),
+    ParseResultCheckerMiddleware(),
 ]

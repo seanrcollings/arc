@@ -7,19 +7,20 @@ from arc import errors, utils
 from arc.core import classful
 from arc.autoload import Autoload
 from arc.core.alias import AliasDict
-from arc.core.app import App, MiddlewareContainer
+from arc.core.app import App
+from arc.core.middleware import MiddlewareContainer
+from arc.core.middleware.middleware import MiddlewareStack
 from arc.decorators import DecoratorMixin, DecoratorStack
 from arc.core.documentation import Documentation
 from arc.config import config
 import arc.typing as at
 from arc.autocompletions import CompletionInfo, get_completions, Completion
 from arc.core.param import ParamMixin
-from arc.core.app import App
 from arc.core.middleware.exec import DEFAULT_EXEC_MIDDLEWARES
+from arc.context import Context
 
 if t.TYPE_CHECKING:
     from .param import ParamDefinition
-    from arc.context import Context
 
 
 class Command(ParamMixin, MiddlewareContainer):
@@ -41,10 +42,7 @@ class Command(ParamMixin, MiddlewareContainer):
         autoload: bool = False,
     ) -> None:
         ParamMixin.__init__(self)
-        MiddlewareContainer.__init__(
-            self,
-            [m() for m in DEFAULT_EXEC_MIDDLEWARES],
-        )
+        MiddlewareContainer.__init__(self, [])
         if inspect.isclass(callback):
             self.callback = classful.wrap_class_callback(  # type: ignore
                 t.cast(type[at.ClassCallback], callback)
@@ -72,13 +70,6 @@ class Command(ParamMixin, MiddlewareContainer):
                 If none is provided, `sys.argv` is used.
             state (dict, optional): Execution State.
 
-        Raises:
-            errors.CommandError: If certain validations are not met
-            errors.Exit: Issues an `Exit()` if an external error occurs
-                (i.e: the input is not passed properly)
-            errors.InternalError: Issues an `InternalError()` when there
-                is a bug in the callback code, or in `arc` itself
-
         Returns:
             result (Any): The value that the command's callback returns
         """
@@ -87,10 +78,22 @@ class Command(ParamMixin, MiddlewareContainer):
         return app(input_args)
 
     def run(self, ctx: Context):
-        ctx = self._stack.start(ctx)
+        stack = MiddlewareStack()
+        for command in self.command_chain:
+            for mid in command.stack:
+                stack.add(mid)
+
+        ctx = stack.start(ctx)
         args = ctx["arc.args"]
-        res = self.callback(**args)
-        res = self._stack.close(res)
+
+        res = None
+        try:
+            res = self.callback(**args)
+        except Exception as e:
+            stack.throw(e)
+        else:
+            stack.close(res)
+
         return res
 
     def __completions__(
@@ -243,7 +246,10 @@ class Command(ParamMixin, MiddlewareContainer):
         """
         self.subcommands[command.name] = command
         command.parent = self
-        # self.inherit_decorators(command)
+        if command.__autoload__:
+            for m in DEFAULT_EXEC_MIDDLEWARES:
+                command.stack.remove(m)
+
         if aliases:
             self.subcommands.add_aliases(command.name, *aliases)
 

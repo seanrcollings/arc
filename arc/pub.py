@@ -7,6 +7,7 @@ import typing as t
 from arc import errors
 from arc.color import colorize, fg
 from arc.core.command import Command, namespace_callback
+from arc.core.middleware.exec import DEFAULT_EXEC_MIDDLEWARES
 from arc.present import Joiner, Ansi
 from arc.types.type_info import TypeInfo
 from arc.types.helpers import convert_type
@@ -85,7 +86,7 @@ def command(
     """
 
     def inner(callback: at.CommandCallback) -> Command:
-        return Command(
+        command = Command(
             callback=callback,
             name=Command.get_command_name(callback, name)[0],
             description=desc,
@@ -93,6 +94,8 @@ def command(
             explicit_name=bool(name),
             autoload=True,
         )
+        command.use(DEFAULT_EXEC_MIDDLEWARES)
+        return command
 
     return inner
 
