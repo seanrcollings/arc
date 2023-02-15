@@ -41,6 +41,10 @@ class App(MiddlewareContainer):
 
         return res
 
+    def execute(self, command: Command, **kwargs: t.Any) -> t.Any:
+        ctx = self.create_ctx({"arc.command": command, "arc.parse.result": kwargs})
+        return command.run(ctx)
+
     def create_ctx(self, data: dict = None) -> arc.Context:
         return arc.Context(
             {
