@@ -1,8 +1,11 @@
 from __future__ import annotations
+import os
+import sys
 import typing as t
 
 import arc
 from arc import errors
+from arc import utils
 from arc.config import config
 from arc.core.middleware.init import DEFAULT_INIT_MIDDLEWARES
 from arc.core.middleware.middleware import Middleware, MiddlewareContainer
@@ -29,13 +32,13 @@ class App(MiddlewareContainer):
         self.state = state or {}
 
     def __call__(self, input=None) -> t.Any:
+        self.handle_dynamic_name()
         ctx = self.create_ctx({"arc.input": input})
-        ctx = self.stack.start(ctx)
-        command: Command = ctx["arc.command"]
-        res = None
-
         try:
             try:
+                ctx = self.stack.start(ctx)
+                command: Command = ctx["arc.command"]
+                res = None
                 res = command.run(ctx)
             except Exception as e:
                 res = None
@@ -67,3 +70,8 @@ class App(MiddlewareContainer):
             | self.provided_ctx
             | (data or {})
         )
+
+    def handle_dynamic_name(self):
+        if not self.root.explicit_name:
+            name = sys.argv[0]
+            self.root.name = os.path.basename(name)

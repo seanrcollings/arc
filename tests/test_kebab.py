@@ -13,7 +13,7 @@ def test_transform():
     assert command("two-words --first-name sean") == "sean"
     assert command("two-words --first-name sean --other-arg hi") == "sean"
 
-    with pytest.raises(errors.Exit):
+    with pytest.raises(errors.UnrecognizedArgError):
         command("two_words")
 
     with pytest.raises(errors.UnrecognizedArgError):
@@ -33,7 +33,7 @@ def test_disable_transform():
         assert command("two_words --first_name sean") == "sean"
         assert command("two_words --first_name sean --other_arg hi") == "sean"
 
-        with pytest.raises(errors.Exit):
+        with pytest.raises(errors.UnrecognizedArgError):
             command("two-words")
 
         with pytest.raises(errors.UnrecognizedArgError):

@@ -11,7 +11,6 @@ from arc.core.alias import AliasDict
 from arc.core.app import App
 from arc.core.middleware import MiddlewareContainer
 from arc.core.middleware.middleware import MiddlewareStack
-from arc.decorators import DecoratorMixin, DecoratorStack
 from arc.core.documentation import Documentation
 from arc.config import config
 from arc.autocompletions import CompletionInfo, get_completions, Completion
@@ -263,7 +262,6 @@ class Command(ParamMixin, MiddlewareContainer):
 
     def split_args(self, args: list[str]) -> tuple[list[str], Command, list[str]]:
         """Seperates out a sequence of args into:
-        - global arguments
         - a subcommand object
         - command arguments
         """
@@ -313,10 +311,6 @@ class Command(ParamMixin, MiddlewareContainer):
     def autoload(self, *paths: str):
         Autoload(paths, self, config.autoload_overwrite).load()
 
-    def decorators(self) -> DecoratorStack[at.DecoratorFunc | at.ErrorHandlerFunc]:
-        lst = t.cast(list[DecoratorMixin], self.command_chain)
-        return DecoratorMixin.create_decostack(lst)
-
     @staticmethod
     def get_command_name(
         callback: at.CommandCallback, names: at.CommandName
@@ -337,3 +331,4 @@ class Command(ParamMixin, MiddlewareContainer):
 
 def namespace_callback(ctx: Context):
     arc.usage(ctx.command)
+    arc.exit(1)

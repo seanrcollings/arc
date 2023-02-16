@@ -12,7 +12,7 @@ T = t.TypeVar("T")
 
 ExecEnv = dict[str, t.Any]
 
-ExecMode = t.Literal["global", "single", "subcommand"]
+ExecMode = t.Literal["root", "subcommand"]
 
 Annotation = t.Union[t._SpecialForm, type]
 

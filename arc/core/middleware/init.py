@@ -82,10 +82,7 @@ class CommandFinderMiddleware(MiddlewareBase):
 
     def get_mode(self, root: Command, command: Command) -> at.ExecMode:
         if root is command:
-            if root.subcommands:
-                return "global"
-            else:
-                return "single"
+            return "root"
         else:
             return "subcommand"
 
@@ -95,25 +92,14 @@ class ArgParseMiddleware(MiddlewareBase):
         command: Command = ctx["arc.command"]
         args: list[str] = ctx["arc.input"]
         global_args: list[str] = ctx["arc.input.global"]
-        root: Command = ctx["arc.root"]
         mode: at.ExecMode = ctx["arc.mode"]
 
-        if mode == "single":
-            return self.run_command(command, global_args, ctx)
-        elif mode == "global":
-            self.parse_args(command, global_args)
-            arc.usage(command)
-            arc.exit(1)
+        if mode == "root":
+            self.run_parse(command, global_args, ctx)
         elif mode == "subcommand":
-            # if not root.is_namespace:
-            #     ctx["arc.command"] = root
-            #     self.run_command(root, global_args, ctx)
-            #     ctx["arc.command"] = command
-            #     del ctx["arc.args.tree"]
-            #     del ctx["arc.args"]
-            return self.run_command(command, args, ctx)
+            self.run_parse(command, args, ctx)
 
-    def run_command(self, command: Command, args: list[str], ctx: Context):
+    def run_parse(self, command: Command, args: list[str], ctx: Context):
         result, extra = self.parse_args(command, args)
 
         ctx["arc.parse.result"] = result

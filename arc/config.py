@@ -22,8 +22,6 @@ class Config:
     version: t.Optional[str] = None
     autocomplete: bool = False
     allow_unrecognized_args: bool = False
-    global_callback_execution: t.Literal["always", "args_present"] = "always"
-    report_bug: str | None = None
     autoload_overwrite: bool = True
     suggestions: at.Suggestions = field(
         default_factory=lambda: at.Suggestions(
@@ -48,8 +46,6 @@ def configure(
     prompt: t.Optional[Prompt] = None,
     autocomplete: t.Optional[bool] = None,
     allow_unrecognized_args: t.Optional[bool] = None,
-    # global_callback_execution: t.Optional[t.Literal["always", "args_present"]] = None,
-    report_bug: str | None = None,
     autoload_overwrite: bool | None = None,
 ):
     """Function for updating global `arc` configuration
@@ -83,10 +79,6 @@ def configure(
             that arc does not recognize. Their values will bes tored in `Context.rest`
             defaults to `False`
 
-
-        report_bug: link to report a bug when an unhandled exception occurs within your
-            application
-
         autoload_overwrite: allow / disallow a command that has been autoloaded to overwrite
             a pre-existing command object. Defaults to `True`
     """
@@ -101,7 +93,6 @@ def configure(
         "prompt": prompt,
         "autocomplete": autocomplete,
         "allow_unrecognized_args": allow_unrecognized_args,
-        "report_bug": report_bug,
         "autoload_overwrite": autoload_overwrite,
     }
 
