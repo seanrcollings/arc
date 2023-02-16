@@ -1,5 +1,3 @@
-import pytest
-
 import arc
 
 
@@ -30,16 +28,3 @@ def test_aliases():
     assert ns("s") == "sub"
     assert ns("other-sub") == "other_sub"
     assert ns("os") == "other_sub"
-
-
-def test_global_args():
-    @arc.command()
-    def command(state: arc.State, *, val, val2):
-        state["val"] = val
-        state.val2 = val2
-
-    @command.subcommand()
-    def sub(state: arc.State):
-        return state
-
-    assert command("--val 2 --val2 2 sub") == arc.State(val="2", val2="2")

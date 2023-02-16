@@ -2,6 +2,8 @@ from __future__ import annotations
 import typing as t
 
 import arc
+from arc import errors
+from arc.config import config
 from arc.core.middleware.init import DEFAULT_INIT_MIDDLEWARES
 from arc.core.middleware.middleware import Middleware, MiddlewareContainer
 import arc.typing as at
@@ -15,7 +17,7 @@ class App(MiddlewareContainer):
     def __init__(
         self,
         root: Command,
-        config: Config = arc.config,
+        config: Config = config,
         init_middlewares: t.Sequence[Middleware] = None,
         state: dict[str, t.Any] = None,
         ctx: dict[str, t.Any] = None,
@@ -33,11 +35,19 @@ class App(MiddlewareContainer):
         res = None
 
         try:
-            res = command.run(ctx)
-        except Exception as e:
-            self.stack.throw(e)
-        else:
-            self.stack.close(res)
+            try:
+                res = command.run(ctx)
+            except Exception as e:
+                res = None
+                self.stack.throw(e)
+            else:
+                res = self.stack.close(res)
+        except errors.ExternalError as exc:
+            if self.config.environment == "production":
+                print(exc)
+                arc.exit(1)
+
+            raise
 
         return res
 

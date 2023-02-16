@@ -26,7 +26,6 @@ class Autoload:
                         f"Command {command.name} already exists on {self.parent}\n"
                         "Autoloaded command cannot overwrite prexisting commands"
                     )
-
                 self.parent.add_command(command)
 
     def __load_files(self, paths: t.Iterable[str]):

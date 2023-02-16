@@ -28,8 +28,6 @@ class InitChecksMiddleware(MiddlewareBase):
                 "have argument / positional parameters"
             )
 
-        return self.app(ctx)
-
 
 class AddUsageErrorInfoMiddleware(MiddlewareBase):
     """A utility middleware that catches `UsageError`s and adds information so they can generate a usage error
@@ -42,7 +40,7 @@ class AddUsageErrorInfoMiddleware(MiddlewareBase):
 
     def __call__(self, ctx: Context) -> t.Any:
         try:
-            return self.app(ctx)
+            yield
         except errors.UsageError as e:
             e.command = ctx.get("arc.command")
             raise
@@ -71,8 +69,6 @@ class InputMiddleware(MiddlewareBase):
         args = list(args)
         ctx["arc.input"] = args
 
-        return self.app(ctx)
-
 
 class CommandFinderMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context):
@@ -83,8 +79,6 @@ class CommandFinderMiddleware(MiddlewareBase):
         ctx["arc.command"] = command
         ctx["arc.input"] = command_args
         ctx["arc.mode"] = self.get_mode(root, command)
-
-        return self.app(ctx)
 
     def get_mode(self, root: Command, command: Command) -> at.ExecMode:
         if root is command:
@@ -125,11 +119,8 @@ class ArgParseMiddleware(MiddlewareBase):
         ctx["arc.parse.result"] = result
         ctx["arc.parse.extra"] = extra
 
-        return self.app(ctx)
-
     def parse_args(self, command: Command, args: list[str]) -> tuple[dict, list[str]]:
         parser = self.create_parser(command)
-
         return parser.parse_known_intermixed_args(args)
 
     def create_parser(self, command: Command) -> Parser:
@@ -163,8 +154,6 @@ class ParseResultCheckerMiddleware(MiddlewareBase):
             )
             message += self.__get_suggestions(extra, config, command)
             raise errors.UnrecognizedArgError(message)
-
-        return self.app(ctx)
 
     def __get_suggestions(
         self,

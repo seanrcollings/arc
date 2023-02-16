@@ -1,7 +1,10 @@
 from __future__ import annotations
+import abc
+import collections
 import types
 import typing as t
 import arc
+from arc import errors
 
 if t.TYPE_CHECKING:
     from arc.context import Context
@@ -11,29 +14,20 @@ MiddlewareGenerator = t.Generator["Context", t.Any, t.Any]
 Middleware = t.Callable[["Context"], t.Union["Context", MiddlewareGenerator, None]]
 
 
-class MiddlewareBase:
-    def __init__(self) -> None:
-        self.app = lambda ctx: None
-
+class MiddlewareBase(abc.ABC):
     def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.app!r})"
+        return f"{type(self).__name__}()"
 
+    @abc.abstractmethod
     def __call__(self, ctx: Context) -> t.Any:
-        return self.app(ctx)
+        ...
 
 
-class MiddlewareStack:
-    __middlewares: list[Middleware]
+class MiddlewareStack(collections.UserList[Middleware]):
     __gens: list[t.Generator[None, t.Any, None]]
 
     def __repr__(self):
-        return f"MiddlewareStack({self.__middlewares!r})"
-
-    def __init__(self, middlewares: t.Sequence[Middleware] = None):
-        self.__middlewares = list(middlewares or [])
-
-    def __iter__(self):
-        yield from self.__middlewares
+        return f"MiddlewareStack({self.data!r})"
 
     def __contains__(self, value):
         return value in self.__decos
@@ -41,8 +35,8 @@ class MiddlewareStack:
     def start(self, ctx):
         self.__gens = []
 
-        for middleware in self.__middlewares:
-            res = middleware(ctx)
+        for handler in self:
+            res = handler(ctx)
             if isinstance(res, types.GeneratorType):
                 self.__gens.append(res)
                 res = next(res)
@@ -96,16 +90,11 @@ class MiddlewareStack:
         if not exception_handled:
             raise exception
 
-    def add(self, middleware: Middleware):
-        self.__middlewares.append(middleware)
-
-    def remove(self, middleware: Middleware):
-        self.__middlewares.remove(middleware)
-
-    def clear(self) -> list[Middleware]:
-        ret = self.__middlewares
-        self.__middlewares = []
-        return ret
+    def try_remove(self, m: Middleware):
+        try:
+            self.remove(m)
+        except ValueError:
+            ...
 
 
 class MiddlewareContainer:
@@ -113,26 +102,79 @@ class MiddlewareContainer:
         self.stack = MiddlewareStack(middlewares)
 
     @t.overload
-    def use(self, func: None) -> t.Callable[[Middleware], Middleware]:
+    def use(
+        self,
+        handler: None = None,
+        *,
+        pos: int | None = None,
+        replace: Middleware | None = None,
+        before: Middleware | None = None,
+        after: Middleware | None = None,
+    ) -> t.Callable[[Middleware], Middleware]:
         ...
 
     @t.overload
-    def use(self, func: Middleware) -> Middleware:
+    def use(
+        self,
+        handler: Middleware,
+        *,
+        pos: int | None = None,
+        replace: Middleware | None = None,
+        before: Middleware | None = None,
+        after: Middleware | None = None,
+    ) -> Middleware:
         ...
 
     @t.overload
-    def use(self, func: t.Sequence[Middleware]) -> t.Sequence[Middleware]:
+    def use(
+        self,
+        handler: t.Sequence[Middleware],
+        *,
+        pos: int | None = None,
+        replace: Middleware | None = None,
+        before: Middleware | None = None,
+        after: Middleware | None = None,
+    ) -> t.Sequence[Middleware]:
         ...
 
-    def use(self, func):
-        def inner(func: Middleware):
-            self.stack.add(func)
-            return func
+    def use(
+        self,
+        handler=None,
+        *,
+        pos: int | None = None,
+        replace: Middleware | None = None,
+        before: Middleware | None = None,
+        after: Middleware | None = None,
+    ):
+        def ensure_single_operation():
+            ops = [op for op in (pos, replace, before, after) if op is not None]
+            if len(ops) > 1:
+                raise errors.InternalError(
+                    "Cannot provide multiple operations for a single middleware"
+                )
 
-        if func:
-            if callable(func):
-                return inner(func)
+        def inner(handler: Middleware):
+            ensure_single_operation()
+            if pos is not None:
+                self.stack.insert(pos, handler)
+            elif replace:
+                idx = self.stack.index(replace)
+                self.stack[idx] = handler
+            elif before:
+                idx = self.stack.index(before)
+                self.stack.insert(idx - 1, handler)
+            elif after:
+                idx = self.stack.index(after)
+                self.stack.insert(idx + 1, handler)
             else:
-                return [inner(f) for f in func]
+                self.stack.append(handler)
+
+            return handler
+
+        if handler:
+            if callable(handler):
+                return inner(handler)
+            else:
+                return [inner(f) for f in handler]
 
         return inner

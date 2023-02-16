@@ -3,6 +3,7 @@ import inspect
 import typing as t
 
 import arc
+import arc.typing as at
 from arc import errors, utils
 from arc.core import classful
 from arc.autoload import Autoload
@@ -13,7 +14,6 @@ from arc.core.middleware.middleware import MiddlewareStack
 from arc.decorators import DecoratorMixin, DecoratorStack
 from arc.core.documentation import Documentation
 from arc.config import config
-import arc.typing as at
 from arc.autocompletions import CompletionInfo, get_completions, Completion
 from arc.core.param import ParamMixin
 from arc.core.middleware.exec import DEFAULT_EXEC_MIDDLEWARES
@@ -80,8 +80,7 @@ class Command(ParamMixin, MiddlewareContainer):
     def run(self, ctx: Context):
         stack = MiddlewareStack()
         for command in self.command_chain:
-            for mid in command.stack:
-                stack.add(mid)
+            stack.extend(command.stack)
 
         ctx = stack.start(ctx)
         args = ctx["arc.args"]
@@ -92,7 +91,7 @@ class Command(ParamMixin, MiddlewareContainer):
         except Exception as e:
             stack.throw(e)
         else:
-            stack.close(res)
+            res = stack.close(res)
 
         return res
 
@@ -245,10 +244,11 @@ class Command(ParamMixin, MiddlewareContainer):
             aliases (t.Sequence[str] | None, optional): Optional aliases to refter to the command by
         """
         self.subcommands[command.name] = command
-        command.parent = self
-        if command.__autoload__:
+
+        if command.parent is None:
+            command.parent = self
             for m in DEFAULT_EXEC_MIDDLEWARES:
-                command.stack.remove(m)
+                command.stack.try_remove(m)
 
         if aliases:
             self.subcommands.add_aliases(command.name, *aliases)

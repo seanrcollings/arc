@@ -119,13 +119,15 @@ def namespace(name: str, desc: str | None = None) -> Command:
     Returns:
         command: A command object without a callback associated with it
     """
-    return Command(
+    command = Command(
         callback=namespace_callback,
         name=name,
         description=desc,
         parent=None,
         autoload=True,
     )
+    command.use(DEFAULT_EXEC_MIDDLEWARES)
+    return command
 
 
 def usage(command: Command, help_prompt: bool = True):

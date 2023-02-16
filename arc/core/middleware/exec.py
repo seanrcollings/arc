@@ -37,7 +37,7 @@ class ExitStackMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context):
         with contextlib.ExitStack() as stack:
             ctx["arc.exitstack"] = stack
-            return self.app(ctx)
+            yield
 
 
 class SetupParamMiddleware(MiddlewareBase):
@@ -46,7 +46,6 @@ class SetupParamMiddleware(MiddlewareBase):
         param_instance = command.param_def.create_instance()
         ctx["arc.args.tree"] = param_instance
         ctx["arc.args.origins"] = {}
-        return self.app(ctx)
 
 
 class ParamProcessor(MiddlewareBase):
@@ -79,8 +78,6 @@ class ParamProcessor(MiddlewareBase):
 
                 if updated is not self.__IGNORE:
                     param_value.value = updated
-
-        return self.app(ctx)
 
     def process(self, param: Param, value: t.Any) -> t.Any:
         return self.__IGNORE
@@ -238,42 +235,11 @@ class MissingParamsCheckerMiddleware(MiddlewareBase):
                 f"The following arguments are required: {params}"
             )
 
-        return self.app(ctx)
-
 
 class CompileParamsMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context) -> t.Any:
         instance: ParamTree = ctx["arc.args.tree"]
         ctx["arc.args"] = instance.compile()
-        return self.app(ctx)
-
-
-class DecoratorStackMiddleware(MiddlewareBase):
-    def __call__(self, ctx: Context):
-        command: Command = ctx["arc.command"]
-
-        decostack = command.decorators()
-        decostack.start(ctx)
-
-        try:
-            res = self.app(ctx)
-        except Exception as e:
-            res = None
-            decostack.throw(e)
-        else:
-            decostack.close()
-
-        return res
-
-
-class ExecutionHandler(MiddlewareBase):
-    def __call__(self, ctx: Context):
-        command: Command = ctx["arc.command"]
-        args: dict = ctx["arc.args"]
-
-        res = command.callback(**args)
-
-        return res
 
 
 DEFAULT_EXEC_MIDDLEWARES = [
