@@ -63,7 +63,9 @@ def info(
 
 
 def exit(code: int = 0, message: str | None = None) -> t.NoReturn:
-    """Exits the application with `code`"""
+    """Exits the application with `code`.
+    Optionally recieves a `message` that will be written
+    to stderr before exiting"""
     raise errors.Exit(code, message)
 
 
