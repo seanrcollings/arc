@@ -63,5 +63,5 @@ nav:
       - Using Context: advanced-usage/using-context.md
       - Command Autoloading: advanced-usage/command-autoloading.md
       - Shell Completions: advanced-usage/shell-completions.md
-      - Dependency Injection: advanced-usage/dependency-injection.md
+      - Dependency Injection: advanced-usage/dependancy-injection.md
   - ...

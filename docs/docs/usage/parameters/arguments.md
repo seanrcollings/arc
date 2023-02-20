@@ -64,4 +64,4 @@ Could also be defined as:
 lastname: str = arc.Argument(default="Joestar")
 ```
 
-Now, `arc.Argument` is unnecessary here, but comes with some additional bells and whistles that make it more useful. Some of these features will be explored in future guides, or you [check the reference for full details on what it provides](/reference/params/#arc.params.Argument).
+Now, `arc.Argument` is unnecessary here, but comes with some additional bells and whistles that make it more useful. Some of these features will be explored in future guides, or you [check the reference for full details on what it provides](../../reference/define/param/constructors.md#arc.define.param.constructors.Argument).

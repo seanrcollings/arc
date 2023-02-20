@@ -100,7 +100,7 @@ class Alias:
             f"{name} is not a valid type. "
             f"Please ensure that {name} conforms to the custom type protocol "
             f"or that there is a alias type registered for it: "
-            "https://arc.seanrcollings.com/usage/parameter-types/#custom-types"
+            "https://arc.seancollings.dev/usage/parameters/types/custom-types"
         )
 
 

@@ -28,4 +28,4 @@ reverse = arc.Flag()
 ```
 The `#!python bool` type is no longer required, but it's still generally recommended
 
-[Check the reference for all the options that `arc.Flag()` can recieve](../../reference/params.md#arc.params.Flag)
+[Check the reference for all the options that `arc.Flag()` can recieve](../../reference/define/param/constructors.md#arc.define.param.constructors.Flag)

@@ -3,7 +3,7 @@
 
 - **Initialization middlewares** - Middleware that run a single time on startup. These are expected to perform the necessary setup to get an *arc* application up and running.
 - **Execution Middlewares** - Middleware that run every-time a command is executed. Each command will have associated middlewares and when a command is chosen all of it's parents middlewares will be ran, then it's middlewares, then the callback.
-- **Type Middlewares** - [Middlewares that operate on the type level](./parameters/parameter-types/type-middleware.md). These middlewares are unique and will not be covered on this page.
+- **Type Middlewares** - [Middlewares that operate on the type level](./parameters/types/type-middleware.md). These middlewares are unique and will not be covered on this page.
 
 ## Middleware details
 A middleware is a callable object that receives and instance of `#!python arc.Context`, which serves as a dict-like object that all middleware share.

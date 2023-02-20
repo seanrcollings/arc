@@ -147,7 +147,7 @@ A representation of a unix group.
 
 `File`
 
-Get access to an open IO object. Handles opening and closing the file descriptor for you. [See reference for full usage](../reference/types/file.md)
+Get access to an open IO object. Handles opening and closing the file descriptor for you. [See reference for full usage](../../../reference/types/file.md)
 
 
 `ValidPath`

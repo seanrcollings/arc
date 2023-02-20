@@ -16,7 +16,7 @@ The value for a parameter can come from multiple different sources, if no value 
 - Getter Function
 - Defalt Values
 
-[For more info](./parameter-sources.md)
+[For more info](./sources.md)
 
 ## Parameter Types
-*arc* uses type hints types for type validation / conversion. [See more here](./parameter-types/types-intro.md)
+*arc* uses type hints types for type validation / conversion. [See more here](./types/types-intro.md)
