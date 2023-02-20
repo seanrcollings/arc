@@ -4,8 +4,8 @@ import sys
 import typing as t
 
 import arc
+import arc.typing as at
 from arc import errors
-from arc import utils
 from arc.config import config
 from arc.core.middleware.init import DEFAULT_INIT_MIDDLEWARES
 from arc.core.middleware.middleware import Middleware, MiddlewareContainer
@@ -31,7 +31,7 @@ class App(MiddlewareContainer):
         self.provided_ctx = ctx or {}
         self.state = state or {}
 
-    def __call__(self, input=None) -> t.Any:
+    def __call__(self, input: at.InputArgs = None) -> t.Any:
         self.handle_dynamic_name()
         ctx = self.create_ctx({"arc.input": input})
         try:

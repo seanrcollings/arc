@@ -12,6 +12,7 @@ if t.TYPE_CHECKING:
 
 MiddlewareGenerator = t.Generator["Context", t.Any, t.Any]
 Middleware = t.Callable[["Context"], t.Union["Context", MiddlewareGenerator, None]]
+ErrorHandler = t.Callable[["Context", BaseException], t.Any]
 
 
 class MiddlewareBase(abc.ABC):
@@ -146,6 +147,17 @@ class MiddlewareContainer:
         before: Middleware | None = None,
         after: Middleware | None = None,
     ):
+        """Register a middleware with this object.
+
+        Args:
+            handler (callable, optional): Callable to register as a middleware.
+                Can optionally receive an array of middlewares.
+            pos (int | None, optional): Index in the middleware stack to insert this middleware. Defaults to None.
+            replace (Middleware | None, optional): A middleware you want to replace with this middleware. Defaults to None.
+            before (Middleware | None, optional): Insert the provided `handler` before this middleware. Defaults to None.
+            after (Middleware | None, optional): Insert the provided `handler` after this middleware. Defaults to None.
+        """
+
         def ensure_single_operation():
             ops = [op for op in (pos, replace, before, after) if op is not None]
             if len(ops) > 1:
@@ -178,3 +190,45 @@ class MiddlewareContainer:
                 return [inner(f) for f in handler]
 
         return inner
+
+    @t.overload
+    def handle(
+        self, *exceptions: type[BaseException]
+    ) -> t.Callable[[ErrorHandler], ErrorHandler]:
+        ...
+
+    @t.overload
+    def handle(
+        self, handler: ErrorHandler, *exceptions: type[BaseException]
+    ) -> ErrorHandler:
+        ...
+
+    @t.overload
+    def handle(
+        self, handlers: t.Sequence[ErrorHandler], *exceptions: type[BaseException]
+    ) -> list[ErrorHandler]:
+        ...
+
+    def handle(self, handler=None, *exceptions):
+        """Register an exception handler to this object
+
+        Args:
+            handler (ErrorHandler, optional): Error handler callback, receives the context
+            and the exception object.
+        """
+
+        def inner(func: ErrorHandler):
+            @self.use
+            def error_handler(ctx: Context):
+                try:
+                    yield
+                except exceptions as e:
+                    return func(ctx, e)
+
+        if issubclass(handler, BaseException):
+            exceptions = (handler, *exceptions)
+            return inner
+        elif callable(handler):
+            return inner(handler)
+        else:
+            return [inner(f) for f in handler]

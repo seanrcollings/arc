@@ -32,17 +32,13 @@ CompletionFunc = t.Callable[
     [CompletionInfo, "Param"], t.Union[list[Completion], Completion, None]
 ]
 
+TypeMiddleware = t.Callable[[t.Any, "Context", "Param"], t.Any]
+
 GetterFunc = t.Union[
     t.Callable[["Param", "Context"], t.Any],
     t.Callable[["Param"], t.Any],
     t.Callable[[], t.Any],
 ]
-
-MiddlewareCallable = t.Callable[[T], T]
-
-DecoratorFunc = t.Callable[["Context"], t.Optional[t.Generator[None, t.Any, None]]]
-
-ErrorHandlerFunc = t.Callable[[Exception, "Context"], None]
 
 
 @t.runtime_checkable
