@@ -20,7 +20,7 @@ NArgs = t.Union[int, t.Literal["+", "*", "?"], None]
 
 ParseResult = dict[str, t.Union[str, list[str], None]]
 
-Env = t.Literal["production", "development"]
+Env = t.Literal["production", "development", "test"]
 
 CommandName = t.Union[str, t.Sequence[str], None]
 

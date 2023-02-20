@@ -23,6 +23,7 @@ class Config:
     autocomplete: bool = False
     allow_unrecognized_args: bool = False
     autoload_overwrite: bool = True
+    debug: bool = False
     suggestions: at.Suggestions = field(
         default_factory=lambda: at.Suggestions(
             suggest_params=True,
@@ -47,6 +48,7 @@ def configure(
     autocomplete: t.Optional[bool] = None,
     allow_unrecognized_args: t.Optional[bool] = None,
     autoload_overwrite: bool | None = None,
+    debug: bool | None = None,
 ):
     """Function for updating global `arc` configuration
 
@@ -94,6 +96,7 @@ def configure(
         "autocomplete": autocomplete,
         "allow_unrecognized_args": allow_unrecognized_args,
         "autoload_overwrite": autoload_overwrite,
+        "debug": debug,
     }
 
     for key, value in data.items():
@@ -102,3 +105,6 @@ def configure(
 
     if env := data["environment"]:
         logger.setLevel(mode_map.get(env, logging.WARNING))  # type: ignore
+
+    if debug:
+        logger.setLevel(logging.DEBUG)

@@ -1,17 +1,26 @@
 import re
-from typing import Annotated, Literal, Union, TypedDict, Any, Optional
+from typing import Literal, Union, TypedDict, Any, Optional
+from hypothesis import given, example, infer, strategies as st
 from pathlib import Path
 import enum
 import pytest
+
 import arc
 from arc import errors
-from arc.types import File
-from arc import Context
 
 
 @pytest.fixture(scope="function")
 def cli():
     return arc.namespace("cli")
+
+
+def textarguments():
+    return st.text(
+        st.characters(
+            blacklist_categories=["Nd"], blacklist_characters=["-", "'", '"']
+        ),
+        min_size=1,
+    )
 
 
 class TestNone:
@@ -23,12 +32,6 @@ class TestNone:
         assert cli("non") == None
         assert cli("non 1") == 1
 
-        # @cli.subcommand()
-        # def non2(val: Optional[list[int]]):
-        #     return val
-        # assert cli("non2") == None
-        # assert cli("non2 1 2 3") == [1, 2, 3]
-
     def test_none(self, cli: arc.Command):
         @cli.subcommand()
         def non(val: int | None):
@@ -37,59 +40,46 @@ class TestNone:
         assert cli("non") == None
         assert cli("non 1") == 1
 
-        # @cli.subcommand()
-        # def non2(val: Optional[list[int]]):
-        #     return val
-        # assert cli("non2") == None
-        # assert cli("non2 1 2 3") == [1, 2, 3]
 
+class TestInt:
+    @given(value=infer)
+    @example(999999)
+    @example(10000000000032)
+    def test_succeed(self, value: int):
+        @arc.command()
+        def it(val: int):
+            return val
 
-@pytest.mark.parametrize(
-    "value,passing",
-    [
-        (1, True),
-        (2, True),
-        (3, True),
-        (11, True),
-        (99999, True),
-        (100000032, True),
-        ("0xFF0000", False),
-        ("string", False),
-    ],
-)
-def test_int(cli: arc.Command, value, passing: bool):
-    @cli.subcommand()
-    def it(val: int):
-        return val
+        assert it(f"{value}") == value
 
-    if passing:
-        assert cli(f"it {value}") == value
-    else:
+    @given(value=textarguments())
+    @example("0xFF000")
+    def test_failure(self, value: str):
+        @arc.command()
+        def it(val: int):
+            return val
+
         with pytest.raises(errors.InvalidArgValue):
-            cli(f"it {value}")
+            it(f"{value!r}")
 
 
-@pytest.mark.parametrize(
-    "value,passing",
-    [
-        (1, True),
-        (1121314, True),
-        (1.4, True),
-        (0.3, True),
-        (".19", True),
-        ("string", False),
-    ],
-)
-def test_float(cli: arc.Command, value, passing: bool):
-    @cli.subcommand()
-    def fl(val: float):
-        return val
+class TestFloat:
+    @given(st.floats(min_value=0))
+    def test_succeed(self, value: float):
+        @arc.command()
+        def fl(val: float):
+            return val
 
-    if passing:
-        assert cli(f"fl {value}") == float(value)
-    else:
+        assert fl(str(value)) == value
+
+    @given(value=textarguments())
+    def test_failure(self, value: str):
+        @arc.command()
+        def fl(val: float):
+            return val
+
         with pytest.raises(errors.InvalidArgValue):
-            cli(f"fl {value}")
+            assert fl(f"{value!r}")
 
 
 def test_bytes(cli: arc.Command):

@@ -1,5 +1,5 @@
 import logging
-from arc.color import colorize, effects, bg
+from arc.color import colorize, effects, bg, fg
 
 DEBUG = logging.DEBUG
 INFO = logging.INFO
@@ -23,13 +23,14 @@ class ArcFormatter(logging.Formatter):
             f" {record.levelname:^8} ",
             self.level_color[record.levelno],
             effects.BOLD,
+            fg.BLACK,
         )
         record.name = colorize(f"{record.name:^5}", bg.GREY)
         return super().format(record)
 
 
 mode_map = {
-    "development": DEBUG,
+    "development": INFO,
     "production": WARNING,
     "test": ERROR,
 }

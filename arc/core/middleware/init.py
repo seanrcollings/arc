@@ -22,10 +22,17 @@ class InitChecksMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context):
         root: Command = ctx["arc.root"]
 
-        if root.subcommands and len(list(root.argument_params)) != 0:
-            raise errors.CommandError(
-                "Top-level command with subcommands cannot "
-                "have argument / positional parameters"
+        param_count = len(
+            [
+                param
+                for param in root.params
+                if param.argument_name not in ("help", "version", "autocomplete")
+            ]
+        )
+
+        if root.subcommands and param_count != 0:
+            ctx.logger.warning(
+                "Top-level commands should not have any arguments defined. Consider removing them"
             )
 
 
@@ -42,7 +49,10 @@ class AddUsageErrorInfoMiddleware(MiddlewareBase):
         try:
             yield
         except errors.UsageError as e:
-            e.command = ctx.get("arc.command")
+            command = ctx.get("arc.command")
+            e.command = command
+            if not command:
+                ctx.logger.debug("UsageError rasied, but no command is set in context")
             raise
 
 
@@ -58,13 +68,16 @@ class InputMiddleware(MiddlewareBase):
     - `arc.input`: Adds it if it's not already there, normalizes it if it is there
     """
 
-    def __call__(self, ctx) -> t.Any:
+    def __call__(self, ctx: Context) -> t.Any:
         args: at.InputArgs = ctx.get("arc.input")
         if args is None:
+            ctx.logger.debug("Using sys.argv as input: %s", sys.argv[1:])
             args = sys.argv[1:]
-
-        if isinstance(args, str):
+        elif isinstance(args, str):
             args = shlex.split(args)
+            ctx.logger.debug("Using provided string as input. Shlex output: %s", args)
+        else:
+            ctx.logger.debug("Using provided iterable as input: %s", args)
 
         args = list(args)
         ctx["arc.input"] = args

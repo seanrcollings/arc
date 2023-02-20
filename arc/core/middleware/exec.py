@@ -38,6 +38,8 @@ class ExitStackMiddleware(MiddlewareBase):
         with contextlib.ExitStack() as stack:
             ctx["arc.exitstack"] = stack
             yield
+            if length := len(stack._exit_callbacks):  # type: ignore
+                ctx.logger.debug("Closing %d resource(s)", length)
 
 
 class SetupParamMiddleware(MiddlewareBase):

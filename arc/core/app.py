@@ -7,6 +7,7 @@ import arc
 import arc.typing as at
 from arc import errors
 from arc.config import config
+from arc.logging import logger
 from arc.core.middleware.init import DEFAULT_INIT_MIDDLEWARES
 from arc.core.middleware.middleware import Middleware, MiddlewareContainer
 import arc.typing as at
@@ -66,6 +67,7 @@ class App(MiddlewareContainer):
                 "arc.errors": [],
                 "arc.app": self,
                 "arc.state": self.state,
+                "arc.logger": logger,
             }
             | self.provided_ctx
             | (data or {})

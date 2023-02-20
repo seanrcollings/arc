@@ -1,4 +1,3 @@
-import pytest
 import arc
 from arc.context import Context
 
