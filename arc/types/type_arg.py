@@ -3,7 +3,7 @@ import typing as t
 from arc import errors
 from arc.types.default import isdefault, unwrap
 
-T = t.TypeVar("T", bound="TypeArg")
+T = t.TypeVar("T")
 
 
 class TypeArg:

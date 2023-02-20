@@ -116,27 +116,35 @@ class File(t.IO, abc.ABC):
 
 T = t.TypeVar("T")
 
+StreamOrigin = t.Literal["cli", "stream"]
+
 
 class Stream(t.Generic[T]):
+    def __init__(self, value: T, origin: StreamOrigin) -> None:
+        self.value: T = value
+        self.origin = origin
+
+    @classmethod
+    def __convert__(cls, value, info: TypeInfo):
+        arg: Stream.Args = TypeArg.ensure(
+            t.cast(t.Optional[Stream.Args], info.type_arg), cls.__name__
+        )
+
+        origin: StreamOrigin = "cli"
+
+        if value == unwrap(arg.char):
+            value = arg.stream.read()
+            origin = "stream"
+
+        sub = info.sub_types[0]
+        return cls(convert_type(sub.resolved_type, value, sub), origin)
+
     class Args(TypeArg):
         __slots__ = ("stream", "char")
 
         def __init__(self, stream: t.IO = sys.stdin, char: str = Default("-")):
             self.stream = stream
             self.char = char
-
-    def __init__(self, value: T) -> None:
-        self.value: T = value
-
-    @classmethod
-    def __convert__(cls, value, info: TypeInfo):
-        arg: Stream.Args = TypeArg.ensure(info.type_arg, cls.__name__)
-
-        if value == unwrap(arg.char):
-            value = arg.stream.read()
-
-        sub = info.sub_types[0]
-        return cls(convert_type(sub.resolved_type, value, sub))
 
 
 Stdin = t.Annotated[Stream[T], Stream.Args(sys.stdin)]

@@ -1,2 +1,0 @@
-# params
-::: arc.params

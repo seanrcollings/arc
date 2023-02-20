@@ -124,12 +124,12 @@ Support for regular expression patterns
 
 `Context`
 
-Gives you access to the current execution context. [Check here for details](../advanced-usage/using-context.md). Does not expose the param on the command line.
+Gives you access to the current execution context. [Check here for details](../../../advanced-usage/using-context.md). Does not expose the param on the command line.
 
 
 `State`
 
-Reference [State](./command-state.md) for details
+Reference [State](../../command-state.md) for details
 
 `SemVer`
 

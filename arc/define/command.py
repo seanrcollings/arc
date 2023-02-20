@@ -110,6 +110,7 @@ class Command(ParamMixin, MiddlewareContainer):
         # TODO: it does not take into
         # account that collection types can include more than 1 positional
         # argument.
+        return []
         global_args, command, command_args = self.split_args(info.words)
 
         if command is self:
@@ -270,27 +271,24 @@ class Command(ParamMixin, MiddlewareContainer):
 
     # Argument Handling ---------------------------------------------------------
 
-    def split_args(self, args: list[str]) -> tuple[list[str], Command, list[str]]:
+    def split_args(self, args: list[str]) -> tuple[Command, list[str]]:
         """Seperates out a sequence of args into:
         - a subcommand object
         - command arguments
         """
         index = 0
-        global_args: list[str] = []
-        while index < len(args) and args[index] not in self.subcommands:
-            global_args.append(args[index])
-            index += 1
-
         command: Command = self
 
-        for idx, value in enumerate(args):
+        for value in args:
             if value in command.subcommands:
-                index = idx
+                index += 1
                 command = command.subcommands.get(value)
+            else:
+                break
 
-        command_args: list[str] = args[index + 1 :]
+        command_args: list[str] = args[index:]
 
-        return global_args, command, command_args
+        return command, command_args
 
     # Helpers --------------------------------------------------------------------
 

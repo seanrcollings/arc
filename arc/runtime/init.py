@@ -39,7 +39,8 @@ class AddUsageErrorInfoMiddleware(MiddlewareBase):
     """A utility middleware that catches `UsageError`s and adds information so they can generate a usage error
 
     # ctx Dependancies
-    - `arc.command` (optional): Usage information comes from the current executing [`Command`][arc.core.command.Command] object
+    - `arc.command` (optional): Usage information comes from the current
+    executing [`Command`][arc.core.command.Command] object
     # ctx Additions
     None
     """
@@ -86,34 +87,17 @@ class CommandFinderMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context):
         args: list[str] = ctx["arc.input"]
         root: Command = ctx["arc.root"]
-        global_args, command, command_args = root.split_args(args)
-        ctx["arc.input.global"] = global_args
+        command, command_args = root.split_args(args)
         ctx["arc.command"] = command
         ctx["arc.input"] = command_args
-        ctx["arc.mode"] = self.get_mode(root, command)
-
-    def get_mode(self, root: Command, command: Command) -> at.ExecMode:
-        if root is command:
-            return "root"
-        else:
-            return "subcommand"
 
 
 class ArgParseMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context):
         command: Command = ctx["arc.command"]
         args: list[str] = ctx["arc.input"]
-        global_args: list[str] = ctx["arc.input.global"]
-        mode: at.ExecMode = ctx["arc.mode"]
 
-        if mode == "root":
-            self.run_parse(command, global_args, ctx)
-        elif mode == "subcommand":
-            self.run_parse(command, args, ctx)
-
-    def run_parse(self, command: Command, args: list[str], ctx: Context):
         result, extra = self.parse_args(command, args)
-
         ctx["arc.parse.result"] = result
         ctx["arc.parse.extra"] = extra
 

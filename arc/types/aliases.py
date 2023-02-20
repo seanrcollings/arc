@@ -23,6 +23,7 @@ from arc.types.helpers import (
     convert_type,
 )
 from arc.prompt.prompts import select_prompt
+from arc.types.type_arg import TypeArg
 
 
 from arc.typing import Annotation, TypeProtocol
@@ -367,8 +368,9 @@ class IOAlias(Alias, of=(_io._IOBase, t.IO)):
     @classmethod
     def convert(cls, value: str, info: TypeInfo) -> t.IO:
         error_msg = f"Cannot access {value}:"
+        arg = TypeArg.ensure(info.type_arg, str(info.origin))
         try:
-            file: t.IO = open(value, **info.type_arg.dict())
+            file: t.IO = open(value, **arg.dict())
             return file
         except FileNotFoundError as e:
             raise errors.ConversionError(value, f"{error_msg} file not found") from e
