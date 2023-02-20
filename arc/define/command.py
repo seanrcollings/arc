@@ -79,11 +79,19 @@ class Command(ParamMixin, MiddlewareContainer):
         return app(input_args)
 
     def run(self, ctx: Context):
+        ctx.logger.debug("Executing: %s", self)
         stack = MiddlewareStack()
         for command in self.command_chain:
             stack.extend(command.stack)
 
         ctx = stack.start(ctx)
+        if "arc.args" not in ctx:
+            raise errors.InternalError(
+                "The command's arguments were not set during execution "
+                "(ctx['arc.args] is not set). This likely means there "
+                "is a problem with your middleware stack"
+            )
+
         args = ctx["arc.args"]
 
         res = None

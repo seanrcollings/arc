@@ -37,6 +37,13 @@ class App(MiddlewareContainer):
         try:
             try:
                 ctx = self.stack.start(ctx)
+                if "arc.command" not in ctx:
+                    raise errors.CommandError(
+                        "The command was not decided upon during initialization "
+                        "(ctx['arc.command'] is not set). This likely means there "
+                        "is a problem with your middleware stack"
+                    )
+
                 command: Command = ctx["arc.command"]
                 res = None
                 res = command.run(ctx)
