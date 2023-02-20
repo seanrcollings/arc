@@ -32,7 +32,7 @@ from arc.types import type_info
 if t.TYPE_CHECKING:
     from arc.types.type_info import TypeInfo
     from arc.context import Context
-    from arc.core.param import Param
+    from arc.define.param import Param
 
 
 AliasFor = t.Union[Annotation, t.Tuple[Annotation, ...]]

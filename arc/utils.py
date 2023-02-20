@@ -11,7 +11,7 @@ import typing as t
 import arc.typing as at
 
 if t.TYPE_CHECKING:
-    from arc.core import Command
+    from arc.define import Command
 
 
 def safe_issubclass(typ, classes: type | tuple[type, ...]) -> bool:

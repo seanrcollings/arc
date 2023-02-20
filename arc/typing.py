@@ -6,7 +6,7 @@ from arc.autocompletions import CompletionInfo, Completion
 
 if t.TYPE_CHECKING:
     from arc.context import Context
-    from arc.core.param import Param
+    from arc.define.param import Param
 
 T = t.TypeVar("T")
 

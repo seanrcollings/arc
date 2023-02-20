@@ -1,8 +1,8 @@
 import typing as t
 
 from arc import constants
-from arc.core.classful import modify_group_cls
-from arc.core.param import param
+from arc.define.classful import modify_group_cls
+from arc.define.param import param
 import arc.typing as at
 
 
@@ -251,17 +251,7 @@ def Depends(callback: t.Callable) -> t.Any:
 G = t.TypeVar("G", bound=type)
 
 
-@t.overload
-def group(*, repr: bool = True) -> t.Callable[[G], G]:
-    ...
-
-
-@t.overload
-def group(cls: G, /) -> G:
-    ...
-
-
-def group(cls=None, *, repr: bool = True):
+def group(cls: G = None) -> G | t.Callable[[G], G]:
     if cls:
         return modify_group_cls(cls)
     return modify_group_cls

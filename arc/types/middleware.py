@@ -1,10 +1,10 @@
 from __future__ import annotations
 import typing as t
 
-from arc.core.param import ValueOrigin
+from arc.define.param import ValueOrigin
 
 if t.TYPE_CHECKING:
-    from arc.core.param import Param
+    from arc.define.param import Param
     from arc import Context
 
 

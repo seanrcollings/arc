@@ -6,8 +6,8 @@ import sys
 import typing as t
 from arc import errors
 from arc.color import colorize, fg
-from arc.core.command import Command, namespace_callback
-from arc.core.middleware.exec import DEFAULT_EXEC_MIDDLEWARES
+from arc.define.command import Command, namespace_callback
+from arc.runtime import DEFAULT_EXEC_MIDDLEWARES
 from arc.present import Joiner, Ansi
 from arc.types.type_info import TypeInfo
 from arc.types.helpers import convert_type

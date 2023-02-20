@@ -12,8 +12,8 @@ from arc.present.formatters import TextFormatter
 from arc.present.ansi import Ansi
 
 if t.TYPE_CHECKING:
-    from arc.core.documentation import Documentation, ParamDoc
-    from arc.core.command import Command
+    from arc.define.documentation import Documentation, ParamDoc
+    from arc.define.command import Command
 
 
 def paragraphize(string: str) -> list[str]:

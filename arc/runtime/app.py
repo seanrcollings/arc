@@ -8,12 +8,11 @@ import arc.typing as at
 from arc import errors
 from arc.config import config
 from arc.logging import logger
-from arc.core.middleware.init import DEFAULT_INIT_MIDDLEWARES
-from arc.core.middleware.middleware import Middleware, MiddlewareContainer
-import arc.typing as at
+from arc.runtime.init import DEFAULT_INIT_MIDDLEWARES
+from arc.runtime.middleware import Middleware, MiddlewareContainer
 
 if t.TYPE_CHECKING:
-    from arc.core import Command
+    from arc.define import Command
     from arc.config import Config
 
 

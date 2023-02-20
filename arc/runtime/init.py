@@ -4,18 +4,17 @@ import shlex
 import sys
 import itertools
 
-import arc
 from arc import errors, utils
 from arc import typing as at
 from arc.color import colorize, fg
 from arc.context import Context
 from arc.parser import Parser
-from arc.core.middleware.middleware import MiddlewareBase
+from arc.runtime.middleware import MiddlewareBase
 from arc.present import Joiner
 from arc.config import Config
 
 if t.TYPE_CHECKING:
-    from arc.core import Command
+    from arc.define import Command
 
 
 class InitChecksMiddleware(MiddlewareBase):

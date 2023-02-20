@@ -7,7 +7,7 @@ from arc import constants
 
 if t.TYPE_CHECKING:
     from arc.prompt.prompt import Prompt
-    from arc.core.param.param import Param
+    from arc.define.param.param import Param
     from arc.context import Context
 
 

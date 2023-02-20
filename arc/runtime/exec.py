@@ -14,13 +14,12 @@ from arc.present import Joiner
 from arc.color import fg, colorize
 from arc.prompt.prompts import input_prompt
 from arc.types.helpers import iscontextmanager
-
-from arc.core.param.param import InjectedParam, Param, ValueOrigin
-from arc.core.middleware.middleware import MiddlewareBase
+from arc.define.param.param import InjectedParam, Param, ValueOrigin
+from arc.runtime.middleware import MiddlewareBase, Middleware
 
 if t.TYPE_CHECKING:
-    from arc.core.param.param_tree import ParamTree
-    from arc.core import Command
+    from arc.define.param.param_tree import ParamTree
+    from arc.define import Command
 
 
 class ExitStackMiddleware(MiddlewareBase):
@@ -244,7 +243,7 @@ class CompileParamsMiddleware(MiddlewareBase):
         ctx["arc.args"] = instance.compile()
 
 
-DEFAULT_EXEC_MIDDLEWARES = [
+DEFAULT_EXEC_MIDDLEWARES: list[Middleware] = [
     ExitStackMiddleware(),
     SetupParamMiddleware(),
     ApplyParseResultMiddleware(),

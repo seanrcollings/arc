@@ -4,7 +4,7 @@ import typing as t
 
 if t.TYPE_CHECKING:
     from arc.context import Context
-    from arc.core import Command
+    from arc.define import Command
 
 
 class Exit(SystemExit):

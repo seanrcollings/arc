@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 
 if t.TYPE_CHECKING:
-    from arc.core.param import Param
+    from arc.define.param import Param
 
 
 @dataclass

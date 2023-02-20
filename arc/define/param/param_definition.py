@@ -6,10 +6,10 @@ import inspect
 from arc import errors, utils
 from arc.config import config
 from arc.constants import MISSING
-from arc.core.param.param_tree import ParamTree, ParamValue
+from arc.define.param.param_tree import ParamTree, ParamValue
 from arc.types.type_info import TypeInfo
-from arc.params import ParamInfo
-from arc.core.param.param import (
+from arc.define.param.constructors import ParamInfo
+from arc.define.param.param import (
     InjectedParam,
     Param,
     FlagParam,
