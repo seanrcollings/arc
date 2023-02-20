@@ -109,13 +109,6 @@
     - --help
     - sub1 --help
     - sub2 --help
-- file: global_params.py
-  exec:
-    - sub
-    - --verbose sub
-- file: global_params.py
-  out: global_params_help
-  exec: --help
 - file: nested_subcommands.py
   exec:
     - sub1 nested1
@@ -151,3 +144,8 @@
   exec: ""
 - file: types/file.py
   exec: "README.md"
+- file: namespace.py
+  exec:
+    - ""
+    - "sub"
+  exit_code: 1

@@ -39,13 +39,15 @@ Subcommands can be arbitrarly nested
 
 ## Root Command
 It is important to note that when using subcommands, the root command is still executable. One must take care that subcommand names may come into collision with arguments for the root or command (or any parent command, really). If you do not want a parent command to be executable, you may use this pattern:
-```py
-import arc
 
-command = arc.namespace("command")
-
-# define your subcommands
+```py title="examples/namespace.py"
+--8<-- "examples/namespace.py"
 ```
+
+```console
+--8<-- "examples/outputs/namespace"
+```
+
 Namespace commands do not take any arguments (besides `--help`), and when invoked, will print out the usage for the command, and exit with an error code.
 
 ## Naming Subcommands
