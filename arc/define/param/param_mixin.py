@@ -7,7 +7,7 @@ from arc.config import config
 from arc.parser import CustomAutocompleteAction, CustomHelpAction, CustomVersionAction
 
 from .param import FlagParam, OptionParam, Param
-from .param_definition import ParamDefinition, ParamDefinitionBuilder
+from .param_definition import ParamDefinition, ParamDefinitionFactory
 
 
 class ParamMixin:
@@ -17,7 +17,7 @@ class ParamMixin:
 
     @cached_property
     def param_def(self) -> ParamDefinition:
-        root = ParamDefinition.from_function(self.callback)
+        root = ParamDefinitionFactory().from_function(self.callback)
 
         if self.is_root and not self.is_namespace:  # type: ignore
 

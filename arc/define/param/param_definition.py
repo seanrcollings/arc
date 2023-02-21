@@ -67,22 +67,38 @@ class ParamDefinition(collections.UserList[Param]):
             definition.cls or dict,
         )
 
-    @classmethod
-    def from_function(cls, func: t.Callable) -> ParamDefinition:
-        """Constructs a ParamDefinition from a callable signature"""
-        builder = ParamDefinitionBuilder()
-        root = builder.build(func)
-        return root
 
-
-class ParamDefinitionBuilder:
+class ParamDefinitionFactory:
     def __init__(self):
         self.param_names: set[str] = set()
 
+    def from_function(self, func: t.Callable) -> ParamDefinition:
+        self.param_names.clear()
+        sig = self._get_sig(func)
+        return self.build(sig)
+
+    def from_class(self, cls: type) -> ParamDefinition:
+        self.param_names.clear()
+        sig = classful.class_signature(cls)
+        return self.build(sig)
+
+    def _from_param_group(self, cls: type, name: str) -> ParamDefinition:
+        definition = groups.get_cached_definition(cls)
+
+        if not definition:
+            options: at.ParamGroupOptions = groups.groupoptions(cls)
+            sig = classful.class_signature(cls)
+            # TODO: move the exclude filtering in here
+            definition = self.build(sig, exclude=options["exclude"])
+            definition.name = name
+            definition.cls = cls
+            groups.cache_definition(cls, definition)
+
+        return definition
+
     def build(
-        self, obj: t.Callable | type, exclude: t.Sequence[str] | None = None
+        self, sig: inspect.Signature, exclude: t.Sequence[str] | None = None
     ) -> ParamDefinition:
-        sig = self.create_sig(obj)
         exclude = exclude or []
         root = ParamDefinition(ParamDefinition.BASE)
 
@@ -95,39 +111,12 @@ class ParamDefinitionBuilder:
                     raise errors.ParamError(
                         "Parameter groups cannot have a default value", param
                     )
-                definition = self.build_param_definition(param.annotation, param.name)
+                definition = self._from_param_group(param.annotation, param.name)
                 root.children.append(definition)
             else:
                 root.append(self.create_param(param))
 
         return root
-
-    def create_sig(self, obj: t.Callable | type) -> inspect.Signature:
-        sig = inspect.signature(obj)
-        annotations = t.get_type_hints(obj, include_extras=True)
-
-        for param in sig.parameters.values():
-            param._annotation = annotations.get(param.name, param.annotation)  # type: ignore
-
-        return sig
-
-    def build_param_definition(
-        self,
-        cls: type,
-        name: str,
-    ) -> ParamDefinition:
-
-        definition = groups.get_cached_definition(cls)
-
-        if not definition:
-            options: at.ParamGroupOptions = groups.groupoptions(cls)
-            classful.class_signature(cls)
-            definition = self.build(cls, exclude=options["exclude"])
-            definition.name = name
-            definition.cls = cls
-            groups.cache_definition(cls, definition)
-
-        return definition
 
     def create_param(self, param: inspect.Parameter) -> Param:
         if param.name in self.param_names:
@@ -195,3 +184,12 @@ class ParamDefinitionBuilder:
             return OptionParam
         else:
             return ArgumentParam
+
+    def _get_sig(self, obj: t.Callable | type) -> inspect.Signature:
+        sig = inspect.signature(obj)
+        annotations = t.get_type_hints(obj, include_extras=True)
+
+        for param in sig.parameters.values():
+            param._annotation = annotations.get(param.name, param.annotation)  # type: ignore
+
+        return sig
