@@ -3,9 +3,10 @@ import typing as t
 import collections
 import inspect
 
-from arc import errors, utils
+from arc import errors, utils, typing as at
 from arc.config import config
 from arc.constants import MISSING
+from arc.define.param import groups
 from arc.define.param.param_tree import ParamTree, ParamValue
 from arc.types.type_info import TypeInfo
 from arc.define.param.constructors import ParamInfo
@@ -77,37 +78,53 @@ class ParamDefinitionBuilder:
     def __init__(self):
         self.param_names: set[str] = set()
 
-    def build(self, obj: t.Callable | type) -> ParamDefinition:
+    def build(
+        self, obj: t.Callable | type, exclude: t.Sequence[str] | None = None
+    ) -> ParamDefinition:
+        sig = self.create_sig(obj)
+        exclude = exclude or []
+        root = ParamDefinition(ParamDefinition.BASE)
+
+        iterable = (
+            param for param in sig.parameters.values() if param.name not in exclude
+        )
+        for param in iterable:
+            if groups.isgroup(param.annotation):
+                if param.default is not param.empty:
+                    raise errors.ParamError(
+                        "Parameter groups cannot have a default value", param
+                    )
+                definition = self.build_param_definition(param.annotation, param.name)
+                root.children.append(definition)
+            else:
+                root.append(self.create_param(param))
+
+        return root
+
+    def create_sig(self, obj: t.Callable | type) -> inspect.Signature:
         sig = inspect.signature(obj)
         annotations = t.get_type_hints(obj, include_extras=True)
 
         for param in sig.parameters.values():
             param._annotation = annotations.get(param.name, param.annotation)  # type: ignore
 
-        root = ParamDefinition(ParamDefinition.BASE)
+        return sig
 
-        for param in sig.parameters.values():
-            if utils.isgroup(param.annotation):
-                root.children.append(self.build_param_definition(param))
-            else:
-                root.append(self.create_param(param))
+    def build_param_definition(
+        self,
+        cls: type,
+        name: str,
+    ) -> ParamDefinition:
 
-        return root
+        definition = groups.get_cached_definition(cls)
 
-    def build_param_definition(self, param: inspect.Parameter) -> ParamDefinition:
-        if param.default is not param.empty:
-            raise errors.ParamError(
-                "Parameter groups cannot have a default value", param
-            )
+        if not definition:
+            options: at.ParamGroupOptions = groups.groupoptions(cls)
+            definition = self.build(cls, exclude=options["exclude"])
+            definition.name = name
+            definition.cls = cls
+            groups.cache_definition(cls, definition)
 
-        cls = param.annotation
-        if hasattr(cls, "__param_group__"):
-            return getattr(cls, "__param_group__")
-
-        definition = self.build(cls)
-        definition.name = param.name
-        definition.cls = param.annotation
-        setattr(cls, "__param_group__", definition)
         return definition
 
     def create_param(self, param: inspect.Parameter) -> Param:

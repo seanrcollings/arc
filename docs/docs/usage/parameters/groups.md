@@ -51,8 +51,15 @@ And just like that, we have a set of re-usable parameters that we can add to any
 ## Notes
 - Anything that works for regular parameters also works for Parameter groups. This means that `#!python arc.Argument()` and it's cohorts can be used to expand the use of a parameter in a group.
 - Because there is no bare `*` or equivelant, there isn't a good way to distinguish between arguments and options. So, any non-flag will be presumed to be an argument unless given an explicit `#!python arc.Option()` as a default value.
-- Groups are not permitted to have a default value assigned to them
-    ```py
-    def hello(group: MyGroup = ...): # This isn't allowed
-    ```
 - Groups are allowed to be nested arbitrarily
+
+## Excluding Some Annotations
+You can exclude certain annotations from being interpreted as parameters
+```py
+import arc
+
+@arc.group(exclude=["val2"])
+class Group:
+    val1: str
+    val2: str
+```

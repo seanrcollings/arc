@@ -77,3 +77,17 @@ def test_non_unique_names():
         @arc.command()
         def command(value: int, group: Group):
             print(value)
+
+
+def test_exclude():
+    @arc.group(exclude=["val2"])
+    class Group:
+        val1: int
+        val2: int
+
+    @arc.command()
+    def command(group: Group):
+        ...
+
+    assert "val1" in [p.argument_name for p in command.params]
+    assert "val2" not in [p.argument_name for p in command.params]

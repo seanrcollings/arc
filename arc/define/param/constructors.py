@@ -1,7 +1,6 @@
 import typing as t
 
 from arc import constants
-from arc.define.classful import modify_group_cls
 from arc.define.param import param
 import arc.typing as at
 
@@ -246,12 +245,3 @@ def Count(
 
 def Depends(callback: t.Callable) -> t.Any:
     return ParamInfo(param_cls=param.InjectedParam, callback=callback)
-
-
-G = t.TypeVar("G", bound=type)
-
-
-def group(cls: G = None) -> G | t.Callable[[G], G]:
-    if cls:
-        return modify_group_cls(cls)
-    return modify_group_cls
