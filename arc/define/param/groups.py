@@ -39,7 +39,6 @@ def modify_group_cls(cls: T, options: at.ParamGroupOptions) -> T:
         if getattr(cls, name) is getattr(object, name):
             setattr(cls, name, func)
 
-    lazy_class_signature(cls)
     return cls
 
 

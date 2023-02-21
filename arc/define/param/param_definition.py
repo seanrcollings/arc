@@ -6,6 +6,7 @@ import inspect
 from arc import errors, utils, typing as at
 from arc.config import config
 from arc.constants import MISSING
+from arc.define import classful
 from arc.define.param import groups
 from arc.define.param.param_tree import ParamTree, ParamValue
 from arc.types.type_info import TypeInfo
@@ -120,6 +121,7 @@ class ParamDefinitionBuilder:
 
         if not definition:
             options: at.ParamGroupOptions = groups.groupoptions(cls)
+            classful.class_signature(cls)
             definition = self.build(cls, exclude=options["exclude"])
             definition.name = name
             definition.cls = cls
