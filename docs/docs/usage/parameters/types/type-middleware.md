@@ -1,4 +1,4 @@
-Type Niddleware are a powerful tool in *arc* to take control of the value of parameters and do what you need to with them.
+Type Middleware are a powerful tool in *arc* to take control of the value of parameters and do what you need to with them.
 
 ## What is a Type Middleware?
 A Type Middleware is simply a callable object that recieves a value, and then returns a value of the same
@@ -22,7 +22,7 @@ def round2(val: float):
 ```
 
 ???+ tip
-    *arc* already ships with a [`Round()`](../reference/types/transforms.md#arc.types.transforms.numbers.Round)
+    *arc* already ships with a [`Round()`](../../../reference/types/transforms.md#arc.types.transforms.numbers.Round)
     middleware, so you wouldn't actually need to implement this one yourself.
 
 ## Using a Type Middleware
@@ -47,5 +47,5 @@ Type Middleware are *attched* to a type using an [Annotated Type](https://docs.p
 ## Builtin Middlewares
 *arc* ships with a set of general-use builtin middlewares
 
-- [Validators](../reference/types/validators.md)
-- [Transforms](../reference/types/transforms.md)
+- [Validators](../../../reference/types/validators.md)
+- [Transforms](../../../reference/types/transforms.md)

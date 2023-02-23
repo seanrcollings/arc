@@ -12,8 +12,8 @@ from arc.present.formatters import TextFormatter
 from arc.present.ansi import Ansi
 
 if t.TYPE_CHECKING:
-    from arc.core.documentation import Documentation, ParamDoc
-    from arc.core.command import Command
+    from arc.define.documentation import Documentation, ParamDoc
+    from arc.define.command import Command
 
 
 def paragraphize(string: str) -> list[str]:
@@ -74,11 +74,7 @@ class HelpFormatter(TextFormatter):
 
         with self.section("USAGE"):
             if command.is_root and command.subcommands:
-                params_str = self.usage_params(
-                    [p for p in self.key_params if p["name"] in command.SPECIAL_PARAMS],
-                    self.argument_params,
-                )
-                global_param_str = self.usage_params(self.doc.global_params, [])
+                params_str = self.usage_params(self.key_params, self.argument_params)
                 self.write_text(
                     Joiner.with_space(
                         [colorize(command.root.name, config.brand_color), params_str]
@@ -91,7 +87,6 @@ class HelpFormatter(TextFormatter):
                         Joiner.with_space(
                             [
                                 colorize(command.root.name, config.brand_color),
-                                global_param_str,
                                 colorize("<subcommand>", effects.UNDERLINE),
                                 "[ARGUMENTS ...]",
                             ],

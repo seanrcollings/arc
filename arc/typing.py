@@ -6,13 +6,13 @@ from arc.autocompletions import CompletionInfo, Completion
 
 if t.TYPE_CHECKING:
     from arc.context import Context
-    from arc.core.param import Param
+    from arc.define.param import Param
 
 T = t.TypeVar("T")
 
 ExecEnv = dict[str, t.Any]
 
-ExecMode = t.Literal["global", "single", "subcommand"]
+ExecMode = t.Literal["root", "subcommand"]
 
 Annotation = t.Union[t._SpecialForm, type]
 
@@ -20,7 +20,7 @@ NArgs = t.Union[int, t.Literal["+", "*", "?"], None]
 
 ParseResult = dict[str, t.Union[str, list[str], None]]
 
-Env = t.Literal["production", "development"]
+Env = t.Literal["production", "development", "test"]
 
 CommandName = t.Union[str, t.Sequence[str], None]
 
@@ -32,17 +32,13 @@ CompletionFunc = t.Callable[
     [CompletionInfo, "Param"], t.Union[list[Completion], Completion, None]
 ]
 
+TypeMiddleware = t.Callable[[t.Any, "Context", "Param"], t.Any]
+
 GetterFunc = t.Union[
     t.Callable[["Param", "Context"], t.Any],
     t.Callable[["Param"], t.Any],
     t.Callable[[], t.Any],
 ]
-
-MiddlewareCallable = t.Callable[[T], T]
-
-DecoratorFunc = t.Callable[["Context"], t.Optional[t.Generator[None, t.Any, None]]]
-
-ErrorHandlerFunc = t.Callable[[Exception, "Context"], None]
 
 
 @t.runtime_checkable

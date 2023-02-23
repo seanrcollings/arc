@@ -6,7 +6,6 @@ from arc.types.aliases import Alias
 from arc.types.type_arg import TypeArg
 
 import arc.typing as at
-from arc.utils import safe_issubclass
 
 
 T = t.TypeVar("T")
@@ -33,7 +32,7 @@ class TypeInfo(t.Generic[T]):
         )
 
     @cached_property
-    def type_arg(self):
+    def type_arg(self) -> TypeArg | None:
         args = (a for a in self.annotations if isinstance(a, TypeArg))
         try:
             curr = next(args)
@@ -45,7 +44,7 @@ class TypeInfo(t.Generic[T]):
         return curr
 
     @cached_property
-    def middleware(self) -> list[at.MiddlewareCallable]:
+    def middleware(self) -> list[at.TypeMiddleware]:
         return [a for a in self.annotations if callable(a)]
 
     @cached_property

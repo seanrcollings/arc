@@ -6,7 +6,8 @@ import sys
 import typing as t
 from arc import errors
 from arc.color import colorize, fg
-from arc.core.command import Command, namespace_callback
+from arc.define.command import Command, namespace_callback
+from arc.runtime import DEFAULT_EXEC_MIDDLEWARES
 from arc.present import Joiner, Ansi
 from arc.types.type_info import TypeInfo
 from arc.types.helpers import convert_type
@@ -62,7 +63,9 @@ def info(
 
 
 def exit(code: int = 0, message: str | None = None) -> t.NoReturn:
-    """Exits the application with `code`"""
+    """Exits the application with `code`.
+    Optionally recieves a `message` that will be written
+    to stderr before exiting"""
     raise errors.Exit(code, message)
 
 
@@ -85,7 +88,7 @@ def command(
     """
 
     def inner(callback: at.CommandCallback) -> Command:
-        return Command(
+        command = Command(
             callback=callback,
             name=Command.get_command_name(callback, name)[0],
             description=desc,
@@ -93,6 +96,8 @@ def command(
             explicit_name=bool(name),
             autoload=True,
         )
+        command.use(DEFAULT_EXEC_MIDDLEWARES)
+        return command
 
     return inner
 
@@ -116,13 +121,15 @@ def namespace(name: str, desc: str | None = None) -> Command:
     Returns:
         command: A command object without a callback associated with it
     """
-    return Command(
+    command = Command(
         callback=namespace_callback,
         name=name,
         description=desc,
         parent=None,
         autoload=True,
     )
+    command.use(DEFAULT_EXEC_MIDDLEWARES)
+    return command
 
 
 def usage(command: Command, help_prompt: bool = True):

@@ -15,14 +15,14 @@ import arc
 
 @arc.command()
 def command(ctx: Context):
-    ctx.logger.debug('hello there!')
+    ctx.logger.info('hello there!')
 
 command()
 ```
 
 The levels are:
 
-- development: `DEBUG`
+- development: `INFO`
 - production: `WARNING`
 
 ## Coloring

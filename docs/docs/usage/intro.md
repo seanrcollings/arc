@@ -52,4 +52,4 @@ Some note about types:
 
 - if a parameter does not specify a type, *arc* implicitly types it as `#!python str`.
 - **All** builtin types are supported by *arc*, and many stdlib types
-- [Parameter Types](parameter-types.md) contains a comprehensive list of all supported types.
+- [Parameter Types](../parameters/types/supported-types) contains a comprehensive list of all supported types.

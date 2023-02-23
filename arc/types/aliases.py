@@ -23,6 +23,7 @@ from arc.types.helpers import (
     convert_type,
 )
 from arc.prompt.prompts import select_prompt
+from arc.types.type_arg import TypeArg
 
 
 from arc.typing import Annotation, TypeProtocol
@@ -32,7 +33,7 @@ from arc.types import type_info
 if t.TYPE_CHECKING:
     from arc.types.type_info import TypeInfo
     from arc.context import Context
-    from arc.core.param import Param
+    from arc.define.param import Param
 
 
 AliasFor = t.Union[Annotation, t.Tuple[Annotation, ...]]
@@ -99,7 +100,7 @@ class Alias:
             f"{name} is not a valid type. "
             f"Please ensure that {name} conforms to the custom type protocol "
             f"or that there is a alias type registered for it: "
-            "https://arc.seanrcollings.com/usage/parameter-types/#custom-types"
+            "https://arc.seancollings.dev/usage/parameters/types/custom-types"
         )
 
 
@@ -367,8 +368,9 @@ class IOAlias(Alias, of=(_io._IOBase, t.IO)):
     @classmethod
     def convert(cls, value: str, info: TypeInfo) -> t.IO:
         error_msg = f"Cannot access {value}:"
+        arg = TypeArg.ensure(info.type_arg, str(info.origin))
         try:
-            file: t.IO = open(value, **info.type_arg.dict())
+            file: t.IO = open(value, **arg.dict())
             return file
         except FileNotFoundError as e:
             raise errors.ConversionError(value, f"{error_msg} file not found") from e

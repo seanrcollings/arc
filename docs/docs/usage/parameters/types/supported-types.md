@@ -124,12 +124,12 @@ Support for regular expression patterns
 
 `Context`
 
-Gives you access to the current execution context. [Check here for details](../advanced-usage/using-context.md). Does not expose the param on the command line.
+Gives you access to the current execution context. [Check here for details](../../../advanced-usage/using-context.md). Does not expose the param on the command line.
 
 
 `State`
 
-Reference [State](./command-state.md) for details
+Reference [State](../../command-state.md) for details
 
 `SemVer`
 
@@ -147,7 +147,7 @@ A representation of a unix group.
 
 `File`
 
-Get access to an open IO object. Handles opening and closing the file descriptor for you. [See reference for full usage](../reference/types/file.md)
+Get access to an open IO object. Handles opening and closing the file descriptor for you. [See reference for full usage](../../../reference/types/file.md)
 
 
 `ValidPath`

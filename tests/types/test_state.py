@@ -2,17 +2,19 @@ import pytest
 import arc
 from arc import namespace, errors
 from arc.context import Context
-from arc.core.app import App
+from arc import App
 from arc.types import State
 
 
 @pytest.fixture(scope="function")
 def cli():
-    @arc.command()
-    def cli(state: State):
-        state.test = 1
+    cli = arc.namespace("cli")
 
-    yield cli
+    @cli.use
+    def inject_state(ctx: Context):
+        ctx.state["test"] = 1
+
+    return cli
 
 
 def test_parent_state(cli: arc.Command):

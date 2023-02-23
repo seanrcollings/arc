@@ -3,61 +3,28 @@ import inspect
 import typing as t
 
 import arc
-from arc import errors, utils
-from arc.context import Context
-from arc.core import classful
-from arc.autoload import Autoload
-from arc.core.app import App
-from arc.decorators import DecoratorMixin, DecoratorStack
-from arc.core.documentation import Documentation
-from arc.config import config
 import arc.typing as at
+from arc import errors, utils
+from arc.define import classful
+from arc.autoload import Autoload
+from arc.define.alias import AliasDict
+from arc.define.documentation import Documentation
+from arc.config import config
 from arc.autocompletions import CompletionInfo, get_completions, Completion
-from arc.core.param import ParamMixin
-from arc.core.app import App
+from arc.define.param import ParamMixin
+from arc.context import Context
+from arc.runtime import (
+    App,
+    MiddlewareContainer,
+    MiddlewareStack,
+    DEFAULT_EXEC_MIDDLEWARES,
+)
 
 if t.TYPE_CHECKING:
     from .param import ParamDefinition
 
-K = t.TypeVar("K")
-V = t.TypeVar("V")
 
-
-class AliasDict(dict[K, V]):
-    """Dict subclass for storing aliases to keys alongside the actual key"""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.aliases: dict[K, K] = {}
-        """Maps aliases to the cannonical key"""
-
-    def get(self, key: K, default=None):
-        """Wraps `dict.get()` but also checks for aliases"""
-        if super().__contains__(key):
-            return self[key]
-        if key in self.aliases:
-            return self[self.aliases[key]]
-
-        return default
-
-    def __contains__(self, key: object):
-        return super().__contains__(key) or key in self.aliases
-
-    def add_alias(self, key: K, alias: K):
-        """Add an `alias` for `key`"""
-        self.aliases[alias] = key
-
-    def add_aliases(self, key: K, *aliases: K):
-        """Add an several `aliass` for `key`"""
-        for alias in aliases:
-            self.add_alias(key, alias)
-
-    def aliases_for(self, key: K) -> list[K]:
-        return [alias for alias, val in self.aliases.items() if val == key]
-
-
-class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc]):
+class Command(ParamMixin, MiddlewareContainer):
     name: str
     parent: Command | None
     subcommands: AliasDict[str, Command]
@@ -75,7 +42,8 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         explicit_name: bool = True,
         autoload: bool = False,
     ) -> None:
-        super().__init__()
+        ParamMixin.__init__(self)
+        MiddlewareContainer.__init__(self, [])
         if inspect.isclass(callback):
             self.callback = classful.wrap_class_callback(  # type: ignore
                 t.cast(type[at.ClassCallback], callback)
@@ -103,19 +71,38 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
                 If none is provided, `sys.argv` is used.
             state (dict, optional): Execution State.
 
-        Raises:
-            errors.CommandError: If certain validations are not met
-            errors.Exit: Issues an `Exit()` if an external error occurs
-                (i.e: the input is not passed properly)
-            errors.InternalError: Issues an `InternalError()` when there
-                is a bug in the callback code, or in `arc` itself
-
         Returns:
             result (Any): The value that the command's callback returns
         """
 
-        app = App(self, config, input=input_args, state=state or {})
-        return app()
+        app = App(self, config, state=state or {})
+        return app(input_args)
+
+    def run(self, ctx: Context):
+        ctx.logger.debug("Executing: %s", self)
+        stack = MiddlewareStack()
+        for command in self.command_chain:
+            stack.extend(command.stack)
+
+        ctx = stack.start(ctx)
+        if "arc.args" not in ctx:
+            raise errors.InternalError(
+                "The command's arguments were not set during execution "
+                "(ctx['arc.args] is not set). This likely means there "
+                "is a problem with your middleware stack"
+            )
+
+        args = ctx["arc.args"]
+
+        res = None
+        try:
+            res = self.callback(**args)
+        except Exception as e:
+            stack.throw(e)
+        else:
+            res = stack.close(res)
+
+        return res
 
     def __completions__(
         self, info: CompletionInfo, *_args, **_kwargs
@@ -123,6 +110,7 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
         # TODO: it does not take into
         # account that collection types can include more than 1 positional
         # argument.
+        return []
         global_args, command, command_args = self.split_args(info.words)
 
         if command is self:
@@ -266,8 +254,12 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
             aliases (t.Sequence[str] | None, optional): Optional aliases to refter to the command by
         """
         self.subcommands[command.name] = command
-        command.parent = self
-        # self.inherit_decorators(command)
+
+        if command.parent is None:
+            command.parent = self
+            for m in DEFAULT_EXEC_MIDDLEWARES:
+                command.stack.try_remove(m)
+
         if aliases:
             self.subcommands.add_aliases(command.name, *aliases)
 
@@ -279,28 +271,24 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
 
     # Argument Handling ---------------------------------------------------------
 
-    def split_args(self, args: list[str]) -> tuple[list[str], Command, list[str]]:
+    def split_args(self, args: list[str]) -> tuple[Command, list[str]]:
         """Seperates out a sequence of args into:
-        - global arguments
         - a subcommand object
         - command arguments
         """
         index = 0
-        global_args: list[str] = []
-        while index < len(args) and args[index] not in self.subcommands:
-            global_args.append(args[index])
-            index += 1
-
         command: Command = self
 
-        for idx, value in enumerate(args):
+        for value in args:
             if value in command.subcommands:
-                index = idx
+                index += 1
                 command = command.subcommands.get(value)
+            else:
+                break
 
-        command_args: list[str] = args[index + 1 :]
+        command_args: list[str] = args[index:]
 
-        return global_args, command, command_args
+        return command, command_args
 
     # Helpers --------------------------------------------------------------------
 
@@ -331,10 +319,6 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
     def autoload(self, *paths: str):
         Autoload(paths, self, config.autoload_overwrite).load()
 
-    def decorators(self) -> DecoratorStack[at.DecoratorFunc | at.ErrorHandlerFunc]:
-        lst = t.cast(list[DecoratorMixin], self.command_chain)
-        return DecoratorMixin.create_decostack(lst)
-
     @staticmethod
     def get_command_name(
         callback: at.CommandCallback, names: at.CommandName
@@ -355,3 +339,4 @@ class Command(ParamMixin, DecoratorMixin[at.DecoratorFunc, at.ErrorHandlerFunc])
 
 def namespace_callback(ctx: Context):
     arc.usage(ctx.command)
+    arc.exit(1)

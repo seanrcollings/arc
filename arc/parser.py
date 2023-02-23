@@ -8,7 +8,7 @@ from gettext import gettext as _
 import arc
 import arc.typing as at
 from arc import errors
-from arc.core.param import Action, Param
+from arc.define.param import Action, Param
 from arc.autocompletions import completions
 from arc.color import fg
 from arc.config import config
@@ -17,7 +17,7 @@ from arc.present.helpers import Joiner
 from arc.utils import safe_issubclass
 
 if t.TYPE_CHECKING:
-    from arc.core.command import Command
+    from arc.define.command import Command
 
 
 class Parser(argparse.ArgumentParser):

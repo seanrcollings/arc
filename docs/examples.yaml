@@ -77,14 +77,6 @@
   exec:
     - "2"
     - string
-- file: decorator_create.py
-  exec: ""
-- file: decorator_inherit.py
-  exit_code: 1
-  error_allowed: true
-  exec:
-    - ""
-    - sub
 - file: from_env.py
   exec:
     - ""
@@ -117,13 +109,6 @@
     - --help
     - sub1 --help
     - sub2 --help
-- file: global_params.py
-  exec:
-    - sub
-    - --verbose sub
-- file: global_params.py
-  out: global_params_help
-  exec: --help
 - file: nested_subcommands.py
   exec:
     - sub1 nested1
@@ -142,8 +127,6 @@
   exit_code: 1
 - file: error_handlers.py
   exec: ""
-- file: error_handlers_deco.py
-  exec: ""
 - file: state.py
   exec: ""
 - file: state.py
@@ -161,3 +144,8 @@
   exec: ""
 - file: types/file.py
   exec: "README.md"
+- file: namespace.py
+  exec:
+    - ""
+    - "sub"
+  exit_code: 1

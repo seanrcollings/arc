@@ -5,7 +5,7 @@ import pytest
 import arc
 from arc import Argument, Option, errors, configure
 from arc import constants
-from arc.core.param.param import Param, ValueOrigin
+from arc.define.param.param import Param, ValueOrigin
 from tests.utils import environ  # type: ignore
 from arc.prompt.helpers import ARROW_DOWN
 

@@ -4,14 +4,14 @@ import re
 import typing as t
 
 from arc.config import config
-from arc.core.param import param
+from arc.define.param import param
 from arc.present.help_formatter import HelpFormatter
 import arc.typing as at
 
 
 if t.TYPE_CHECKING:
     from arc.types.type_info import TypeInfo
-    from arc.core.command import Command
+    from arc.define.command import Command
 
 
 ParamKinds = t.Literal["argument", "option", "flag"]

@@ -7,7 +7,7 @@ import sys
 from arc.errors import CommandError
 
 if t.TYPE_CHECKING:
-    from arc.core import Command
+    from arc.define import Command
 
 
 class Autoload:
@@ -26,7 +26,6 @@ class Autoload:
                         f"Command {command.name} already exists on {self.parent}\n"
                         "Autoloaded command cannot overwrite prexisting commands"
                     )
-
                 self.parent.add_command(command)
 
     def __load_files(self, paths: t.Iterable[str]):
