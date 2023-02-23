@@ -14,12 +14,7 @@ from arc.config import config
 from arc.autocompletions import CompletionInfo, get_completions, Completion
 from arc.define.param import ParamMixin
 from arc.context import Context
-from arc.runtime import (
-    App,
-    MiddlewareContainer,
-    MiddlewareStack,
-    DEFAULT_EXEC_MIDDLEWARES,
-)
+from arc.runtime import App, MiddlewareContainer, MiddlewareStack, ExecMiddleware
 
 if t.TYPE_CHECKING:
     from .param import ParamDefinition
@@ -258,7 +253,7 @@ class Command(ParamMixin, MiddlewareContainer):
 
         if command.parent is None:
             command.parent = self
-            for m in DEFAULT_EXEC_MIDDLEWARES:
+            for m in ExecMiddleware.all():
                 command.stack.try_remove(m)
 
         if aliases:

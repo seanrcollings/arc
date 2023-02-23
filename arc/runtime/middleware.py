@@ -232,3 +232,18 @@ class MiddlewareContainer:
             return inner(handler)
         else:
             return [inner(f) for f in handler]
+
+
+class DefaultMiddlewareNamespace:
+    _list: list[Middleware]
+
+    @classmethod
+    def all(cls) -> list[Middleware]:
+        """Returns a list of all default middlewares"""
+        return cls._list
+
+    @classmethod
+    def regsiter(cls, name: str, middleware: Middleware):
+        """Register a new default middleware."""
+        cls._list.append(middleware)
+        setattr(cls, name, middleware)
