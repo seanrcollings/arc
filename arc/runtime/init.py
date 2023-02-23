@@ -195,7 +195,6 @@ class CheckParseReulstMiddleware(MiddlewareBase):
         return message
 
 
-
 class InitMiddleware(DefaultMiddlewareNamespace):
     """Namespace for all the default init middlewares"""
 
@@ -207,7 +206,6 @@ class InitMiddleware(DefaultMiddlewareNamespace):
 
     _list: list[Middleware] = [
         AddUsageErrorInfo,
-        InitChecks,
         NormalizeInput,
         CommandFinder,
         Parser,
