@@ -41,6 +41,10 @@ GetterFunc = t.Union[
 ]
 
 
+class ParamGroupOptions(t.TypedDict):
+    exclude: t.Sequence[str] | None
+
+
 @t.runtime_checkable
 class ClassCallback(t.Protocol):
     def handle(self):

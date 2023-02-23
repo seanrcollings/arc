@@ -31,10 +31,6 @@ def display(*members: str):
     return __repr__
 
 
-def isgroup(cls: type):
-    return getattr(cls, "__arc_group__", False)
-
-
 def dispatch_args(func: t.Callable, *args):
     """Calls the given `func` with the maximum
     slice of `*args` that it can accept. Handles

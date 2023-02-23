@@ -7,7 +7,7 @@ import typing as t
 from arc import errors
 from arc.color import colorize, fg
 from arc.define.command import Command, namespace_callback
-from arc.runtime import DEFAULT_EXEC_MIDDLEWARES
+from arc.runtime import ExecMiddleware
 from arc.present import Joiner, Ansi
 from arc.types.type_info import TypeInfo
 from arc.types.helpers import convert_type
@@ -96,7 +96,7 @@ def command(
             explicit_name=bool(name),
             autoload=True,
         )
-        command.use(DEFAULT_EXEC_MIDDLEWARES)
+        command.use(ExecMiddleware.all())
         return command
 
     return inner
@@ -128,7 +128,7 @@ def namespace(name: str, desc: str | None = None) -> Command:
         parent=None,
         autoload=True,
     )
-    command.use(DEFAULT_EXEC_MIDDLEWARES)
+    command.use(ExecMiddleware.all())
     return command
 
 

@@ -45,14 +45,14 @@ nav:
           - Options: usage/parameters/options.md
           - Flags: usage/parameters/flags.md
           - Counter: usage/parameters/counter.md
-          - Parameter Sources: usage/parameters/sources.md
-          - Parameter Groups: usage/parameters/groups.md
           - Parameter Types:
               - Types Intro: usage/parameters/types/types-intro.md
               - Supported Types: usage/parameters/types/supported-types.md
               - Multiple Values: usage/parameters/types/multiple-values.md
               - Type Middleware: usage/parameters/types/type-middleware.md
               - Custom Types: usage/parameters/types/custom-types.md
+          - Parameter Sources: usage/parameters/sources.md
+          - Parameter Groups: usage/parameters/groups.md
       - Printing & Coloring Output: usage/printing.md
       - Subcommands: usage/subcommands.md
       - File Access: usage/file-access.md

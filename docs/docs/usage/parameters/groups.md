@@ -48,11 +48,30 @@ def hello(group: MyGroup): # Don't need firstname or reverse here anymore
 
 And just like that, we have a set of re-usable parameters that we can add to any command at-will!
 
-## Notes
-- Anything that works for regular parameters also works for Parameter groups. This means that `#!python arc.Argument()` and it's cohorts can be used to expand the use of a parameter in a group.
-- Because there is no bare `*` or equivelant, there isn't a good way to distinguish between arguments and options. So, any non-flag will be presumed to be an argument unless given an explicit `#!python arc.Option()` as a default value.
-- Groups are not permitted to have a default value assigned to them
-    ```py
-    def hello(group: MyGroup = ...): # This isn't allowed
-    ```
-- Groups are allowed to be nested arbitrarily
+!!! note "Some Notes about param groups"
+    - Anything that works for regular parameters also works for Parameter groups. This means that `#!python arc.Argument()` and it's cohorts can be used to expand the use of a parameter in a group.
+    - Because there is no bare `*` or equivelant, there isn't a good way to distinguish between arguments and options. So, any non-flag will be presumed to be an argument unless given an explicit `#!python arc.Option()` as a default value.
+    - Groups are allowed to be nested arbitrarily
+
+## Param Group Callbacks
+You may optionally define callbacks on a param group that will be called before or after execution of the command.
+
+```py title="examples/group_callbacks.py"
+--8<-- "examples/group_callbacks.py"
+```
+
+```console
+--8<-- "examples/outputs/group_callbacks"
+```
+
+## Excluding Some Annotations
+You can exclude certain annotations from being interpreted as parameters
+```py title="examples/group_exclude.py"
+--8<-- "examples/group_exclude.py"
+```
+
+You can see in the help that `val1` is included as a param while `val2` is not.
+```console
+--8<-- "examples/outputs/group_exclude"
+```
+This is useful when you are assiging some attributes of your param group in the `#!python pre_exec()` callback mentioned above, but still want type checking applying.

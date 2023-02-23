@@ -1,4 +1,5 @@
 from __future__ import annotations
+import functools
 import inspect
 import typing as t
 
@@ -13,12 +14,7 @@ from arc.config import config
 from arc.autocompletions import CompletionInfo, get_completions, Completion
 from arc.define.param import ParamMixin
 from arc.context import Context
-from arc.runtime import (
-    App,
-    MiddlewareContainer,
-    MiddlewareStack,
-    DEFAULT_EXEC_MIDDLEWARES,
-)
+from arc.runtime import App, MiddlewareContainer, MiddlewareStack, ExecMiddleware
 
 if t.TYPE_CHECKING:
     from .param import ParamDefinition
@@ -45,7 +41,7 @@ class Command(ParamMixin, MiddlewareContainer):
         ParamMixin.__init__(self)
         MiddlewareContainer.__init__(self, [])
         if inspect.isclass(callback):
-            self.callback = classful.wrap_class_callback(  # type: ignore
+            self.callback = self.wrap_class_callback(  # type: ignore
                 t.cast(type[at.ClassCallback], callback)
             )
         else:
@@ -257,7 +253,7 @@ class Command(ParamMixin, MiddlewareContainer):
 
         if command.parent is None:
             command.parent = self
-            for m in DEFAULT_EXEC_MIDDLEWARES:
+            for m in ExecMiddleware.all():
                 command.stack.try_remove(m)
 
         if aliases:
@@ -318,6 +314,22 @@ class Command(ParamMixin, MiddlewareContainer):
 
     def autoload(self, *paths: str):
         Autoload(paths, self, config.autoload_overwrite).load()
+
+    @staticmethod
+    def wrap_class_callback(cls: type[at.ClassCallback]):
+        if not hasattr(cls, "handle"):
+            raise errors.CommandError("class-style commands require a handle() method")
+
+        def wrapper(**kwargs):
+            inst = cls()
+            for key, value in kwargs.items():
+                setattr(inst, key, value)
+
+            return cls.handle(inst)
+
+        classful.class_signature(cls)
+        functools.update_wrapper(wrapper, cls)
+        return wrapper
 
     @staticmethod
     def get_command_name(
