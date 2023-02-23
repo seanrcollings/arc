@@ -1,3 +1,4 @@
+**TODO**: Improve / expand this documentation
 
 *arc* is based on a middleware design pattern. In arc there are three kinds:
 
