@@ -9,7 +9,11 @@ from arc import typing as at
 from arc.color import colorize, fg
 from arc.context import Context
 from arc.parser import Parser
-from arc.runtime.middleware import MiddlewareBase
+from arc.runtime.middleware import (
+    DefaultMiddlewareNamespace,
+    Middleware,
+    MiddlewareBase,
+)
 from arc.present import Joiner
 from arc.config import Config
 
@@ -56,7 +60,7 @@ class AddUsageErrorInfoMiddleware(MiddlewareBase):
             raise
 
 
-class InputMiddleware(MiddlewareBase):
+class NormalizeInputMiddleware(MiddlewareBase):
     """Middleware that normalizes different input sources. If input is provided when
     command is called, it will be normalized to an list. If input is not provided,
     `sys.argv` is used.
@@ -113,7 +117,7 @@ class ArgParseMiddleware(MiddlewareBase):
         return parser
 
 
-class ParseResultCheckerMiddleware(MiddlewareBase):
+class CheckParseReulstMiddleware(MiddlewareBase):
     """Checks the results of the input parsing against configutation options.
     Generates error messages for unrecognized arguments
 
@@ -191,11 +195,21 @@ class ParseResultCheckerMiddleware(MiddlewareBase):
         return message
 
 
-DEFAULT_INIT_MIDDLEWARES = [
-    AddUsageErrorInfoMiddleware(),
-    InitChecksMiddleware(),
-    InputMiddleware(),
-    CommandFinderMiddleware(),
-    ArgParseMiddleware(),
-    ParseResultCheckerMiddleware(),
-]
+class InitMiddleware(DefaultMiddlewareNamespace):
+    """Namespace for all the default init middlewares"""
+
+    AddUsageErrorInfo = AddUsageErrorInfoMiddleware()
+    InitChecks = InitChecksMiddleware()
+    NormalizeInput = NormalizeInputMiddleware()
+    CommandFinder = CommandFinderMiddleware()
+    Parser = ArgParseMiddleware()
+    CheckParseResult = CheckParseReulstMiddleware()
+
+    _list: list[Middleware] = [
+        AddUsageErrorInfo,
+        InitChecks,
+        NormalizeInput,
+        CommandFinder,
+        Parser,
+        CheckParseResult,
+    ]

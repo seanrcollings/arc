@@ -15,7 +15,11 @@ from arc.color import fg, colorize
 from arc.prompt.prompts import input_prompt
 from arc.types.helpers import iscontextmanager
 from arc.define.param.param import InjectedParam, Param, ValueOrigin
-from arc.runtime.middleware import MiddlewareBase, Middleware
+from arc.runtime.middleware import (
+    DefaultMiddlewareNamespace,
+    MiddlewareBase,
+    Middleware,
+)
 
 if t.TYPE_CHECKING:
     from arc.define.param.param_tree import ParamTree
@@ -233,7 +237,10 @@ class CompileParamsMiddleware(MiddlewareBase):
 
 class OpenResourceMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context) -> t.Any:
-        stack: contextlib.ExitStack = ctx["arc.exitstack"]
+        stack: contextlib.ExitStack | None = ctx.get("arc.exitstack")
+        if not stack:
+            return
+
         args: dict[str, t.Any] = ctx["arc.args"]
 
         for key, val in args.items():
@@ -241,18 +248,35 @@ class OpenResourceMiddleware(MiddlewareBase):
                 args[key] = stack.enter_context(val)
 
 
-DEFAULT_EXEC_MIDDLEWARES: list[Middleware] = [
-    ExitStackMiddleware(),
-    SetupParamMiddleware(),
-    ApplyParseResultMiddleware(),
-    GetEnvValueMiddleware(),
-    GetPromptValueMiddleware(),
-    GetterValueMiddleware(),
-    ConvertValuesMiddleware(),
-    DefaultValueMiddleware(),
-    DependancyInjectorMiddleware(),
-    RunTypeMiddlewareMiddleware(),
-    MissingParamsCheckerMiddleware(),
-    CompileParamsMiddleware(),
-    OpenResourceMiddleware(),
-]
+class ExecMiddleware(DefaultMiddlewareNamespace):
+    """Container for all default execution middleware"""
+
+    ExitStack = ExitStackMiddleware()
+    SetupParam = SetupParamMiddleware()
+    AopplyParseResult = ApplyParseResultMiddleware()
+    GetEnvValue = GetEnvValueMiddleware()
+    GetPromptValue = GetPromptValueMiddleware()
+    GetterValue = GetterValueMiddleware()
+    ConvertValues = ConvertValuesMiddleware()
+    DefaultValue = DefaultValueMiddleware()
+    DependancyInjector = DependancyInjectorMiddleware()
+    RunTypeMiddleware = RunTypeMiddlewareMiddleware()
+    MissingParamsChecker = MissingParamsCheckerMiddleware()
+    CompileParams = CompileParamsMiddleware()
+    OpenResource = OpenResourceMiddleware()
+
+    _list: list[Middleware] = [
+        ExitStack,
+        SetupParam,
+        AopplyParseResult,
+        GetEnvValue,
+        GetPromptValue,
+        GetterValue,
+        ConvertValues,
+        DefaultValue,
+        DependancyInjector,
+        RunTypeMiddleware,
+        MissingParamsChecker,
+        CompileParams,
+        OpenResource,
+    ]
