@@ -193,7 +193,6 @@ class ParseResultCheckerMiddleware(MiddlewareBase):
 
 DEFAULT_INIT_MIDDLEWARES = [
     AddUsageErrorInfoMiddleware(),
-    InitChecksMiddleware(),
     InputMiddleware(),
     CommandFinderMiddleware(),
     ArgParseMiddleware(),

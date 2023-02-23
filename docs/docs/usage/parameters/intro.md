@@ -20,3 +20,7 @@ The value for a parameter can come from multiple different sources, if no value 
 
 ## Parameter Types
 *arc* uses type hints types for type validation / conversion. [See more here](./types/types-intro.md)
+
+## Additional Features
+- [Parameter Groups](./groups.md)
+- [Parameter Sources](./sources.md)
