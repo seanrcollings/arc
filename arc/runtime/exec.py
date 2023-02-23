@@ -15,7 +15,11 @@ from arc.color import fg, colorize
 from arc.prompt.prompts import input_prompt
 from arc.types.helpers import iscontextmanager
 from arc.define.param.param import InjectedParam, Param, ValueOrigin
-from arc.runtime.middleware import MiddlewareBase, Middleware
+from arc.runtime.middleware import (
+    DefaultMiddlewareNamespace,
+    MiddlewareBase,
+    Middleware,
+)
 
 if t.TYPE_CHECKING:
     from arc.define.param.param_tree import ParamTree
@@ -207,18 +211,6 @@ class RunTypeMiddlewareMiddleware(ParamProcessor):
         return False  # Don't want to skip any of the params
 
 
-class OpenResourceMiddleware(ParamProcessor):
-    def process(self, _param: Param, value: t.Any) -> t.Any:
-        if iscontextmanager(value):
-            value = self.open_resource(value)
-
-        return value
-
-    def open_resource(self, resource: t.ContextManager) -> t.Any:
-        stack: contextlib.ExitStack = self.ctx["arc.exitstack"]
-        return stack.enter_context(resource)
-
-
 class MissingParamsCheckerMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context) -> t.Any:
         tree: ParamTree = ctx["arc.args.tree"]
@@ -243,18 +235,48 @@ class CompileParamsMiddleware(MiddlewareBase):
         ctx["arc.args"] = instance.compile()
 
 
-DEFAULT_EXEC_MIDDLEWARES: list[Middleware] = [
-    ExitStackMiddleware(),
-    SetupParamMiddleware(),
-    ApplyParseResultMiddleware(),
-    GetEnvValueMiddleware(),
-    GetPromptValueMiddleware(),
-    GetterValueMiddleware(),
-    ConvertValuesMiddleware(),
-    DefaultValueMiddleware(),
-    DependancyInjectorMiddleware(),
-    RunTypeMiddlewareMiddleware(),
-    OpenResourceMiddleware(),
-    MissingParamsCheckerMiddleware(),
-    CompileParamsMiddleware(),
-]
+class OpenResourceMiddleware(MiddlewareBase):
+    def __call__(self, ctx: Context) -> t.Any:
+        stack: contextlib.ExitStack | None = ctx.get("arc.exitstack")
+        if not stack:
+            return
+
+        args: dict[str, t.Any] = ctx["arc.args"]
+
+        for key, val in args.items():
+            if iscontextmanager(val):
+                args[key] = stack.enter_context(val)
+
+
+class ExecMiddleware(DefaultMiddlewareNamespace):
+    """Container for all default execution middleware"""
+
+    ExitStack = ExitStackMiddleware()
+    SetupParam = SetupParamMiddleware()
+    AopplyParseResult = ApplyParseResultMiddleware()
+    GetEnvValue = GetEnvValueMiddleware()
+    GetPromptValue = GetPromptValueMiddleware()
+    GetterValue = GetterValueMiddleware()
+    ConvertValues = ConvertValuesMiddleware()
+    DefaultValue = DefaultValueMiddleware()
+    DependancyInjector = DependancyInjectorMiddleware()
+    RunTypeMiddleware = RunTypeMiddlewareMiddleware()
+    MissingParamsChecker = MissingParamsCheckerMiddleware()
+    CompileParams = CompileParamsMiddleware()
+    OpenResource = OpenResourceMiddleware()
+
+    _list: list[Middleware] = [
+        ExitStack,
+        SetupParam,
+        AopplyParseResult,
+        GetEnvValue,
+        GetPromptValue,
+        GetterValue,
+        ConvertValues,
+        DefaultValue,
+        DependancyInjector,
+        RunTypeMiddleware,
+        MissingParamsChecker,
+        CompileParams,
+        OpenResource,
+    ]

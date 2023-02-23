@@ -8,7 +8,7 @@ import arc.typing as at
 from arc import errors
 from arc.config import config
 from arc.logging import logger
-from arc.runtime.init import DEFAULT_INIT_MIDDLEWARES
+from arc.runtime.init import InitMiddleware
 from arc.runtime.middleware import Middleware, MiddlewareContainer
 
 if t.TYPE_CHECKING:
@@ -25,7 +25,7 @@ class App(MiddlewareContainer):
         state: dict[str, t.Any] = None,
         ctx: dict[str, t.Any] = None,
     ) -> None:
-        super().__init__(init_middlewares or DEFAULT_INIT_MIDDLEWARES)
+        super().__init__(init_middlewares or InitMiddleware.all())
         self.root = root
         self.config = config
         self.provided_ctx = ctx or {}

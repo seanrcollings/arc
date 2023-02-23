@@ -3,9 +3,11 @@ import typing as t
 import collections
 import inspect
 
-from arc import errors, utils
+from arc import errors, utils, typing as at
 from arc.config import config
 from arc.constants import MISSING
+from arc.define import classful
+from arc.define.param import groups
 from arc.define.param.param_tree import ParamTree, ParamValue
 from arc.types.type_info import TypeInfo
 from arc.define.param.constructors import ParamInfo
@@ -65,50 +67,55 @@ class ParamDefinition(collections.UserList[Param]):
             definition.cls or dict,
         )
 
-    @classmethod
-    def from_function(cls, func: t.Callable) -> ParamDefinition:
-        """Constructs a ParamDefinition from a callable signature"""
-        builder = ParamDefinitionBuilder()
-        root = builder.build(func)
-        return root
 
-
-class ParamDefinitionBuilder:
+class ParamDefinitionFactory:
     def __init__(self):
         self.param_names: set[str] = set()
 
-    def build(self, obj: t.Callable | type) -> ParamDefinition:
-        sig = inspect.signature(obj)
-        annotations = t.get_type_hints(obj, include_extras=True)
+    def from_function(self, func: t.Callable) -> ParamDefinition:
+        self.param_names.clear()
+        sig = self._get_sig(func)
+        return self.build(sig)
 
-        for param in sig.parameters.values():
-            param._annotation = annotations.get(param.name, param.annotation)  # type: ignore
+    def from_class(self, cls: type) -> ParamDefinition:
+        self.param_names.clear()
+        sig = classful.class_signature(cls)
+        return self.build(sig)
 
+    def _from_param_group(self, cls: type, name: str) -> ParamDefinition:
+        definition = groups.get_cached_definition(cls)
+
+        if not definition:
+            options = t.cast(at.ParamGroupOptions, groups.groupoptions(cls))
+            sig = classful.class_signature(cls)
+            definition = self.build(sig, exclude=options["exclude"])
+            definition.name = name
+            definition.cls = cls
+            groups.cache_definition(cls, definition)
+
+        return definition
+
+    def build(
+        self, sig: inspect.Signature, exclude: t.Sequence[str] | None = None
+    ) -> ParamDefinition:
+        exclude = exclude or []
         root = ParamDefinition(ParamDefinition.BASE)
 
-        for param in sig.parameters.values():
-            if utils.isgroup(param.annotation):
-                root.children.append(self.build_param_definition(param))
+        iterable = (
+            param for param in sig.parameters.values() if param.name not in exclude
+        )
+        for param in iterable:
+            if groups.isgroup(param.annotation):
+                if param.default is not param.empty:
+                    raise errors.ParamError(
+                        "Parameter groups cannot have a default value", param
+                    )
+                definition = self._from_param_group(param.annotation, param.name)
+                root.children.append(definition)
             else:
                 root.append(self.create_param(param))
 
         return root
-
-    def build_param_definition(self, param: inspect.Parameter) -> ParamDefinition:
-        if param.default is not param.empty:
-            raise errors.ParamError(
-                "Parameter groups cannot have a default value", param
-            )
-
-        cls = param.annotation
-        if hasattr(cls, "__param_group__"):
-            return getattr(cls, "__param_group__")
-
-        definition = self.build(cls)
-        definition.name = param.name
-        definition.cls = param.annotation
-        setattr(cls, "__param_group__", definition)
-        return definition
 
     def create_param(self, param: inspect.Parameter) -> Param:
         if param.name in self.param_names:
@@ -176,3 +183,12 @@ class ParamDefinitionBuilder:
             return OptionParam
         else:
             return ArgumentParam
+
+    def _get_sig(self, obj: t.Callable | type) -> inspect.Signature:
+        sig = inspect.signature(obj)
+        annotations = t.get_type_hints(obj, include_extras=True)
+
+        for param in sig.parameters.values():
+            param._annotation = annotations.get(param.name, param.annotation)  # type: ignore
+
+        return sig
