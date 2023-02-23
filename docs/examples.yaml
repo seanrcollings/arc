@@ -118,6 +118,12 @@
   exec:
     - --help
     - Joseph --reverse
+- file: group_exclude.py
+  exec:
+    - --help
+- file: group_callbacks.py
+  exec:
+    - "Jonathan"
 - file: add.py
   exec: 5 10
 - file: add.py
@@ -143,6 +149,7 @@
 - file: command_string.py
   exec: ""
 - file: types/file.py
+  name: file.py
   exec: "README.md"
 - file: namespace.py
   exec:

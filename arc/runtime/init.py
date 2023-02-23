@@ -195,11 +195,11 @@ class CheckParseReulstMiddleware(MiddlewareBase):
         return message
 
 
+
 class InitMiddleware(DefaultMiddlewareNamespace):
     """Namespace for all the default init middlewares"""
 
     AddUsageErrorInfo = AddUsageErrorInfoMiddleware()
-    InitChecks = InitChecksMiddleware()
     NormalizeInput = NormalizeInputMiddleware()
     CommandFinder = CommandFinderMiddleware()
     Parser = ArgParseMiddleware()

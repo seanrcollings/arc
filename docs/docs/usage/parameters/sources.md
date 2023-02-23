@@ -2,7 +2,7 @@ While generally, input is parsed from the command line, there are a few other so
 
 The precedence of sources is:
 
-1. Commane Line
+1. Command Line
 2. Environment Variables
 3. Input Prompt
 4. Getter Function
