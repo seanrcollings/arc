@@ -207,18 +207,6 @@ class RunTypeMiddlewareMiddleware(ParamProcessor):
         return False  # Don't want to skip any of the params
 
 
-class OpenResourceMiddleware(ParamProcessor):
-    def process(self, _param: Param, value: t.Any) -> t.Any:
-        if iscontextmanager(value):
-            value = self.open_resource(value)
-
-        return value
-
-    def open_resource(self, resource: t.ContextManager) -> t.Any:
-        stack: contextlib.ExitStack = self.ctx["arc.exitstack"]
-        return stack.enter_context(resource)
-
-
 class MissingParamsCheckerMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context) -> t.Any:
         tree: ParamTree = ctx["arc.args.tree"]
@@ -243,6 +231,16 @@ class CompileParamsMiddleware(MiddlewareBase):
         ctx["arc.args"] = instance.compile()
 
 
+class OpenResourceMiddleware(MiddlewareBase):
+    def __call__(self, ctx: Context) -> t.Any:
+        stack: contextlib.ExitStack = ctx["arc.exitstack"]
+        args: dict[str, t.Any] = ctx["arc.args"]
+
+        for key, val in args.items():
+            if iscontextmanager(val):
+                args[key] = stack.enter_context(val)
+
+
 DEFAULT_EXEC_MIDDLEWARES: list[Middleware] = [
     ExitStackMiddleware(),
     SetupParamMiddleware(),
@@ -254,7 +252,7 @@ DEFAULT_EXEC_MIDDLEWARES: list[Middleware] = [
     DefaultValueMiddleware(),
     DependancyInjectorMiddleware(),
     RunTypeMiddlewareMiddleware(),
-    OpenResourceMiddleware(),
     MissingParamsCheckerMiddleware(),
     CompileParamsMiddleware(),
+    OpenResourceMiddleware(),
 ]

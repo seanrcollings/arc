@@ -214,7 +214,7 @@ class MiddlewareContainer:
 
         Args:
             handler (ErrorHandler, optional): Error handler callback, receives the context
-            and the exception object.
+                and the exception object.
         """
 
         def inner(func: ErrorHandler):

@@ -40,7 +40,7 @@ class AddUsageErrorInfoMiddleware(MiddlewareBase):
 
     # ctx Dependancies
     - `arc.command` (optional): Usage information comes from the current
-    executing [`Command`][arc.core.command.Command] object
+    executing [`Command`][arc.define.command.Command] object
     # ctx Additions
     None
     """

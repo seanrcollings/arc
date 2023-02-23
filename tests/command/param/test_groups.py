@@ -91,3 +91,24 @@ def test_exclude():
 
     assert "val1" in [p.argument_name for p in command.params]
     assert "val2" not in [p.argument_name for p in command.params]
+
+
+def test_callbacks():
+    @arc.group(exclude=["pre", "post"])
+    class Group:
+        pre: bool = False
+        post: bool = False
+
+        def pre_exec(self):
+            self.pre = True
+
+        def post_exec(self):
+            self.post = True
+
+    @arc.command()
+    def command(group: Group):
+        return group
+
+    group = command("")
+    assert group.pre
+    assert group.post

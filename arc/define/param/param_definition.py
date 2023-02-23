@@ -86,9 +86,8 @@ class ParamDefinitionFactory:
         definition = groups.get_cached_definition(cls)
 
         if not definition:
-            options: at.ParamGroupOptions = groups.groupoptions(cls)
+            options = t.cast(at.ParamGroupOptions, groups.groupoptions(cls))
             sig = classful.class_signature(cls)
-            # TODO: move the exclude filtering in here
             definition = self.build(sig, exclude=options["exclude"])
             definition.name = name
             definition.cls = cls
