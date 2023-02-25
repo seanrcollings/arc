@@ -51,7 +51,7 @@ It is important to note that when using subcommands, the root command is still e
 Namespace commands do not take any arguments (besides `--help`), and when invoked, will print out the usage for the command, and exit with an error code.
 
 ## Naming Subcommands
-By default, commands are the kebab-case version of the function they decorate. This can be modified to change the name
+By default, commands are the kebab-case version of the function they decorate. You can provide an explicit name for the command:
 
 ```py
 import arc
@@ -67,7 +67,7 @@ def sub():
 command()
 ```
 
-or provide *multiple* names, for a command.
+or provide *multiple* names, for a command:
 ```py
 import arc
 
@@ -75,12 +75,15 @@ import arc
 def command():
     ...
 
-@command.subcommand(("some-other-name", "another-name", "a-third-name"))
+@command.subcommand("some-other-name", "another-name", "a-third-name")
 def sub():
     ...
 
 command()
 ```
+
+Note that when you provide multiple names, the first in the list of names will be considered the "canonical" name while the others will be considered aliases
+
 ## Subcommands in other Files
 Breaking up your CLI interface into multiple files in *arc* is a very straightforward process.
 
@@ -108,7 +111,7 @@ Breaking up your CLI interface into multiple files in *arc* is a very straightfo
         print('hello there!')
 
     # Here we add sub as a subcommand to cli
-    cli.add_command(sub)
+    cli.subcommand(sub) # Could add any number of aliases here if we wanted
 
     cli()
     ```
