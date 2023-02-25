@@ -215,30 +215,76 @@ class Command(ParamMixin, MiddlewareContainer):
 
     # Subcommands ----------------------------------------------------------------
 
+    @t.overload
     def subcommand(
-        self, name: at.CommandName = None, description: str | None = None
-    ) -> t.Callable[[at.CommandCallback], Command]:
-        """Create a subcommand of this command
+        self,
+        /,
+        command: Command,
+        *aliases: str,
+    ) -> Command:
+        ...
 
-        Args:
-            name (at.CommandName, optional): Name(s) of the command.
-                Name of the function is used if one is not provided
-            description (str | None, optional): Description of the command's functionaly.
-                Used in `--help` documentation.
+    @t.overload
+    def subcommand(
+        self,
+        /,
+        callback: at.CommandCallback,
+    ) -> Command:
+        ...
+
+    @t.overload
+    def subcommand(
+        self, /, name: str | None = None, *aliases: str, desc: str | None = None
+    ) -> t.Callable[[at.CommandCallback], Command]:
+        ...
+
+    def subcommand(self, first=None, *aliases, desc=None):
+        """Create a new child commmand of this command OR
+        adopt a already created command as the child.
+
+        ```py
+        @command.subcommand("name1", "alias", desc="...")
+        def subcommand():
+            ...
+        ```
+        OR
+        ```py
+        @arc.command("name1")
+        def subcommand():
+            ...
+
+        command.subcommand(subcommand, "alias", desc="...")
+        ```
+
         """
 
-        def inner(callback: at.CommandCallback):
-            command_name, aliases = self.get_command_name(callback, name)
-            command = Command(
-                callback=callback,
-                name=command_name,
-                description=description,
-                parent=self,
-            )
-            self.add_command(command, aliases)
-            return command
+        if isinstance(first, type(self)):
+            self.add_command(first, aliases)
+        else:
 
-        return inner
+            def inner(callback: at.CommandCallback):
+                command_name = self.get_canonical_subcommand_name(callback, first)
+                command = Command(
+                    callback=callback,
+                    name=command_name,
+                    description=desc,
+                    parent=self,
+                )
+                self.add_command(command, aliases)
+                return command
+
+            if callable(first):
+                callback = first
+                first = None
+                return inner(callback)
+            elif first is None or isinstance(first, str):
+                return inner
+            else:
+                raise errors.CommandError(
+                    "Bad input to command.subcommand(). "
+                    "Needs to be used as a decorator, or "
+                    "passed an already construction Command insance"
+                )
 
     def add_command(
         self, command: Command, aliases: t.Sequence[str] | None = None
@@ -249,6 +295,11 @@ class Command(ParamMixin, MiddlewareContainer):
             command (Command): The command to add
             aliases (t.Sequence[str] | None, optional): Optional aliases to refter to the command by
         """
+        if command is self:
+            raise errors.CommandError(
+                "Command cannot be added as children of themselves"
+            )
+
         self.subcommands[command.name] = command
 
         if command.parent is None:
@@ -265,26 +316,18 @@ class Command(ParamMixin, MiddlewareContainer):
         """Add multiple commands as subcommands"""
         return [self.add_command(command) for command in commands]
 
-    # Argument Handling ---------------------------------------------------------
+    @staticmethod
+    def get_canonical_subcommand_name(
+        callback: at.CommandCallback,
+        cannonical_name: str | None,
+    ) -> str:
+        if cannonical_name is None:
+            cannonical_name = callback.__name__
 
-    def split_args(self, args: list[str]) -> tuple[Command, list[str]]:
-        """Seperates out a sequence of args into:
-        - a subcommand object
-        - command arguments
-        """
-        index = 0
-        command: Command = self
+            if config.transform_snake_case:
+                cannonical_name = cannonical_name.replace("_", "-")
 
-        for value in args:
-            if value in command.subcommands:
-                index += 1
-                command = command.subcommands.get(value)
-            else:
-                break
-
-        command_args: list[str] = args[index:]
-
-        return command, command_args
+        return cannonical_name
 
     # Helpers --------------------------------------------------------------------
 
@@ -331,22 +374,86 @@ class Command(ParamMixin, MiddlewareContainer):
         functools.update_wrapper(wrapper, cls)
         return wrapper
 
-    @staticmethod
-    def get_command_name(
-        callback: at.CommandCallback, names: at.CommandName
-    ) -> tuple[str, tuple[str, ...]]:
-        if names is None:
-            name = callback.__name__
 
-            if config.transform_snake_case:
-                name = name.replace("_", "-")
+@t.overload
+def command(callback: at.CommandCallback, /) -> Command:
+    ...
 
-            return name, tuple()
 
-        if isinstance(names, str):
-            return names, tuple()
+@t.overload
+def command(
+    name: str | None = None, /, *, desc: str | None = None
+) -> t.Callable[[at.CommandCallback], Command]:
+    ...
 
-        return names[0], tuple(names[1:])
+
+def command(
+    first: at.CommandCallback | str | None = None, /, *, desc: str | None = None
+):
+    """Create an arc Command
+
+    ```py
+    @arc.command()
+    def command():
+        print("Hello there!")
+    ```
+
+    Args:
+        name (str | None, optional): The name for this command.
+            If one is not provided, the function's name will be used.
+        desc (str | None, optional): Description for the command. If
+            one is not provided, the docstring description will be used
+    """
+
+    name = None
+
+    def inner(callback: at.CommandCallback) -> Command:
+        command = Command(
+            callback=callback,
+            name=Command.get_canonical_subcommand_name(callback, name),
+            description=desc,
+            parent=None,
+            explicit_name=bool(name),
+            autoload=True,
+        )
+        command.use(ExecMiddleware.all())
+        return command
+
+    if isinstance(first, str) or first is None:
+        name = first
+        return inner
+    else:
+        return inner(first)
+
+
+def namespace(name: str, *, desc: str | None = None) -> Command:
+    """Create an arc Command, that is not executable on it's own,
+    but can have commands nested underneath it.
+
+    ```py
+    ns = arc.namespace("ns")
+
+    @ns.subcommand()
+    def sub():
+        print("I'm a subcommand")
+    ```
+
+    Args:
+        name (str): Name of the command
+        desc (str | None, optional): Description for the command.
+
+    Returns:
+        command: A command object without a callback associated with it
+    """
+    command = Command(
+        callback=namespace_callback,
+        name=name,
+        description=desc,
+        parent=None,
+        autoload=True,
+    )
+    command.use(ExecMiddleware.all())
+    return command
 
 
 def namespace_callback(ctx: Context):

@@ -14,7 +14,7 @@ def test_subcommand():
 def test_aliases():
     ns = arc.namespace("ns")
 
-    @ns.subcommand(("sub", "s"))
+    @ns.subcommand("sub", "s")
     def sub():
         return "sub"
 
@@ -22,7 +22,7 @@ def test_aliases():
     def other_sub():
         return "other_sub"
 
-    ns.add_command(other_sub, ["os"])
+    ns.subcommand(other_sub, "os")
 
     assert ns("sub") == "sub"
     assert ns("s") == "sub"
