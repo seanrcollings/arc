@@ -70,7 +70,7 @@ class Loader:
     def update(self, value):
         if not self.done:
             self.progress = value
-            self.arc.print()
+            self.print()
 
     def print(self):
         arc.print(

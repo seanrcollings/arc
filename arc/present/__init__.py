@@ -4,3 +4,4 @@
 # from .loaders import BarLoader, RectangleLoader, Pacman, SlantLoader
 from .helpers import Joiner
 from .ansi import Ansi
+from .out import print, err, info, usage
