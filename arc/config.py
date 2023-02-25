@@ -56,8 +56,8 @@ def configure(
         version: Version string to display with `--version`
 
         environment: The current environment, either `production` or `development`.
-            Defaults to `production`. When in `development` mode, debug
-            information is arc.printed during execution.
+            Defaults to `production`. When in `development` mode, the arc logger is set
+            to level `logging.INFO`
 
         default_section_name: The name to use by default if the first section in a
             command docstring is does not have a header. Defaults to `description`.
@@ -69,7 +69,7 @@ def configure(
             Defaults to `fg.ARC_BLUE`.
 
         env_prefix: A prefix to use when selecting values from environmental
-                variables. Will be combined with the name specified for a parameter.
+                variables. Will be combined with the name specified by parameter.
 
         prompt: A prompt object will be used when prompting
             for parameter values. Is also made available via `Context.prompt`.
@@ -78,11 +78,13 @@ def configure(
             the default is `False`
 
         allow_unrecognized_args: arc will not error when there are arguments provided
-            that arc does not recognize. Their values will bes tored in `Context.rest`
-            defaults to `False`
+            that arc does not recognize. Their values will be stored in the context under the
+            key `arc.parse.extra`. Defaults to `False`
 
         autoload_overwrite: allow / disallow a command that has been autoloaded to overwrite
             a pre-existing command object. Defaults to `True`
+
+        debug: enable / disable arc debug logs.
     """
     data: dict = {
         "version": version,
@@ -103,8 +105,7 @@ def configure(
         if value is not None:
             setattr(config, key, value)
 
-    if env := data["environment"]:
-        logger.setLevel(mode_map.get(env, logging.WARNING))  # type: ignore
-
     if debug:
         logger.setLevel(logging.DEBUG)
+    elif env := data["environment"]:
+        logger.setLevel(mode_map.get(env, logging.WARNING))  # type: ignore
