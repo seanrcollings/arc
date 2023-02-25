@@ -2,7 +2,7 @@ import arc
 from arc.types import File
 
 
-@arc.command()
+@arc.command
 def command(file: File.Read):
     arc.print(file.readline())
 

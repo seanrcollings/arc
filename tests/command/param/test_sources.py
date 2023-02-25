@@ -12,7 +12,7 @@ from arc.prompt.helpers import ARROW_DOWN
 
 class TestEnv:
     def test_basic(self):
-        @arc.command()
+        @arc.command
         def env(val: int = Argument(envvar="VAL")):
             return val
 
@@ -29,7 +29,7 @@ class TestEnv:
 
         try:
 
-            @arc.command()
+            @arc.command
             def env(val: int = Argument(envvar="VAL")):
                 return val
 
@@ -39,7 +39,7 @@ class TestEnv:
             configure(env_prefix="")
 
     def test_multiple(self):
-        @arc.command()
+        @arc.command
         def env(val: int = Argument(envvar="VAL"), key: int = Option(envvar="KEY")):
             return val, key
 
@@ -61,7 +61,7 @@ class TestEnv:
             assert env("--key 10") == (2, 10)
 
     def test_get_origin(self):
-        @arc.command()
+        @arc.command
         def env(ctx: arc.Context, val: int = Argument(envvar="VAL")):
             return ctx.get_origin("val")
 
@@ -73,7 +73,7 @@ class TestEnv:
 
 class TestPrompt:
     def test_basic(self, monkeypatch: pytest.MonkeyPatch):
-        @arc.command()
+        @arc.command
         def pr(val: int = Argument(prompt="Val")):
             return val
 
@@ -83,7 +83,7 @@ class TestPrompt:
         assert pr("") == 2
 
     def test_default(self, monkeypatch: pytest.MonkeyPatch):
-        @arc.command()
+        @arc.command
         def pr(val: int = Argument(prompt="Val", default=10)):
             return val
 
@@ -93,7 +93,7 @@ class TestPrompt:
         assert pr("") == 10
 
     def test_get_origin(self, monkeypatch: pytest.MonkeyPatch):
-        @arc.command()
+        @arc.command
         def pr(ctx: arc.Context, val: int = Argument(prompt="Val")):
             return ctx.get_origin("val")
 
@@ -106,14 +106,14 @@ class TestGetter:
         def _get(param: Param):
             return 2
 
-        @arc.command()
+        @arc.command
         def getter(val: int = Argument(get=_get, default=1)):
             return val
 
         assert getter("") == 2
 
     def test_alias(self):
-        @arc.command()
+        @arc.command
         def getter(val: int = Argument(default=1)):
             return val
 
@@ -124,7 +124,7 @@ class TestGetter:
         assert getter("") == 2
 
     def test_missing(self):
-        @arc.command()
+        @arc.command
         def getter(val: int = Argument()):
             return val
 
@@ -136,7 +136,7 @@ class TestGetter:
             getter("")
 
     def test_missing_with_default(self):
-        @arc.command()
+        @arc.command
         def getter(val: int = Argument(default=1)):
             return val
 
@@ -147,7 +147,7 @@ class TestGetter:
         assert getter("") == 1
 
     def test_get_origin(self):
-        @arc.command()
+        @arc.command
         def getter(ctx: arc.Context, val: int = Argument(default=1)):
             return ctx.get_origin("val")
 
@@ -159,7 +159,7 @@ class TestGetter:
 
 
 def test_precedence(monkeypatch: pytest.MonkeyPatch):
-    @arc.command()
+    @arc.command
     def c1(val: int = Argument(envvar="VAL", prompt="val")):
         return val
 

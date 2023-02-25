@@ -12,7 +12,7 @@ def test_group():
         val: int
         other_val: int
 
-    @arc.command()
+    @arc.command
     def command(group: Group):
         return group
 
@@ -32,7 +32,7 @@ def test_subgroup():
         val: int
         sub: Sub
 
-    @arc.command()
+    @arc.command
     def command(group: Group):
         return group
 
@@ -56,7 +56,7 @@ def test_dependencies():
         dep2 = arc.Depends(depfunc2)
         ctx: arc.State
 
-    @arc.command()
+    @arc.command
     def command(group: Group):
         return group
 
@@ -74,7 +74,7 @@ def test_non_unique_names():
 
     with pytest.raises(errors.ParamError):
 
-        @arc.command()
+        @arc.command
         def command(value: int, group: Group):
             print(value)
 
@@ -85,7 +85,7 @@ def test_exclude():
         val1: int
         val2: int
 
-    @arc.command()
+    @arc.command
     def command(group: Group):
         ...
 
@@ -105,7 +105,7 @@ def test_callbacks():
         def post_exec(self):
             self.post = True
 
-    @arc.command()
+    @arc.command
     def command(group: Group):
         return group
 

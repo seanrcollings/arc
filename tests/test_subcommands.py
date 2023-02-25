@@ -4,7 +4,7 @@ import arc
 def test_subcommand():
     ns = arc.namespace("ns")
 
-    @ns.subcommand()
+    @ns.subcommand
     def sub():
         return "sub"
 
@@ -18,7 +18,7 @@ def test_aliases():
     def sub():
         return "sub"
 
-    @arc.command()
+    @arc.command
     def other_sub():
         return "other_sub"
 
@@ -42,7 +42,7 @@ def test_creation_conventions():
 
     ns.subcommand(sub2)
 
-    @ns.subcommand()
+    @ns.subcommand
     def sub3():
         return True
 

@@ -1,7 +1,7 @@
 import arc
 
 
-@arc.command()
+@arc.command
 def hello(name: str):
     arc.print(f"Hello {name}!")
 

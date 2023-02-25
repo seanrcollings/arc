@@ -4,7 +4,7 @@ from arc.types.transforms import Round
 
 
 def test_middleware_exec():
-    @arc.command()
+    @arc.command
     def com(val: t.Annotated[float, Round(2)]):
         return val
 
@@ -15,7 +15,7 @@ def test_middleware_injected():
     def _get():
         return 1.123456
 
-    @arc.command()
+    @arc.command
     def com(val: t.Annotated[float, Round(2)] = arc.Depends(_get)):
         return val
 

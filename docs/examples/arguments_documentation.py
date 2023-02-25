@@ -3,7 +3,7 @@ import arc
 cli = arc.namespace("cli")
 
 
-@cli.subcommand()
+@cli.subcommand
 def command1(
     firstname: str = arc.Argument(desc="Someone's first name"),
     lastname: str = arc.Option(default="", desc="Someone's last name. Optional"),
@@ -12,7 +12,7 @@ def command1(
     """Documentation using descriptions"""
 
 
-@cli.subcommand()
+@cli.subcommand
 def command2(firstname, *, lastname="", reverse: bool):
     """Documentation in docstring
 

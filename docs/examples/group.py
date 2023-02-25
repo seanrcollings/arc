@@ -7,7 +7,7 @@ class MyGroup:
     reverse: bool
 
 
-@arc.command()
+@arc.command
 def hello(group: MyGroup):
     if group.reverse:
         group.firstname = group.firstname[::-1]

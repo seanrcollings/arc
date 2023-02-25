@@ -1,7 +1,7 @@
 import arc
 
 
-@arc.command()
+@arc.command
 def command():
     arc.print("hello there!")
 

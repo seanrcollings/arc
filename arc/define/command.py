@@ -393,7 +393,7 @@ def command(
     """Create an arc Command
 
     ```py
-    @arc.command()
+    @arc.command
     def command():
         print("Hello there!")
     ```
@@ -433,7 +433,7 @@ def namespace(name: str, *, desc: str | None = None) -> Command:
     ```py
     ns = arc.namespace("ns")
 
-    @ns.subcommand()
+    @ns.subcommand
     def sub():
         print("I'm a subcommand")
     ```

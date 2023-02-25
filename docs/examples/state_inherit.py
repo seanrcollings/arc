@@ -8,7 +8,7 @@ class MyState(arc.State):
         arc.print(f"ORA ORA, {self.name}")
 
 
-@arc.command()
+@arc.command
 def punch(state: MyState):
     state.punch()
 

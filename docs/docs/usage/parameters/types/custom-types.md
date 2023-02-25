@@ -52,7 +52,7 @@ class NDArrayAlias(Alias, of=np.ndarry):
         return np.ndarray(value.split(","))
 
 
-@arc.command()
+@arc.command
 def main(array: np.ndarray):
     arc.print(repr(array))
 

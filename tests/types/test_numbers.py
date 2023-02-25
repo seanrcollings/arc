@@ -24,7 +24,7 @@ INTS = [
 
 @pytest.mark.parametrize(("cls", "value", "result"), INTS)
 def test_custom_int_types(cls, value, result: int):
-    @arc.command()
+    @arc.command
     def command(val: cls):  # type: ignore
         return val
 
@@ -59,7 +59,7 @@ FLOATS = [
 
 @pytest.mark.parametrize(("cls", "value", "result"), FLOATS)
 def test_strict_floats(cls, value, result):
-    @arc.command()
+    @arc.command
     def command(val: cls):  # type: ignore
         return val
 

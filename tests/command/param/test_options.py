@@ -5,14 +5,14 @@ from arc import errors
 
 class TestOptionDeclaration:
     def test_keyword_only(self):
-        @arc.command()
+        @arc.command
         def command(*, name: str):
             return name
 
         self.assertions(command)
 
     def test_param_info(self):
-        @arc.command()
+        @arc.command
         def command(name: str = arc.Option()):
             return name
 
@@ -29,7 +29,7 @@ class TestOptionDeclaration:
 
 
 def test_ordering():
-    @arc.command()
+    @arc.command
     def command(*, val1, val2, val3, val4):
         return val1, val2, val3, val4
 
@@ -38,7 +38,7 @@ def test_ordering():
 
 
 def test_default():
-    @arc.command()
+    @arc.command
     def command(*, val="val"):
         return val
 
@@ -47,7 +47,7 @@ def test_default():
 
 
 def test_param_name():
-    @arc.command()
+    @arc.command
     def command(val=arc.Option(name="different-name")):
         return val
 
@@ -55,7 +55,7 @@ def test_param_name():
 
 
 def test_short_name():
-    @arc.command()
+    @arc.command
     def command(val=arc.Option(short="v")):
         return val
 
@@ -64,7 +64,7 @@ def test_short_name():
 
 @pytest.mark.parametrize("cls", [list[int], set[int], tuple[int, ...]])  # type: ignore
 def test_collections(cls):
-    @arc.command()
+    @arc.command
     def command(*, val: cls):
         return val
 

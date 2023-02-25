@@ -1,27 +1,27 @@
 import arc
 
 
-@arc.command()
+@arc.command
 def command():
     ...
 
 
-@command.subcommand()
+@command.subcommand
 def sub1():
     print("This is sub 1")
 
 
-@sub1.subcommand()
+@sub1.subcommand
 def nested1():
     print("This is nested 1")
 
 
-@command.subcommand()
+@command.subcommand
 def sub2():
     print("This is sub 2")
 
 
-@sub2.subcommand()
+@sub2.subcommand
 def nested2():
     print("This is nested 2")
 

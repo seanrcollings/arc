@@ -1,7 +1,7 @@
 import arc
 
 
-@arc.command()
+@arc.command
 def hello(firstname: str, repeat: int = arc.Count()):
     arc.print(f"Repeat {repeat} time(s)")
     for _ in range(0, repeat):

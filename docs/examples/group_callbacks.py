@@ -12,7 +12,7 @@ class Group:
         arc.print("After the command executes")
 
 
-@arc.command()
+@arc.command
 def command(group: Group):
     arc.print(f"Hello, {group.name}")
 

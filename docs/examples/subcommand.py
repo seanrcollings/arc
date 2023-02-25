@@ -1,17 +1,17 @@
 import arc
 
 
-@arc.command()
+@arc.command
 def command():
     ...
 
 
-@command.subcommand()
+@command.subcommand
 def sub1():
     print("This is sub 1")
 
 
-@command.subcommand()
+@command.subcommand
 def sub2():
     print("This is sub 2")
 

@@ -16,7 +16,7 @@ own custom commands.
     # /home/user/timers.py
     import arc
 
-    @arc.command()
+    @arc.command
     def autoload_demo():
         arc.print("I've been autoloaded!")
     ```
@@ -27,7 +27,7 @@ own custom commands.
     # cli.py
     import arc
 
-    @arc.command()
+    @arc.command
     def command():
         ...
 
@@ -51,7 +51,7 @@ By default, commands that are autloaded can overwrite regular commands.
     # /home/user/timers.py
     import arc
 
-    @arc.command()
+    @arc.command
     def sub():
         arc.print("I've been autoloaded!")
     ```
@@ -62,11 +62,11 @@ By default, commands that are autloaded can overwrite regular commands.
     # cli.py
     import arc
 
-    @arc.command()
+    @arc.command
     def command():
         ...
 
-    @command.subcommand()
+    @command.subcommand
     def sub():
         arc.print("I'm the original")
 

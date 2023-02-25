@@ -56,7 +56,7 @@ By default, commands are the kebab-case version of the function they decorate. Y
 ```py
 import arc
 
-@arc.command()
+@arc.command
 def command():
     ...
 
@@ -71,7 +71,7 @@ or provide *multiple* names, for a command:
 ```py
 import arc
 
-@arc.command()
+@arc.command
 def command():
     ...
 
@@ -92,7 +92,7 @@ Breaking up your CLI interface into multiple files in *arc* is a very straightfo
     ``` py
     import arc
 
-    @arc.command()
+    @arc.command
     def sub():
         print("This is the subcommand")
 
@@ -106,7 +106,7 @@ Breaking up your CLI interface into multiple files in *arc* is a very straightfo
     from subcommand import sub
 
 
-    @arc.command()
+    @arc.command
     def cli():
         print('hello there!')
 

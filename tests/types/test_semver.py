@@ -46,7 +46,7 @@ def test_bump_patch():
 
 @pytest.mark.parametrize("value", VERSIONS)
 def test_usage(value):
-    @arc.command()
+    @arc.command
     def command(version: SemVer):
         return version
 

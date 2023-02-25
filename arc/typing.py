@@ -56,14 +56,14 @@ CommandCallback = t.Union[t.Callable, type[ClassCallback]]
 
 May be a function
 ```py
-@arc.command()
+@arc.command
 def command(name: str):
     print(f"Hello {name}!")
 ```
 
 Or a class
 ```py
-@arc.command()
+@arc.command
 class command:
     name: str
 

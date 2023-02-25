@@ -13,7 +13,7 @@ class Round:
     import arc
     from arc.transforms import Round
 
-    @arc.command()
+    @arc.command
     def command(val: Annotated[float, Round(2)])
         arc.print(val)
 
@@ -51,7 +51,7 @@ class Truncate:
     import arc
     from arc.transforms import Truncate
 
-    @arc.command()
+    @arc.command
     def command(val: Annotated[str, Truncate(6)])
         arc.print(val)
 
@@ -93,7 +93,7 @@ class Pad:
     import arc
     from arc.transforms import Pad
 
-    @arc.command()
+    @arc.command
     def command(val: Annotated[str, Pad(6, 'b')])
         arc.print(val)
 

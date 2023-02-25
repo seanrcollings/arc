@@ -36,7 +36,7 @@ class TestImpl:
 
 
 def test_usage():
-    @arc.command()
+    @arc.command
     def pa(path: path.ValidPath):
         return path
 

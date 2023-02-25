@@ -8,7 +8,7 @@ class Color(Enum):
     GREEN = "green"
 
 
-@arc.command()
+@arc.command
 def paint(color: Color):
     if color is Color.RED:
         arc.print("You painted the walls the bloodiest of reds")

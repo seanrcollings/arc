@@ -32,7 +32,7 @@ def content_file(tmp_path_factory: pytest.TempPathFactory):
 def test_mode(mode, content_file: Path):
     args = t.get_args(mode)[-1]
 
-    @arc.command()
+    @arc.command
     def command(file: mode):  # type: ignore
         return file
 
@@ -42,7 +42,7 @@ def test_mode(mode, content_file: Path):
 
 
 def test_read(content_file: Path):
-    @arc.command()
+    @arc.command
     def command(file: File.Read):
         return file, file.read()
 
@@ -53,7 +53,7 @@ def test_read(content_file: Path):
 
 
 def test_binary_read(content_file: Path):
-    @arc.command()
+    @arc.command
     def command(file: File.BinaryRead):
         return file, file.read()
 
@@ -64,7 +64,7 @@ def test_binary_read(content_file: Path):
 
 
 def test_write(content_file: Path):
-    @arc.command()
+    @arc.command
     def command(file: File.Write):
         file.write("test")
         return file
@@ -78,7 +78,7 @@ def test_write(content_file: Path):
 def test_stream():
     io = StringIO("value")
 
-    @arc.command()
+    @arc.command
     def command(contents: t.Annotated[Stream[str], Stream.Args(io)]):
         return contents.value
 
@@ -89,7 +89,7 @@ def test_stream():
 def test_stream_conversion():
     io = StringIO("1")
 
-    @arc.command()
+    @arc.command
     def command(contents: t.Annotated[Stream[int], Stream.Args(io)]):
         return contents.value
 

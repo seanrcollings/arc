@@ -13,7 +13,7 @@ import arc
 # print to the screen.
 # arc.configure(enviroment="development")
 
-@arc.command()
+@arc.command
 def command(ctx: Context):
     ctx.logger.info('hello there!')
 
@@ -38,7 +38,7 @@ Spice up your script's output with some color! Implements both the basic ANSI-16
 import arc
 from arc import color
 
-@arc.command()
+@arc.command
 def command():
     arc.print(f"{color.fg.RED}This will be in red!{color.effects.CLEAR}")
 

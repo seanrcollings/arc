@@ -1,7 +1,7 @@
 import arc
 
 
-@arc.command()
+@arc.command
 def command(name: str = arc.Argument()):
     arc.print(f"Good morning {name}")
 
