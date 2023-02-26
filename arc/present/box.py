@@ -95,7 +95,7 @@ class Box:
                 self.border["corner"][f"{side}_left"],
                 self.border["horizontal"] * (width - 2),
                 self.border["corner"][f"{side}_right"],
-                color.effects.CLEAR,
+                color.fx.CLEAR,
             )
         )
 
@@ -107,9 +107,9 @@ class Box:
     ):
         cleaned = cleaned or line
         formatted = (
-            f"{self.__color}{self.border['vertical']}{color.effects.CLEAR}"
+            f"{self.__color}{self.border['vertical']}{color.fx.CLEAR}"
             f"{cleaned:{self.__justify}{width - 2}}"
-            f"{self.__color}{self.border['vertical']}{color.effects.CLEAR}\n"
+            f"{self.__color}{self.border['vertical']}{color.fx.CLEAR}\n"
         )
 
         if line == "":

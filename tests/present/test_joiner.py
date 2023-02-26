@@ -1,5 +1,5 @@
 from arc.present.helpers import Joiner
-from arc.color import colorize, fg, bg, effects
+from arc.color import colorize, fg, bg, fx
 
 
 class TestJoin:

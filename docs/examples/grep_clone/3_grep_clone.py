@@ -11,7 +11,7 @@ def grep(pattern: re.Pattern, files: list[File.Read]):
             if match := pattern.search(line):  # check for a match
                 # If there is a match, highlight it
                 colored = pattern.sub(
-                    color.fg.RED + match.group() + color.effects.CLEAR,
+                    color.fg.RED + match.group() + color.fx.CLEAR,
                     line,
                 )
                 arc.print(colored, end="")

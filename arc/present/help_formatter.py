@@ -5,7 +5,7 @@ import typing as t
 import textwrap
 from arc import constants
 
-from arc.color import colorize, fg, effects
+from arc.color import colorize, fg, fx
 from arc.config import config
 from arc.present.helpers import Joiner
 from arc.present.formatters import TextFormatter
@@ -67,7 +67,7 @@ class HelpFormatter(TextFormatter):
                 self.write_text(paragraphize(body))
 
     def write_heading(self, heading: str):
-        super().write_heading(colorize(heading.upper(), effects.BOLD))
+        super().write_heading(colorize(heading.upper(), fx.BOLD))
 
     def write_usage(self):
         command = self.command
@@ -87,7 +87,7 @@ class HelpFormatter(TextFormatter):
                         Joiner.with_space(
                             [
                                 colorize(command.root.name, config.brand_color),
-                                colorize("<subcommand>", effects.UNDERLINE),
+                                colorize("<subcommand>", fx.UNDERLINE),
                                 "[ARGUMENTS ...]",
                             ],
                             remove_falsey=True,
@@ -97,7 +97,7 @@ class HelpFormatter(TextFormatter):
                 params_str = self.usage_params(self.key_params, self.argument_params)
                 fullname = self.doc.fullname
                 path = " ".join(fullname[0:-1]) if fullname else ""
-                name = colorize(fullname[-1], effects.UNDERLINE) if fullname else ""
+                name = colorize(fullname[-1], fx.UNDERLINE) if fullname else ""
 
                 if not command.is_namespace:
                     self.write_text(
@@ -121,7 +121,7 @@ class HelpFormatter(TextFormatter):
                                 colorize(command.root.name, config.brand_color),
                                 path,
                                 name,
-                                colorize("<subcommand>", effects.UNDERLINE),
+                                colorize("<subcommand>", fx.UNDERLINE),
                                 "[ARGUMENTS ...]",
                             ],
                             remove_falsey=True,

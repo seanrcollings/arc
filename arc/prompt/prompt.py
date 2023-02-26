@@ -2,7 +2,7 @@ from typing import Any, TypeVar
 from getpass import getpass
 
 import arc
-from arc.color import fg, effects
+from arc.color import fg, fx
 from arc.context import Context
 from .helpers import write, PREVIOUS_LINE, clear_line
 from .questions import Question, QuestionError, ConfirmQuestion, InputQuestion
@@ -139,7 +139,7 @@ class Prompt:
 
     def beautify(self, message: str, color: str = "", emoji: str = "", **kwargs):
         arc.print(
-            self.colored(color) + self.emoji(emoji) + message + effects.CLEAR, **kwargs
+            self.colored(color) + self.emoji(emoji) + message + fx.CLEAR, **kwargs
         )
 
     def error(self, message: str, **kwargs):

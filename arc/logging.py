@@ -1,5 +1,5 @@
 import logging
-from arc.color import colorize, effects, bg, fg
+from arc.color import colorize, fx, bg, fg
 
 DEBUG = logging.DEBUG
 INFO = logging.INFO
@@ -22,7 +22,7 @@ class ArcFormatter(logging.Formatter):
         record.levelname = colorize(
             f" {record.levelname:^8} ",
             self.level_color[record.levelno],
-            effects.BOLD,
+            fx.BOLD,
             fg.BLACK,
         )
         record.name = colorize(f"{record.name:^5}", bg.GREY)

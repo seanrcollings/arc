@@ -4,7 +4,7 @@ import itertools
 import typing as t
 
 from arc.errors import ArcError
-from arc.color import colorize, effects, fg
+from arc.color import colorize, fx, fg
 from arc.present.ansi import Ansi
 from arc.present import drawing
 
@@ -65,7 +65,7 @@ def _format_cell(value: t.Any):
 
 
 def _format_header_cell(value: t.Any):
-    return colorize(str(value), effects.BOLD)
+    return colorize(str(value), fx.BOLD)
 
 
 def _format_bool(val: bool):
@@ -93,7 +93,7 @@ class Table:
     t.add_row(["Jonathen Joestar", 20, "-"])
     t.add_row(["Joseph Joestar", 18, "Hermit Purple (in Part 3)"])
     t.add_row(["Jotaro Kujo", 18, "Star Platinum"])
-    t.add_row(["Josuke Higashikata", 16, "Crazy Diamon"])
+    t.add_row(["Josuke Higashikata", 16, "Crazy Diamond"])
     t.add_row(["Giorno Giovanna", 15, "Gold Experience"])
     t.add_row(["Joylene Kujo", 19, "Stone Free"])
 
@@ -109,7 +109,7 @@ class Table:
     │ Jonathen Joestar   │ 20  │ -                         │
     │ Joseph Joestar     │ 18  │ Hermit Purple (in Part 3) │
     │ Jotaro Kujo        │ 18  │ Star Platinum             │
-    │ Josuke Higashikata │ 16  │ Crazy Diamon              │
+    │ Josuke Higashikata │ 16  │ Crazy Diamond             │
     │ Giorno Giovanna    │ 15  │ Gold Experience           │
     │ Joylene Kujo       │ 19  │ Stone Free                │
     └────────────────────┴─────┴───────────────────────────┘

@@ -1,6 +1,6 @@
 from __future__ import annotations
 import arc
-from arc.color import fg, effects
+from arc.color import fg, fx
 
 RGB = tuple[int, int, int]
 
@@ -31,7 +31,7 @@ class Transiton(Styler):
         r = int((1.0 - p) * r1 + p * r2 + 0.5)
         g = int((1.0 - p) * g1 + p * g2 + 0.5)
         b = int((1.0 - p) * b1 + p * b2 + 0.5)
-        return f"{fg.rgb(r, g, b)}{string}{effects.CLEAR}"
+        return f"{fg.rgb(r, g, b)}{string}{fx.CLEAR}"
 
 
 class Loader:
@@ -120,7 +120,7 @@ class RectangleLoader(BarLoader):
 
 class Pacman(Loader):
     FULL = "-"
-    EMPTY = f"{fg.GREY} o {effects.CLEAR}"
+    EMPTY = f"{fg.GREY} o {fx.CLEAR}"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -136,10 +136,7 @@ class Pacman(Loader):
         )
 
     def pacman(self):
-        return (
-            f"{fg.YELLOW}{effects.BOLD}"
-            f"{'C' if self.mouth_open else 'c'}{effects.CLEAR}"
-        )
+        return f"{fg.YELLOW}{fx.BOLD}" f"{'C' if self.mouth_open else 'c'}{fx.CLEAR}"
 
     def update(self, value):
         self.mouth_open = not self.mouth_open

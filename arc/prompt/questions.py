@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, Union
-from arc.color import fg, effects
+from arc.color import fg, fx
 from arc import errors
 
 T = TypeVar("T")
@@ -173,13 +173,12 @@ class ConfirmQuestion(Question[bool]):
     }
 
     def render(self) -> str:
-        return f"{self.desc} [{fg.GREEN}Y{effects.CLEAR}/{fg.RED}N{effects.CLEAR}] "
+        return f"{self.desc} [{fg.GREEN}Y{fx.CLEAR}/{fg.RED}N{fx.CLEAR}] "
 
     def handle_answer(self, answer: str) -> bool:
         if answer.lower() in self.result:
             return self.result[answer.lower()]
 
         raise QuestionError(
-            "Not valid, please enter "
-            f"{fg.GREEN}y{effects.CLEAR} or {fg.RED}n{effects.CLEAR}",
+            "Not valid, please enter " f"{fg.GREEN}y{fx.CLEAR} or {fg.RED}n{fx.CLEAR}",
         )
