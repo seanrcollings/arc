@@ -5,7 +5,7 @@ import sys
 
 from arc.color import colorize, fg
 from arc.present.ansi import Ansi
-from arc.present.helpers import Joiner
+from arc.present.joiner import Joiner
 
 if t.TYPE_CHECKING:
     from arc.define.command import Command

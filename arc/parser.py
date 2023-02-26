@@ -13,7 +13,7 @@ from arc.autocompletions import completions
 from arc.color import fg
 from arc.config import config
 from arc.context import Context
-from arc.present.helpers import Joiner
+from arc.present.joiner import Joiner
 from arc.utils import safe_issubclass
 
 if t.TYPE_CHECKING:

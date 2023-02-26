@@ -4,7 +4,7 @@ import os
 import enum
 import dataclasses as dc
 from arc import errors
-from arc.present.helpers import Joiner
+from arc.present.joiner import Joiner
 
 if t.TYPE_CHECKING:
     from arc.context import Context

@@ -17,7 +17,7 @@ from arc import errors, utils
 from arc import autocompletions
 from arc.autocompletions import Completion, CompletionInfo, CompletionType
 from arc.color import colorize, fg
-from arc.present.helpers import Joiner
+from arc.present.joiner import Joiner
 from arc.types.helpers import (
     safe_issubclass,
     convert_type,

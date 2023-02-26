@@ -1,4 +1,4 @@
-from arc.present.helpers import Joiner
+from arc.present.joiner import Joiner
 from arc.color import colorize, fg, bg, fx
 
 

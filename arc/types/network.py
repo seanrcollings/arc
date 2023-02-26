@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 import typing as t
 
 from arc import errors
-from arc.present.helpers import Joiner
+from arc.present.joiner import Joiner
 
 __all__ = [
     "IPAddress",

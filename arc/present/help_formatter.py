@@ -7,7 +7,7 @@ from arc import constants
 
 from arc.color import colorize, fg, fx
 from arc.config import config
-from arc.present.helpers import Joiner
+from arc.present.joiner import Joiner
 from arc.present.formatters import TextFormatter
 from arc.present.ansi import Ansi
 

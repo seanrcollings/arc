@@ -2,6 +2,6 @@
 # from .table import Table
 # from .box import Box
 # from .loaders import BarLoader, RectangleLoader, Pacman, SlantLoader
-from .helpers import Joiner
-from .ansi import Ansi
+from .joiner import Joiner
+from .ansi import Ansi, fg, bg, fx, colorize
 from .out import print, err, info, usage
