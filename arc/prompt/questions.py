@@ -1,91 +1,132 @@
+import typing as t
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, Union
-from arc.color import fg, effects
+
+import arc
 from arc import errors
+from arc.present.helpers import Joiner
 
-T = TypeVar("T")
-
-__all__ = [
-    "Question",
-    "InputQuestion",
-    "MultipleChoiceQuestion",
-    "RangeQuestion",
-    "ConfirmQuestion",
-]
-
-
-def is_int(f):
-    """Asserts that the given answer is a number.
-    If it is a number, cast to an int and call
-    the decorated function.
-    """
-
-    def wrapper(inst, answer: str, *args, **kwargs):
-        if not answer.isnumeric():
-            raise QuestionError("Input must be a number")
-
-        return f(inst, int(answer), *args, **kwargs)
-
-    return wrapper
-
-
-def is_list(f):
-    """Splits the answer on commas"""
-
-    def wrapper(inst, answer: str, *args, **kwargs):
-        return f(inst, list(a.strip() for a in answer.split(",")), *args, **kwargs)
-
-    return wrapper
+T = t.TypeVar("T")
+C = t.TypeVar("C")
 
 
 class QuestionError(errors.ArcError):
     ...
 
 
-class Question(ABC, Generic[T]):
-    multi_line = True
-    sensitive = False
-    """Sensitive questions are those  who's answer
-    shouldn't be echoed to the terminal like passwords"""
-
-    def __init__(self, desc: str):
-        self.desc = desc
+class Question(ABC, t.Generic[T]):
+    def err(self, error: str) -> t.NoReturn:
+        raise QuestionError(error)
 
     @abstractmethod
-    def render(self) -> str:
-        """Returns a string repersentation of the question"""
+    def render(self) -> t.Iterable[str]:
+        ...
+
+
+class StandardQuestion(Question[T], ABC):
+    def __init__(self, echo: bool = True) -> None:
+        self.echo = echo
 
     @abstractmethod
-    def handle_answer(self, answer: str) -> T:
-        """Handles the user's input for the question"""
+    def handle_answer(self, value: str) -> T:
+        ...
 
 
-class InputQuestion(Question):
+class InputQuestion(StandardQuestion[T]):
     def __init__(
         self,
-        desc: str,
-        empty: bool = True,
-        sensitive: bool = False,
-        multi_line: bool = False,
-    ):
-        super().__init__(desc)
-        self.empty = empty
-        self.sensitive = sensitive
-        self.multi_line = multi_line
+        prompt: str,
+        convert: type[T] = str,  # type: ignore
+        *,
+        default: T | None = None,
+        echo: bool = True,
+    ) -> None:
+        super().__init__(echo)
+        self.prompt = prompt
+        self.convert_to = convert
+        self.default = default
 
-    def render(self) -> str:
-        return self.desc
+    @property
+    def required(self):
+        return self.default is None
 
-    def handle_answer(self, answer: str):
-        if not self.empty and len(answer) == 0:
-            raise QuestionError("Cannot be blank")
-        return answer
+    def render(self):
+        yield self.prompt
+
+    def handle_answer(self, value: str) -> T:
+        self.test_required(value)
+        return self.convert(value, self.convert_to)
+
+    def convert(self, value: str, type: type[C]) -> C:
+        try:
+            return arc.convert(value, type)
+        except errors.ConversionError as e:
+            self.err(str(e))
+
+    def test_required(self, value: str):
+        if not value and self.required:
+            self.err("Cannot be blank")
 
 
-MultipleReturn = Union[tuple[int, str], list[tuple[int, str]]]
+class RangeQuestion(InputQuestion[int]):
+    """Question for a number in a given range"""
+
+    def __init__(self, prompt: str, min: int, max: int, **kwargs):
+        """
+        Args:
+            min: the smallest number possible
+            max: the largest  number possible
+        """
+        super().__init__(prompt, convert=int, **kwargs)
+        self.min = min
+        self.max = max
+
+    def handle_answer(self, answer: str) -> int:
+        val = super().handle_answer(answer)
+
+        if val < self.min or val > self.max:
+            self.err(f"Must be between {self.min} and {self.max}")
+
+        return val
 
 
-class MultipleChoiceQuestion(Question[MultipleReturn]):
+class MappedInputQuestion(InputQuestion[T]):
+    def __init__(
+        self,
+        prompt: str,
+        mapping: t.Mapping[str, T],
+        **kwargs,
+    ) -> None:
+        super().__init__(prompt, **kwargs)
+        self.mapping = mapping
+
+    def handle_answer(self, answer: str) -> T:
+        self.test_required(answer)
+
+        if answer.lower() in self.mapping:
+            return self.mapping[answer.lower()]
+
+        self.err(
+            f"Please enter {Joiner.with_or(list(self.mapping.keys()))}",
+        )
+
+
+class ConfirmQuestion(MappedInputQuestion[bool]):
+    """Question to get a yes / no from the user"""
+
+    def __init__(self, prompt: str, **kwargs) -> None:
+        super().__init__(
+            prompt,
+            mapping={
+                "y": True,
+                "yes": True,
+                "n": False,
+                "no": False,
+            },
+            **kwargs,
+        )
+
+
+class MultipleChoiceQuestion(InputQuestion[tuple[int, str]]):
     """Question with multiple possible options
 
     ```
@@ -94,92 +135,45 @@ class MultipleChoiceQuestion(Question[MultipleReturn]):
     [1] Option 2
     [3] Option 3
     ```
-
-    if `multiple_answer = True`, the user can choose multiple options (1,2,3)
     """
 
-    def __init__(self, desc: str, choices: list[str], multiple_answer: bool = False):
-        super().__init__(desc)
+    def __init__(self, prompt: str, choices: list[str], **kwargs):
+        super().__init__(prompt, **kwargs)
         self.choices = choices
-        self.multiple_answer = multiple_answer
 
-    def render(self) -> str:
-        choices = "\n".join(
-            f"[{idx}] {choice}" for idx, choice in enumerate(self.choices)
-        )
+    def render(self):
+        yield self.prompt + "\n"
 
-        return self.desc + "\n" + choices + self._render_multiple_answer()
+        for idx, choice in enumerate(self.choices):
+            yield f"[{idx}] {choice}\n"
 
-    def _render_multiple_answer(self) -> str:
-        if not self.multiple_answer:
-            return ""
+        yield "> "
 
-        return "\nMultiple answers can be selected (i.e: 1,2,3)"
+    def handle_answer(self, answer: str) -> tuple[int, str]:
+        self.test_required(answer)
+        val = self.convert(answer, int)
 
-    def handle_answer(self, answer: str):
-        if self.multiple_answer:
-            return self._handle_multiple_answer(answer)
-        return self._handle_single_answer(answer)
+        if val < 0 or val >= len(self.choices):
+            self.err("Input not in range")
 
-    @is_int
-    def _handle_single_answer(self, answer: int):
-        if answer >= len(self.choices):
-            raise QuestionError("Input not in range")
-
-        return (answer, self.choices[answer])
-
-    @is_list
-    def _handle_multiple_answer(self, answer: list[str]):
-        return list(self._handle_single_answer(a) for a in answer)
+        return val, self.choices[val]
 
 
-class RangeQuestion(Question[int]):
-    """Question for a number in a given range"""
+class RawQuestion(Question[T]):
+    def __init__(self) -> None:
+        self.is_done = False
+        self.result: T | None = None
+        self.update_occured = False
 
-    def __init__(self, desc: str, min: int, max: int):
-        """
-        Args:
-            min: the smallest number possible
-            max: the largest  number possible
-        """
-        super().__init__(desc)
-        self.min = min
-        self.max = max
+    def on_key(self, key: str):
+        ...
 
-    def render(self) -> str:
-        return f"Pick a number between {self.min} and {self.max}"
+    def on_line(self, line: str):
+        ...
 
-    @is_int
-    def handle_answer(self, answer: int):
-        if answer < self.min or answer > self.max:
-            raise QuestionError("Input not in range")
+    def on_done(self, content: str):
+        ...
 
-        return answer
-
-
-class ConfirmQuestion(Question[bool]):
-    """Question to get a yes / no from the user
-
-    `confirm()` is an alias for asking this question
-    """
-
-    multi_line = False
-
-    result = {
-        "y": True,
-        "yes": True,
-        "n": False,
-        "no": False,
-    }
-
-    def render(self) -> str:
-        return f"{self.desc} [{fg.GREEN}Y{effects.CLEAR}/{fg.RED}N{effects.CLEAR}] "
-
-    def handle_answer(self, answer: str) -> bool:
-        if answer.lower() in self.result:
-            return self.result[answer.lower()]
-
-        raise QuestionError(
-            "Not valid, please enter "
-            f"{fg.GREEN}y{effects.CLEAR} or {fg.RED}n{effects.CLEAR}",
-        )
+    def done(self, value: T | None = None):
+        self.is_done = True
+        self.result = value

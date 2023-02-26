@@ -1,12 +1,14 @@
-from typing import Literal
+import typing as t
+from contextlib import contextmanager
+import re
 import sys
 import tty
 import termios
 
-PREVIOUS_LINE = "\033[F"
+T = t.TypeVar("T")
 
 
-def clear_line(amount: Literal["all", "before", "after"] = "all"):
+def clear_line(amount: t.Literal["all", "before", "after"] = "all"):
     if amount == "all":
         num = 2
     elif amount == "before":
@@ -28,6 +30,27 @@ def getch():
     ch = sys.stdin.read(1)
     termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
     return ch
+
+
+class RawTerminal:
+    __raw: bool = False
+    __old_settings: list
+
+    def __enter__(self):
+        fd = sys.stdin.fileno()
+        self.__old_settings = termios.tcgetattr(fd)
+        tty.setraw(sys.stdin.fileno())
+        self.__raw = True
+        return self
+
+    def __exit__(self, *args):
+        fd = sys.stdin.fileno()
+        self.__raw = False
+        termios.tcsetattr(fd, termios.TCSADRAIN, self.__old_settings)
+
+    def getch(self):
+        assert self.__raw, "Cannot getch() when not in raw mode"
+        return sys.stdin.read(1)
 
 
 class Cursor:
@@ -56,48 +79,78 @@ class Cursor:
         sys.stdout.write(f"\x1b[{val}F")
 
     @staticmethod
-    def pos(x: int, y: int):
-        sys.stdout.write(f"\x1b[{y};{x}H")
+    def getpos() -> tuple[int, int]:
+        sys.stdout.write(f"\x1b[6n")
+        sys.stdout.flush()
+        with RawTerminal() as term:
+            seq = term.getch()
+            while seq[-1] != "R":
+                seq += term.getch()
+
+        match = re.match(r"\x1b\[(\d+);(\d+)R", seq)
+        if not match:
+            raise RuntimeError("Could not match position string returned")
+        return t.cast(tuple[int, int], tuple(int(v) for v in match.groups()))
+
+    @staticmethod
+    def setpos(row: int, col: int):
+        sys.stdout.write(f"\x1b[{row};{col}H")
+
+    @staticmethod
+    def save():
+        sys.stdout.write(f"\033[s")
+        sys.stdout.flush()
+
+    @staticmethod
+    def restore():
+        sys.stdout.write(f"\033[u")
+        sys.stdout.flush()
 
     @staticmethod
     def show():
         sys.stdout.write("\x1b[?25h")
 
-    class __HideContextManager:
-        def __enter__(self):
-            return self
+    # class __HideContextManager:
+    #     def __enter__(self):
+    #         return self
 
-        def __exit__(self, _exc_type, _exc_val, _exc_tb):
-            Cursor.show()
+    #     def __exit__(self, _exc_type, _exc_val, _exc_tb):
+    #         Cursor.show()
 
-    _hidectx = __HideContextManager()
+    # _hidectx = __HideContextManager()
 
+    @contextmanager
     @staticmethod
     def hide():
-        sys.stdout.write("\x1b[?25l")
-        return Cursor._hidectx
+        try:
+            sys.stdout.write("\x1b[?25l")
+            yield
+        finally:
+            Cursor.show()
 
 
-class State:
+class State(t.Generic[T]):
     public_name: str
     private_name: str
 
-    def __set_name__(self, owner, name):
+    def __init__(self, initial_value: T | None = None) -> None:
+        self._initial_value: T | None = initial_value
+
+    def __set_name__(self, _owner, name):
         self.public_name = name
         self.private_name = "_" + name
 
-    def __get__(self, instance, owner):
-        return getattr(instance, self.private_name)
+    def __get__(self, instance, _owner) -> T:
+        return getattr(instance, self.private_name, self._initial_value)
 
-    def __set__(self, instance, value):
-        if instance.should_update(getattr(instance, self.private_name, None), value):
-            setattr(instance, self.private_name, value)
-            instance.queue_update(self)
-        else:
-            setattr(instance, self.private_name, value)
+    def __set__(self, instance, value: T):
+        setattr(instance, self.private_name, value)
+        setattr(instance, "update_occured", True)
 
 
 ARROW_UP = "\x1b[A"
 ARROW_DOWN = "\x1b[B"
 ESCAPE = "\x1b"
 CTRL_C = "\x03"
+BACKSPACE = "\x7f"
+PREVIOUS_LINE = "\033[F"
