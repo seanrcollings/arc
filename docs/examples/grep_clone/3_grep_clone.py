@@ -4,7 +4,7 @@ from arc import color
 from arc.types import File
 
 
-@arc.command()
+@arc.command
 def grep(pattern: re.Pattern, files: list[File.Read]):
     for file in files:  # Iterate over all the files
         for line in file.readlines():  # Iterate over all the line in the file

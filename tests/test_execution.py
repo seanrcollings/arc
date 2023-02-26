@@ -3,19 +3,19 @@ import arc
 
 class TestNestedExecution:
     def test_sub_execution(self):
-        @arc.command()
+        @arc.command
         def command():
             ...
 
-        @command.subcommand()
+        @command.subcommand
         def sub1(ctx: arc.Context):
             return ctx.execute(sub2)
 
-        @command.subcommand()
+        @command.subcommand
         def sub2(val: int = 1):
             return val
 
-        @command.subcommand()
+        @command.subcommand
         def sub3(ctx: arc.Context):
             return ctx.execute(sub2, val=10)
 
@@ -24,11 +24,11 @@ class TestNestedExecution:
         assert command("sub3") == 10
 
     def test_group_execution(self):
-        @arc.command()
+        @arc.command
         def command():
             ...
 
-        @command.subcommand()
+        @command.subcommand
         def sub1(ctx: arc.Context):
             return ctx.execute(sub2, val=10)
 
@@ -36,7 +36,7 @@ class TestNestedExecution:
         class Group:
             val: int = 1
 
-        @command.subcommand()
+        @command.subcommand
         def sub2(group: Group):
             return group.val
 

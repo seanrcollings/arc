@@ -21,7 +21,7 @@ class Log:
     arc.configure(environment="development")
 
 
-    @arc.command()
+    @arc.command
     def command(
         val: t.Annotated[int, Log()],
         flag_name: t.Annotated[bool, Log()],

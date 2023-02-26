@@ -93,7 +93,7 @@ def group(
     class MyGroup():
         name: str
 
-    @arc.command()
+    @arc.command
     def command(group: MyGroup):
         print(group.name)
 

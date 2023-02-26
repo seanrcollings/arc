@@ -17,7 +17,7 @@ def greater_than_previous(value: types.SemVer, ctx: arc.Context):
 NewVersion = t.Annotated[types.SemVer, greater_than_previous]
 
 
-@arc.command()
+@arc.command
 def command(version: NewVersion):
     print(version)
 

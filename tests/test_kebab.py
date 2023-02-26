@@ -6,7 +6,7 @@ import arc
 def test_transform():
     command = arc.namespace("command")
 
-    @command.subcommand()
+    @command.subcommand
     def two_words(*, first_name: str = "", other_arg: str = ""):
         return first_name
 
@@ -26,7 +26,7 @@ def test_disable_transform():
 
         command = arc.namespace("command")
 
-        @command.subcommand()
+        @command.subcommand
         def two_words(*, first_name: str = "", other_arg: str = ""):
             return first_name
 

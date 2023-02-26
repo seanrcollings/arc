@@ -18,11 +18,11 @@ def cli():
 
 
 def test_parent_state(cli: arc.Command):
-    @cli.subcommand()
+    @cli.subcommand
     def parent_state(val: int, state: State):
         return val, state
 
-    @cli.subcommand()
+    @cli.subcommand
     def ignore_parent_state(val: int):
         return val
 
@@ -36,7 +36,7 @@ def test_custom_state(cli: arc.Command):
     class CustomState(State):
         ...
 
-    @cli.subcommand()
+    @cli.subcommand
     def custom(state: CustomState):
         return state
 
@@ -46,7 +46,7 @@ def test_custom_state(cli: arc.Command):
 
 
 def test_override(cli: arc.Command):
-    @cli.subcommand()
+    @cli.subcommand
     def override(*, state: State):
         ...
 
@@ -55,12 +55,12 @@ def test_override(cli: arc.Command):
 
 
 def test_state_retained(cli: arc.Command):
-    @cli.subcommand()
+    @cli.subcommand
     def c1(ctx: Context, state: State):
         state.val = 2
         return ctx.execute(c2)
 
-    @cli.subcommand()
+    @cli.subcommand
     def c2(state: State):
         return state
 

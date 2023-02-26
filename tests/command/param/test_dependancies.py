@@ -12,7 +12,7 @@ class DependableType:
 
 class TestTypeDependancies:
     def test_depends(self):
-        @arc.command()
+        @arc.command
         def command(val: DependableType):
             return val
 
@@ -22,18 +22,18 @@ class TestTypeDependancies:
     def test_no_default(self):
         with pytest.raises(errors.ParamError):
 
-            @arc.command()
+            @arc.command
             def command(val: DependableType = arc.Argument()):
                 return val
 
         with pytest.raises(errors.ParamError):
 
-            @arc.command()
+            @arc.command
             def command(val: DependableType = 1):  # type: ignore
                 return val
 
     def test_annotation(self):
-        @arc.command()
+        @arc.command
         def command(val: Annotated[DependableType, 1]):
             return val
 
@@ -50,7 +50,7 @@ def dep2(ctx):
 
 class TestParamDependancies:
     def test_depends(self):
-        @arc.command()
+        @arc.command
         def command(val=arc.Depends(dep1)):
             return val
 
@@ -61,7 +61,7 @@ class TestParamDependancies:
             command("val")
 
     def test_multiple_depends(self):
-        @arc.command()
+        @arc.command
         def command(val=arc.Depends(dep1), val2=arc.Depends(dep2)):
             return val, val2
 

@@ -17,7 +17,7 @@ class ContextManager:
         return cls(value)
 
 
-@arc.command()
+@arc.command
 def command(val: ContextManager):
     arc.print(val)
 

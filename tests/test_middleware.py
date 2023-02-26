@@ -3,7 +3,7 @@ from arc.context import Context
 
 
 def test_install():
-    @arc.command()
+    @arc.command
     def command(ctx: Context):
         return ctx
 
@@ -15,7 +15,7 @@ def test_install():
 
 
 def test_ctx():
-    @arc.command()
+    @arc.command
     def command(ctx: Context):
         return ctx
 
@@ -27,7 +27,7 @@ def test_ctx():
 
 
 def test_replace_ctx():
-    @arc.command()
+    @arc.command
     def command(ctx: Context):
         return ctx
 
@@ -39,7 +39,7 @@ def test_replace_ctx():
 
 
 def test_yield():
-    @arc.command()
+    @arc.command
     def command(ctx: Context):
         return ctx
 
@@ -56,7 +56,7 @@ def test_yield():
 
 
 def test_yield_results():
-    @arc.command()
+    @arc.command
     def command(ctx: Context):
         return 2
 
@@ -69,7 +69,7 @@ def test_yield_results():
 
 
 def test_overwrite_result():
-    @arc.command()
+    @arc.command
     def command(ctx: Context):
         return 2
 

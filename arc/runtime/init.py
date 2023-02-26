@@ -21,24 +21,6 @@ if t.TYPE_CHECKING:
     from arc.define import Command
 
 
-class InitChecksMiddleware(MiddlewareBase):
-    def __call__(self, ctx: Context):
-        root: Command = ctx["arc.root"]
-
-        param_count = len(
-            [
-                param
-                for param in root.params
-                if param.argument_name not in ("help", "version", "autocomplete")
-            ]
-        )
-
-        if root.subcommands and param_count != 0:
-            ctx.logger.warning(
-                "Top-level commands should not have any arguments defined. Consider removing them"
-            )
-
-
 class AddUsageErrorInfoMiddleware(MiddlewareBase):
     """A utility middleware that catches `UsageError`s and adds information so they can generate a usage error
 
@@ -91,9 +73,28 @@ class CommandFinderMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context):
         args: list[str] = ctx["arc.input"]
         root: Command = ctx["arc.root"]
-        command, command_args = root.split_args(args)
+        command, command_args = self.split_args(root, args)
         ctx["arc.command"] = command
         ctx["arc.input"] = command_args
+
+    def split_args(self, root: Command, args: list[str]) -> tuple[Command, list[str]]:
+        """Seperates out a sequence of args into:
+        - a subcommand object
+        - command arguments
+        """
+        index = 0
+        command: Command = root
+
+        for value in args:
+            if value in command.subcommands:
+                index += 1
+                command = command.subcommands.get(value)
+            else:
+                break
+
+        command_args: list[str] = args[index:]
+
+        return command, command_args
 
 
 class ArgParseMiddleware(MiddlewareBase):

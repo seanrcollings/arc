@@ -3,7 +3,7 @@ import arc
 ns = arc.namespace("ns")
 
 
-@ns.subcommand()
+@ns.subcommand
 def sub():
     arc.print("Namespace Example")
 

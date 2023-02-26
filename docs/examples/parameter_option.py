@@ -1,7 +1,7 @@
 import arc
 
 
-@arc.command()
+@arc.command
 def hello(*, firstname: str, lastname: str | None):
     name = firstname
     if lastname:

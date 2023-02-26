@@ -16,7 +16,7 @@ class CustomType:
             raise arc.ConversionError(value, "must be an integer")
 
 
-@arc.command()
+@arc.command
 def main(foo: CustomType):
     arc.print(foo)
 

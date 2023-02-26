@@ -1,7 +1,7 @@
 import arc
 
 
-@arc.command()
+@arc.command
 def command():
     """Description for the command. It may
     spread over multiple lines.

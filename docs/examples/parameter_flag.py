@@ -1,7 +1,7 @@
 import arc
 
 
-@arc.command()
+@arc.command
 def hello(firstname: str, reverse: bool):
     if reverse:
         firstname = firstname[::-1]

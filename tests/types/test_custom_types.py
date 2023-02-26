@@ -12,7 +12,7 @@ def test_convert():
         def __convert__(cls, value):
             return cls(value)
 
-    @arc.command()
+    @arc.command
     def command(val: TestType):
         return val
 
@@ -27,7 +27,7 @@ def test_convert():
 
 #     with pytest.raises(errors.ParamError):
 
-#         @arc.command()
+#         @arc.command
 #         def c1(val: NoConvert):
 #             return val
 
@@ -51,7 +51,7 @@ def test_cleanup():
             assert self.value == "2"
             raise CleanupError()
 
-    @arc.command()
+    @arc.command
     def c(val: TestType):
         return val
 

@@ -2,7 +2,7 @@ import arc
 
 
 def test_count():
-    @arc.command()
+    @arc.command
     def command(flag: int = arc.Count()):
         return flag
 

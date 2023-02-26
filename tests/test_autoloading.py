@@ -12,7 +12,7 @@ def autoload_path(tmp_path_factory: pytest.TempPathFactory):
             """
 import arc
 
-@arc.command()
+@arc.command
 def test():
     return 2
 
@@ -22,7 +22,7 @@ def test():
 
 
 def test_autoload(autoload_path: Path):
-    @arc.command()
+    @arc.command
     def command():
         ...
 
@@ -33,11 +33,11 @@ def test_autoload(autoload_path: Path):
 def test_overwrite_allowed(autoload_path: Path):
     arc.configure(autoload_overwrite=True)
 
-    @arc.command()
+    @arc.command
     def command():
         ...
 
-    @command.subcommand()
+    @command.subcommand
     def test():
         return 1
 
@@ -48,11 +48,11 @@ def test_overwrite_allowed(autoload_path: Path):
 def test_overwrite_disallowed(autoload_path: Path):
     arc.configure(autoload_overwrite=False)
 
-    @arc.command()
+    @arc.command
     def command():
         ...
 
-    @command.subcommand()
+    @command.subcommand
     def test():
         ...
 

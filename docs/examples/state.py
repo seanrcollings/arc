@@ -1,7 +1,7 @@
 import arc
 
 
-@arc.command()
+@arc.command
 def command(state: arc.State):
     # arc.State is a dict-like object, so it can be accessed
     # like a dictionary, or it can be accessed via attributes

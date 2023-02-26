@@ -7,7 +7,7 @@ def get_lines(string: str, from_line: int, to_line: int):
 
 
 def test_basic():
-    @arc.command()
+    @arc.command
     def command():
         ...
 
@@ -24,7 +24,7 @@ OPTIONS
 
 
 def test_description():
-    @arc.command()
+    @arc.command
     def command():
         """Here's a description"""
 
@@ -44,7 +44,7 @@ OPTIONS
 
 
 def test_advanced_parsing():
-    @arc.command()
+    @arc.command
     def command():
         """Here's a description
 
@@ -84,15 +84,15 @@ SECTION
 
 
 def test_subcommands():
-    @arc.command()
+    @arc.command
     def command():
         ...
 
-    @command.subcommand()
+    @command.subcommand
     def sub():
         ...
 
-    @sub.subcommand()
+    @sub.subcommand
     def sub2():
         ...
 
@@ -143,11 +143,11 @@ def test_namespace():
 
     ns = arc.namespace("ns", desc="ns description")
 
-    @ns.subcommand()
+    @ns.subcommand
     def command1():
         """command1 desc"""
 
-    @ns.subcommand()
+    @ns.subcommand
     def command2():
         """command2 desc"""
 
@@ -189,7 +189,7 @@ OPTIONS
 
 
 def test_argument_desc_in_definition():
-    @arc.command()
+    @arc.command
     def command(
         pos_req: int = arc.Argument(desc="positional required"),
         pos_opt: int = arc.Argument(desc="positional optional", default=1),
@@ -203,7 +203,7 @@ def test_argument_desc_in_definition():
 
 
 def test_argument_desc_in_docstring():
-    @arc.command()
+    @arc.command
     def command(
         pos_req: int,
         pos_opt: int = 1,
@@ -225,7 +225,7 @@ def test_argument_desc_in_docstring():
 
 
 def test_collections():
-    @arc.command()
+    @arc.command
     def command(
         val: list[int],
         val2: tuple[int, int],

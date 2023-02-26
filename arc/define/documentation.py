@@ -51,13 +51,7 @@ class Documentation:
 
     @property
     def fullname(self):
-        names = []
-        command = self.command
-        while command.parent:
-            names.append(command.name)
-            command = command.parent
-
-        return list(reversed(names))
+        return list(c.name for c in self.command.command_chain)[1:]
 
     @property
     def description(self) -> t.Optional[str]:

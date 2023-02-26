@@ -5,7 +5,7 @@ from arc import errors
 
 class TestArgumentDeclartion:
     def test_postional(self):
-        @arc.command()
+        @arc.command
         def command(name):
             return name
 
@@ -15,7 +15,7 @@ class TestArgumentDeclartion:
             command("")
 
     def test_param_info(self):
-        @arc.command()
+        @arc.command
         def command(name: str = arc.Argument()):
             return name
 
@@ -26,7 +26,7 @@ class TestArgumentDeclartion:
 
 
 def test_missing():
-    @arc.command()
+    @arc.command
     def command(val: list):
         return val
 
@@ -37,7 +37,7 @@ def test_missing():
 
 
 def test_ordering():
-    @arc.command()
+    @arc.command
     def command(val1, val2, val3, val4):
         return val1, val2, val3, val4
 
@@ -45,7 +45,7 @@ def test_ordering():
 
 
 def test_default():
-    @arc.command()
+    @arc.command
     def command(val="val"):
         return val
 
@@ -54,7 +54,7 @@ def test_default():
 
 
 def test_param_name():
-    @arc.command()
+    @arc.command
     def command(val=arc.Argument(name="different-name")):
         return val
 
@@ -62,7 +62,7 @@ def test_param_name():
 
 
 def test_colletions():
-    @arc.command()
+    @arc.command
     def command(val: tuple[int, int], val2: list[int]):
         return val, val2
 

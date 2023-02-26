@@ -78,7 +78,7 @@ Custom middleware can be added using the `@object.use` interface
 ### Init Middleware
 The add init middlewares to your application, you are required to construct the `App` object explicitly
 ```py
-@arc.command()
+@arc.command
 def command():
    ...
 
@@ -93,7 +93,7 @@ app()
 ### Exec Middleware
 Execution middlewares are registered with command's specifically.
 ```py
-@arc.command()
+@arc.command
 def command():
    ...
 

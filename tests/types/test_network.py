@@ -31,7 +31,7 @@ IPV6 = [
 class TestAddresses:
     @pytest.mark.parametrize("value", IPV4)
     def test_ipv4_success(self, value):
-        @arc.command()
+        @arc.command
         def command(address: ipaddress.IPv4Address):
             return address
 
@@ -39,7 +39,7 @@ class TestAddresses:
 
     @pytest.mark.parametrize("value", IPV6)
     def test_ipv6(self, value):
-        @arc.command()
+        @arc.command
         def command(address: ipaddress.IPv6Address):
             return address
 
@@ -51,7 +51,7 @@ class TestAddresses:
         + [(ip, ipaddress.IPv6Address) for ip in IPV6],  # type: ignore
     )
     def test_ip(self, value, cls):
-        @arc.command()
+        @arc.command
         def command(address: network.IPAddress):
             return address
 
@@ -151,7 +151,7 @@ class TestUrl:
     class TestUsage:
         @pytest.mark.parametrize("value", URLS)
         def test_url(self, value):
-            @arc.command()
+            @arc.command
             def command(url: network.Url):
                 return url
 
@@ -159,7 +159,7 @@ class TestUrl:
 
         @pytest.mark.parametrize("value", HTTP_URLS)
         def test_http_url(self, value):
-            @arc.command()
+            @arc.command
             def command(url: network.HttpUrl):
                 return url
 
@@ -167,7 +167,7 @@ class TestUrl:
 
         @pytest.mark.parametrize("value", POSTGRES_URLS)
         def test_psql_url(self, value):
-            @arc.command()
+            @arc.command
             def command(url: network.PostgresUrl):
                 return url
 

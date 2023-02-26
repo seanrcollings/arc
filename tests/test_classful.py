@@ -3,7 +3,7 @@ import arc
 
 
 def test_basic():
-    @arc.command()
+    @arc.command
     class command:
         def handle(self):
             return True
@@ -14,13 +14,13 @@ def test_basic():
 def test_no_handle():
     with pytest.raises(arc.errors.CommandError):
 
-        @arc.command()
+        @arc.command
         class command:
             ...
 
 
 def test_arguments():
-    @arc.command()
+    @arc.command
     class command:
         val: int
         opt: int = arc.Option()
@@ -33,7 +33,7 @@ def test_arguments():
 
 
 def test_other_methods():
-    @arc.command()
+    @arc.command
     class command:
         val: int
 

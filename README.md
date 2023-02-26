@@ -14,7 +14,7 @@ A tool for building declartive, and highly extendable CLI systems for Python 3.9
 ```py
 import arc
 
-@arc.command()
+@arc.command
 def hello(name: str):
     """My first arc program!"""
     arc.arc.print(f"Hello {name}!")

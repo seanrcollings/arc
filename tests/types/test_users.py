@@ -9,7 +9,7 @@ from arc import types, errors
 
 class TestUsage:
     def test_user(self):
-        @arc.command()
+        @arc.command
         def command(user: types.User):
             return user
 
@@ -19,7 +19,7 @@ class TestUsage:
             command("invalid")
 
     def test_group(self):
-        @arc.command()
+        @arc.command
         def command(user: types.Group):
             return user
 

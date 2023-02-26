@@ -7,7 +7,7 @@ class Group:
     val2: str
 
 
-@arc.command()
+@arc.command
 def command(group: Group):
     ...
 
