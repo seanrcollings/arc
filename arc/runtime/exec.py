@@ -10,7 +10,7 @@ from arc import typing as at
 from arc import utils
 from arc.config import Config
 from arc.context import Context
-from arc.present import Joiner
+from arc.present import Join
 from arc.color import fg, colorize
 from arc.prompt.prompts import input_prompt
 from arc.types.helpers import iscontextmanager
@@ -221,7 +221,7 @@ class MissingParamsCheckerMiddleware(MiddlewareBase):
         ]
 
         if missing:
-            params = Joiner.with_comma(
+            params = Join.with_comma(
                 (param.cli_name for param in missing), style=fg.YELLOW
             )
             raise arc.errors.MissingArgError(

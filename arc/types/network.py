@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 import typing as t
 
 from arc import errors
-from arc.present.joiner import Joiner
+from arc.present.joiner import Join
 
 __all__ = [
     "IPAddress",
@@ -26,7 +26,7 @@ class AllowedUrlProtocols:
     def __call__(self, value: Url) -> Url:
         if value.protocol not in self.allowed_protocols:
             raise errors.ValidationError(
-                f"protocol must be {Joiner.with_or(tuple(self.allowed_protocols))}"
+                f"protocol must be {Join.with_or(tuple(self.allowed_protocols))}"
             )
 
         return value

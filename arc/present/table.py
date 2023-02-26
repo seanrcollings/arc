@@ -86,7 +86,6 @@ class Table:
     """Display information in a table
 
     ```py
-    from arc.color import colorize, fg
     from arc.present.table import Table
 
     t = Table(["Name", "Age", "Stand"])
@@ -116,7 +115,12 @@ class Table:
     ```
     """
 
-    def __init__(self, columns: ColumnInput, default_formatting: bool = True) -> None:
+    def __init__(
+        self,
+        columns: ColumnInput,
+        rows: t.Sequence[t.Sequence[t.Any]] | None = None,
+        default_formatting: bool = True,
+    ) -> None:
         self.__columns: t.Sequence[Column] = self.__resolve_columns(columns)
         self.__rows: list[Row] = []
         self._border = drawing.borders["light"]
@@ -128,6 +132,8 @@ class Table:
         self._type_formatters: dict[type, TableFormatter] = (
             _DEFAULT_TYPE_FORMATTERS if default_formatting else {}
         )
+        if rows:
+            self.add_rows(rows)
 
     def __str__(self):
         for col in self.__columns:
@@ -158,6 +164,10 @@ class Table:
             resolved[col["name"]] = value
 
         self.__rows.append(resolved)
+
+    def add_rows(self, rows: t.Sequence[t.Sequence[t.Any]]):
+        for row in rows:
+            self.add_row(row)
 
     def fmt_header_cell(self, func: TableFormatter | None = None):
         def inner(func: TableFormatter):

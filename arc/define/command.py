@@ -4,8 +4,9 @@ import inspect
 import typing as t
 
 import arc
+from arc.present.joiner import Join
 import arc.typing as at
-from arc import errors, utils
+from arc import errors, utils, color
 from arc.define import classful
 from arc.autoload import Autoload
 from arc.define.alias import AliasDict
@@ -457,5 +458,11 @@ def namespace(name: str, *, desc: str | None = None) -> Command:
 
 
 def namespace_callback(ctx: Context):
-    arc.usage(ctx.command)
+    command = ctx.command
+    arc.usage(command)
+    help_call = color.colorize(
+        f"{command.root.name} {Join.with_space(command.doc.fullname)} --help",
+        color.fg.YELLOW,
+    )
+    arc.info(f"{help_call} for more information")
     arc.exit(1)

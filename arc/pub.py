@@ -8,7 +8,7 @@ from arc import errors
 from arc.color import colorize, fg
 from arc.define.command import Command, namespace_callback
 from arc.runtime import ExecMiddleware
-from arc.present import Joiner, Ansi
+from arc.present import Join, Ansi
 from arc.types.type_info import TypeInfo
 from arc.types.helpers import convert_type
 from arc import utils

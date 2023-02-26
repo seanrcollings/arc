@@ -5,7 +5,7 @@ import sys
 
 from arc.color import colorize, fg
 from arc.present.ansi import Ansi
-from arc.present.joiner import Joiner
+from arc.present.joiner import Join
 
 if t.TYPE_CHECKING:
     from arc.define.command import Command
@@ -34,7 +34,7 @@ def err(
     end: str | None = None,
     flush: bool = False,
 ):
-    """Wrapper around `print()` that emits to stderr instead of stdout"""
+    """Wrapper around `print()` that emits to `stderr` instead of `stdout`"""
     print(*values, sep=sep, end=end, file=sys.stderr, flush=flush)
 
 
@@ -44,16 +44,10 @@ def info(
     end: str | None = None,
     flush: bool = False,
 ):
-    """Wrapper around `print()` that emits to stderr instead of stdout"""
+    """Wrapper around `print()` that emits to `stderr` instead of `stdout`"""
     print(*values, sep=sep, end=end, file=sys.stderr, flush=flush)
 
 
-def usage(command: Command, help_prompt: bool = True):
+def usage(command: Command):
+    """Display the usage string for a given command object. Writes it to `stderr`"""
     info(command.doc.usage())
-
-    if help_prompt:
-        help_call = colorize(
-            f"{command.root.name} {Joiner.with_space(command.doc.fullname)} --help",
-            fg.YELLOW,
-        )
-        info(f"{help_call} for more information")
