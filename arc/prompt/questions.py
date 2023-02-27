@@ -200,6 +200,10 @@ class SelectQuestion(RawQuestion[tuple[int, T]]):
             self.selected = max(0, self.selected - 1)
         elif key == ARROW_DOWN:
             self.selected = min(len(self.options) - 1, self.selected + 1)
+        elif key.isnumeric():
+            index = int(key)
+            if index < len(self.options):
+                self.selected = index
 
     def on_line(self, _line):
         self.done((self.selected, self.options[self.selected]))
