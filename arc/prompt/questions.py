@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 
 import arc
 from arc import errors
+from arc import constants
 from arc.color import colorize, fg
 from arc.present.helpers import Joiner
 from arc.prompt.helpers import ARROW_DOWN, ARROW_UP, State
@@ -33,14 +34,13 @@ class StandardQuestion(Question[T], ABC):
         ...
 
 
-# TODO: respect the usage of default
 class InputQuestion(StandardQuestion[T]):
     def __init__(
         self,
         prompt: str,
         convert: type[T] = str,  # type: ignore
         *,
-        default: T | None = None,
+        default: T | constants.Constant = constants.MISSING_DEFAULT,
         echo: bool = True,
     ) -> None:
         super().__init__(echo)
@@ -56,18 +56,23 @@ class InputQuestion(StandardQuestion[T]):
         yield self.prompt
 
     def handle_answer(self, value: str) -> T:
-        self.test_required(value)
+        if not value:
+            if self.default is not constants.MISSING_DEFAULT:
+                return t.cast(T, self.default)
+            else:
+                self.err("Cannot be blank")
+
+        value = self.validate(value)
         return self.convert(value, self.convert_to)
+
+    def validate(self, value: str):
+        return value
 
     def convert(self, value: str, type: type[C]) -> C:
         try:
             return arc.convert(value, type)
         except errors.ConversionError as e:
             self.err(str(e))
-
-    def test_required(self, value: str):
-        if not value and self.required:
-            self.err("Cannot be blank")
 
 
 class RangeQuestion(InputQuestion[int]):
@@ -83,9 +88,8 @@ class RangeQuestion(InputQuestion[int]):
         self.min = min
         self.max = max
 
-    def handle_answer(self, answer: str) -> int:
-        val = super().handle_answer(answer)
-
+    def validate(self, answer: str) -> int:
+        val = self.convert(answer, int)
         if val < self.min or val > self.max:
             self.err(f"Must be between {self.min} and {self.max}")
 
@@ -102,9 +106,7 @@ class MappedInputQuestion(InputQuestion[T]):
         super().__init__(prompt, **kwargs)
         self.mapping = mapping
 
-    def handle_answer(self, answer: str) -> T:
-        self.test_required(answer)
-
+    def validate(self, answer: str) -> T:
         if answer.lower() in self.mapping:
             return self.mapping[answer.lower()]
 
@@ -152,8 +154,7 @@ class MultipleChoiceQuestion(InputQuestion[tuple[int, str]]):
 
         yield "> "
 
-    def handle_answer(self, answer: str) -> tuple[int, str]:
-        self.test_required(answer)
+    def validate(self, answer: str) -> tuple[int, str]:
         val = self.convert(answer, int)
 
         if val < 0 or val >= len(self.choices):

@@ -128,7 +128,7 @@ class GetEnvValueMiddleware(ParamProcessor):
         self.set_origin(param, ValueOrigin.ENV)
         return value
 
-    def get_env_value(self, param: Param) -> str | constants.MissingType:
+    def get_env_value(self, param: Param) -> str | constants.Constant:
         if not param.envvar:
             return constants.MISSING
 
@@ -141,7 +141,7 @@ class GetPromptValueMiddleware(ParamProcessor):
         self.set_origin(param, ValueOrigin.PROMPT)
         return value
 
-    def get_prompt_value(self, param: Param) -> str | constants.MissingType:
+    def get_prompt_value(self, param: Param) -> str | constants.Constant:
         if not param.prompt:
             return constants.MISSING
 
@@ -155,7 +155,7 @@ class GetterValueMiddleware(ParamProcessor):
         self.set_origin(param, ValueOrigin.GETTER)
         return value
 
-    def get_getter_value(self, param: Param) -> t.Any | constants.MissingType:
+    def get_getter_value(self, param: Param) -> t.Any | constants.Constant:
         getter = param.getter_func
         if not getter:
             return constants.MISSING
