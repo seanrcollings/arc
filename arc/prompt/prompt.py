@@ -1,3 +1,4 @@
+from re import I
 import sys
 import typing as t
 from getpass import getpass
@@ -17,6 +18,7 @@ from .questions import (
     QuestionError,
     InputQuestion,
     RawQuestion,
+    SelectQuestion,
     StandardQuestion,
 )
 
@@ -63,6 +65,10 @@ class Prompt:
         question = ConfirmQuestion(prompt, **kwargs)
         return self.ask(question)
 
+    def select(self, prompt: str, options: list[str], **kwargs):
+        question = SelectQuestion(prompt, options, **kwargs)
+        return self.ask(question)
+
     def _standard_ask(self, question: StandardQuestion):
         answer = None
         get_input: t.Callable[[], str] = input if question.echo else lambda: getpass("")  # type: ignore
@@ -89,20 +95,19 @@ class Prompt:
         return answer
 
     def _raw_ask(self, question: RawQuestion):
-        Cursor.save()
+        row, col = Cursor.getpos()
         self.write_many(question.render())
         self.flush()
 
         full_input: list[str] = [""]
-        with RawTerminal() as term:
+        with Cursor.hide(), RawTerminal() as term:
             while True:
                 if question.is_done:
                     question.on_done("\n".join(full_input))
                     break
 
-                if question.update_occured and self.should_update():
-                    Cursor.restore()
-                    Cursor.save()
+                if question.update_occured:
+                    Cursor.setpos(row, col)
                     self.cycle_buffers()
                     self.write_many(question.render())
                     self.flush()
@@ -155,7 +160,7 @@ class Prompt:
         elif seq == "\r":
             return "\r\n"
         elif seq == CTRL_C:
-            raise RuntimeError()
+            raise SystemExit(1)
         else:
             return seq
 

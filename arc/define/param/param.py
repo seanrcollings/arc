@@ -169,7 +169,7 @@ class Param(t.Generic[T]):
     @property
     def prompt_string(self):
         if self.default is not MISSING:
-            return self.prompt + colorize(f" ({self.default})", fg.GREY)
+            return self.prompt + colorize(f" ({self.default}) ", fg.GREY)
         return self.prompt
 
     @property

@@ -10,6 +10,7 @@ if t.TYPE_CHECKING:
     from arc.runtime import App
     from logging import Logger
     from arc.config import Config
+    from arc.prompt.prompt import Prompt
 
 
 T = t.TypeVar("T")
@@ -37,6 +38,10 @@ class Context(collections.UserDict[str, t.Any]):
     @property
     def config(self) -> Config:
         return self["arc.config"]
+
+    @property
+    def prompt(self) -> Prompt:
+        return self.config.prompt
 
     def execute(self, command: Command, **kwargs) -> t.Any:
         """Execute a command within the context of another command"""

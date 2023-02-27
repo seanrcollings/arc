@@ -3,7 +3,9 @@ from abc import ABC, abstractmethod
 
 import arc
 from arc import errors
+from arc.color import colorize, fg
 from arc.present.helpers import Joiner
+from arc.prompt.helpers import ARROW_DOWN, ARROW_UP, State
 
 T = t.TypeVar("T")
 C = t.TypeVar("C")
@@ -31,6 +33,7 @@ class StandardQuestion(Question[T], ABC):
         ...
 
 
+# TODO: respect the usage of default
 class InputQuestion(StandardQuestion[T]):
     def __init__(
         self,
@@ -177,3 +180,36 @@ class RawQuestion(Question[T]):
     def done(self, value: T | None = None):
         self.is_done = True
         self.result = value
+
+
+class SelectQuestion(RawQuestion[tuple[int, T]]):
+    selected = State(0)
+
+    def __init__(
+        self, prompt: str, options: list[T], highlight_color: str = fg.ARC_BLUE
+    ) -> None:
+        super().__init__()
+        self.prompt = prompt
+        self.char = "❯"
+        self.options = options
+        self.highlight_color = highlight_color
+
+    def on_key(self, key: str):
+        if key == ARROW_UP:
+            self.selected = max(0, self.selected - 1)
+        elif key == ARROW_DOWN:
+            self.selected = min(len(self.options) - 1, self.selected + 1)
+
+    def on_line(self, _line):
+        self.done((self.selected, self.options[self.selected]))
+
+    def render(self):
+        yield self.prompt
+        yield "\n\r"
+        for idx, item in enumerate(self.options):
+            if idx == self.selected:
+                yield colorize(f"  {self.char} {item}", self.highlight_color)
+                yield "\n\r"
+            else:
+                yield colorize(f"    {item}", fg.GREY)
+                yield "\n\r"

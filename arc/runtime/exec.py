@@ -145,12 +145,8 @@ class GetPromptValueMiddleware(ParamProcessor):
         if not param.prompt:
             return constants.MISSING
 
-        if hasattr(param.type.resolved_type, "__prompt__"):
-            return utils.dispatch_args(
-                param.type.resolved_type.__prompt__, param, self.ctx  # type: ignore
-            )
-
-        return input_prompt(self.config.prompt, param)
+        prompter = getattr(param.type.resolved_type, "__prompt__", input_prompt)
+        return utils.dispatch_args(prompter, param, self.ctx)
 
 
 class GetterValueMiddleware(ParamProcessor):

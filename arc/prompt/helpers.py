@@ -19,19 +19,6 @@ def clear_line(amount: t.Literal["all", "before", "after"] = "all"):
     return f"\033[{num}K"
 
 
-def write(string: str):
-    sys.stdout.write(string)
-
-
-def getch():
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    tty.setraw(sys.stdin.fileno())
-    ch = sys.stdin.read(1)
-    termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-    return ch
-
-
 class RawTerminal:
     __raw: bool = False
     __old_settings: list
@@ -110,20 +97,12 @@ class Cursor:
     def show():
         sys.stdout.write("\x1b[?25h")
 
-    # class __HideContextManager:
-    #     def __enter__(self):
-    #         return self
-
-    #     def __exit__(self, _exc_type, _exc_val, _exc_tb):
-    #         Cursor.show()
-
-    # _hidectx = __HideContextManager()
-
     @contextmanager
     @staticmethod
     def hide():
         try:
             sys.stdout.write("\x1b[?25l")
+            sys.stdout.flush()
             yield
         finally:
             Cursor.show()
@@ -144,8 +123,10 @@ class State(t.Generic[T]):
         return getattr(instance, self.private_name, self._initial_value)
 
     def __set__(self, instance, value: T):
-        setattr(instance, self.private_name, value)
-        setattr(instance, "update_occured", True)
+        prev = getattr(instance, self.private_name, self._initial_value)
+        if prev != value:
+            setattr(instance, self.private_name, value)
+            setattr(instance, "update_occured", True)
 
 
 ARROW_UP = "\x1b[A"

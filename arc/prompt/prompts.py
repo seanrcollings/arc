@@ -1,8 +1,6 @@
 from __future__ import annotations
 import typing as t
 
-import arc
-from arc.prompt import select
 from arc import constants
 
 if t.TYPE_CHECKING:
@@ -11,19 +9,22 @@ if t.TYPE_CHECKING:
     from arc.context import Context
 
 
-def input_prompt(prompt: Prompt, param: Param, **kwargs):
-    empty = param.default is not constants.MISSING
+def input_prompt(param: Param, ctx: Context, **kwargs) -> t.Any:
+    default = constants.MISSING if param.default is not constants.MISSING else None
+    return ctx.prompt.input(
+        param.prompt_string,
+        convert=param.type.original_type,
+        default=default,
+        **kwargs,
+    )
 
-    return prompt.input(param.prompt_string, empty=empty, **kwargs) or constants.MISSING
+
+def password_prompt(param: Param, ctx: Context):
+    return input_prompt(param, ctx, echo=False)
 
 
-def password_prompt(prompt: Prompt, param: Param):
-    return input_prompt(prompt, param, sensitive=True)
-
-
-def select_prompt(values: list, param: Param, **kwargs):
-    arc.print(param.prompt)
-    res = select(values, **kwargs)
+def select_prompt(prompt: Prompt, string: str, values: list, **kwargs):
+    res = prompt.select(string, values, **kwargs)
 
     if res is None:
         return constants.MISSING

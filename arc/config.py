@@ -18,7 +18,7 @@ class Config:
     transform_snake_case: bool = True
     brand_color: str = fg.ARC_BLUE
     env_prefix: str = ""
-    prompt: Prompt = Prompt(" ")
+    prompt: Prompt = Prompt()
     version: t.Optional[str] = None
     autocomplete: bool = False
     allow_unrecognized_args: bool = False
