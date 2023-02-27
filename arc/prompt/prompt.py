@@ -1,3 +1,5 @@
+from functools import cached_property
+import os
 from re import I
 import sys
 import typing as t
@@ -40,6 +42,10 @@ class Prompt:
     def answers(self) -> list[tuple[Question, t.Any]]:
         return self._answers
 
+    @property
+    def buffered_lines(self):
+        return len(self._buffer.split("\n"))
+
     def ask(self, question: Question[T]) -> T:
         if isinstance(question, RawQuestion):
             return self._raw_ask(question)
@@ -73,9 +79,11 @@ class Prompt:
         answer = None
         get_input: t.Callable[[], str] = input if question.echo else lambda: getpass("")  # type: ignore
         self.write_many(question.render())
-
         self.flush()
         row, col = Cursor.getpos()
+        self.write("\r\n", flush=True)
+        row, col = self.ensure_space(row, col)
+        Cursor.setpos(row, col)
 
         while answer is None:
             self.write(clear_line("after"))
@@ -86,7 +94,7 @@ class Prompt:
                 answer = question.handle_answer(user_input)
             except QuestionError as e:
                 self.write(clear_line())
-                self.error(str(e))
+                self.error(str(e), end="", flush=True)
                 Cursor.setpos(row, col)
 
         self.write(clear_line())
@@ -97,6 +105,7 @@ class Prompt:
     def _raw_ask(self, question: RawQuestion):
         row, col = Cursor.getpos()
         self.write_many(question.render())
+        row, col = self.ensure_space(row, col)
         self.flush()
 
         full_input: list[str] = [""]
@@ -129,10 +138,21 @@ class Prompt:
         self._answers.append((question, result))
         return result
 
-    def write(self, value: t.Any):
+    def ensure_space(self, curr_row: int, curr_col: int) -> tuple[int, int]:
+        total_rows = os.get_terminal_size()[1]
+        diff = total_rows - curr_row
+        buffered_lines = self.buffered_lines
+
+        if diff < buffered_lines:
+            new_lines = buffered_lines - diff
+            curr_row -= new_lines
+
+        return curr_row, curr_col
+
+    def write(self, value: t.Any, flush: bool = False):
         text = str(value)
         self._buffer += text
-        if text.endswith("\n"):
+        if flush:
             self.flush()
 
     def write_many(self, values: t.Iterable):
@@ -164,9 +184,12 @@ class Prompt:
         else:
             return seq
 
-    def beautify(self, message: str, color: str = "", emoji: str = "", end: str = "\n"):
+    def beautify(
+        self, message: str, color: str = "", emoji: str = "", end: str = "\n", **kwargs
+    ):
         self.write(
-            self.colored(color) + self.emoji(emoji) + message + effects.CLEAR + end
+            self.colored(color) + self.emoji(emoji) + message + effects.CLEAR + end,
+            **kwargs,
         )
 
     def error(self, message: str, **kwargs):

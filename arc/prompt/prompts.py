@@ -10,7 +10,11 @@ if t.TYPE_CHECKING:
 
 
 def input_prompt(param: Param, ctx: Context, **kwargs) -> t.Any:
-    default = constants.MISSING if param.default is not constants.MISSING else None
+    default = (
+        constants.MISSING_DEFAULT
+        if param.default is constants.MISSING
+        else constants.MISSING
+    )
     return ctx.prompt.input(
         param.prompt_string,
         convert=param.type.original_type,

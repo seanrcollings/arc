@@ -214,7 +214,7 @@ class SelectQuestion(RawQuestion[tuple[int, T]]):
         for idx, item in enumerate(self.options):
             if idx == self.selected:
                 yield colorize(f"  {self.char} {item}", self.highlight_color)
-                yield "\n\r"
             else:
                 yield colorize(f"    {item}", fg.GREY)
-                yield "\n\r"
+
+            yield "\r\n"
