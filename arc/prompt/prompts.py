@@ -23,10 +23,6 @@ def input_prompt(param: Param, ctx: Context, **kwargs) -> t.Any:
     )
 
 
-def password_prompt(param: Param, ctx: Context):
-    return input_prompt(param, ctx, echo=False)
-
-
 def select_prompt(prompt: Prompt, string: str, values: list, **kwargs):
     res = prompt.select(string, values, **kwargs)
 

@@ -10,6 +10,11 @@ from tests.utils import environ  # type: ignore
 from arc.prompt.helpers import ARROW_DOWN, Cursor
 
 
+@pytest.fixture(autouse=True)
+def setup(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr("arc.prompt.prompt.Prompt.max_height", lambda *args: 100)
+
+
 class TestEnv:
     def test_basic(self):
         @arc.command

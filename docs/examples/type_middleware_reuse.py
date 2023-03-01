@@ -9,7 +9,9 @@ def greater_than_previous(value: types.SemVer, ctx: arc.Context):
         return value
 
     if current_version >= value:
-        raise arc.ValidationError("New version must be greater than current version")
+        raise arc.ValidationError(
+            f"New version must be greater than current version ({current_version})"
+        )
 
     return value
 

@@ -139,7 +139,7 @@ class Prompt:
         return result
 
     def ensure_space(self, curr_row: int, curr_col: int) -> tuple[int, int]:
-        total_rows = os.get_terminal_size()[1]
+        total_rows = self.max_height()
         diff = total_rows - curr_row
         buffered_lines = self.buffered_lines
 
@@ -148,6 +148,9 @@ class Prompt:
             curr_row -= new_lines
 
         return curr_row, curr_col
+
+    def max_height(self) -> int:
+        return os.get_terminal_size()[1]
 
     def write(self, value: t.Any, flush: bool = False):
         text = str(value)
@@ -232,4 +235,4 @@ class Prompt:
 
     @classmethod
     def __depends__(self, ctx: Context) -> "Prompt":
-        return ctx.config.prompt
+        return ctx.prompt

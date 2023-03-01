@@ -67,6 +67,7 @@ class TypeInfo(t.Generic[T]):
 
     @classmethod
     def analyze(cls, annotation) -> TypeInfo:
+        """Create a `TypeInfo` object based on a type annotation"""
         original_type = annotation
         origin = t.get_origin(annotation) or annotation
         annotated_args: tuple = tuple()
