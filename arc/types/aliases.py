@@ -310,8 +310,9 @@ class LiteralAlias(Alias, of=t.Literal):
     @classmethod
     def __prompt__(cls, param: Param, ctx: Context):
         return select_prompt(
+            ctx.prompt,
+            t.cast(str, param.prompt),
             list(str(tp.origin) for tp in param.type.sub_types),
-            param,
             highlight_color=ctx.config.brand_color,
         )
 
@@ -343,8 +344,9 @@ class EnumAlias(Alias, of=enum.Enum):
     def __prompt__(cls, param: Param[enum.Enum], ctx: Context) -> t.Any:
         enum_cls: type[enum.Enum] = param.type.origin
         return select_prompt(
+            ctx.prompt,
+            t.cast(str, param.prompt),
             list(str(m.value) for m in enum_cls.__members__.values()),
-            param,
             highlight_color=ctx.config.brand_color,
         )
 

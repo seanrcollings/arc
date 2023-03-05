@@ -58,6 +58,7 @@ nav:
           - Intro: usage/presentation/presentation-intro.md
           - Printing: usage/presentation/printing.md
           - Coloring: usage/presentation/coloring.md
+      - User Input: usage/user-input.md
       - Subcommands: usage/subcommands.md
       - File Access: usage/file-access.md
       - Documentation Generation: usage/documentation-generation.md
