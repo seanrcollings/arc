@@ -1,6 +1,4 @@
-from functools import cached_property
 import os
-from re import I
 import sys
 import typing as t
 from getpass import getpass
@@ -16,12 +14,12 @@ from .helpers import (
 )
 from .questions import (
     ConfirmQuestion,
-    Question,
+    BaseQuestion,
     QuestionError,
     InputQuestion,
     RawQuestion,
     SelectQuestion,
-    StandardQuestion,
+    Question,
 )
 
 
@@ -35,21 +33,21 @@ class Prompt:
         self.color_output = color_output
         self._buffer: str = ""
         self._prev_buffer: str = ""
-        self._answers: list[tuple[Question, t.Any]] = []
+        self._answers: list[tuple[BaseQuestion, t.Any]] = []
         self._max_line_lengths: dict[int, int] = {}
 
     @property
-    def answers(self) -> list[tuple[Question, t.Any]]:
+    def answers(self) -> list[tuple[BaseQuestion, t.Any]]:
         return self._answers
 
     @property
     def buffered_lines(self):
         return len(self._buffer.split("\n"))
 
-    def ask(self, question: Question[T]) -> T:
+    def ask(self, question: BaseQuestion[T]) -> T:
         if isinstance(question, RawQuestion):
             return self._raw_ask(question)
-        elif isinstance(question, StandardQuestion):
+        elif isinstance(question, Question):
             return self._standard_ask(question)
 
         raise RuntimeError("Called Prompt.ask() with an invalid question object")
@@ -63,19 +61,22 @@ class Prompt:
         ...
 
     def input(self, prompt, convert=str, **kwargs):
+        """Get input from the user"""
         question = InputQuestion(prompt, convert, **kwargs)
         return self.ask(question)
 
     def confirm(self, prompt, **kwargs):
+        """Get a yes / no confirmation from the user"""
         prompt = f"{prompt} [{colorize('y', fg.GREEN)}/{colorize('n', fg.RED)}] "
         question = ConfirmQuestion(prompt, **kwargs)
         return self.ask(question)
 
     def select(self, prompt: str, options: list[str], **kwargs):
+        """Prompt the user to select from a list of options"""
         question = SelectQuestion(prompt, options, **kwargs)
         return self.ask(question)
 
-    def _standard_ask(self, question: StandardQuestion):
+    def _standard_ask(self, question: Question):
         answer = None
         get_input: t.Callable[[], str] = input if question.echo else lambda: getpass("")  # type: ignore
         self.write_many(question.render())
@@ -187,6 +188,7 @@ class Prompt:
         else:
             return seq
 
+    # TODO: move these methods into some sort of present object
     def beautify(
         self, message: str, color: str = "", emoji: str = "", end: str = "\n", **kwargs
     ):

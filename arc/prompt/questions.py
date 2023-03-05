@@ -16,16 +16,21 @@ class QuestionError(errors.ArcError):
     ...
 
 
-class Question(ABC, t.Generic[T]):
+class BaseQuestion(ABC, t.Generic[T]):
+    """Base Question class"""
+
     def err(self, error: str) -> t.NoReturn:
+        """Inform the user that an error has
+        occured when trying to process their answer"""
         raise QuestionError(error)
 
     @abstractmethod
     def render(self) -> t.Iterable[str]:
-        ...
+        """Returns an iterable of strings
+        to be printed to the output"""
 
 
-class StandardQuestion(Question[T], ABC):
+class Question(BaseQuestion[T], ABC):
     def __init__(self, echo: bool = True) -> None:
         self.echo = echo
 
@@ -34,7 +39,13 @@ class StandardQuestion(Question[T], ABC):
         ...
 
 
-class InputQuestion(StandardQuestion[T]):
+class InputQuestion(Question[T]):
+    """Question to request textual input from the user.
+    Similar to using `input()` with add validations.
+
+    `Prompt.input()` is an alias for asking this question
+    """
+
     def __init__(
         self,
         prompt: str,
@@ -43,6 +54,20 @@ class InputQuestion(StandardQuestion[T]):
         default: T | constants.Constant = constants.MISSING_DEFAULT,
         echo: bool = True,
     ) -> None:
+        """
+
+        Args:
+            prompt (str): String to be displayed before the cursor
+            convert (type[T], optional): A type to attempt converting
+                the user input into. Should be a supported arc type. If
+                conversion fails, an error will be emmited and the user
+                will be prompted to enter a value again.
+            default (T | constants.Constant, optional): A default to return
+                if the user does not enter any input (just hits the enter key).
+                If there is no default provided, the user must give some form of
+                input, or exit the program with Ctrl-C
+            echo (bool, optional): Whether to echo the user's input out to the screen.
+        """
         super().__init__(echo)
         self.prompt = prompt
         self.convert_to = convert
@@ -116,7 +141,10 @@ class MappedInputQuestion(InputQuestion[T]):
 
 
 class ConfirmQuestion(MappedInputQuestion[bool]):
-    """Question to get a yes / no from the user"""
+    """Question to get a yes / no from the user
+
+    `Prompt.confirm()` is an alias for asking this question
+    """
 
     def __init__(self, prompt: str, **kwargs) -> None:
         super().__init__(
@@ -163,7 +191,7 @@ class MultipleChoiceQuestion(InputQuestion[tuple[int, str]]):
         return val, self.choices[val]
 
 
-class RawQuestion(Question[T]):
+class RawQuestion(BaseQuestion[T]):
     def __init__(self) -> None:
         self.is_done = False
         self.result: T | None = None
@@ -184,6 +212,11 @@ class RawQuestion(Question[T]):
 
 
 class SelectQuestion(RawQuestion[tuple[int, T]]):
+    """Presents the user with a menu that they can select an option from
+
+    `Prompt.select()` is an alias for asking this question
+    """
+
     selected = State(0)
 
     def __init__(

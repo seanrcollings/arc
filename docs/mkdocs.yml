@@ -55,6 +55,7 @@ nav:
           - Parameter Groups: usage/parameters/groups.md
           - Dependency Injection: usage/parameters/dependancy-injection.md
       - Printing & Coloring Output: usage/printing.md
+      - User Input: usage/user-input.md
       - Subcommands: usage/subcommands.md
       - File Access: usage/file-access.md
       - Documentation Generation: usage/documentation-generation.md
