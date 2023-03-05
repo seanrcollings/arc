@@ -1,17 +1,19 @@
 import typing as t
 
 
-class MissingType:
+class Constant:
+    def __init__(self, name: str) -> None:
+        self.__name = name
+
     def __str__(self):
-        return "MISSING"
+        return self.__name
 
     def __repr__(self):
-        return "MISSING"
+        return self.__name
 
 
-MISSING = MissingType()
+MISSING = Constant("MISSING")
+MISSING_DEFAULT = Constant("MISSING_DEFAULT")
 
-
-NO_CONVERT = {None, bool, t.Any, MISSING}
 
 COLLECTION_TYPES = (list, set, tuple)

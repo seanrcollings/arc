@@ -7,7 +7,12 @@ from arc import Argument, Option, errors, configure
 from arc import constants
 from arc.define.param.param import Param, ValueOrigin
 from tests.utils import environ  # type: ignore
-from arc.prompt.helpers import ARROW_DOWN
+from arc.prompt.helpers import ARROW_DOWN, Cursor
+
+
+@pytest.fixture(autouse=True)
+def setup(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr("arc.prompt.prompt.Prompt.max_height", lambda *args: 100)
 
 
 class TestEnv:
@@ -79,6 +84,7 @@ class TestPrompt:
 
         assert pr("2") == 2
 
+        monkeypatch.setattr(Cursor, "getpos", lambda *args: (1, 2))
         monkeypatch.setattr("sys.stdin", io.StringIO("2"))
         assert pr("") == 2
 
@@ -89,6 +95,7 @@ class TestPrompt:
 
         assert pr("2") == 2
 
+        monkeypatch.setattr(Cursor, "getpos", lambda *args: (1, 2))
         monkeypatch.setattr("sys.stdin", io.StringIO("\n"))
         assert pr("") == 10
 
@@ -97,6 +104,7 @@ class TestPrompt:
         def pr(ctx: arc.Context, val: int = Argument(prompt="Val")):
             return ctx.get_origin("val")
 
+        monkeypatch.setattr(Cursor, "getpos", lambda *args: (1, 2))
         monkeypatch.setattr("sys.stdin", io.StringIO("2"))
         assert pr("") == ValueOrigin.PROMPT
 
@@ -163,6 +171,7 @@ def test_precedence(monkeypatch: pytest.MonkeyPatch):
     def c1(val: int = Argument(envvar="VAL", prompt="val")):
         return val
 
+    monkeypatch.setattr(Cursor, "getpos", lambda *args: (1, 2))
     monkeypatch.setattr("sys.stdin", io.StringIO("2"))
 
     with environ(VAL="3"):

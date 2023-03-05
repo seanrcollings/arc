@@ -1,145 +1,200 @@
-from typing import Any, TypeVar
+import os
+import sys
+import typing as t
 from getpass import getpass
 
-import arc
-from arc.color import fg, effects
+from arc.color import colorize, fg, effects
 from arc.context import Context
-from .helpers import write, PREVIOUS_LINE, clear_line
-from .questions import Question, QuestionError, ConfirmQuestion, InputQuestion
+from .helpers import (
+    CTRL_C,
+    ESCAPE,
+    Cursor,
+    RawTerminal,
+    clear_line,
+)
+from .questions import (
+    ConfirmQuestion,
+    BaseQuestion,
+    QuestionError,
+    InputQuestion,
+    RawQuestion,
+    SelectQuestion,
+    Question,
+)
 
 
-V = TypeVar("V")
+T = t.TypeVar("T")
 
 
 class Prompt:
-    """Core class to the `prompt` package.
-
-    Usage:
-
-    ```py
-    prompt = Prompt()
-    question = MultipleChoiceQuestion(
-        "What's you favorite ice cream flavor?",
-        ["Chocolate", "Vanilla", "Strawberry"]
-    )
-    prompt.ask(question)
-    ```
-    Would result in a prompt like:
-    ```
-    What's you favorite ice cream flavor?
-    [0] Chocolate
-    [1] Vanilla
-    [2] Strawberry
-
-    >
-    ```
-    """
-
-    def __init__(
-        self, prompt: str = "> ", show_emojis: bool = True, color_output: bool = True
-    ):
-        """
-        Args:
-            prompt (str, optional): What to display before the cursor when
-                asking a question. Defaults to `'> '`
-            show_emojis (bool, optional): Whether or not to display the
-                icons / emojis when arc.printing messages with the display
-                methods below. Defaults to True.
-            color_output (bool, optional): [description]. Whether or not
-                do color the output of each of the display methods below.
-                Defaults to True.
-        """
-        self.prompt = prompt
+    def __init__(self, show_emojis: bool = True, color_output: bool = True) -> None:
+        self.out_stream = sys.stdout
         self.show_emojis = show_emojis
         self.color_output = color_output
-        self._previous_answers: list[Any] = []
+        self._buffer: str = ""
+        self._prev_buffer: str = ""
+        self._answers: list[tuple[BaseQuestion, t.Any]] = []
+        self._max_line_lengths: dict[int, int] = {}
 
     @property
-    def previous_answers(self):
-        """All questions asked by this Prompt
-        have their answers stored in here"""
-        return self._previous_answers
+    def answers(self) -> list[tuple[BaseQuestion, t.Any]]:
+        return self._answers
 
-    def ask(self, question: Question[V]) -> V:
-        """Ask a question
+    @property
+    def buffered_lines(self):
+        return len(self._buffer.split("\n"))
 
-        Args:
-            question (Question[V]): Question object to ask. Each question
-                object handles it's rendering and answering differently
+    def ask(self, question: BaseQuestion[T]) -> T:
+        if isinstance(question, RawQuestion):
+            return self._raw_ask(question)
+        elif isinstance(question, Question):
+            return self._standard_ask(question)
 
-        Returns:
-            V: The type that the particular Question returns
-        """
+        raise RuntimeError("Called Prompt.ask() with an invalid question object")
 
-        # TODO: currently, sensitive questions
-        # can't display errors
-        def get_input(prompt: str):
-            if question.sensitive:
-                return getpass(prompt)
-            return input(prompt)
+    @t.overload
+    def input(self, prompt: str, **kwargs) -> str:
+        ...
 
-        if question.multi_line:
-            write(question.render() + "\n")
+    @t.overload
+    def input(self, prompt: str, convert: type[T], **kwargs) -> T:
+        ...
 
+    def input(self, prompt, convert=str, **kwargs):
+        """Get input from the user"""
+        question = InputQuestion(prompt, convert, **kwargs)
+        return self.ask(question)
+
+    def confirm(self, prompt, **kwargs):
+        """Get a yes / no confirmation from the user"""
+        prompt = f"{prompt} [{colorize('y', fg.GREEN)}/{colorize('n', fg.RED)}] "
+        question = ConfirmQuestion(prompt, **kwargs)
+        return self.ask(question)
+
+    def select(self, prompt: str, options: list[str], **kwargs):
+        """Prompt the user to select from a list of options"""
+        question = SelectQuestion(prompt, options, **kwargs)
+        return self.ask(question)
+
+    def _standard_ask(self, question: Question):
         answer = None
-        has_failed = False
+        get_input: t.Callable[[], str] = input if question.echo else lambda: getpass("")  # type: ignore
+        self.write_many(question.render())
+        self.flush()
+        row, col = Cursor.getpos()
+        self.write("\r\n", flush=True)
+        row, col = self.ensure_space(row, col)
+        Cursor.setpos(row, col)
+
         while answer is None:
-            user_input = get_input(
-                (PREVIOUS_LINE if has_failed else "")
-                + clear_line()
-                + (question.render() if not question.multi_line else "")
-                + self.prompt
-            )
+            self.write(clear_line("after"))
+            self.flush()
+            user_input = get_input()
 
             try:
                 answer = question.handle_answer(user_input)
             except QuestionError as e:
-                write(clear_line())
-                self.error(str(e), end="")
-                has_failed = True
+                self.write(clear_line())
+                self.error(str(e), end="", flush=True)
+                Cursor.setpos(row, col)
 
-        if has_failed:
-            write("\n")  # get past the error message
-        self._previous_answers.append(answer)
+        self.write(clear_line())
+        self.flush()
+        self._answers.append((question, answer))
         return answer
 
-    def confirm(self, desc: str) -> bool:
-        """Request a Y/N answer from the user
+    def _raw_ask(self, question: RawQuestion):
+        row, col = Cursor.getpos()
+        self.write_many(question.render())
+        row, col = self.ensure_space(row, col)
+        self.flush()
 
-        Args:
-            desc (str): Message to display to the user
+        full_input: list[str] = [""]
+        with Cursor.hide(), RawTerminal() as term:
+            while True:
+                if question.is_done:
+                    question.on_done("\n".join(full_input))
+                    break
 
-        Returns:
-            bool: The user's answer to the question
-        """
-        question = ConfirmQuestion(desc)
-        return self.ask(question)
+                if question.update_occured:
+                    Cursor.setpos(row, col)
+                    self.cycle_buffers()
+                    self.write_many(question.render())
+                    self.flush()
 
-    def input(
-        self,
-        desc: str,
-        empty: bool = True,
-        sensitive: bool = False,
-        multi_line: bool = False,
-    ) -> str:
-        """Gather input from stdin
+                key = self.get_key(term)
+                full_input[-1] += key
 
-        Is an alias for the `InputQuestion` type
+                if key.endswith("\n"):
+                    question.on_line(full_input[-1])
+                    full_input.append("")
+                else:
+                    question.on_key(key)
 
-        Args:
-            desc (str): Message to display to the user
-            empty (bool): Whether an empty imput should be allowed
-            sensitive (bool): If The data is sensitive, input won't be echoed to the command line
+        self.write("\n")
+        self._buffer = ""
+        self._prev_buffer = ""
+        result = question.result
+        question.result = None
+        self._answers.append((question, result))
+        return result
 
-        Returns:
-            str: The user's input
-        """
-        question = InputQuestion(desc, empty, sensitive, multi_line)
-        return self.ask(question)
+    def ensure_space(self, curr_row: int, curr_col: int) -> tuple[int, int]:
+        total_rows = self.max_height()
+        diff = total_rows - curr_row
+        buffered_lines = self.buffered_lines
 
-    def beautify(self, message: str, color: str = "", emoji: str = "", **kwargs):
-        arc.print(
-            self.colored(color) + self.emoji(emoji) + message + effects.CLEAR, **kwargs
+        if diff < buffered_lines:
+            new_lines = buffered_lines - diff
+            curr_row -= new_lines
+
+        return curr_row, curr_col
+
+    def max_height(self) -> int:
+        return os.get_terminal_size()[1]
+
+    def write(self, value: t.Any, flush: bool = False):
+        text = str(value)
+        self._buffer += text
+        if flush:
+            self.flush()
+
+    def write_many(self, values: t.Iterable):
+        for v in values:
+            self.write(v)
+
+    def flush(self):
+        self.out_stream.write("".join(self._buffer))
+        self.out_stream.flush()
+        self._buffer = ""
+
+    def cycle_buffers(self):
+        self._prev_buffer = self._buffer
+        self._buffer = ""
+
+    def should_update(self) -> bool:
+        return self._buffer != self._prev_buffer
+
+    def get_key(self, term: RawTerminal):
+        seq = term.getch()
+        if seq == ESCAPE:
+            seq += term.getch()  # [
+            seq += term.getch()  # Some Character
+            return seq
+        elif seq == "\r":
+            return "\r\n"
+        elif seq == CTRL_C:
+            raise SystemExit(1)
+        else:
+            return seq
+
+    # TODO: move these methods into some sort of present object
+    def beautify(
+        self, message: str, color: str = "", emoji: str = "", end: str = "\n", **kwargs
+    ):
+        self.write(
+            self.colored(color) + self.emoji(emoji) + message + effects.CLEAR + end,
+            **kwargs,
         )
 
     def error(self, message: str, **kwargs):
@@ -163,7 +218,7 @@ class Prompt:
         self.beautify(message, fg.YELLOW, "🚧", **kwargs)
 
     def subtle(self, message: str, **kwargs):
-        """ "Display a subtle (light grey) message to the user"""
+        """Display a subtle (light grey) message to the user"""
         self.beautify(message, fg.GREY, **kwargs)
 
     def snake(self, message: str, **kwargs):
@@ -182,4 +237,4 @@ class Prompt:
 
     @classmethod
     def __depends__(self, ctx: Context) -> "Prompt":
-        return ctx.config.prompt
+        return ctx.prompt

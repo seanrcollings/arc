@@ -12,7 +12,7 @@ from arc.color import colorize, effects, fg
 from arc.types.helpers import convert_type
 from arc.types.type_info import TypeInfo
 import arc.typing as at
-from arc.constants import MISSING, MissingType
+from arc.constants import MISSING, Constant
 
 if t.TYPE_CHECKING:
     from arc.context import Context
@@ -47,7 +47,7 @@ class Param(t.Generic[T]):
     """Optional single-character name alternabive for keyword params"""
     type: TypeInfo[T]
     """Information on the type of the argument"""
-    default: T | MissingType | None
+    default: T | Constant | None
     """Default value for this Param, will be used if no
     other source provides a value. A value `MISSING` indicates
     that the parameter is required. Otherwise, the parameter is optional"""
@@ -76,7 +76,7 @@ class Param(t.Generic[T]):
         self,
         argument_name: str,
         annotation: at.Annotation,
-        default: T | None | MissingType = MISSING,
+        default: T | None | Constant = MISSING,
         param_name: str | None = None,
         short_name: str | None = None,
         description: str | None = None,
@@ -169,7 +169,7 @@ class Param(t.Generic[T]):
     @property
     def prompt_string(self):
         if self.default is not MISSING:
-            return self.prompt + colorize(f" ({self.default})", fg.GREY)
+            return self.prompt + colorize(f" ({self.default}) ", fg.GREY)
         return self.prompt
 
     @property
