@@ -54,7 +54,7 @@ nav:
           - Parameter Sources: usage/parameters/sources.md
           - Parameter Groups: usage/parameters/groups.md
           - Dependency Injection: usage/parameters/dependancy-injection.md
-      - Presenting Output:
+      - Printing Output:
           - Intro: usage/presentation/presentation-intro.md
           - Printing: usage/presentation/printing.md
           - Coloring: usage/presentation/coloring.md

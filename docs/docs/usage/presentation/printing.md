@@ -3,7 +3,7 @@
 
 - `#!python arc.print()` - Wrapper around the normal print function that is aware of whether or not stdout is the terminal or not. If it not a terminal, all escape codes will be removed.
 - `#!python arc.info()` - Wrapper around `#!python arc.print()`, but writes to stderr instead of stdout. Useful for quick logging purposes
-- `#!python arc.err()` - Wrapper around `#!python arc.print()`, but writes to stderr instead of stdout. Intended to be used to emit errors. `#!python arc.info()` and `#!python arc.err()` are essentially aliases of each other; the only reason both exist is to make each instance of their usage more explicit.
+- `#!python arc.err()` - Wrapper around `#!python arc.print()`, but writes to stderr instead of stdout and styled as an error.
 
 [Reference](../../reference/present/out.md)
 
