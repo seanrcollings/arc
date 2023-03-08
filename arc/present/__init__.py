@@ -7,3 +7,4 @@ from .joiner import Join
 from .ansi import Ansi, fg, bg, fx, colorize
 from .out import print, err, info, usage
 from .console import Console
+from .pager import pager

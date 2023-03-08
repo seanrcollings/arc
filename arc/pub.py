@@ -1,14 +1,8 @@
 """This module contains various functions that get exposed to the external interface.
-They could be placed along with the stuff they interact with, but this felt more convenient"""
+Notabally, the things in here should only be here if there is no better location for them to exist"""
 from __future__ import annotations
-import builtins
-import sys
 import typing as t
 from arc import errors
-from arc.color import colorize, fg
-from arc.define.command import Command, namespace_callback
-from arc.runtime import ExecMiddleware
-from arc.present import Join, Ansi
 from arc.types.type_info import TypeInfo
 from arc.types.helpers import convert_type
 from arc import utils

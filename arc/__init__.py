@@ -22,4 +22,4 @@ from arc.pub import convert, exit
 from arc.constants import MISSING
 from arc import prompt
 from arc import present
-from arc.present import print, err, info, usage
+from arc.present import print, err, info, usage, pager
