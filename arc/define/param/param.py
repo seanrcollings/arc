@@ -71,6 +71,8 @@ class Param(t.Generic[T]):
     """Function that can provide shell completions for the parameter"""
     getter_func: at.GetterFunc | None
     """Function that can retrieve a value not provided on the command line"""
+    data: dict[str, t.Any]
+    """Dictionary of any other key values passed to the constructors"""
 
     def __init__(
         self,
@@ -87,6 +89,7 @@ class Param(t.Generic[T]):
         expose: bool = True,
         comp_func: at.CompletionFunc | None = None,
         getter_func: at.GetterFunc | None = None,
+        data: dict[str, t.Any] = None,
     ):
         self.argument_name = argument_name
         self.param_name = param_name or argument_name
@@ -101,6 +104,7 @@ class Param(t.Generic[T]):
         self.expose = expose
         self.comp_func = comp_func
         self.getter_func = getter_func
+        self.data = data or {}
 
         if self.type.is_union_type:
             for sub in self.type.sub_types:

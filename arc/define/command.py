@@ -29,6 +29,7 @@ class Command(ParamMixin, MiddlewareContainer):
     doc: Documentation
     explicit_name: bool
     __autoload__: bool
+    data: dict[str, t.Any]
 
     def __init__(
         self,
@@ -38,6 +39,7 @@ class Command(ParamMixin, MiddlewareContainer):
         parent: Command | None = None,
         explicit_name: bool = True,
         autoload: bool = False,
+        **kwargs: t.Any,
     ) -> None:
         ParamMixin.__init__(self)
         MiddlewareContainer.__init__(self, [])
@@ -54,6 +56,7 @@ class Command(ParamMixin, MiddlewareContainer):
         self.doc = Documentation(self, description)
         self.explicit_name = explicit_name
         self.__autoload__ = autoload
+        self.data = kwargs
 
         if config.environment == "development":
             self.param_def
@@ -217,7 +220,7 @@ class Command(ParamMixin, MiddlewareContainer):
     # Subcommands ----------------------------------------------------------------
 
     @t.overload
-    def subcommand(
+    def subcommand(  # type: ignore
         self,
         /,
         command: Command,
@@ -226,7 +229,7 @@ class Command(ParamMixin, MiddlewareContainer):
         ...
 
     @t.overload
-    def subcommand(
+    def subcommand(  # type: ignore
         self,
         /,
         callback: at.CommandCallback,
@@ -235,11 +238,16 @@ class Command(ParamMixin, MiddlewareContainer):
 
     @t.overload
     def subcommand(
-        self, /, name: str | None = None, *aliases: str, desc: str | None = None
+        self,
+        /,
+        name: str | None = None,
+        *aliases: str,
+        desc: str | None = None,
+        **kwargs: t.Any,
     ) -> t.Callable[[at.CommandCallback], Command]:
         ...
 
-    def subcommand(self, first=None, *aliases, desc=None):
+    def subcommand(self, /, first=None, *aliases, desc=None, **kwargs):
         """Create a new child commmand of this command OR
         adopt a already created command as the child.
 
@@ -269,6 +277,7 @@ class Command(ParamMixin, MiddlewareContainer):
                     name=command_name,
                     description=desc,
                     parent=self,
+                    **kwargs,
                 )
                 self.add_command(command, aliases)
                 return command
@@ -382,13 +391,17 @@ def command(callback: at.CommandCallback, /) -> Command:
 
 @t.overload
 def command(
-    name: str | None = None, /, *, desc: str | None = None
+    name: str | None = None, /, *, desc: str | None = None, **kwargs: t.Any
 ) -> t.Callable[[at.CommandCallback], Command]:
     ...
 
 
 def command(
-    first: at.CommandCallback | str | None = None, /, *, desc: str | None = None
+    first: at.CommandCallback | str | None = None,
+    /,
+    *,
+    desc: str | None = None,
+    **kwargs: t.Any,
 ):
     """Create an arc Command
 
@@ -415,6 +428,7 @@ def command(
             parent=None,
             explicit_name=bool(name),
             autoload=True,
+            **kwargs,
         )
         command.use(ExecMiddleware.all())
         return command
@@ -426,7 +440,7 @@ def command(
         return inner(first)
 
 
-def namespace(name: str, *, desc: str | None = None) -> Command:
+def namespace(name: str, *, desc: str | None = None, **kwargs) -> Command:
     """Create an arc Command, that is not executable on it's own,
     but can have commands nested underneath it.
 
@@ -451,6 +465,7 @@ def namespace(name: str, *, desc: str | None = None) -> Command:
         description=desc,
         parent=None,
         autoload=True,
+        **kwargs,
     )
     command.use(ExecMiddleware.all())
     return command

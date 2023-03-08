@@ -19,6 +19,7 @@ class ParamInfo:
         envvar: str = None,
         complete: at.CompletionFunc = None,
         getter_func: at.GetterFunc = None,
+        data: dict[str, t.Any] = None,
     ):
         self.param_cls = param_cls
         self.param_name = param_name
@@ -31,6 +32,7 @@ class ParamInfo:
         self.envvar = envvar
         self.complete = complete
         self.getter_func = getter_func
+        self.data = data or {}
 
     def dict(self):
         """Used to pass to `Param()` as **kwargs"""
@@ -45,6 +47,7 @@ class ParamInfo:
             "action": self.action,
             "comp_func": self.complete,
             "getter_func": self.getter_func,
+            "data": self.data,
         }
 
 
@@ -58,6 +61,7 @@ def Argument(
     envvar: str = None,
     get: at.GetterFunc = None,
     complete: at.CompletionFunc = None,
+    **kwargs: t.Any,
 ) -> t.Any:
     """A CLI argument. Input is passed positionally.
 
@@ -98,6 +102,7 @@ def Argument(
         envvar=envvar,
         getter_func=get,
         complete=complete,
+        data=kwargs,
     )
 
 
@@ -112,6 +117,7 @@ def Option(
     envvar: str = None,
     get: at.GetterFunc = None,
     complete: at.CompletionFunc = None,
+    **kwargs: t.Any,
 ) -> t.Any:
     """A (generally optional) keyword parameter.
 
@@ -154,6 +160,7 @@ def Option(
         envvar=envvar,
         getter_func=get,
         complete=complete,
+        data=kwargs,
     )
 
 
@@ -164,6 +171,7 @@ def Flag(
     default: bool = False,
     desc: str = None,
     callback: t.Callable = None,
+    **kwargs: t.Any,
 ) -> t.Any:
     """An option that represents a boolean value.
 
@@ -196,6 +204,7 @@ def Flag(
         default=default,
         desc=desc,
         callback=callback,
+        data=kwargs,
     )
 
 
@@ -206,6 +215,7 @@ def Count(
     default: int = 0,
     desc: str = None,
     callback: t.Callable = None,
+    **kwargs: t.Any,
 ) -> t.Any:
     """A Flag that counts it's number of apperances on the command line
 
@@ -240,8 +250,9 @@ def Count(
         desc=desc,
         callback=callback,
         action=param.Action.COUNT,
+        data=kwargs,
     )
 
 
-def Depends(callback: t.Callable) -> t.Any:
-    return ParamInfo(param_cls=param.InjectedParam, callback=callback)
+def Depends(callback: t.Callable, **kwargs: t.Any) -> t.Any:
+    return ParamInfo(param_cls=param.InjectedParam, callback=callback, data=kwargs)
