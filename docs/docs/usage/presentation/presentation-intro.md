@@ -6,3 +6,5 @@
 Here are the sections covered:
 
 - [Printing / Logging](./printing.md)
+- [Coloring Output](./coloring.md)
+- [Rich Output](./rich-output.md)

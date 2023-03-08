@@ -6,9 +6,10 @@ import shlex
 import shutil
 import contextlib
 from dataclasses import dataclass
-
+from arc.present import out
 import yaml
 from arc.config import config as ac
+from arc.present.console import Console
 
 ROOT_DIR = Path(".")
 DOCS_DIR = ROOT_DIR / "docs"
@@ -69,26 +70,27 @@ def exec_examples(config: list[ExecConfig]):
         (OUTPUT_DIR / entry.out).parent.mkdir(parents=True, exist_ok=True)
 
         with open(OUTPUT_DIR / entry.out, "w+") as f:
+            out._console = Console(default_print_stream=f, default_log_stream=f)
             print(entry.file, "->", entry.out)
-            stderr = sys.stderr
-            with contextlib.redirect_stdout(f), contextlib.redirect_stderr(f):
-                for args in entry.exec:
-                    logging.root.handlers.clear()
-                    f.write(f"$ python {entry.name} {args}\n")
-                    sys.argv = [entry.name, *shlex.split(args)]
+            for args in entry.exec:
+                logging.root.handlers.clear()
+                f.write(f"$ python {entry.name} {args}\n")
+                sys.argv = [entry.name, *shlex.split(args)]
 
-                    try:
-                        exec(contents, {})
-                    except SystemExit as e:
-                        if e.code != entry.exit_code:
-                            stderr.write(
-                                f"{entry.file} exited with {str(e)} exit code\n"
-                            )
-                            raise
-                    except Exception as e:
-                        if not entry.error_allowed:
-                            stderr.write(str(e))
-                            raise
+                try:
+                    exec(contents, {})
+                except SystemExit as e:
+                    if e.code != entry.exit_code:
+
+                        print(
+                            f"{entry.file} exited with {str(e)} exit code\n",
+                            file=sys.stderr,
+                        )
+                        raise
+                except Exception as e:
+                    if not entry.error_allowed:
+                        print(str(e), file=sys.stderr)
+                        raise
 
     print("\nFinished!")
 

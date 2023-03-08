@@ -180,7 +180,20 @@ class Table:
         return inner
 
     def fmt_cell(self, func: TableFormatter | None = None):
-        """Formats any cell that does not already have a formatter applied"""
+        """Formats any cell that does not already have a formatter applied
+
+        ```py
+        from arc.color import fg, fx
+        from arc.present import Table
+
+        table = Table()
+
+        @table.fmt_cell
+        def fmt(cell):
+            return f"{fg.RED}{cell}{fx.CLEAR}"
+
+        ```
+        """
 
         def inner(func: TableFormatter):
             self._cell_formatter = func
