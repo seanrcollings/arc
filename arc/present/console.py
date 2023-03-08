@@ -136,7 +136,7 @@ class Console:
         """Display a successful message to the user"""
         self._decorate(*values, color=fg.GREEN, icon=self.icons["ok"], **kwargs)
 
-    def error(self, *values: object, **kwargs):
+    def err(self, *values: object, **kwargs):
         """Display an unsuccessful message to the user"""
         self._decorate(*values, color=fg.RED, icon=self.icons["error"], **kwargs)
 

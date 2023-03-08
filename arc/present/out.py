@@ -39,6 +39,17 @@ def info(
     _default_console().info(*values, sep=sep, end=end, flush=flush)
 
 
+def log(
+    *values: object,
+    sep: str | None = None,
+    end: str | None = None,
+    file: t.IO | None = None,
+    flush: bool = False,
+):
+    """`print()` to stderr with a timestamp"""
+    _default_console().log(*values, sep=sep, end=end, file=file, flush=flush)
+
+
 def err(
     *values: object,
     sep: str | None = None,
@@ -46,7 +57,7 @@ def err(
     flush: bool = False,
 ):
     """Wrapper around `print()` that emits to an error in red"""
-    _default_console().error(*values, sep=sep, end=end, flush=flush)
+    _default_console().err(*values, sep=sep, end=end, flush=flush)
 
 
 def usage(command: Command):

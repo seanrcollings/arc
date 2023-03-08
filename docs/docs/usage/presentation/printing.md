@@ -4,6 +4,7 @@
 - `#!python arc.print()` - Wrapper around the normal print function that is aware of whether or not stdout is the terminal or not. If it not a terminal, all escape codes will be removed.
 - `#!python arc.info()` - Wrapper around `#!python arc.print()`, but writes to stderr instead of stdout. Useful for quick logging purposes
 - `#!python arc.err()` - Wrapper around `#!python arc.print()`, but writes to stderr instead of stdout and styled as an error.
+- `#!python arc.log()` - Wrapper around `#!python arc.print()`, but writes to stderr instead of stdout and includes a timestamp.
 
 [Reference](../../reference/present/out.md)
 
@@ -29,7 +30,6 @@ The levels are:
 - development: `INFO`
 - production: `WARNING`
 
-You can also set the level to `DEBUG` by setting `#!python arc.configure(debug=True)`, which takes priority over the enviroment.
-
+You can also set the level to `DEBUG` by setting `#!python arc.configure(debug=True)`, which takes priority over the enviroment. Note that this will start printing out *arc's* own debug statements
 
 
