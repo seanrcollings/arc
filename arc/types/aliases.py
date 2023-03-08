@@ -2,13 +2,12 @@
 All builtin types (int, str, float, etc...) have a corresponding Alias type.
 """
 from __future__ import annotations
-
+import collections
 import enum
 import pathlib
 import types
 import typing as t
 import ipaddress
-import dataclasses
 import re
 
 import _io  # type: ignore
@@ -107,7 +106,7 @@ class Alias:
 # Builtin Types ---------------------------------------------------------------------------------
 
 
-class StringAlias(Alias, str, of=str):
+class StringAlias(Alias, str, of=(str, t.Any, collections.UserString)):  # type: ignore
     @classmethod
     def convert(cls, value: str, info: TypeInfo[str]) -> str:
         try:
@@ -313,7 +312,7 @@ class LiteralAlias(Alias, of=t.Literal):
             ctx.prompt,
             t.cast(str, param.prompt),
             list(str(tp.origin) for tp in param.type.sub_types),
-            highlight_color=ctx.config.brand_color,
+            highlight_color=ctx.config.color.accent,
         )
 
     @classmethod
@@ -347,7 +346,7 @@ class EnumAlias(Alias, of=enum.Enum):
             ctx.prompt,
             t.cast(str, param.prompt),
             list(str(m.value) for m in enum_cls.__members__.values()),
-            highlight_color=ctx.config.brand_color,
+            highlight_color=ctx.config.color.accent,
         )
 
     @classmethod

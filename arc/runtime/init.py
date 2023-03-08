@@ -150,8 +150,7 @@ class CheckParseReulstMiddleware(MiddlewareBase):
     ) -> str:
         message = ""
 
-        if config.suggestions["suggest_commands"]:
-
+        if config.suggest.commands:
             message += self.__fmt_suggestions(
                 extra[0:1],
                 itertools.chain(
@@ -161,7 +160,7 @@ class CheckParseReulstMiddleware(MiddlewareBase):
                 config,
             )
 
-        if config.suggestions["suggest_params"]:
+        if config.suggest.params:
             message += self.__fmt_suggestions(
                 extra,
                 itertools.chain(
@@ -183,7 +182,7 @@ class CheckParseReulstMiddleware(MiddlewareBase):
         message = ""
 
         suggestions = utils.string_suggestions(
-            rest, possibilities, config.suggestions["distance"]
+            rest, possibilities, config.suggest.distance
         )
 
         for param_name, param_sug in suggestions.items():

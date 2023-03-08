@@ -3,7 +3,7 @@ from arc import color
 
 arc.configure(
     version="1.0.0",
-    brand_color=color.fg.RED,
+    color=arc.ColorConfig(accent=color.fg.RED),
 )
 
 

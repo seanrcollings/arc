@@ -198,32 +198,16 @@ class Param(t.Generic[T]):
         return "?"  # Optional
 
     def convert(self, value: t.Any) -> T:
-        try:
-            return convert_type(self.type.resolved_type, value, self.type)
-        except errors.ConversionError as e:
-            message = self._fmt_error(e)
-            if e.details:
-                message += colorize(f" ({e.details})", fg.GREY)
-            raise errors.InvalidArgValue(message) from e
+        return convert_type(self.type.resolved_type, value, self.type)
 
     def run_middleware(self, value: t.Any, ctx: t.Any):
         for middleware in self.type.middleware:
-            try:
-                value = utils.dispatch_args(middleware, value, ctx, self)
-            except errors.ValidationError as e:
-                message = self._fmt_error(e)
-                raise errors.InvalidArgValue(message) from e
+            value = utils.dispatch_args(middleware, value, ctx, self)
 
         return value
 
     def get_param_names(self) -> list[str]:
         return []
-
-    def _fmt_error(self, error: errors.ArcError):
-        return (
-            f"invalid value for {colorize(self.cli_name, fg.YELLOW)}: "
-            f"{colorize(str(error), fx.BOLD)}"
-        )
 
 
 class ArgumentParam(Param[t.Any]):
