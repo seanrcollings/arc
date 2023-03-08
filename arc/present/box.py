@@ -3,8 +3,9 @@ import re
 import shutil
 
 from arc import color
+from arc.present.joiner import Join
 from .data import justifications, Justification
-from .drawing import BORDER_HEAVY, BORDER_LIGHT, Border, borders
+from .drawing import Border, borders
 from .ansi import Ansi
 
 
@@ -29,9 +30,9 @@ class Box:
     def __init__(
         self,
         string: str,
-        border: str = "light",
+        border: str = "rounded",
         padding: Union[int, dict[str, int]] = 0,
-        justify: Justification = "left",
+        justify: Justification = "center",
         color: str = color.fg.WHITE,
     ):
         """
@@ -60,14 +61,14 @@ class Box:
         term_width, _ = shutil.get_terminal_size()
         width = min(width, term_width)
 
-        pad_top = "".join(
+        pad_top = Join.together(
             self.format_line("", width) for _ in range(0, self.__padding["top"])
         )
-        content = "".join(
+        content = Join.together(
             self.format_line(line, width, clean_line)
             for line, clean_line in zip(self.string.split("\n"), cleaned)
         )
-        pad_btm = "".join(
+        pad_btm = Join.together(
             self.format_line("", width) for _ in range(0, self.__padding["bottom"])
         )
 
@@ -83,20 +84,19 @@ class Box:
         return self.__border
 
     @border.setter
-    def border(self, value):
+    def border(self, value: str):
         self.__border = borders[value]
 
     # Utils
 
-    def horizontal_border(self, width, side: str):
-        return "".join(
+    def horizontal_border(self, width: int, side: str):
+        return Join.together(
             (
-                self.__color,
                 self.border["corner"][f"{side}_left"],
                 self.border["horizontal"] * (width - 2),
                 self.border["corner"][f"{side}_right"],
-                color.effects.CLEAR,
-            )
+            ),
+            style=self.__color,
         )
 
     def format_line(
@@ -107,9 +107,9 @@ class Box:
     ):
         cleaned = cleaned or line
         formatted = (
-            f"{self.__color}{self.border['vertical']}{color.effects.CLEAR}"
+            f"{self.__color}{self.border['vertical']}{color.fx.CLEAR}"
             f"{cleaned:{self.__justify}{width - 2}}"
-            f"{self.__color}{self.border['vertical']}{color.effects.CLEAR}\n"
+            f"{self.__color}{self.border['vertical']}{color.fx.CLEAR}\n"
         )
 
         if line == "":

@@ -13,7 +13,7 @@ from arc.autocompletions import completions
 from arc.color import fg
 from arc.config import config
 from arc.context import Context
-from arc.present.helpers import Joiner
+from arc.present.joiner import Join
 from arc.utils import safe_issubclass
 
 if t.TYPE_CHECKING:
@@ -301,7 +301,7 @@ class Parser(argparse.ArgumentParser):
             # MODIFIED -----------------------------------------------------------
             self.error(
                 _("the following arguments are required: %s")
-                % Joiner.with_comma(required_actions, style=(fg.YELLOW))
+                % Join.with_comma(required_actions, style=(fg.YELLOW))
             )
             # ORIGINAL -----------------------------------------------------------
             # self.error(

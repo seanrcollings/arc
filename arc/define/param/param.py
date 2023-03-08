@@ -8,7 +8,7 @@ import typing as t
 from arc import errors, utils
 from arc import constants
 from arc.autocompletions import CompletionInfo, get_completions
-from arc.color import colorize, effects, fg
+from arc.color import colorize, fx, fg
 from arc.types.helpers import convert_type
 from arc.types.type_info import TypeInfo
 import arc.typing as at
@@ -218,7 +218,7 @@ class Param(t.Generic[T]):
     def _fmt_error(self, error: errors.ArcError):
         return (
             f"invalid value for {colorize(self.cli_name, fg.YELLOW)}: "
-            f"{colorize(str(error), effects.BOLD)}"
+            f"{colorize(str(error), fx.BOLD)}"
         )
 
 

@@ -14,7 +14,7 @@ from arc.runtime.middleware import (
     Middleware,
     MiddlewareBase,
 )
-from arc.present import Joiner
+from arc.present import Join
 from arc.config import Config
 
 if t.TYPE_CHECKING:
@@ -137,7 +137,7 @@ class CheckParseReulstMiddleware(MiddlewareBase):
 
         if extra and not config.allow_unrecognized_args:
             message = (
-                f"Unrecognized arguments: {Joiner.with_space(extra, style=fg.YELLOW)}"
+                f"Unrecognized arguments: {Join.with_space(extra, style=fg.YELLOW)}"
             )
             message += self.__get_suggestions(extra, config, command)
             raise errors.UnrecognizedArgError(message)
@@ -190,7 +190,7 @@ class CheckParseReulstMiddleware(MiddlewareBase):
             if param_sug:
                 message += (
                     f"\nUnrecognized {kind} {colorize(param_name, fg.YELLOW)}, "
-                    f"did you mean: {Joiner.with_or(param_sug, style=fg.YELLOW)}"
+                    f"did you mean: {Join.with_or(param_sug, style=fg.YELLOW)}"
                 )
 
         return message

@@ -17,7 +17,7 @@ from arc import errors, utils
 from arc import autocompletions
 from arc.autocompletions import Completion, CompletionInfo, CompletionType
 from arc.color import colorize, fg
-from arc.present.helpers import Joiner
+from arc.present.joiner import Join
 from arc.types.helpers import (
     safe_issubclass,
     convert_type,
@@ -253,7 +253,7 @@ class DictAlias(dict, Alias, of=dict):
                 raise errors.ConversionError(
                     elements,
                     f"{key} is not a valid key name. "
-                    f"Valid keys are: {Joiner.with_and(list(hints.keys()))}",
+                    f"Valid keys are: {Join.with_and(list(hints.keys()))}",
                 )
 
             sub_info = type_info.TypeInfo.analyze(hints[key])
@@ -286,7 +286,7 @@ class UnionAlias(Alias, of=(t.Union, types.UnionType)):  # type: ignore
             except Exception:
                 ...
 
-        options = Joiner.with_or(
+        options = Join.with_or(
             list(sub.name for sub in info.sub_types if sub.origin is not types.NoneType)
         )
         raise errors.ConversionError(
@@ -304,7 +304,7 @@ class LiteralAlias(Alias, of=t.Literal):
 
         raise errors.ConversionError(
             value,
-            f"must be {Joiner.with_or(list(sub.original_type for sub in info.sub_types))}",
+            f"must be {Join.with_or(list(sub.original_type for sub in info.sub_types))}",
         )
 
     @classmethod
@@ -337,7 +337,7 @@ class EnumAlias(Alias, of=enum.Enum):
         except ValueError as e:
             raise errors.ConversionError(
                 value,
-                f"must be {Joiner.with_or([m.value for m in info.origin.__members__.values()])}",
+                f"must be {Join.with_or([m.value for m in info.origin.__members__.values()])}",
             ) from e
 
     @classmethod

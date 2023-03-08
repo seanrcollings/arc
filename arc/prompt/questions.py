@@ -1,12 +1,13 @@
 import typing as t
 from abc import ABC, abstractmethod
+from arc.color import fg, fx
 
 import arc
 from arc import errors
 from arc import constants
 from arc.color import colorize, fg
-from arc.present.helpers import Joiner
 from arc.prompt.helpers import ARROW_DOWN, ARROW_UP, State
+from arc.present import Join
 
 T = t.TypeVar("T")
 C = t.TypeVar("C")
@@ -136,7 +137,7 @@ class MappedInputQuestion(InputQuestion[T]):
             return self.mapping[answer.lower()]
 
         self.err(
-            f"Please enter {Joiner.with_or(list(self.mapping.keys()))}",
+            f"Please enter {Join.with_or(list(self.mapping.keys()))}",
         )
 
 

@@ -54,7 +54,11 @@ nav:
           - Parameter Sources: usage/parameters/sources.md
           - Parameter Groups: usage/parameters/groups.md
           - Dependency Injection: usage/parameters/dependancy-injection.md
-      - Printing & Coloring Output: usage/printing.md
+      - Printing Output:
+          - Intro: usage/presentation/presentation-intro.md
+          - Printing: usage/presentation/printing.md
+          - Coloring: usage/presentation/coloring.md
+          - Rich Output: usage/presentation/rich-output.md
       - User Input: usage/user-input.md
       - Subcommands: usage/subcommands.md
       - File Access: usage/file-access.md

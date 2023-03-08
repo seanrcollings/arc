@@ -3,11 +3,11 @@ import typing as t
 from arc import color
 
 
-class Joiner:
+class Join:
     @staticmethod
-    def join(
+    def together(
         values: t.Iterable,
-        string: str,
+        string: str = "",
         remove_falsey: bool = False,
         style: str = None,
     ) -> str:
@@ -21,11 +21,11 @@ class Joiner:
 
     @staticmethod
     def with_space(values: t.Iterable, *args, **kwargs) -> str:
-        return Joiner.join(values, " ", *args, **kwargs)
+        return Join.together(values, " ", *args, **kwargs)
 
     @staticmethod
     def with_comma(values: t.Iterable, *args, **kwargs) -> str:
-        return Joiner.join(values, ", ", *args, **kwargs)
+        return Join.together(values, ", ", *args, **kwargs)
 
     @staticmethod
     def in_groups(
@@ -37,10 +37,10 @@ class Joiner:
         **kwargs
     ) -> str:
         """Joins two groups objects with `string`, then joins the two groups together with `between`"""
-        return Joiner.join(
+        return Join.together(
             (
-                Joiner.join(first, string, *args, **kwargs),
-                Joiner.join(second, string, *args, **kwargs),
+                Join.together(first, string, *args, **kwargs),
+                Join.together(second, string, *args, **kwargs),
             ),
             between,
         )
@@ -61,9 +61,9 @@ class Joiner:
             return ""
 
         if len(values) == 1:
-            return Joiner.join(values, "", *args, **kwargs)
+            return Join.together(values, "", *args, **kwargs)
 
-        return Joiner.in_groups(
+        return Join.in_groups(
             values[:-1], [values[-1]], string, last_string, *args, **kwargs
         )
 
@@ -78,7 +78,7 @@ class Joiner:
         Returns:
             string: joined values
         """
-        return Joiner.with_last(values, ", ", " and ")
+        return Join.with_last(values, ", ", " and ")
 
     @staticmethod
     def with_or(values: t.Sequence, *args, **kwargs) -> str:
@@ -94,4 +94,4 @@ class Joiner:
             string: joined values
         """
 
-        return Joiner.with_last(values, ", ", " or ", *args, **kwargs)
+        return Join.with_last(values, ", ", " or ", *args, **kwargs)

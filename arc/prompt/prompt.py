@@ -3,8 +3,9 @@ import sys
 import typing as t
 from getpass import getpass
 
-from arc.color import colorize, fg, effects
+from arc.color import fg, fx
 from arc.context import Context
+from arc.present.ansi import colorize
 from .helpers import (
     CTRL_C,
     ESCAPE,
@@ -27,10 +28,8 @@ T = t.TypeVar("T")
 
 
 class Prompt:
-    def __init__(self, show_emojis: bool = True, color_output: bool = True) -> None:
+    def __init__(self) -> None:
         self.out_stream = sys.stdout
-        self.show_emojis = show_emojis
-        self.color_output = color_output
         self._buffer: str = ""
         self._prev_buffer: str = ""
         self._answers: list[tuple[BaseQuestion, t.Any]] = []
@@ -95,7 +94,7 @@ class Prompt:
                 answer = question.handle_answer(user_input)
             except QuestionError as e:
                 self.write(clear_line())
-                self.error(str(e), end="", flush=True)
+                self.error(str(e), flush=True)
                 Cursor.setpos(row, col)
 
         self.write(clear_line())
@@ -188,52 +187,8 @@ class Prompt:
         else:
             return seq
 
-    # TODO: move these methods into some sort of present object
-    def beautify(
-        self, message: str, color: str = "", emoji: str = "", end: str = "\n", **kwargs
-    ):
-        self.write(
-            self.colored(color) + self.emoji(emoji) + message + effects.CLEAR + end,
-            **kwargs,
-        )
-
     def error(self, message: str, **kwargs):
-        """Display an error message to the user"""
-        self.beautify(message, fg.RED, "🚨", **kwargs)
-
-    def ok(self, message: str, **kwargs):
-        """Display a successful message to the user"""
-        self.beautify(message, fg.GREEN, "✓", **kwargs)
-
-    def no(self, message: str, **kwargs):
-        """Display an unsuccessful message to the user"""
-        self.beautify(message, fg.RED, "✗", **kwargs)
-
-    def act(self, message: str, **kwargs):
-        """Display an action message to the user"""
-        self.beautify(message, fg.BRIGHT_BLUE, **kwargs)
-
-    def warn(self, message: str, **kwargs):
-        """Display a warning message to the user"""
-        self.beautify(message, fg.YELLOW, "🚧", **kwargs)
-
-    def subtle(self, message: str, **kwargs):
-        """Display a subtle (light grey) message to the user"""
-        self.beautify(message, fg.GREY, **kwargs)
-
-    def snake(self, message: str, **kwargs):
-        """Display a Pythonic message to the user"""
-        self.beautify(message, emoji="🐍", **kwargs)
-
-    def emoji(self, emoji: str):
-        if self.show_emojis and len(emoji) > 0:
-            return emoji + " "
-        return ""
-
-    def colored(self, color: str):
-        if self.color_output:
-            return color
-        return ""
+        self.write(f"{fg.RED}✗ {message}{fx.CLEAR}", **kwargs)
 
     @classmethod
     def __depends__(self, ctx: Context) -> "Prompt":

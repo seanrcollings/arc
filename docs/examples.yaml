@@ -156,3 +156,7 @@
     - ""
     - "sub"
   exit_code: 1
+- file: table.py
+  exec: ""
+- file: box.py
+  exec: ""

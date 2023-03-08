@@ -4,7 +4,7 @@ import os
 import enum
 import dataclasses as dc
 from arc import errors
-from arc.present.helpers import Joiner
+from arc.present.joiner import Join
 
 if t.TYPE_CHECKING:
     from arc.context import Context
@@ -16,7 +16,7 @@ def completions(shell: str, ctx: Context):
     info = CompletionInfo.from_env()
     if shell not in shells:
         raise errors.ArgumentError(
-            f"Unsupported shell: {shell}. Supported shells: {Joiner.with_comma(shells)}"
+            f"Unsupported shell: {shell}. Supported shells: {Join.with_comma(shells)}"
         )
     comp: ShellCompletion = shells[shell](ctx, info)
     return comp.complete() if comp.should_complete() else comp.source()

@@ -4,7 +4,7 @@ import itertools
 import typing as t
 
 from arc.errors import ArcError
-from arc.color import colorize, effects, fg
+from arc.color import colorize, fx, fg
 from arc.present.ansi import Ansi
 from arc.present import drawing
 
@@ -65,7 +65,7 @@ def _format_cell(value: t.Any):
 
 
 def _format_header_cell(value: t.Any):
-    return colorize(str(value), effects.BOLD)
+    return colorize(str(value), fx.BOLD)
 
 
 def _format_bool(val: bool):
@@ -86,14 +86,13 @@ class Table:
     """Display information in a table
 
     ```py
-    from arc.color import colorize, fg
     from arc.present.table import Table
 
     t = Table(["Name", "Age", "Stand"])
     t.add_row(["Jonathen Joestar", 20, "-"])
     t.add_row(["Joseph Joestar", 18, "Hermit Purple (in Part 3)"])
     t.add_row(["Jotaro Kujo", 18, "Star Platinum"])
-    t.add_row(["Josuke Higashikata", 16, "Crazy Diamon"])
+    t.add_row(["Josuke Higashikata", 16, "Crazy Diamond"])
     t.add_row(["Giorno Giovanna", 15, "Gold Experience"])
     t.add_row(["Joylene Kujo", 19, "Stone Free"])
 
@@ -109,14 +108,19 @@ class Table:
     │ Jonathen Joestar   │ 20  │ -                         │
     │ Joseph Joestar     │ 18  │ Hermit Purple (in Part 3) │
     │ Jotaro Kujo        │ 18  │ Star Platinum             │
-    │ Josuke Higashikata │ 16  │ Crazy Diamon              │
+    │ Josuke Higashikata │ 16  │ Crazy Diamond             │
     │ Giorno Giovanna    │ 15  │ Gold Experience           │
     │ Joylene Kujo       │ 19  │ Stone Free                │
     └────────────────────┴─────┴───────────────────────────┘
     ```
     """
 
-    def __init__(self, columns: ColumnInput, default_formatting: bool = True) -> None:
+    def __init__(
+        self,
+        columns: ColumnInput,
+        rows: t.Sequence[t.Sequence[t.Any]] | None = None,
+        default_formatting: bool = True,
+    ) -> None:
         self.__columns: t.Sequence[Column] = self.__resolve_columns(columns)
         self.__rows: list[Row] = []
         self._border = drawing.borders["light"]
@@ -128,6 +132,8 @@ class Table:
         self._type_formatters: dict[type, TableFormatter] = (
             _DEFAULT_TYPE_FORMATTERS if default_formatting else {}
         )
+        if rows:
+            self.add_rows(rows)
 
     def __str__(self):
         for col in self.__columns:
@@ -159,6 +165,10 @@ class Table:
 
         self.__rows.append(resolved)
 
+    def add_rows(self, rows: t.Sequence[t.Sequence[t.Any]]):
+        for row in rows:
+            self.add_row(row)
+
     def fmt_header_cell(self, func: TableFormatter | None = None):
         def inner(func: TableFormatter):
             self._cell_formatter = func
@@ -170,7 +180,20 @@ class Table:
         return inner
 
     def fmt_cell(self, func: TableFormatter | None = None):
-        """Formats any cell that does not already have a formatter applied"""
+        """Formats any cell that does not already have a formatter applied
+
+        ```py
+        from arc.color import fg, fx
+        from arc.present import Table
+
+        table = Table()
+
+        @table.fmt_cell
+        def fmt(cell):
+            return f"{fg.RED}{cell}{fx.CLEAR}"
+
+        ```
+        """
 
         def inner(func: TableFormatter):
             self._cell_formatter = func

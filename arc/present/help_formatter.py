@@ -5,9 +5,9 @@ import typing as t
 import textwrap
 from arc import constants
 
-from arc.color import colorize, fg, effects
+from arc.color import colorize, fg, fx
 from arc.config import config
-from arc.present.helpers import Joiner
+from arc.present.joiner import Join
 from arc.present.formatters import TextFormatter
 from arc.present.ansi import Ansi
 
@@ -67,7 +67,7 @@ class HelpFormatter(TextFormatter):
                 self.write_text(paragraphize(body))
 
     def write_heading(self, heading: str):
-        super().write_heading(colorize(heading.upper(), effects.BOLD))
+        super().write_heading(colorize(heading.upper(), fx.BOLD))
 
     def write_usage(self):
         command = self.command
@@ -76,7 +76,7 @@ class HelpFormatter(TextFormatter):
             if command.is_root and command.subcommands:
                 params_str = self.usage_params(self.key_params, self.argument_params)
                 self.write_text(
-                    Joiner.with_space(
+                    Join.with_space(
                         [colorize(command.root.name, config.brand_color), params_str]
                     )
                 )
@@ -84,10 +84,10 @@ class HelpFormatter(TextFormatter):
                 if self.doc.command.subcommands:
                     self.write_paragraph()
                     self.write_text(
-                        Joiner.with_space(
+                        Join.with_space(
                             [
                                 colorize(command.root.name, config.brand_color),
-                                colorize("<subcommand>", effects.UNDERLINE),
+                                colorize("<subcommand>", fx.UNDERLINE),
                                 "[ARGUMENTS ...]",
                             ],
                             remove_falsey=True,
@@ -97,11 +97,11 @@ class HelpFormatter(TextFormatter):
                 params_str = self.usage_params(self.key_params, self.argument_params)
                 fullname = self.doc.fullname
                 path = " ".join(fullname[0:-1]) if fullname else ""
-                name = colorize(fullname[-1], effects.UNDERLINE) if fullname else ""
+                name = colorize(fullname[-1], fx.UNDERLINE) if fullname else ""
 
                 if not command.is_namespace:
                     self.write_text(
-                        Joiner.with_space(
+                        Join.with_space(
                             [
                                 colorize(command.root.name, config.brand_color),
                                 path,
@@ -116,12 +116,12 @@ class HelpFormatter(TextFormatter):
 
                 if self.doc.command.subcommands:
                     self.write_text(
-                        Joiner.with_space(
+                        Join.with_space(
                             [
                                 colorize(command.root.name, config.brand_color),
                                 path,
                                 name,
-                                colorize("<subcommand>", effects.UNDERLINE),
+                                colorize("<subcommand>", fx.UNDERLINE),
                                 "[ARGUMENTS ...]",
                             ],
                             remove_falsey=True,
@@ -144,7 +144,7 @@ class HelpFormatter(TextFormatter):
             if param["kind"] == "argument":
                 formatted.append(self.format_single_param(param))
 
-        return Joiner.with_space(formatted, remove_falsey=True)
+        return Join.with_space(formatted, remove_falsey=True)
 
     def format_single_param(self, param: ParamDoc):
         fmt = ""
@@ -158,9 +158,9 @@ class HelpFormatter(TextFormatter):
             nargs = param["nargs"]
             if isinstance(nargs, int) and nargs:
                 if optional:
-                    fmt = Joiner.with_space(repeat(f"[{fmt}]", nargs))
+                    fmt = Join.with_space(repeat(f"[{fmt}]", nargs))
                 else:
-                    fmt = Joiner.with_space(repeat(fmt, nargs))
+                    fmt = Join.with_space(repeat(fmt, nargs))
             elif nargs == "*":
                 fmt += f" [{fmt}...]"
                 if optional:
@@ -200,7 +200,7 @@ class HelpFormatter(TextFormatter):
                 and param["kind"] != "flag"
             ):
                 if isinstance(param["default"], constants.COLLECTION_TYPES):
-                    default = Joiner.with_comma(param["default"])
+                    default = Join.with_comma(param["default"])
                 else:
                     default = param["default"]
 
@@ -219,7 +219,7 @@ class HelpFormatter(TextFormatter):
             desc = command.doc.short_description or ""
             aliases = parent.subcommands.aliases_for(command.name)
             if aliases:
-                name += colorize(f" ({Joiner.with_comma(aliases)})", fg.GREY)
+                name += colorize(f" ({Join.with_comma(aliases)})", fg.GREY)
 
             data.append((name, desc))
 
