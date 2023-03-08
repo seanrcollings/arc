@@ -32,7 +32,7 @@ def pager(contents: object, command: list[str] | None = None):
     Args:
         contents (str): String contents to display in their page
         command (list[str] | None, optional): Override the default
-        pager discovery with a given command to run. Defaults to None.
+            pager discovery with a given command to run. Defaults to None.
 
     Raises:
         ArcError: if no pager can be found for the user

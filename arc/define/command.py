@@ -256,7 +256,6 @@ class Command(ParamMixin, MiddlewareContainer):
 
         command.subcommand(subcommand, "alias", desc="...")
         ```
-
         """
 
         if isinstance(first, type(self)):

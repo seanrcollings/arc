@@ -10,7 +10,8 @@ The precedence of sources is:
 
 !!! note "Type Conversion"
     All input sources, except for default value, will still pass through the type
-    conversion systems that *arc* provides.
+    conversion systems that *arc* provides. If the value you return for something
+    is already the correct type, it will be passed over.
 
 ### Command Line
 When an *arc* command is executed it will check `#!python sys.argv` for input. However, you can actually provide explcit input as the first argument to call:
@@ -81,4 +82,15 @@ If none of the above are satisfied first, *arc* will check for a default value o
 If there is no default (like with `firstname` above), *arc* will emit an error
 ```console
 --8<-- "examples/outputs/parameter_default_error"
+```
+
+## Checking origin of parameter value
+You can check what the origin of a value is like this:
+
+```py title="examples/origins.py"
+--8<-- "examples/origins.py"
+```
+
+```console
+--8<-- "examples/outputs/origins"
 ```

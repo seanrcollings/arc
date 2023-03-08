@@ -160,3 +160,14 @@
   exec: ""
 - file: box.py
   exec: ""
+- file: dependency.py
+  exec: ""
+- file: dependency.py
+  out: dependency_help
+  exec: "--help"
+- file: type_dependency.py
+  exec: ""
+- file: origins.py
+  exec:
+    - ""
+    - "10"

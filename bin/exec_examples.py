@@ -50,7 +50,7 @@ def get_config(file):
             if item.get("out", None):
                 item["out"] = Path(item["out"])
             else:
-                item["out"] = Path(item["file"].rstrip(".py"))
+                item["out"] = Path(item["file"]).with_suffix("")
 
             if isinstance(item.get("exec", None), str):
                 item["exec"] = [item["exec"]]
