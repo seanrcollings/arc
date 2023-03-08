@@ -131,6 +131,10 @@ Gives you access to the current execution context.
 
 Reference [State](../../command-state.md) for details
 
+`Prompt`
+
+Gives you access to a [Prompt instance](../../user-input.md)
+
 `SemVer`
 
 A type to support semantically-versioned strings based on the spec found [here](https://semver.org/spec/v2.0.0.html)
