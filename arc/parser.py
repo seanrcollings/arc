@@ -21,6 +21,10 @@ if t.TYPE_CHECKING:
 
 
 class Parser(argparse.ArgumentParser):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.param_map: dict[str, Param] = {}
+
     def parse_intermixed_args(  # type: ignore
         self, args: t.Sequence[str] | None = None, namespace=None
     ) -> at.ParseResult:
@@ -51,6 +55,9 @@ class Parser(argparse.ArgumentParser):
 
         if not param.is_argument:
             kwargs["dest"] = param.argument_name
+
+        for name in param.get_param_names():
+            self.param_map[name] = param
 
         self.add_argument(*param.get_param_names(), **kwargs)
 
@@ -140,7 +147,11 @@ class Parser(argparse.ArgumentParser):
                 try:
                     return self._match_argument(action, args_str_pattern)
                 except argparse.ArgumentError as e:
-                    raise errors.ParserError(str(e)) from e
+                    # TODO: need to verify that this is the only
+                    # circumstance that this error will be raised given the
+                    # way in which I'm using argparse
+                    param = self.param_map[e.argument_name]
+                    raise errors.MissingOptionValueError(param) from e
 
             match_argument = _wrapped_match_argument
             # ORIGINAL ------------------------------------------

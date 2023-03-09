@@ -37,7 +37,7 @@ def test_custom_int_types(cls, value, result: int):
             arc.convert(value, cls)
 
         # Don't bother testing integer values
-        with pytest.raises(errors.InvalidArgValue):
+        with pytest.raises(errors.InvalidParamValueError):
             assert command(str(value))
 
 
@@ -70,5 +70,5 @@ def test_strict_floats(cls, value, result):
         with pytest.raises(errors.ValidationError):
             arc.convert(value, cls)
 
-        with pytest.raises(errors.InvalidArgValue):
+        with pytest.raises(errors.InvalidParamValueError):
             assert command(f"{value}") == cls(value) == float(value)

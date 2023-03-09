@@ -42,5 +42,5 @@ def test_usage():
 
     assert pa("arc") == path.ValidPath("arc")
 
-    with pytest.raises(errors.InvalidArgValue):
+    with pytest.raises(errors.InvalidParamValueError):
         pa("doesnotexist")

@@ -111,13 +111,11 @@ class ApplyParseResultMiddleware(ParamProcessor):
         value: t.Any = self.res.pop(param.argument_name, constants.MISSING)
         self.set_origin(param, ValueOrigin.CLI)
 
-        # This is dependant on the fact that the current parser
+        # This is dependent on the fact that the current parser
         # adds a None to the result when you input a keyword, but
         # with no value
         if param.is_required and value is None:
-            raise errors.MissingArgError(
-                f"argument {colorize(param.cli_name, fg.YELLOW)} expected 1 argument",
-            )
+            raise errors.MissingOptionValueError(param)
 
         return value
 
@@ -163,10 +161,6 @@ class GetterValueMiddleware(ParamProcessor):
         return utils.dispatch_args(getter, param, self.ctx)
 
 
-def fmt_error(ctx: Context, param: Param, error: errors.ArcError):
-    return f"invalid value for {colorize(param.cli_name, ctx.config.color.highlight)}: {error}"
-
-
 class ConvertValuesMiddleware(ParamProcessor):
     def process_not_missing(self, param: Param, value: t.Any):
         if value in (None, constants.MISSING, True, False,) and param.type.origin in (
@@ -178,10 +172,7 @@ class ConvertValuesMiddleware(ParamProcessor):
         try:
             return param.convert(value)
         except errors.ConversionError as e:
-            message = fmt_error(self.ctx, param, e)
-            if e.details:
-                message += colorize(f" ({e.details})", self.ctx.config.color.subtle)
-            raise errors.InvalidArgValue(message) from e
+            raise errors.InvalidParamValueError(str(e), param, e.details) from e
 
 
 class DefaultValueMiddleware(ParamProcessor):
@@ -207,8 +198,7 @@ class RunTypeMiddlewareMiddleware(ParamProcessor):
             try:
                 value = param.run_middleware(value, self.ctx)
             except errors.ValidationError as e:
-                message = fmt_error(self.ctx, param, e)
-                raise errors.InvalidArgValue(message) from e
+                raise errors.InvalidParamValueError(str(e), param) from e
         return value
 
     def skip(self, _param: Param, _value: t.Any) -> bool:
@@ -225,12 +215,7 @@ class MissingParamsCheckerMiddleware(MiddlewareBase):
         ]
 
         if missing:
-            params = Join.with_comma(
-                (param.cli_name for param in missing), style=ctx.config.color.highlight
-            )
-            raise arc.errors.MissingArgError(
-                f"The following arguments are required: {params}"
-            )
+            raise arc.errors.MissingArgValueError(missing)
 
 
 class CompileParamsMiddleware(MiddlewareBase):

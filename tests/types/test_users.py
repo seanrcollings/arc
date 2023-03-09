@@ -15,7 +15,7 @@ class TestUsage:
 
         assert command("root").name == "root"
 
-        with pytest.raises(errors.InvalidArgValue):
+        with pytest.raises(errors.InvalidParamValueError):
             command("invalid")
 
     def test_group(self):
@@ -25,7 +25,7 @@ class TestUsage:
 
         assert command("root").name == "root"
 
-        with pytest.raises(errors.InvalidArgValue):
+        with pytest.raises(errors.InvalidParamValueError):
             command("invalid")
 
 

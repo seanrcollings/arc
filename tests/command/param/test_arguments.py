@@ -11,7 +11,7 @@ class TestArgumentDeclartion:
 
         assert command("Jotaro") == "Jotaro"
 
-        with pytest.raises(errors.MissingArgError):
+        with pytest.raises(errors.MissingArgValueError):
             command("")
 
     def test_param_info(self):
@@ -21,7 +21,7 @@ class TestArgumentDeclartion:
 
         assert command("Jotaro") == "Jotaro"
 
-        with pytest.raises(errors.MissingArgError):
+        with pytest.raises(errors.MissingArgValueError):
             command("")
 
 
@@ -32,7 +32,7 @@ def test_missing():
 
     assert command("1 2") == ["1", "2"]
 
-    with pytest.raises(errors.MissingArgError):
+    with pytest.raises(errors.MissingArgValueError):
         command("")
 
 

@@ -54,13 +54,13 @@ class App(MiddlewareContainer):
                 res = self.stack.close(res)
         except errors.ExternalError as exc:
             if self.config.environment == "production":
-                arc.info(exc)
+                arc.info(exc.fmt(ctx))
                 arc.exit(1)
 
             raise
         except errors.Exit as exc:
             if exc.message:
-                arc.info(exc.message)
+                arc.info(exc.fmt(ctx))
             raise
 
         return res

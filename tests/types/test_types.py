@@ -59,7 +59,7 @@ class TestInt:
         def it(val: int):
             return val
 
-        with pytest.raises(errors.InvalidArgValue):
+        with pytest.raises(errors.InvalidParamValueError):
             it(f"{value!r}")
 
 
@@ -78,7 +78,7 @@ class TestFloat:
         def fl(val: float):
             return val
 
-        with pytest.raises(errors.InvalidArgValue):
+        with pytest.raises(errors.InvalidParamValueError):
             assert fl(f"{value!r}")
 
 
@@ -192,7 +192,7 @@ class TestTuple:
         def not_enough_opt(*, val: tuple[int, int]):
             return val
 
-        with pytest.raises(errors.InvalidArgValue):
+        with pytest.raises(errors.InvalidParamValueError):
             cli("not-enough-opt --val 1")
 
 
@@ -228,7 +228,7 @@ class TestDict:
 
         assert cli("di one=1,two=2,three=3") == dict(one=1, two=2, three=3)
 
-        with pytest.raises(errors.InvalidArgValue):
+        with pytest.raises(errors.InvalidParamValueError):
             cli("di one=1,two=2,three=three")
 
     def test_typed_dict(self, cli: arc.Command):
@@ -242,10 +242,10 @@ class TestDict:
 
         assert cli("td val1=1,val2=2.0") == Thing(val1=1, val2=2.0)
 
-        with pytest.raises(errors.InvalidArgValue):
+        with pytest.raises(errors.InvalidParamValueError):
             cli("td val1=string,val2=string")
 
-        with pytest.raises(errors.InvalidArgValue):
+        with pytest.raises(errors.InvalidParamValueError):
             cli("td val1=string")
 
 

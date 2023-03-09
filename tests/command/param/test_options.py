@@ -21,10 +21,10 @@ class TestOptionDeclaration:
     def assertions(self, command: arc.Command):
         assert command("--name Jotaro") == "Jotaro"
 
-        with pytest.raises(errors.MissingArgError):
+        with pytest.raises(errors.MissingArgValueError):
             command("")
 
-        with pytest.raises(errors.MissingArgError):
+        with pytest.raises(errors.MissingOptionValueError):
             command("--name")
 
 

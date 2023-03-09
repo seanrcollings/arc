@@ -23,7 +23,7 @@ class TestEnv:
 
         assert env("10") == 10
 
-        with pytest.raises(errors.MissingArgError):
+        with pytest.raises(errors.MissingArgValueError):
             env("")
 
         with environ(VAL="2"):
@@ -50,17 +50,17 @@ class TestEnv:
 
         assert env("10 --key 10") == (10, 10)
 
-        with pytest.raises(errors.MissingArgError):
+        with pytest.raises(errors.MissingArgValueError):
             env("")
 
-        with pytest.raises(errors.MissingArgError):
+        with pytest.raises(errors.MissingArgValueError):
             env("10")
 
         with environ(VAL="2", KEY="10"):
             assert env("") == (2, 10)
 
         with environ(VAL="2"):
-            with pytest.raises(errors.MissingArgError):
+            with pytest.raises(errors.MissingArgValueError):
                 env("")
 
             assert env("--key 10") == (2, 10)
@@ -140,7 +140,7 @@ class TestGetter:
         def get_val(param):
             return constants.MISSING
 
-        with pytest.raises(errors.MissingArgError):
+        with pytest.raises(errors.MissingArgValueError):
             getter("")
 
     def test_missing_with_default(self):
