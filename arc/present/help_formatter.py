@@ -196,7 +196,9 @@ class HelpFormatter(TextFormatter):
             else:
                 name = colorize(f"--{param['name']}", self.config.color.accent)
                 if param["short_name"]:
-                    name += colorize(f" (-{param['short_name']})", fg.GREY)
+                    name += colorize(
+                        f" (-{param['short_name']})", self.config.color.subtle
+                    )
 
             desc = textwrap.dedent(param["description"] or "")
             if (
@@ -208,7 +210,7 @@ class HelpFormatter(TextFormatter):
                 else:
                     default = param["default"]
 
-                desc += colorize(f" (default: {default})", fg.GREY)
+                desc += colorize(f" (default: {default})", self.config.color.subtle)
 
             desc = desc.strip("\n")
 
@@ -223,7 +225,9 @@ class HelpFormatter(TextFormatter):
             desc = command.doc.short_description or ""
             aliases = parent.subcommands.aliases_for(command.name)
             if aliases:
-                name += colorize(f" ({Join.with_comma(aliases)})", fg.GREY)
+                name += colorize(
+                    f" ({Join.with_comma(aliases)})", self.config.color.subtle
+                )
 
             data.append((name, desc))
 
