@@ -1,10 +1,6 @@
 import arc
-from arc import color
 
-arc.configure(
-    version="1.0.0",
-    color=arc.ColorConfig(accent=color.fg.RED),
-)
+arc.configure(version="1.0.0")
 
 
 @arc.command

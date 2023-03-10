@@ -41,7 +41,7 @@ class App(MiddlewareContainer):
                     raise errors.CommandError(
                         "The command was not decided upon during initialization "
                         "(ctx['arc.command'] is not set). This likely means there "
-                        "is a problem with your middleware stack"
+                        "is a problem with the middleware stack"
                     )
 
                 command: Command = ctx["arc.command"]
@@ -52,7 +52,7 @@ class App(MiddlewareContainer):
                 self.stack.throw(e)
             else:
                 res = self.stack.close(res)
-        except errors.ExternalError as exc:
+        except errors.ArcError as exc:
             if self.config.environment == "production":
                 arc.info(exc.fmt(ctx))
                 arc.exit(1)

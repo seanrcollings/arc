@@ -15,7 +15,7 @@ from arc.runtime import App, ExecMiddleware, InitMiddleware
 from arc import types
 from arc.types import State
 from arc.context import Context
-from arc.config import configure, Config, ColorConfig, SuggestionConfig
+from arc.config import configure, Config, ColorConfig, SuggestionConfig, LinksConfig
 from arc import errors
 from arc.errors import ConversionError, ExecutionError, ValidationError
 from arc.pub import convert, exit

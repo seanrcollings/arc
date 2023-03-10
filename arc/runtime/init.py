@@ -2,11 +2,9 @@ from __future__ import annotations
 import typing as t
 import shlex
 import sys
-import itertools
 
-from arc import errors, utils
+from arc import errors
 from arc import typing as at
-from arc.color import colorize, fg
 from arc.context import Context
 from arc.parser import Parser
 from arc.runtime.middleware import (
@@ -14,7 +12,6 @@ from arc.runtime.middleware import (
     Middleware,
     MiddlewareBase,
 )
-from arc.present import Join
 from arc.config import Config
 
 if t.TYPE_CHECKING:
@@ -36,9 +33,16 @@ class AddUsageErrorInfoMiddleware(MiddlewareBase):
             yield
         except errors.UsageError as e:
             command = ctx.get("arc.command")
-            e.command = command
             if not command:
-                ctx.logger.debug("UsageError rasied, but no command is set in context")
+                ctx.logger.debug("UsageError raised, but no command is set in context")
+
+            if e.command:
+                ctx.logger.debug(
+                    "UsageError was raised, but a command is already attached"
+                )
+            else:
+                e.command = command
+
             raise
 
 
@@ -136,63 +140,7 @@ class CheckParseReulstMiddleware(MiddlewareBase):
         command: Command = ctx["arc.command"]
 
         if extra and not config.allow_unrecognized_args:
-            message = (
-                f"Unrecognized arguments: {Join.with_space(extra, style=fg.YELLOW)}"
-            )
-            message += self.__get_suggestions(extra, config, command)
-            raise errors.UnrecognizedArgError(message)
-
-    def __get_suggestions(
-        self,
-        extra: list[str],
-        config: Config,
-        command: Command,
-    ) -> str:
-        message = ""
-
-        if config.suggest.commands:
-            message += self.__fmt_suggestions(
-                extra[0:1],
-                itertools.chain(
-                    *[com.all_names for com in command.subcommands.values()]
-                ),
-                "subcommand",
-                config,
-            )
-
-        if config.suggest.params:
-            message += self.__fmt_suggestions(
-                extra,
-                itertools.chain(
-                    *[param.get_param_names() for param in command.key_params]
-                ),
-                "argument",
-                config,
-            )
-
-        return message
-
-    def __fmt_suggestions(
-        self,
-        rest: t.Iterable[str],
-        possibilities: t.Iterable[str],
-        kind: str,
-        config: Config,
-    ) -> str:
-        message = ""
-
-        suggestions = utils.string_suggestions(
-            rest, possibilities, config.suggest.distance
-        )
-
-        for param_name, param_sug in suggestions.items():
-            if param_sug:
-                message += (
-                    f"\nUnrecognized {kind} {colorize(param_name, fg.YELLOW)}, "
-                    f"did you mean: {Join.with_or(param_sug, style=fg.YELLOW)}"
-                )
-
-        return message
+            raise errors.UnrecognizedArgError(extra)
 
 
 class InitMiddleware(DefaultMiddlewareNamespace):

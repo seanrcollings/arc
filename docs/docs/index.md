@@ -2,15 +2,17 @@
 title: Home
 ---
 # Overview
-*arc* is a tool for building declartive, and highly extendable CLI applications for Python ^3.10 based on Python type-hints
+*arc* is a tool for building declarative, and highly extendable CLI applications for Python ^3.10.
+
+## Features
 
 *arc's* features include:
 
-* Command line arguments based on Python type hints
-* Arbitrary command nesting
-* Automatic `--help` documentation generation
-* Dynamic command loading at runtime
-* Single and multi-command modes
+* [Command line Arguments, Options, and Flags](./usage/parameters/intro.md) - Using Python function arguments
+* [Data Validation](./usage/parameters/types/types-intro.md) - Via Python type hints
+* [Subcommands](./usage/subcommands.md) - Breaking functionality into discrete components
+* [Documentation](./usage/documentation-generation.md) - Automatic `--help` generation from your command definitons
+* [User Extension](./usage/command-autoloading.md) - Dynamic command loading at runtime
 
 ## Installation
 *arc* can be installed with pip
@@ -44,8 +46,7 @@ Pretty cool, huh? *arc* will pull *all* of the information that it needs from yo
 ### Configuration
 *arc* is easily configurable via the `#!python arc.configure()` function.
 
-For example, you can set a version string for you application. This will add a `--version` flag to your application. Additionally you can set a "brand color" which is the primary color used for the documentation.
-
+For example, you can set a version string for you application. This will add a `--version` flag to your application.
 
 ```py title="examples/hello_configuration.py"
 --8<-- "examples/hello_configuration.py"
