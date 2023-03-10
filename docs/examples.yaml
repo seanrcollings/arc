@@ -171,3 +171,8 @@
   exec:
     - ""
     - "10"
+- file: length.py
+  exec:
+    - "1 2 3 4 5 6"
+    - "1"
+  exit_code: 1

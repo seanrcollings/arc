@@ -387,7 +387,7 @@ class _Address(Alias):
     alias_for: t.ClassVar[type]
 
     @classmethod
-    def convert(cls, value: str, info):
+    def convert(cls, value: str, info: TypeInfo):
         try:
             if value.isnumeric():
                 return cls.alias_for(int(value))

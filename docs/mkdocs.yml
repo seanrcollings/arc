@@ -48,7 +48,6 @@ nav:
           - Parameter Types:
               - Types Intro: usage/parameters/types/types-intro.md
               - Supported Types: usage/parameters/types/supported-types.md
-              - Multiple Values: usage/parameters/types/multiple-values.md
               - Type Middleware: usage/parameters/types/type-middleware.md
               - Custom Types: usage/parameters/types/custom-types.md
           - Parameter Sources: usage/parameters/sources.md
@@ -61,7 +60,6 @@ nav:
           - Rich Output: usage/presentation/rich-output.md
       - User Input: usage/user-input.md
       - Subcommands: usage/subcommands.md
-      - File Access: usage/file-access.md
       - Documentation Generation: usage/documentation-generation.md
       - Middleware: usage/middleware.md
       - Command State: usage/command-state.md
