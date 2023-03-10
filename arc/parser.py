@@ -354,20 +354,16 @@ class CustomAction(argparse.Action):
 class CustomHelpAction(CustomAction, argparse._HelpAction):
     def __call__(self, *args, **kwargs):
         arc.info(self.command.doc.help())
-        raise errors.Exit()
+        arc.exit()
 
 
 class CustomVersionAction(CustomAction, argparse._VersionAction):
     def __call__(self, *args, **kwargs):
-        # TODO: remove this
-        from arc.config import config
-
-        arc.info(config.version)
-        raise errors.Exit()
+        arc.info(self.command.config.version)
+        arc.exit()
 
 
 class CustomAutocompleteAction(CustomAction, argparse._StoreAction):
     def __call__(self, _parser, _ns, value, *args, **kwargs):
-        raise RuntimeError("Not working")
+        arc.exit(1, "Not currently working")
         arc.info(completions(value, Context.current()), end="")
-        raise errors.Exit()

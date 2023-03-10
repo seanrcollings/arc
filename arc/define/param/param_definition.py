@@ -6,7 +6,6 @@ import typing as t
 
 from arc import api, errors
 from arc import typing as at
-from arc.config import config
 from arc.constants import MISSING
 from arc.define import classful
 from arc.define.param import groups
@@ -71,8 +70,9 @@ class ParamDefinition(collections.UserList[Param]):
 
 
 class ParamDefinitionFactory:
-    def __init__(self):
+    def __init__(self, transform_snake_case: bool = True):
         self.param_names: set[str] = set()
+        self.transform_snake_case = transform_snake_case
 
     def from_function(self, func: t.Callable) -> ParamDefinition:
         self.param_names.clear()
@@ -135,7 +135,7 @@ class ParamDefinitionFactory:
         if annotation is param.empty:
             annotation = bool if info.param_cls is FlagParam else str
 
-        if config.transform_snake_case and not info.param_name:
+        if self.transform_snake_case and not info.param_name:
             info.param_name = param.name.replace("_", "-")
 
         return info.param_cls(

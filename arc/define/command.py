@@ -5,11 +5,11 @@ import inspect
 import typing as t
 
 import arc
+from arc.config import Config
 import arc.typing as at
 from arc import api, color, errors
 from arc.autocompletions import Completion, CompletionInfo, get_completions
 from arc.autoload import Autoload
-from arc.config import config
 from arc.define import classful
 from arc.define.alias import AliasDict
 from arc.define.documentation import Documentation
@@ -25,11 +25,12 @@ if t.TYPE_CHECKING:
 class Command(ParamMixin, MiddlewareContainer):
     name: str
     parent: Command | None
+    config: Config
     subcommands: AliasDict[str, Command]
     param_def: ParamDefinition
     doc: Documentation
     explicit_name: bool
-    __autoload__: bool
+    _autoload: bool
     data: dict[str, t.Any]
 
     def __init__(
@@ -37,6 +38,7 @@ class Command(ParamMixin, MiddlewareContainer):
         callback: at.CommandCallback,
         name: str | None = None,
         description: str | None = None,
+        config: Config | None = None,
         parent: Command | None = None,
         explicit_name: bool = True,
         autoload: bool = False,
@@ -51,15 +53,18 @@ class Command(ParamMixin, MiddlewareContainer):
         else:
             self.callback = callback  # type: ignore
 
+        self.config = config or Config.load()
         self.name = name or callback.__name__
         self.parent = parent
         self.subcommands = AliasDict()
-        self.doc = Documentation(self, description)
+        self.doc = Documentation(
+            self, self.config.default_section_name, self.config.color, description
+        )
         self.explicit_name = explicit_name
-        self.__autoload__ = autoload
+        self._autoload = autoload
         self.data = kwargs
 
-        if config.environment == "development":
+        if self.config.environment == "development":
             self.param_def
 
     __repr__ = api.display("name")
@@ -76,7 +81,7 @@ class Command(ParamMixin, MiddlewareContainer):
             result (Any): The value that the command's callback returns
         """
 
-        app = App(self, config, state=state or {})
+        app = App(self, state=state or {})
         return app(input_args)
 
     def run(self, ctx: Context):
@@ -272,11 +277,15 @@ class Command(ParamMixin, MiddlewareContainer):
         else:
 
             def inner(callback: at.CommandCallback):
-                command_name = self.get_canonical_subcommand_name(callback, first)
+                command_name = self.get_canonical_subcommand_name(
+                    callback, first, self.config.transform_snake_case
+                )
+
                 command = Command(
                     callback=callback,
                     name=command_name,
                     description=desc,
+                    config=self.config,
                     parent=self,
                     **kwargs,
                 )
@@ -293,7 +302,7 @@ class Command(ParamMixin, MiddlewareContainer):
                 raise errors.CommandError(
                     "Bad input to command.subcommand(). "
                     "Needs to be used as a decorator, or "
-                    "passed an already construction Command insance"
+                    "passed an already constructed Command insance"
                 )
 
     def add_command(
@@ -330,11 +339,13 @@ class Command(ParamMixin, MiddlewareContainer):
     def get_canonical_subcommand_name(
         callback: at.CommandCallback,
         cannonical_name: str | None,
+        transform_snake_case: bool = True,
     ) -> str:
+
         if cannonical_name is None:
             cannonical_name = callback.__name__
 
-            if config.transform_snake_case:
+            if transform_snake_case:
                 cannonical_name = cannonical_name.replace("_", "-")
 
         return cannonical_name
@@ -366,7 +377,7 @@ class Command(ParamMixin, MiddlewareContainer):
         raise errors.ParamError(f"No parameter with name: {param_name}")
 
     def autoload(self, *paths: str):
-        Autoload(paths, self, config.autoload_overwrite).load()
+        Autoload(paths, self, self.config.autoload_overwrite).load()
 
     @staticmethod
     def wrap_class_callback(cls: type[at.ClassCallback]):
@@ -392,7 +403,12 @@ def command(callback: at.CommandCallback, /) -> Command:
 
 @t.overload
 def command(
-    name: str | None = None, /, *, desc: str | None = None, **kwargs: t.Any
+    name: str | None = None,
+    /,
+    *,
+    desc: str | None = None,
+    config: Config | None = None,
+    **kwargs: t.Any,
 ) -> t.Callable[[at.CommandCallback], Command]:
     ...
 
@@ -402,6 +418,7 @@ def command(
     /,
     *,
     desc: str | None = None,
+    config: Config | None = None,
     **kwargs: t.Any,
 ):
     """Create an arc Command
@@ -417,15 +434,26 @@ def command(
             If one is not provided, the function's name will be used.
         desc (str | None, optional): Description for the command. If
             one is not provided, the docstring description will be used
+        config (Config | None, optional): Configuration object to apply
+            to this command. If one is not provided, the default is used
     """
 
     name = None
 
     def inner(callback: at.CommandCallback) -> Command:
+        command_name = Command.get_canonical_subcommand_name(
+            callback,
+            name,
+            config.transform_snake_case
+            if config
+            else Config.load().transform_snake_case,
+        )
+
         command = Command(
             callback=callback,
-            name=Command.get_canonical_subcommand_name(callback, name),
+            name=command_name,
             description=desc,
+            config=config,
             parent=None,
             explicit_name=bool(name),
             autoload=True,
@@ -441,7 +469,9 @@ def command(
         return inner(first)
 
 
-def namespace(name: str, *, desc: str | None = None, **kwargs) -> Command:
+def namespace(
+    name: str, *, desc: str | None = None, config: Config | None = None, **kwargs
+) -> Command:
     """Create an arc Command, that is not executable on it's own,
     but can have commands nested underneath it.
 
@@ -464,6 +494,7 @@ def namespace(name: str, *, desc: str | None = None, **kwargs) -> Command:
         callback=namespace_callback,
         name=name,
         description=desc,
+        config=config,
         parent=None,
         autoload=True,
         **kwargs,

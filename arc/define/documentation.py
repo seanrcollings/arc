@@ -5,14 +5,12 @@ import typing as t
 from functools import cached_property
 
 import arc.typing as at
-from arc.config import config
 from arc.define.param import param
 from arc.present.help_formatter import HelpFormatter
 
 if t.TYPE_CHECKING:
     from arc.define.command import Command
-    from arc.types.type_info import TypeInfo
-
+    from arc.config import ColorConfig
 
 ParamKinds = t.Literal["argument", "option", "flag"]
 
@@ -34,18 +32,26 @@ class ParamDoc(t.TypedDict):
 
 
 class Documentation:
-    def __init__(self, command: Command, description: str = None):
+    def __init__(
+        self,
+        command: Command,
+        default_section_name: str,
+        color: ColorConfig,
+        description: str = None,
+    ):
         self.command = command
+        self.default_section_name = default_section_name
+        self.color = color
         self._description = description
         self._docstring = self.command.callback.__doc__
 
-    def help(self):
-        formatter = HelpFormatter(self)
+    def help(self) -> str:
+        formatter = HelpFormatter(self, self.default_section_name, self.color)
         formatter.write_help()
         return formatter.value
 
-    def usage(self):
-        formatter = HelpFormatter(self)
+    def usage(self) -> str:
+        formatter = HelpFormatter(self, self.default_section_name, self.color)
         formatter.write_usage()
         return formatter.value
 
@@ -55,7 +61,7 @@ class Documentation:
 
     @property
     def description(self) -> t.Optional[str]:
-        return self._description or self.docstring.get(config.default_section_name)
+        return self._description or self.docstring.get(self.default_section_name)
 
     @property
     def short_description(self) -> t.Optional[str]:
@@ -105,10 +111,10 @@ class Documentation:
         if not self._docstring:
             return {}
 
-        parsed: dict[str, str] = {config.default_section_name: ""}
+        parsed: dict[str, str] = {self.default_section_name: ""}
         lines = [line.strip() for line in self._docstring.split("\n")]
 
-        current_section = config.default_section_name
+        current_section = self.default_section_name
 
         for line in lines:
             if line.startswith("#"):

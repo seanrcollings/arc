@@ -5,8 +5,8 @@ import typing as t
 from itertools import repeat
 
 from arc import constants
-from arc.color import colorize, fg, fx
-from arc.config import Config, config
+from arc.color import colorize, fx
+from arc.config import ColorConfig
 from arc.present.ansi import Ansi
 from arc.present.formatters import TextFormatter
 from arc.present.joiner import Join
@@ -23,11 +23,19 @@ def paragraphize(string: str) -> list[str]:
 class HelpFormatter(TextFormatter):
     _longest_intro: int = 0
 
-    def __init__(self, doc: Documentation, config: Config = config, *args, **kwargs):
+    def __init__(
+        self,
+        doc: Documentation,
+        default_section_name: str,
+        color: ColorConfig,
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.doc = doc
         self.command = self.doc.command
-        self.config = config
+        self.default_section_name = default_section_name
+        self.color = color
 
     @property
     def argument_params(self):
@@ -42,7 +50,7 @@ class HelpFormatter(TextFormatter):
         self.write_usage()
 
         if doc.description:
-            with self.section(self.config.default_section_name.upper()):
+            with self.section(self.default_section_name.upper()):
                 self.write_text(paragraphize(doc.description))
 
         args = self.get_params(self.argument_params)
@@ -61,7 +69,7 @@ class HelpFormatter(TextFormatter):
             self.write_section("SUBCOMMANDS", subcommands, longest)
 
         for section, body in doc.docstring.items():
-            if section in {"arguments", self.config.default_section_name}:
+            if section in {"arguments", self.default_section_name}:
                 continue
 
             with self.section(section):
@@ -79,7 +87,7 @@ class HelpFormatter(TextFormatter):
                 self.write_text(
                     Join.with_space(
                         [
-                            colorize(command.root.name, self.config.color.accent),
+                            colorize(command.root.name, self.color.accent),
                             params_str,
                         ]
                     )
@@ -90,7 +98,7 @@ class HelpFormatter(TextFormatter):
                     self.write_text(
                         Join.with_space(
                             [
-                                colorize(command.root.name, self.config.color.accent),
+                                colorize(command.root.name, self.color.accent),
                                 colorize("<subcommand>", fx.UNDERLINE),
                                 "[ARGUMENTS ...]",
                             ],
@@ -107,7 +115,7 @@ class HelpFormatter(TextFormatter):
                     self.write_text(
                         Join.with_space(
                             [
-                                colorize(command.root.name, self.config.color.accent),
+                                colorize(command.root.name, self.color.accent),
                                 path,
                                 name,
                                 params_str,
@@ -122,7 +130,7 @@ class HelpFormatter(TextFormatter):
                     self.write_text(
                         Join.with_space(
                             [
-                                colorize(command.root.name, self.config.color.accent),
+                                colorize(command.root.name, self.color.accent),
                                 path,
                                 name,
                                 colorize("<subcommand>", fx.UNDERLINE),
@@ -192,13 +200,11 @@ class HelpFormatter(TextFormatter):
         for param in params:
             name: str = ""
             if param["kind"] == "argument":
-                name = colorize(param["name"], self.config.color.accent)
+                name = colorize(param["name"], self.color.accent)
             else:
-                name = colorize(f"--{param['name']}", self.config.color.accent)
+                name = colorize(f"--{param['name']}", self.color.accent)
                 if param["short_name"]:
-                    name += colorize(
-                        f" (-{param['short_name']})", self.config.color.subtle
-                    )
+                    name += colorize(f" (-{param['short_name']})", self.color.subtle)
 
             desc = textwrap.dedent(param["description"] or "")
             if (
@@ -210,7 +216,7 @@ class HelpFormatter(TextFormatter):
                 else:
                     default = param["default"]
 
-                desc += colorize(f" (default: {default})", self.config.color.subtle)
+                desc += colorize(f" (default: {default})", self.color.subtle)
 
             desc = desc.strip("\n")
 
@@ -221,13 +227,11 @@ class HelpFormatter(TextFormatter):
     def get_subcommands(self, parent: Command, commands: t.Collection[Command]):
         data = []
         for command in commands:
-            name = colorize(command.name, self.config.color.accent)
+            name = colorize(command.name, self.color.accent)
             desc = command.doc.short_description or ""
             aliases = parent.subcommands.aliases_for(command.name)
             if aliases:
-                name += colorize(
-                    f" ({Join.with_comma(aliases)})", self.config.color.subtle
-                )
+                name += colorize(f" ({Join.with_comma(aliases)})", self.color.subtle)
 
             data.append((name, desc))
 

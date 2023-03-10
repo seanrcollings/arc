@@ -4,13 +4,14 @@ import typing as t
 from dataclasses import dataclass, field
 
 import arc.typing as at
-from arc import logging
 from arc.color import fg
-from arc.logging import logger, mode_map
 from arc.prompt import Prompt
 
 if t.TYPE_CHECKING:
     from arc.types.semver import SemVer
+
+
+_config: Config | None = None
 
 
 @dataclass
@@ -58,8 +59,20 @@ class Config:
     color: ColorConfig = field(default_factory=ColorConfig)
     links: LinksConfig = field(default_factory=LinksConfig)
 
+    @classmethod
+    def load(cls) -> "Config":
+        """Access the Global `Config` instance"""
+        global _config
 
-config = Config()
+        if not _config:
+            _config = cls()
+
+        return _config
+
+    def update(self, **kwargs: t.Any):
+        for key, value in kwargs.items():
+            if value is not None:
+                setattr(self, key, value)
 
 
 def configure(
@@ -134,11 +147,5 @@ def configure(
         "links": links,
     }
 
-    for key, value in data.items():
-        if value is not None:
-            setattr(config, key, value)
-
-    if debug:
-        logger.setLevel(logging.DEBUG)
-    elif env := data["environment"]:
-        logger.setLevel(mode_map.get(env, logging.WARNING))
+    config = Config.load()
+    config.update(**data)

@@ -174,6 +174,7 @@ class ValidationError(ArgumentError):
     ...
 
 
+# TODO: enable printing of stack trace for internal errors
 class InternalError(ArcError):
     """Errors that fire due to development / internal errors.
     These will be noted to probably be bugs in production mode"""

@@ -7,12 +7,12 @@ import typing as t
 import arc
 import arc.typing as at
 from arc import errors
-from arc.logging import logger
+from arc.logging import WARNING, logger, mode_map, DEBUG
 from arc.runtime.init import InitMiddleware
 from arc.runtime.middleware import Middleware, MiddlewareContainer
 
+
 if t.TYPE_CHECKING:
-    from arc.config import Config
     from arc.define import Command
 
 
@@ -20,7 +20,6 @@ class App(MiddlewareContainer):
     def __init__(
         self,
         root: Command,
-        config: Config | None = None,
         init_middlewares: t.Sequence[Middleware] = None,
         state: dict[str, t.Any] = None,
         ctx: dict[str, t.Any] = None,
@@ -29,10 +28,11 @@ class App(MiddlewareContainer):
         self.root = root
         self.provided_ctx = ctx or {}
         self.state = state or {}
-        self.config = self._get_config(config)
+        self.config = root.config
 
     def __call__(self, input: at.InputArgs = None) -> t.Any:
         self._handle_dynamic_name()
+        self._setup_logger()
         ctx = self._create_ctx({"arc.input": input})
         try:
             try:
@@ -88,10 +88,8 @@ class App(MiddlewareContainer):
             name = sys.argv[0]
             self.root.name = os.path.basename(name)
 
-    def _get_config(self, config: Config | None) -> Config:
-        if config:
-            return config
-
-        from arc.config import config as global_config
-
-        return global_config
+    def _setup_logger(self):
+        if self.config.debug:
+            logger.setLevel(DEBUG)
+        else:
+            logger.setLevel(mode_map.get(self.config.environment, WARNING))

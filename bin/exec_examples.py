@@ -8,9 +8,10 @@ import contextlib
 from dataclasses import dataclass
 from arc.present import out
 import yaml
-from arc.config import config as ac
+from arc.config import Config
 from arc.present.console import Console
 
+ac = Config.load()
 ROOT_DIR = Path(".")
 DOCS_DIR = ROOT_DIR / "docs"
 EXAMPLE_DIR = DOCS_DIR / "examples"

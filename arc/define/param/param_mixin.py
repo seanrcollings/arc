@@ -4,28 +4,34 @@ import typing as t
 from functools import cached_property
 
 from arc import autocompletions
-from arc.config import config
 from arc.parser import CustomAutocompleteAction, CustomHelpAction, CustomVersionAction
 
-from .param import FlagParam, OptionParam, Param
 from .param_definition import ParamDefinition, ParamDefinitionFactory
+from .param import FlagParam, OptionParam, Param
+
+if t.TYPE_CHECKING:
+    from arc.config import Config
 
 
 class ParamMixin:
     SPECIAL_PARAMS = {"help", "version", "autocomplete"}
     callback: t.Callable
     parent: t.Any
+    config: Config
 
     @cached_property
     def param_def(self) -> ParamDefinition:
-        root = ParamDefinitionFactory().from_function(self.callback)
+        root = ParamDefinitionFactory(self.config.transform_snake_case).from_function(
+            self.callback
+        )
 
+        # TODO: Move adding these to runtime
         if self.is_root and not self.is_namespace:  # type: ignore
 
-            if config.version:
+            if self.config.version:
                 self.__add_version_param(root)
 
-            if config.autocomplete:
+            if self.config.autocomplete:
                 self.__add_autocomplete_param(root)
 
         self.__add_help_param(root)

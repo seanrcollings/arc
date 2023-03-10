@@ -54,7 +54,7 @@ class Autoload:
                 continue
 
             try:
-                if obj.__autoload__:
+                if obj._autoload:
                     yield obj
             except AttributeError:
                 continue

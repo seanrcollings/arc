@@ -2,8 +2,10 @@ import pytest
 import contextlib
 import arc
 from arc import errors
-from arc.config import config
+from arc.config import Config
 import arc.typing as at
+
+config = Config.load()
 
 
 @contextlib.contextmanager
