@@ -1,29 +1,27 @@
 from __future__ import annotations
-import typing as t
+
 import contextlib
 import os
+import typing as t
 
 import arc
-from arc import constants
-from arc import errors
+from arc import api, constants, errors
 from arc import typing as at
-from arc import utils
+from arc.color import colorize, fg, fx
 from arc.config import Config
-from arc.context import Context
-from arc.present import Join
-from arc.color import fg, fx, colorize
-from arc.prompt.prompts import input_prompt
-from arc.types.helpers import iscontextmanager
 from arc.define.param.param import InjectedParam, Param, ValueOrigin
+from arc.present import Join
+from arc.prompt.prompts import input_prompt
+from arc.runtime import Context
 from arc.runtime.middleware import (
     DefaultMiddlewareNamespace,
-    MiddlewareBase,
     Middleware,
+    MiddlewareBase,
 )
 
 if t.TYPE_CHECKING:
-    from arc.define.param.param_tree import ParamTree
     from arc.define import Command
+    from arc.define.param.param_tree import ParamTree
 
 
 class ExitStackMiddleware(MiddlewareBase):
@@ -144,7 +142,7 @@ class GetPromptValueMiddleware(ParamProcessor):
             return constants.MISSING
 
         prompter = getattr(param.type.resolved_type, "__prompt__", input_prompt)
-        return utils.dispatch_args(prompter, param, self.ctx)
+        return api.dispatch_args(prompter, param, self.ctx)
 
 
 class GetterValueMiddleware(ParamProcessor):
@@ -158,7 +156,7 @@ class GetterValueMiddleware(ParamProcessor):
         if not getter:
             return constants.MISSING
 
-        return utils.dispatch_args(getter, param, self.ctx)
+        return api.dispatch_args(getter, param, self.ctx)
 
 
 class ConvertValuesMiddleware(ParamProcessor):
@@ -222,6 +220,10 @@ class CompileParamsMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context) -> t.Any:
         instance: ParamTree = ctx["arc.args.tree"]
         ctx["arc.args"] = instance.compile()
+
+
+def iscontextmanager(obj: t.Any) -> bool:
+    return hasattr(obj, "__enter__") and hasattr(obj, "__exit__")
 
 
 class OpenResourceMiddleware(MiddlewareBase):

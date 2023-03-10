@@ -1,21 +1,22 @@
 from __future__ import annotations
+
 import functools
 import inspect
 import typing as t
 
 import arc
-from arc.present.joiner import Join
 import arc.typing as at
-from arc import errors, utils, color
-from arc.define import classful
+from arc import api, color, errors
+from arc.autocompletions import Completion, CompletionInfo, get_completions
 from arc.autoload import Autoload
+from arc.config import config
+from arc.define import classful
 from arc.define.alias import AliasDict
 from arc.define.documentation import Documentation
-from arc.config import config
-from arc.autocompletions import CompletionInfo, get_completions, Completion
 from arc.define.param import ParamMixin
-from arc.context import Context
-from arc.runtime import App, MiddlewareContainer, MiddlewareStack, ExecMiddleware
+from arc.present.joiner import Join
+from arc.runtime import App, ExecMiddleware, MiddlewareContainer, MiddlewareStack
+from arc.runtime import Context
 
 if t.TYPE_CHECKING:
     from .param import ParamDefinition
@@ -61,7 +62,7 @@ class Command(ParamMixin, MiddlewareContainer):
         if config.environment == "development":
             self.param_def
 
-    __repr__ = utils.display("name")
+    __repr__ = api.display("name")
 
     def __call__(self, input_args: at.InputArgs = None, state: dict = None) -> t.Any:
         """Entry point for a command, call to execute your command object

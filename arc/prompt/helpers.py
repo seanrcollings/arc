@@ -1,9 +1,9 @@
-import typing as t
-from contextlib import contextmanager
 import re
 import sys
-import tty
 import termios
+import tty
+import typing as t
+from contextlib import contextmanager
 
 T = t.TypeVar("T")
 

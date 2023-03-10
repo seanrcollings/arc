@@ -1,20 +1,17 @@
 from __future__ import annotations
 
 import argparse
-import enum
 import typing as t
 from gettext import gettext as _
 
 import arc
 import arc.typing as at
-from arc import errors
-from arc.define.param import Action, Param
+from arc import errors, safe
 from arc.autocompletions import completions
 from arc.color import fg
-from arc.config import config
-from arc.context import Context
+from arc.define.param import Action, Param
 from arc.present.joiner import Join
-from arc.utils import safe_issubclass
+
 
 if t.TYPE_CHECKING:
     from arc.define.command import Command
@@ -47,7 +44,7 @@ class Parser(argparse.ArgumentParser):
         if (default := param.parser_default) is not None:
             kwargs["default"] = default
 
-        if safe_issubclass(param.action, CustomAction):
+        if safe.issubclass(param.action, CustomAction):
             kwargs["command"] = command
 
         if param.action is Action.STORE:
@@ -362,11 +359,15 @@ class CustomHelpAction(CustomAction, argparse._HelpAction):
 
 class CustomVersionAction(CustomAction, argparse._VersionAction):
     def __call__(self, *args, **kwargs):
+        # TODO: remove this
+        from arc.config import config
+
         arc.info(config.version)
         raise errors.Exit()
 
 
 class CustomAutocompleteAction(CustomAction, argparse._StoreAction):
     def __call__(self, _parser, _ns, value, *args, **kwargs):
+        raise RuntimeError("Not working")
         arc.info(completions(value, Context.current()), end="")
         raise errors.Exit()

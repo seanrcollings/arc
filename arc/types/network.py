@@ -1,7 +1,8 @@
 from __future__ import annotations
+
 import ipaddress
-from urllib.parse import urlparse
 import typing as t
+from urllib.parse import urlparse
 
 from arc import errors
 from arc.present.joiner import Join

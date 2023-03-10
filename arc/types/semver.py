@@ -1,8 +1,27 @@
 from __future__ import annotations
+
 import re
 import typing as t
-from arc import errors, typing as at
-from arc.utils import cmp
+
+from arc import errors
+from arc import typing as at
+
+CompareReturn = t.Literal[-1, 0, 1]
+
+
+def cmp(a, b) -> CompareReturn:
+    """Compare two values
+
+    Args:
+        a (Any): First value
+        b (Any): Second value
+
+    Returns:
+        - `a < b  => -1`
+        - `a == b =>  0`
+        - `a > b  =>  1`
+    """
+    return (a > b) - (a < b)
 
 
 # https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
@@ -79,7 +98,7 @@ class SemVer:
 
     # Comparison Operators --------------------------------------------------------------------
 
-    def compare(self, other: object) -> at.CompareReturn:
+    def compare(self, other: object) -> CompareReturn:
         """Compares `self` with `other`
 
         Args:
@@ -125,7 +144,7 @@ class SemVer:
 
     def _cmp_prerelease_tag(
         self, a: t.Union[str, int], b: t.Union[str, int]
-    ) -> at.CompareReturn:
+    ) -> CompareReturn:
         """Compares two prerelease tags given the following conditions:
         - Identifiers consisting of only digits are compared numerically.
         - Identifiers with letters or hyphens are compared lexically in ASCII sort order.

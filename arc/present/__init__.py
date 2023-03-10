@@ -1,10 +1,9 @@
 """Provides a series of helper utilities for displaying information to the user"""
-from .table import Table
+from .ansi import Ansi, bg, colorize, fg, fx
 from .box import Box
-
+from .console import Console
 # from .loaders import BarLoader, RectangleLoader, Pacman, SlantLoader
 from .joiner import Join
-from .ansi import Ansi, fg, bg, fx, colorize
-from .out import print, err, info, usage
-from .console import Console
+from .out import err, info, print, usage
 from .pager import pager
+from .table import Table

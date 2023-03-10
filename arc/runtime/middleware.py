@@ -1,13 +1,15 @@
 from __future__ import annotations
+
 import abc
 import collections
 import types
 import typing as t
+
 import arc
 from arc import errors
 
 if t.TYPE_CHECKING:
-    from arc.context import Context
+    from arc.runtime import Context
 
 
 MiddlewareGenerator = t.Generator["Context", t.Any, t.Any]

@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import os
 import sys
 import typing as t
@@ -6,34 +7,33 @@ import typing as t
 import arc
 import arc.typing as at
 from arc import errors
-from arc.config import config
 from arc.logging import logger
 from arc.runtime.init import InitMiddleware
 from arc.runtime.middleware import Middleware, MiddlewareContainer
 
 if t.TYPE_CHECKING:
-    from arc.define import Command
     from arc.config import Config
+    from arc.define import Command
 
 
 class App(MiddlewareContainer):
     def __init__(
         self,
         root: Command,
-        config: Config = config,
+        config: Config | None = None,
         init_middlewares: t.Sequence[Middleware] = None,
         state: dict[str, t.Any] = None,
         ctx: dict[str, t.Any] = None,
     ) -> None:
         super().__init__(init_middlewares or InitMiddleware.all())
         self.root = root
-        self.config = config
         self.provided_ctx = ctx or {}
         self.state = state or {}
+        self.config = self._get_config(config)
 
     def __call__(self, input: at.InputArgs = None) -> t.Any:
-        self.handle_dynamic_name()
-        ctx = self.create_ctx({"arc.input": input})
+        self._handle_dynamic_name()
+        ctx = self._create_ctx({"arc.input": input})
         try:
             try:
                 ctx = self.stack.start(ctx)
@@ -66,10 +66,10 @@ class App(MiddlewareContainer):
         return res
 
     def execute(self, command: Command, **kwargs: t.Any) -> t.Any:
-        ctx = self.create_ctx({"arc.command": command, "arc.parse.result": kwargs})
+        ctx = self._create_ctx({"arc.command": command, "arc.parse.result": kwargs})
         return command.run(ctx)
 
-    def create_ctx(self, data: dict = None) -> arc.Context:
+    def _create_ctx(self, data: dict = None) -> arc.Context:
         return arc.Context(
             {
                 "arc.root": self.root,
@@ -83,7 +83,15 @@ class App(MiddlewareContainer):
             | (data or {})
         )
 
-    def handle_dynamic_name(self):
+    def _handle_dynamic_name(self):
         if not self.root.explicit_name:
             name = sys.argv[0]
             self.root.name = os.path.basename(name)
+
+    def _get_config(self, config: Config | None) -> Config:
+        if config:
+            return config
+
+        from arc.config import config as global_config
+
+        return global_config

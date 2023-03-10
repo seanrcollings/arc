@@ -1,5 +1,6 @@
 import logging
-from arc.color import colorize, fx, bg, fg
+
+from arc.color import bg, colorize, fg, fx
 
 DEBUG = logging.DEBUG
 INFO = logging.INFO

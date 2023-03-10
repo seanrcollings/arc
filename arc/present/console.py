@@ -1,14 +1,15 @@
 from __future__ import annotations
+
+import builtins
+import datetime
+import sys
 import typing as t
 from contextlib import contextmanager
-import builtins
-import sys
-import datetime
 
 from arc.present.ansi import Ansi, colorize, fg, fx
 
 if t.TYPE_CHECKING:
-    from arc.context import Context
+    from arc.runtime import Context
 
 T = t.TypeVar("T", bytes, str)
 

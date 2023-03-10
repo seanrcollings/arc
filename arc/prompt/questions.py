@@ -1,13 +1,11 @@
 import typing as t
 from abc import ABC, abstractmethod
-from arc.color import fg, fx
 
 import arc
-from arc import errors
-from arc import constants
-from arc.color import colorize, fg
-from arc.prompt.helpers import ARROW_DOWN, ARROW_UP, State
+from arc import constants, errors
+from arc.color import colorize, fg, fx
 from arc.present import Join
+from arc.prompt.helpers import ARROW_DOWN, ARROW_UP, State
 
 T = t.TypeVar("T")
 C = t.TypeVar("C")

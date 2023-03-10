@@ -1,12 +1,13 @@
 from __future__ import annotations
-import typing as t
-from arc import logging
 
+import typing as t
+
+from arc import logging
 from arc.define.param import ValueOrigin
 
 if t.TYPE_CHECKING:
-    from arc.define.param import Param
     from arc import Context
+    from arc.define.param import Param
 
 
 class Log:

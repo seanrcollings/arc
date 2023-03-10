@@ -1,6 +1,7 @@
 from __future__ import annotations
-import typing as t
+
 import re
+import typing as t
 
 from arc import errors
 
@@ -48,17 +49,12 @@ class Len:
         length = len(value)
 
         if self.max:
-            if length < self.min:
+            if length < self.min or length > self.max:
                 raise errors.ValidationError(
                     f"must have a length between {self.min} and {self.max}"
                 )
-            if length > self.max:
-                raise errors.ValidationError(
-                    f"must have a length between {self.min} and {self.max}"
-                )
-        else:
-            if length != self.min:
-                raise errors.ValidationError(f"must have a length equal to {self.min}")
+        elif length != self.min:
+            raise errors.ValidationError(f"must have a length equal to {self.min}")
 
         return value
 

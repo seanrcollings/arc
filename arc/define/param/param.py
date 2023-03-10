@@ -1,22 +1,17 @@
 from __future__ import annotations
+
 import argparse
 import enum
-from functools import cached_property
-import os
 import typing as t
+from functools import cached_property
 
-from arc import errors, utils
-from arc import constants
-from arc.autocompletions import CompletionInfo, get_completions
-from arc.color import colorize, fx, fg
-from arc.types.helpers import convert_type
-from arc.types.type_info import TypeInfo
 import arc.typing as at
+from arc import api, constants, errors, safe
+from arc.autocompletions import CompletionInfo, get_completions
+from arc.color import colorize, fg
 from arc.constants import MISSING, Constant
-
-if t.TYPE_CHECKING:
-    from arc.context import Context
-
+from arc.types.convert import convert_type
+from arc.types.type_info import TypeInfo
 
 T = t.TypeVar("T")
 
@@ -108,7 +103,7 @@ class Param(t.Generic[T]):
 
         if self.type.is_union_type:
             for sub in self.type.sub_types:
-                if utils.safe_issubclass(sub.origin, (set, tuple, list)):
+                if safe.issubclass(sub.origin, (set, tuple, list)):
                     raise errors.ParamError(
                         f"{self.type.original_type} is not a valid type. "
                         f"lists, sets, and tuples cannot be members of a Union / Optional type"
@@ -123,7 +118,7 @@ class Param(t.Generic[T]):
                 self,
             )
 
-    __repr__ = utils.display("argument_name", "type")
+    __repr__ = api.display("argument_name", "type")
 
     def __completions__(self, info: CompletionInfo, *args, **kwargs):
         if self.comp_func:
@@ -187,12 +182,12 @@ class Param(t.Generic[T]):
     @cached_property
     def nargs(self) -> at.NArgs:
         if (
-            utils.safe_issubclass(self.type.origin, tuple)
+            safe.issubclass(self.type.origin, tuple)
             and self.type.sub_types
             and self.type.sub_types[-1].origin is not Ellipsis
         ):
             return len(self.type.sub_types)  # Consume a specific number
-        elif utils.safe_issubclass(self.type.origin, constants.COLLECTION_TYPES):
+        elif safe.issubclass(self.type.origin, constants.COLLECTION_TYPES):
             return "*"  # Consume one or more
 
         return "?"  # Optional
@@ -202,7 +197,7 @@ class Param(t.Generic[T]):
 
     def run_middleware(self, value: t.Any, ctx: t.Any):
         for middleware in self.type.middleware:
-            value = utils.dispatch_args(middleware, value, ctx, self)
+            value = api.dispatch_args(middleware, value, ctx, self)
 
         return value
 
@@ -217,7 +212,7 @@ class ArgumentParam(Param[t.Any]):
 
     # @property
     # def nargs(self):
-    #     if utils.safe_issubclass(self.type.origin, (tuple, list, set)):
+    #     if safe.issubclass(self.type.origin, (tuple, list, set)):
     #         return "*"  # Consume one or more
 
     #     return "?"  # Optional
@@ -297,7 +292,7 @@ class InjectedParam(Param):
     callback: t.Callable
 
     def get_injected_value(self, ctx: t.Any) -> t.Any:
-        value = utils.dispatch_args(self.callback, ctx) if self.callback else None
+        value = api.dispatch_args(self.callback, ctx) if self.callback else None
         return value
 
     @property

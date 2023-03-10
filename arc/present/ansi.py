@@ -1,7 +1,7 @@
 """Module contains code relavent to ANSI escape codes"""
-import typing as t
-import re
 import functools
+import re
+import typing as t
 
 
 class Ansi:

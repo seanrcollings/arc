@@ -1,5 +1,5 @@
 import arc
-from arc.context import Context
+from arc.runtime import Context
 
 
 def test_install():

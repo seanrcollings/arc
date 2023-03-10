@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import arc
 from arc.color import fg, fx
 

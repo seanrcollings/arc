@@ -1,10 +1,10 @@
 from __future__ import annotations
+
 import typing as t
 
 from arc.types.default import Default
 from arc.types.type_arg import TypeArg
 from arc.types.validators import GreaterThan, LessThan
-
 
 __all__ = [
     "Hex",

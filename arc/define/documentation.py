@@ -1,17 +1,17 @@
 from __future__ import annotations
-from functools import cached_property
+
 import re
 import typing as t
+from functools import cached_property
 
+import arc.typing as at
 from arc.config import config
 from arc.define.param import param
 from arc.present.help_formatter import HelpFormatter
-import arc.typing as at
-
 
 if t.TYPE_CHECKING:
-    from arc.types.type_info import TypeInfo
     from arc.define.command import Command
+    from arc.types.type_info import TypeInfo
 
 
 ParamKinds = t.Literal["argument", "option", "flag"]

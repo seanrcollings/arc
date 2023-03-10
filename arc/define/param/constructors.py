@@ -1,8 +1,8 @@
 import typing as t
 
+import arc.typing as at
 from arc import constants
 from arc.define.param import param
-import arc.typing as at
 
 
 class ParamInfo:

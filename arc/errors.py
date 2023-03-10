@@ -1,15 +1,15 @@
 from __future__ import annotations
-import itertools
+
 import typing as t
 
 from arc import suggest
-from arc.present.ansi import colorize, fx
+from arc.color import colorize, fx
 from arc.present.joiner import Join
 
 if t.TYPE_CHECKING:
-    from arc.context import Context
-    from arc.define import Command, Param
     from arc.config import Config
+    from arc.define import Command, Param
+    from arc.runtime import Context
 
 
 class Exit(SystemExit):
@@ -19,6 +19,13 @@ class Exit(SystemExit):
 
     def fmt(self, ctx: Context):
         return self.message
+
+
+def exit(code: int = 0, message: str | None = None) -> t.NoReturn:
+    """Exits the application with `code`.
+    Optionally recieves a `message` that will be written
+    to stderr before exiting"""
+    raise Exit(code, message)
 
 
 class ArcError(Exception):

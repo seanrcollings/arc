@@ -1,11 +1,13 @@
 from __future__ import annotations
+
 import typing as t
 from dataclasses import dataclass, field
-from arc import logging
+
 import arc.typing as at
+from arc import logging
 from arc.color import fg
-from arc.prompt import Prompt
 from arc.logging import logger, mode_map
+from arc.prompt import Prompt
 
 if t.TYPE_CHECKING:
     from arc.types.semver import SemVer

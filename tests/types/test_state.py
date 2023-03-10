@@ -1,8 +1,8 @@
 import pytest
+
 import arc
-from arc import namespace, errors
-from arc.context import Context
-from arc import App
+from arc import App, errors, namespace
+from arc.runtime import Context
 from arc.types import State
 
 

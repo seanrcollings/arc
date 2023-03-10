@@ -1,12 +1,13 @@
-from typing import Literal, Union, Optional
 import re
 import shutil
+from typing import Literal, Optional, Union
 
-from arc import color
+from arc.present.ansi import bg, fg, fx
 from arc.present.joiner import Join
-from .data import justifications, Justification
-from .drawing import Border, borders
+
 from .ansi import Ansi
+from .data import Justification, justifications
+from .drawing import Border, borders
 
 
 class Box:
@@ -33,7 +34,7 @@ class Box:
         border: str = "rounded",
         padding: Union[int, dict[str, int]] = 0,
         justify: Justification = "center",
-        color: str = color.fg.WHITE,
+        color: str = fg.WHITE,
     ):
         """
         Args:
@@ -107,9 +108,9 @@ class Box:
     ):
         cleaned = cleaned or line
         formatted = (
-            f"{self.__color}{self.border['vertical']}{color.fx.CLEAR}"
+            f"{self.__color}{self.border['vertical']}{fx.CLEAR}"
             f"{cleaned:{self.__justify}{width - 2}}"
-            f"{self.__color}{self.border['vertical']}{color.fx.CLEAR}\n"
+            f"{self.__color}{self.border['vertical']}{fx.CLEAR}\n"
         )
 
         if line == "":

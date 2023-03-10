@@ -1,6 +1,5 @@
 import typing as t
 
-
 justify = {
     "left": "<",
     "center": "^",

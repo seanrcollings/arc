@@ -2,37 +2,30 @@
 All builtin types (int, str, float, etc...) have a corresponding Alias type.
 """
 from __future__ import annotations
+
 import collections
 import enum
+import ipaddress
 import pathlib
+import re
 import types
 import typing as t
-import ipaddress
-import re
 
 import _io  # type: ignore
 
-from arc import errors, utils
-from arc import autocompletions
+from arc import api, autocompletions, errors, safe
 from arc.autocompletions import Completion, CompletionInfo, CompletionType
 from arc.color import colorize, fg
 from arc.present.joiner import Join
-from arc.types.helpers import (
-    safe_issubclass,
-    convert_type,
-)
 from arc.prompt.prompts import select_prompt
+from arc.types.convert import convert_type
 from arc.types.type_arg import TypeArg
-
-
 from arc.typing import Annotation, TypeProtocol
 
-from arc.types import type_info
-
 if t.TYPE_CHECKING:
-    from arc.types.type_info import TypeInfo
-    from arc.context import Context
     from arc.define.param import Param
+    from arc.runtime import Context
+    from arc.types.type_info import TypeInfo
 
 
 AliasFor = t.Union[Annotation, t.Tuple[Annotation, ...]]
@@ -58,9 +51,9 @@ class Alias:
             typ.name = cls.name
 
         if not typ.sub_types:
-            obj = utils.dispatch_args(cls.convert, value, typ)
+            obj = api.dispatch_args(cls.convert, value, typ)
         else:
-            obj = utils.dispatch_args(cls.g_convert, value, typ)
+            obj = api.dispatch_args(cls.g_convert, value, typ)
 
         return obj
 
@@ -80,7 +73,7 @@ class Alias:
     def resolve(cls, annotation: type) -> type[TypeProtocol]:
         """Handles resolving alias types"""
 
-        if safe_issubclass(annotation, TypeProtocol):
+        if safe.issubclass(annotation, TypeProtocol):
             return annotation
         elif annotation in cls.aliases:
             # Type is a key
@@ -255,7 +248,7 @@ class DictAlias(dict, Alias, of=dict):
                     f"Valid keys are: {Join.with_and(list(hints.keys()))}",
                 )
 
-            sub_info = type_info.TypeInfo.analyze(hints[key])
+            sub_info = type(info).analyze(hints[key])
             try:
                 elements[key] = convert_type(sub_info.resolved_type, value, sub_info)
             except errors.ConversionError as e:

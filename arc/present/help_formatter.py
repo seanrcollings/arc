@@ -1,19 +1,19 @@
 from __future__ import annotations
+
+import textwrap
+import typing as t
 from itertools import repeat
 
-import typing as t
-import textwrap
 from arc import constants
-
 from arc.color import colorize, fg, fx
 from arc.config import Config, config
-from arc.present.joiner import Join
-from arc.present.formatters import TextFormatter
 from arc.present.ansi import Ansi
+from arc.present.formatters import TextFormatter
+from arc.present.joiner import Join
 
 if t.TYPE_CHECKING:
-    from arc.define.documentation import Documentation, ParamDoc
     from arc.define.command import Command
+    from arc.define.documentation import Documentation, ParamDoc
 
 
 def paragraphize(string: str) -> list[str]:

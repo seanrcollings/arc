@@ -1,12 +1,13 @@
 from __future__ import annotations
+
 import typing as t
 
 from arc import constants
 
 if t.TYPE_CHECKING:
-    from arc.prompt.prompt import Prompt
     from arc.define.param.param import Param
-    from arc.context import Context
+    from arc.prompt.prompt import Prompt
+    from arc.runtime import Context
 
 
 def input_prompt(param: Param, ctx: Context, **kwargs) -> t.Any:

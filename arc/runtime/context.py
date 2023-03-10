@@ -1,16 +1,18 @@
 from __future__ import annotations
+
 import collections
 import typing as t
 
 import arc.typing as at
 
 if t.TYPE_CHECKING:
-    from arc.define.param.param import ValueOrigin
-    from arc.define.command import Command
-    from arc.runtime import App
     from logging import Logger
+
     from arc.config import Config
+    from arc.define.command import Command
+    from arc.define.param.param import ValueOrigin
     from arc.prompt.prompt import Prompt
+    from arc.runtime import App
 
 
 T = t.TypeVar("T")

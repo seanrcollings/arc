@@ -1,23 +1,25 @@
 from __future__ import annotations
-import typing as t
+
 import collections
 import inspect
+import typing as t
 
-from arc import errors, utils, typing as at
+from arc import api, errors
+from arc import typing as at
 from arc.config import config
 from arc.constants import MISSING
 from arc.define import classful
 from arc.define.param import groups
-from arc.define.param.param_tree import ParamTree, ParamValue
-from arc.types.type_info import TypeInfo
 from arc.define.param.constructors import ParamInfo
 from arc.define.param.param import (
-    InjectedParam,
-    Param,
-    FlagParam,
     ArgumentParam,
+    FlagParam,
+    InjectedParam,
     OptionParam,
+    Param,
 )
+from arc.define.param.param_tree import ParamTree, ParamValue
+from arc.types.type_info import TypeInfo
 
 
 class ParamDefinition(collections.UserList[Param]):
@@ -35,7 +37,7 @@ class ParamDefinition(collections.UserList[Param]):
         self.cls: type | None = cls
         self.children: list[ParamDefinition] = []
 
-    __repr__ = utils.display("name", "data", "children")
+    __repr__ = api.display("name", "data", "children")
 
     @property
     def is_base(self) -> bool:

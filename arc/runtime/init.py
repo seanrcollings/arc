@@ -1,21 +1,22 @@
 from __future__ import annotations
-import typing as t
+
 import shlex
 import sys
+import typing as t
 
 from arc import errors
 from arc import typing as at
-from arc.context import Context
 from arc.parser import Parser
+from arc.runtime import Context
 from arc.runtime.middleware import (
     DefaultMiddlewareNamespace,
     Middleware,
     MiddlewareBase,
 )
-from arc.config import Config
 
 if t.TYPE_CHECKING:
     from arc.define import Command
+    from arc.config import Config
 
 
 class AddUsageErrorInfoMiddleware(MiddlewareBase):

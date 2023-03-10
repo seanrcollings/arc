@@ -1,8 +1,9 @@
 from __future__ import annotations
+
 import typing as t
 from functools import cached_property
-from arc import autocompletions
 
+from arc import autocompletions
 from arc.config import config
 from arc.parser import CustomAutocompleteAction, CustomHelpAction, CustomVersionAction
 

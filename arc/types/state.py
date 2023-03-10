@@ -1,8 +1,10 @@
 from __future__ import annotations
+
 import collections
 import typing as t
-import arc.typing as at
-from arc.context import Context
+
+if t.TYPE_CHECKING:
+    from arc.runtime import Context
 
 
 class State(collections.UserDict):

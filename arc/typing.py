@@ -1,12 +1,13 @@
 """Module contains custom type defintions that arc uses"""
 from __future__ import annotations
+
 import typing as t
 
-from arc.autocompletions import CompletionInfo, Completion
+from arc.autocompletions import Completion, CompletionInfo
 
 if t.TYPE_CHECKING:
-    from arc.context import Context
     from arc.define.param import Param
+    from arc.runtime import Context
 
 T = t.TypeVar("T")
 
@@ -23,8 +24,6 @@ ParseResult = dict[str, t.Union[str, list[str], None]]
 Env = t.Literal["production", "development", "test"]
 
 InputArgs = t.Union[str, t.Sequence[str], None]
-
-CompareReturn = t.Literal[-1, 0, 1]
 
 CompletionFunc = t.Callable[
     [CompletionInfo, "Param"], t.Union[list[Completion], Completion, None]

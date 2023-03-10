@@ -1,8 +1,7 @@
 import os
 import subprocess
 
-from arc.errors import ArcError
-
+from arc import errors
 
 _reasonable_pagers = [
     "/usr/bin/less",
@@ -19,7 +18,7 @@ def _get_pager_command() -> str:
         if os.path.exists(path):
             return path
 
-    raise ArcError("No pager found")
+    raise errors.ArcError("No pager found")
 
 
 def pager(contents: object, command: list[str] | None = None):

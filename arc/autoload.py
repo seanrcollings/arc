@@ -1,8 +1,9 @@
 from __future__ import annotations
+
+import sys
 import typing as t
 from importlib import import_module
 from pathlib import Path
-import sys
 
 from arc.errors import CommandError
 

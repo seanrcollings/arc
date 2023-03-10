@@ -1,12 +1,12 @@
 from __future__ import annotations
-from functools import cached_property
+
 import types
 import typing as t
-from arc.types.aliases import Alias
-from arc.types.type_arg import TypeArg
+from functools import cached_property
 
 import arc.typing as at
-
+from arc.types.aliases import Alias
+from arc.types.type_arg import TypeArg
 
 T = t.TypeVar("T")
 

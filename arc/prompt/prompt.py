@@ -1,28 +1,26 @@
+from __future__ import annotations
+
 import os
 import sys
 import typing as t
 from getpass import getpass
 
 from arc.color import fg, fx
-from arc.context import Context
 from arc.present.ansi import colorize
-from .helpers import (
-    CTRL_C,
-    ESCAPE,
-    Cursor,
-    RawTerminal,
-    clear_line,
-)
+
+from .helpers import CTRL_C, ESCAPE, Cursor, RawTerminal, clear_line
 from .questions import (
-    ConfirmQuestion,
     BaseQuestion,
-    QuestionError,
+    ConfirmQuestion,
     InputQuestion,
+    Question,
+    QuestionError,
     RawQuestion,
     SelectQuestion,
-    Question,
 )
 
+if t.TYPE_CHECKING:
+    from arc.runtime import Context
 
 T = t.TypeVar("T")
 

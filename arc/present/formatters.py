@@ -1,8 +1,9 @@
 # https://github.com/pallets/click/blob/main/src/click/formatting.py
 import shutil
-from contextlib import contextmanager
 import textwrap
 import typing as t
+from contextlib import contextmanager
+
 from .ansi import Ansi
 
 DEFAULT_MAX_WIDTH = 80

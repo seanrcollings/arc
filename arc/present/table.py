@@ -1,12 +1,12 @@
 from __future__ import annotations
+
 import functools
 import itertools
 import typing as t
 
-from arc.errors import ArcError
-from arc.color import colorize, fx, fg
-from arc.present.ansi import Ansi
+from arc import errors
 from arc.present import drawing
+from arc.present.ansi import Ansi, colorize, fg, fx
 
 
 class ColumnBase(t.TypedDict):  # pylint: disable=inherit-non-class
@@ -157,7 +157,7 @@ class Table:
 
     def add_row(self, row: t.Sequence[t.Any]):
         if len(row) > len(self.__columns):
-            raise ArcError("Too many values")
+            raise errors.ArcError("Too many values")
 
         resolved = {}
         for col, value in itertools.zip_longest(self.__columns, row, fillvalue=""):
@@ -313,7 +313,7 @@ class Table:
                 column = t.cast(Column, column)
                 copy.update(column)  # type: ignore
             else:
-                raise ArcError("Columns must either be a string or a dictionary")
+                raise errors.ArcError("Columns must either be a string or a dictionary")
 
             resolved.append(copy)
 
