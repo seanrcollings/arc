@@ -6,12 +6,14 @@ from functools import cached_property
 from arc import autocompletions
 from arc.define.alias import AliasDict
 from arc.parser import CustomAutocompleteAction, CustomHelpAction, CustomVersionAction
+from arc.types.type_info import TypeInfo
 
 from .param_definition import ParamDefinition, ParamDefinitionFactory
 from .param import FlagParam, OptionParam, Param
 
 if t.TYPE_CHECKING:
     from arc.config import Config
+    from arc.define import Command
 
 
 class ParamMixin:
@@ -22,18 +24,9 @@ class ParamMixin:
 
     @cached_property
     def param_def(self) -> ParamDefinition:
-        root = ParamDefinitionFactory(self.config.transform_snake_case).from_function(
-            self.callback
-        )
-
-        # TODO: Move adding these to runtime
-        if self.is_root and not self.is_namespace:  # type: ignore
-
-            if self.config.version:
-                self.__add_version_param(root)
-
-            if self.config.autocomplete:
-                self.__add_autocomplete_param(root)
+        root = ParamDefinitionFactory(
+            t.cast("Command", self), self.config.transform_snake_case
+        ).from_function(self.callback)
 
         self.__add_help_param(root)
 
@@ -95,43 +88,15 @@ class ParamMixin:
     def get_param(self, name: str) -> t.Optional[Param]:
         return self.param_map.get(name)
 
-    def __add_version_param(self, group: ParamDefinition):
-        group.append(
-            FlagParam(
-                "version",
-                short_name="v",
-                annotation=bool,
-                description="Displays the app's version number",
-                default=False,
-                action=CustomVersionAction,
-                expose=False,
-            ),
-        )
-
     def __add_help_param(self, group: ParamDefinition):
-        group.insert(
-            0,
+        group.appendleft(
             FlagParam(
                 "help",
                 short_name="h",
-                annotation=bool,
+                type=TypeInfo.analyze(bool),
                 description="Displays this help message",
                 default=False,
                 action=CustomHelpAction,
-                expose=False,
-            ),
-        )
-
-    def __add_autocomplete_param(self, group: ParamDefinition):
-        annotation = t.Literal[1]
-        annotation.__args__ = tuple(autocompletions.shells.keys())  # type: ignore
-        group.append(
-            OptionParam(
-                "autocomplete",
-                annotation=annotation,  # type: ignore
-                description="Shell completion support",
-                action=CustomAutocompleteAction,
-                default=None,
                 expose=False,
             ),
         )

@@ -72,7 +72,7 @@ class Param(t.Generic[T]):
     def __init__(
         self,
         argument_name: str,
-        annotation: at.Annotation,
+        type: TypeInfo,
         default: T | None | Constant = MISSING,
         param_name: str | None = None,
         short_name: str | None = None,
@@ -88,6 +88,7 @@ class Param(t.Generic[T]):
     ):
         self.argument_name = argument_name
         self.param_name = param_name or argument_name
+        self.type = type
         self.short_name = short_name
         self.default = default
         self.description = description
@@ -95,28 +96,13 @@ class Param(t.Generic[T]):
         self.envvar = envvar
         self.prompt = prompt
         self.action = action or Action.STORE
-        self.type = TypeInfo.analyze(annotation)
         self.expose = expose
         self.comp_func = comp_func
         self.getter_func = getter_func
         self.data = data or {}
 
-        if self.type.is_union_type:
-            for sub in self.type.sub_types:
-                if safe.issubclass(sub.origin, (set, tuple, list)):
-                    raise errors.ParamError(
-                        f"{self.type.original_type} is not a valid type. "
-                        f"lists, sets, and tuples cannot be members of a Union / Optional type"
-                    )
-
         if self.type.is_optional_type and self.default is MISSING:
             self.default = None
-
-        if self.short_name and len(self.short_name) > 1:
-            raise errors.ParamError(
-                f"Parameter {self.param_name}'s shortened name is longer than 1 character",
-                self,
-            )
 
     __repr__ = api.display("argument_name", "type")
 

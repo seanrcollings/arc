@@ -1,4 +1,5 @@
 from __future__ import annotations
+from datetime import datetime
 
 import shlex
 import sys
@@ -6,17 +7,33 @@ import typing as t
 
 from arc import errors
 from arc import typing as at
-from arc.parser import Parser
+from arc.define.param.param import FlagParam, OptionParam
+from arc.parser import CustomAutocompleteAction, CustomVersionAction, Parser
 from arc.runtime import Context
 from arc.runtime.middleware import (
     DefaultMiddlewareNamespace,
     Middleware,
     MiddlewareBase,
 )
+from arc.types.type_info import TypeInfo
 
 if t.TYPE_CHECKING:
     from arc.define import Command
     from arc.config import Config
+    from arc.define.param import ParamDefinition
+
+
+class StartTimeMiddleware(MiddlewareBase):
+    def __call__(self, ctx: Context) -> t.Any:
+        start = datetime.now()
+        ctx["arc.debug.start"] = start
+        try:
+            yield
+        finally:
+            end = datetime.now()
+            ctx["arc.debug.end"] = end
+            diff = end - start
+            ctx.logger.debug(f"Execution took: {diff.total_seconds():.4f}s")
 
 
 class PerformDevChecksMiddleware(MiddlewareBase):
@@ -41,6 +58,45 @@ class PerformDevChecksMiddleware(MiddlewareBase):
                 if "param_def" not in command.__dict__:
                     command.param_def
                     del command.param_def
+
+
+class AddRuntimeParmsMiddleware(MiddlewareBase):
+    def __call__(self, ctx: Context) -> t.Any:
+
+        if ctx.config.version:
+            self.__add_version_param(ctx.root.param_def)
+
+        if ctx.config.autocomplete:
+            self.__add_autocomplete_param(ctx.root.param_def)
+
+    def __add_version_param(self, group: ParamDefinition):
+        group.insert(
+            1,
+            FlagParam(
+                "version",
+                short_name="v",
+                type=TypeInfo.analyze(bool),
+                description="Displays the app's version number",
+                default=False,
+                action=CustomVersionAction,
+                expose=False,
+            ),
+        )
+
+    def __add_autocomplete_param(self, group: ParamDefinition):
+        annotation = t.Literal[1]
+        annotation.__args__ = tuple(autocompletions.shells.keys())  # type: ignore
+        group.insert(
+            1,
+            OptionParam(
+                "autocomplete",
+                type=TypeInfo.analyze(annotation),
+                description="Shell completion support",
+                action=CustomAutocompleteAction,
+                default=None,
+                expose=False,
+            ),
+        )
 
 
 class AddUsageErrorInfoMiddleware(MiddlewareBase):
@@ -172,7 +228,9 @@ class CheckParseReulstMiddleware(MiddlewareBase):
 class InitMiddleware(DefaultMiddlewareNamespace):
     """Namespace for all the default init middlewares"""
 
+    StartTime = StartTimeMiddleware()
     PerformDevChecks = PerformDevChecksMiddleware()
+    AddRuntimeParms = AddRuntimeParmsMiddleware()
     AddUsageErrorInfo = AddUsageErrorInfoMiddleware()
     NormalizeInput = NormalizeInputMiddleware()
     CommandFinder = CommandFinderMiddleware()
@@ -180,7 +238,9 @@ class InitMiddleware(DefaultMiddlewareNamespace):
     CheckParseResult = CheckParseReulstMiddleware()
 
     _list: list[Middleware] = [
+        StartTime,
         PerformDevChecks,
+        AddRuntimeParms,
         AddUsageErrorInfo,
         NormalizeInput,
         CommandFinder,

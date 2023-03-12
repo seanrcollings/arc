@@ -4,7 +4,7 @@ import collections
 import inspect
 import typing as t
 
-from arc import api, errors
+from arc import api, errors, safe
 from arc import typing as at
 from arc.constants import MISSING
 from arc.define import classful
@@ -20,8 +20,11 @@ from arc.define.param.param import (
 from arc.define.param.param_tree import ParamTree, ParamValue
 from arc.types.type_info import TypeInfo
 
+if t.TYPE_CHECKING:
+    from arc.define import Command
 
-class ParamDefinition(collections.UserList[Param]):
+
+class ParamDefinition(collections.deque[Param]):
     """A tree structure that represents how the parameters to a command look.
     This represents the definition of a command's paramaters, and not a particular
     execution of that comamnd with particular values"""
@@ -44,7 +47,7 @@ class ParamDefinition(collections.UserList[Param]):
 
     def all_params(self) -> t.Generator[Param, None, None]:
         """Generator that yields all params in the tree"""
-        yield from self.data
+        yield from self
 
         if self.children:
             for child in self.children:
@@ -70,8 +73,9 @@ class ParamDefinition(collections.UserList[Param]):
 
 
 class ParamDefinitionFactory:
-    def __init__(self, transform_snake_case: bool = True):
+    def __init__(self, command: Command, transform_snake_case: bool = True):
         self.param_names: set[str] = set()
+        self.command = command
         self.transform_snake_case = transform_snake_case
 
     def from_function(self, func: t.Callable) -> ParamDefinition:
@@ -115,7 +119,30 @@ class ParamDefinitionFactory:
                 definition = self._from_param_group(param.annotation, param.name)
                 root.children.append(definition)
             else:
-                root.append(self.create_param(param))
+                command_param = self.create_param(param)
+
+                if command_param.short_name:
+                    if len(command_param.short_name) > 1:
+                        raise errors.ParamError(
+                            f"Parameter {command_param.param_name}'s shortened name is longer than 1 character",
+                            self,
+                        )
+
+                    if command_param.short_name in self.param_names:
+                        raise errors.ParamError(
+                            f"Parameter {command_param.param_name} shortened name "
+                            f"{command_param.short_name!r} is non-unique."
+                        )
+
+                if command_param.type.is_union_type:
+                    for sub in command_param.type.sub_types:
+                        if safe.issubclass(sub.origin, (set, tuple, list)):
+                            raise errors.ParamError(
+                                f"{command_param.type.original_type} is not a valid type. "
+                                f"lists, sets, and tuples cannot be members of a Union / Optional type"
+                            )
+
+                root.append(command_param)
 
         return root
 
@@ -127,8 +154,8 @@ class ParamDefinitionFactory:
             )
 
         self.param_names.add(param.name)
-        # TODO: pass this type_info into the param, instead of creating it twice
-        type_info = TypeInfo.analyze(param.annotation)
+        annotation = t.Any if param.annotation is param.empty else param.annotation
+        type_info = TypeInfo.analyze(annotation)
         info = self.get_param_info(param, type_info)
 
         annotation = param.annotation
@@ -140,7 +167,7 @@ class ParamDefinitionFactory:
 
         return info.param_cls(
             argument_name=param.name,
-            annotation=annotation,
+            type=type_info,
             **info.dict(),
         )
 

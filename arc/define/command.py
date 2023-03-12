@@ -1,4 +1,5 @@
 from __future__ import annotations
+from datetime import datetime
 
 import functools
 import inspect
@@ -64,9 +65,6 @@ class Command(ParamMixin, MiddlewareContainer):
         self._autoload = autoload
         self.data = kwargs
 
-        # if self.config.environment == "development":
-        #     self.param_def
-
     __repr__ = api.display("name")
 
     def __call__(self, input_args: at.InputArgs = None, state: dict = None) -> t.Any:
@@ -94,7 +92,13 @@ class Command(ParamMixin, MiddlewareContainer):
             yield curr
 
     def run(self, ctx: Context):
-        ctx.logger.debug("Executing: %s", self)
+        start_time: datetime | None = ctx.get("arc.debug.start")
+        if start_time:
+            diff = datetime.now() - start_time
+            ctx.logger.debug(f"Executing: {self} ({diff.total_seconds():.4f}s)")
+        else:
+            ctx.logger.debug(f"Executing: {self}")
+
         stack = MiddlewareStack()
         for command in self.command_chain:
             stack.extend(command.stack)

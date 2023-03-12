@@ -1,3 +1,4 @@
+"""Utility module for things that make the arc apis cleaner"""
 from __future__ import annotations
 
 import inspect
@@ -11,6 +12,8 @@ if t.TYPE_CHECKING:
 
 
 def display(*members: str):
+    """Construct a repr that displays the values of the provided members"""
+
     def __repr__(self):
         values = ", ".join(
             [f"{member}={repr(getattr(self, member))}" for member in members]
