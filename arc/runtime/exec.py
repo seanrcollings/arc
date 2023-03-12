@@ -1,3 +1,4 @@
+"""Contains all of the middlewares used during execution of a command"""
 from __future__ import annotations
 
 import contextlib
@@ -7,10 +8,8 @@ import typing as t
 import arc
 from arc import api, constants, errors
 from arc import typing as at
-from arc.color import colorize, fg, fx
 from arc.config import Config
 from arc.define.param.param import InjectedParam, Param, ValueOrigin
-from arc.present import Join
 from arc.prompt.prompts import input_prompt
 from arc.runtime import Context
 from arc.runtime.middleware import (
@@ -28,7 +27,7 @@ class ExitStackMiddleware(MiddlewareBase):
     """Utility middleware that adds an instance of `contextlib.ExitStack` to the context.
     This can be used to open resources (like IO objects) that need to be closed when the program is exiting.
 
-    # Context Dependancies
+    # Context Dependencies
     None
 
     # Context Additions
@@ -44,6 +43,16 @@ class ExitStackMiddleware(MiddlewareBase):
 
 
 class SetupParamMiddleware(MiddlewareBase):
+    """Performs parameter setup for the given command
+
+    # Context Dependencies
+    - `arc.command`
+
+    # Context Additions
+    `arc.args.tree` - Tree representing the command's parameters and their realized values
+    `arc.args.origins` - Dictionary that stores where each parameter value comes from. See `Context.get_origin()`
+    """
+
     def __call__(self, ctx: Context) -> t.Any:
         command: Command = ctx["arc.command"]
         param_instance = command.param_def.create_instance()
@@ -99,6 +108,18 @@ class ParamProcessor(MiddlewareBase):
 
 
 class ApplyParseResultMiddleware(ParamProcessor):
+    """Update the parameter values with the values found from parsing the input
+
+    # Context Dependencies
+    - `arc.parse.result`
+    - `arc.args.tree`
+    - `arc.config`
+    - `arc.args.origins`
+
+    # Context Additions
+    None
+    """
+
     res: at.ParseResult
 
     def __call__(self, ctx: Context):
@@ -119,6 +140,17 @@ class ApplyParseResultMiddleware(ParamProcessor):
 
 
 class GetEnvValueMiddleware(ParamProcessor):
+    """Retrieves parameter values from enviroment variables
+
+    # Context Dependencies
+    - `arc.args.tree`
+    - `arc.config`
+    - `arc.args.origins`
+
+    # Context Additions
+    None
+    """
+
     def process_missing(self, param: Param) -> t.Any:
         value = self.get_env_value(param)
         self.set_origin(param, ValueOrigin.ENV)
@@ -132,6 +164,17 @@ class GetEnvValueMiddleware(ParamProcessor):
 
 
 class GetPromptValueMiddleware(ParamProcessor):
+    """Retrieves parameter values from user input
+
+    # Context Dependencies
+    - `arc.args.tree`
+    - `arc.config`
+    - `arc.args.origins`
+
+    # Context Additions
+    None
+    """
+
     def process_missing(self, param: Param) -> t.Any:
         value = self.get_prompt_value(param)
         self.set_origin(param, ValueOrigin.PROMPT)
@@ -146,6 +189,17 @@ class GetPromptValueMiddleware(ParamProcessor):
 
 
 class GetterValueMiddleware(ParamProcessor):
+    """Retrieves parameter values from the parameter getter function
+
+    # Context Dependencies
+    - `arc.args.tree`
+    - `arc.config`
+    - `arc.args.origins`
+
+    # Context Additions
+    None
+    """
+
     def process_missing(self, param: Param) -> t.Any:
         value = self.get_getter_value(param)
         self.set_origin(param, ValueOrigin.GETTER)
@@ -160,6 +214,17 @@ class GetterValueMiddleware(ParamProcessor):
 
 
 class ConvertValuesMiddleware(ParamProcessor):
+    """Performs type conversion on retrieved parameter values
+
+    # Context Dependencies
+    - `arc.args.tree`
+    - `arc.config`
+    - `arc.args.origins`
+
+    # Context Additions
+    None
+    """
+
     def process_not_missing(self, param: Param, value: t.Any):
         if value in (None, constants.MISSING, True, False,) and param.type.origin in (
             bool,
@@ -174,12 +239,34 @@ class ConvertValuesMiddleware(ParamProcessor):
 
 
 class DefaultValueMiddleware(ParamProcessor):
+    """Retrieves parameter values from the defaults for each parameter
+
+    # Context Dependencies
+    - `arc.args.tree`
+    - `arc.config`
+    - `arc.args.origins`
+
+    # Context Additions
+    None
+    """
+
     def process_missing(self, param: Param):
         self.set_origin(param, ValueOrigin.DEFAULT)
         return param.default
 
 
 class DependancyInjectorMiddleware(ParamProcessor):
+    """Performs dependcy injection for relavent parameters
+
+    # Context Dependencies
+    - `arc.args.tree`
+    - `arc.config`
+    - `arc.args.origins`
+
+    # Context Additions
+    None
+    """
+
     def process(self, param: Param, value: t.Any) -> t.Any:
         param = t.cast(InjectedParam, param)
         injected = param.get_injected_value(self.ctx)
@@ -191,6 +278,17 @@ class DependancyInjectorMiddleware(ParamProcessor):
 
 
 class RunTypeMiddlewareMiddleware(ParamProcessor):
+    """Execute the registered type middleware for each parameter
+
+    # Context Dependencies
+    - `arc.args.tree`
+    - `arc.config`
+    - `arc.args.origins`
+
+    # Context Additions
+    None
+    """
+
     def process(self, param: Param, value: t.Any) -> t.Any:
         if value not in (None, constants.MISSING):
             try:
@@ -204,6 +302,15 @@ class RunTypeMiddlewareMiddleware(ParamProcessor):
 
 
 class MissingParamsCheckerMiddleware(MiddlewareBase):
+    """Checks to ensure that all params have been given a value
+
+    # Context Dependencies
+    - `arc.args.tree`
+
+    # Context Additions
+    None
+    """
+
     def __call__(self, ctx: Context) -> t.Any:
         tree: ParamTree = ctx["arc.args.tree"]
         missing = [
@@ -217,6 +324,17 @@ class MissingParamsCheckerMiddleware(MiddlewareBase):
 
 
 class CompileParamsMiddleware(MiddlewareBase):
+    """Compile the parameter tree into dictionary that can be used
+    to call the command callback.
+
+    # Context Dependencies
+    - `arc.args.tree`
+
+    # Context Additions
+    - `arc.args` - Dictionary to pass into command callback
+
+    """
+
     def __call__(self, ctx: Context) -> t.Any:
         instance: ParamTree = ctx["arc.args.tree"]
         ctx["arc.args"] = instance.compile()
@@ -227,6 +345,16 @@ def iscontextmanager(obj: t.Any) -> bool:
 
 
 class OpenResourceMiddleware(MiddlewareBase):
+    """Opens any parameter that is a context manager
+
+    # Context Dependencies
+    - `arc.args`
+    - `arc.exitstack`
+
+    # Context Additions
+    None
+    """
+
     def __call__(self, ctx: Context) -> t.Any:
         stack: contextlib.ExitStack | None = ctx.get("arc.exitstack")
         if not stack:
@@ -240,11 +368,27 @@ class OpenResourceMiddleware(MiddlewareBase):
 
 
 class ExecMiddleware(DefaultMiddlewareNamespace):
-    """Container for all default execution middleware"""
+    """Container for all default execution middlewares
+
+    Use it to reference a default exec middleware when adding your own custom middlewares
+
+    ```py
+    import arc
+
+    @arc.command
+    def command():
+        arc.print("hello there")
+
+    @command.use(after=arc.ExecMiddleware.ConverValues)
+    def after_convert(ctx: arc.Context):
+        # Runs after type conversion occurs
+        ...
+    ```
+    """
 
     ExitStack = ExitStackMiddleware()
     SetupParam = SetupParamMiddleware()
-    AopplyParseResult = ApplyParseResultMiddleware()
+    ApplyParseResult = ApplyParseResultMiddleware()
     GetEnvValue = GetEnvValueMiddleware()
     GetPromptValue = GetPromptValueMiddleware()
     GetterValue = GetterValueMiddleware()
@@ -259,7 +403,7 @@ class ExecMiddleware(DefaultMiddlewareNamespace):
     _list: list[Middleware] = [
         ExitStack,
         SetupParam,
-        AopplyParseResult,
+        ApplyParseResult,
         GetEnvValue,
         GetPromptValue,
         GetterValue,

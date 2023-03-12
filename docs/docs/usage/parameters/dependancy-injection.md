@@ -34,6 +34,6 @@ A type can be denoted to be a dependency by implementing the `#!python __depends
 
 *arc* uses this feature to make various components available to your commands:
 
-- [`arc.Context`](../../reference/context.md)
+- [`arc.Context`](../../reference/runtime/context.md)
 - [`arc.prompt.Prompt`](../../usage/user-input.md)
 - [`arc.types.State`](../command-state.md)

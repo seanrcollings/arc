@@ -1,3 +1,4 @@
+"""Contains all of the middlewares used during initialization of a command"""
 from __future__ import annotations
 from datetime import datetime
 
@@ -24,6 +25,16 @@ if t.TYPE_CHECKING:
 
 
 class StartTimeMiddleware(MiddlewareBase):
+    """Utility Middleware that tracks how long execution takes
+
+    # Context Dependencies
+    None
+
+    #  Context Additions
+    - `arc.debug.start` - datetime representing the start of execution
+    - `arc.debug.end`  - datetime representing the end of execution.
+    """
+
     def __call__(self, ctx: Context) -> t.Any:
         start = datetime.now()
         ctx["arc.debug.start"] = start
@@ -158,8 +169,7 @@ class NormalizeInputMiddleware(MiddlewareBase):
 class CommandFinderMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context):
         args: list[str] = ctx["arc.input"]
-        root: Command = ctx["arc.root"]
-        command, command_args = self.split_args(root, args)
+        command, command_args = self.split_args(ctx.root, args)
         ctx["arc.command"] = command
         ctx["arc.input"] = command_args
 
@@ -185,10 +195,9 @@ class CommandFinderMiddleware(MiddlewareBase):
 
 class ArgParseMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context):
-        command: Command = ctx["arc.command"]
         args: list[str] = ctx["arc.input"]
 
-        result, extra = self.parse_args(command, args)
+        result, extra = self.parse_args(ctx.command, args)
         ctx["arc.parse.result"] = result
         ctx["arc.parse.extra"] = extra
 
@@ -204,29 +213,49 @@ class ArgParseMiddleware(MiddlewareBase):
         return parser
 
 
-class CheckParseReulstMiddleware(MiddlewareBase):
+class CheckParseResultsMiddleware(MiddlewareBase):
     """Checks the results of the input parsing against configutation options.
     Generates error messages for unrecognized arguments
 
     # Context Dependencies
     - `arc.config`
-    - `arc.command`
     - `arc.parse.extra` (optional)
 
     # Context Additions
     """
 
     def __call__(self, ctx: Context):
-        config: Config = ctx["arc.config"]
         extra: list[str] | None = ctx.get("arc.parse.extra")
-        command: Command = ctx["arc.command"]
 
-        if extra and not config.allow_unrecognized_args:
+        if extra and not ctx.config.allow_unrecognized_args:
             raise errors.UnrecognizedArgError(extra)
 
 
 class InitMiddleware(DefaultMiddlewareNamespace):
-    """Namespace for all the default init middlewares"""
+    """Namespace for all the default init middlewares
+
+    Use it to reference a default init middleware when adding your own custom middlewares
+
+    ```py
+    import arc
+
+    @arc.command
+    def command():
+        arc.print("hello there")
+
+    # To add your own init middlewares, you need to
+    # create the App object explicitly
+    app = arc.App(command)
+
+    @app.use(before=arc.InitMiddleware.Parse)
+    def before_parse(ctx: arc.Context):
+        # Will run before the middleware that performs the parsing operation
+        ...
+
+    app()
+    ```
+
+    """
 
     StartTime = StartTimeMiddleware()
     PerformDevChecks = PerformDevChecksMiddleware()
@@ -235,7 +264,7 @@ class InitMiddleware(DefaultMiddlewareNamespace):
     NormalizeInput = NormalizeInputMiddleware()
     CommandFinder = CommandFinderMiddleware()
     Parser = ArgParseMiddleware()
-    CheckParseResult = CheckParseReulstMiddleware()
+    CheckParseResult = CheckParseResultsMiddleware()
 
     _list: list[Middleware] = [
         StartTime,
