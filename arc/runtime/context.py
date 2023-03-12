@@ -24,6 +24,11 @@ class Context(collections.UserDict[str, t.Any]):
     """
 
     @property
+    def root(self) -> Command:
+        """The root command object. Alias for `ctx["arc.root"]`"""
+        return self["arc.root"]
+
+    @property
     def command(self) -> Command:
         """The command object being executed. Alias for `ctx["arc.command"]`"""
         return self["arc.command"]

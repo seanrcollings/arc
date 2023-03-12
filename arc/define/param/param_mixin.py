@@ -4,6 +4,7 @@ import typing as t
 from functools import cached_property
 
 from arc import autocompletions
+from arc.define.alias import AliasDict
 from arc.parser import CustomAutocompleteAction, CustomHelpAction, CustomVersionAction
 
 from .param_definition import ParamDefinition, ParamDefinitionFactory
@@ -37,6 +38,18 @@ class ParamMixin:
         self.__add_help_param(root)
 
         return root
+
+    @cached_property
+    def param_map(self) -> t.Mapping[str, Param]:
+        data: AliasDict[str, Param] = AliasDict()
+        for param in self.params:
+            data[param.argument_name] = param
+            data.add_alias(param.argument_name, param.param_name)
+            if param.short_name:
+                data.add_alias(param.argument_name, param.short_name)
+            data.add_aliases(param.argument_name, *param.get_param_names())
+
+        return data
 
     @property
     def params(self) -> t.Generator[Param, None, None]:
@@ -80,11 +93,7 @@ class ParamMixin:
                 yield param
 
     def get_param(self, name: str) -> t.Optional[Param]:
-        for param in self.params:
-            if name in (param.argument_name, param.param_name, param.short_name):
-                return param
-
-        return None
+        return self.param_map.get(name)
 
     def __add_version_param(self, group: ParamDefinition):
         group.append(

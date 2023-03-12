@@ -20,17 +20,19 @@ class TestTypeDependancies:
         assert len(list(command.injected_params)) == 1
 
     def test_no_default(self):
-        with pytest.raises(errors.ParamError):
-
-            @arc.command
-            def command(val: DependableType = arc.Argument()):
-                return val
+        @arc.command
+        def command(val: DependableType = arc.Argument()):
+            return val
 
         with pytest.raises(errors.ParamError):
+            command()
 
-            @arc.command
-            def command(val: DependableType = 1):  # type: ignore
-                return val
+        @arc.command
+        def command(val: DependableType = 1):  # type: ignore
+            return val
+
+        with pytest.raises(errors.ParamError):
+            command()
 
     def test_annotation(self):
         @arc.command

@@ -292,11 +292,12 @@ class TestUnion:
         assert cli("un 1 string 2 string") == [1, "string", 2, "string"]
 
     def test_collections_not_allowed(self, cli):
-        with pytest.raises(errors.ParamError):
+        @cli.subcommand
+        def un2(val: Union[list[int], list[str]]):
+            return val
 
-            @cli.subcommand
-            def un2(val: Union[list[int], list[str]]):
-                return val
+        with pytest.raises(errors.ParamError):
+            cli()
 
     def test_310_type(self, cli: arc.Command):
         @cli.subcommand

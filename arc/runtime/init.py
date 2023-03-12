@@ -19,13 +19,38 @@ if t.TYPE_CHECKING:
     from arc.config import Config
 
 
+class PerformDevChecksMiddleware(MiddlewareBase):
+    """A utility middleware that performs some development checks.
+    Will be disabled in production mode.
+
+    # Context Dependencies
+    - `arc.root` - Root Command object to start checks from
+    - `arc.concig` - Checks Configuration for enviroment
+
+    # Context Additions
+    None
+
+    """
+
+    def __call__(self, ctx: Context) -> t.Any:
+        if ctx.config.environment == "development":
+            ctx.logger.debug("Performing dev checks...")
+            ctx.logger.debug("  Checking all command parameters")
+
+            for command in ctx.root:
+                if "param_def" not in command.__dict__:
+                    command.param_def
+                    del command.param_def
+
+
 class AddUsageErrorInfoMiddleware(MiddlewareBase):
     """A utility middleware that catches `UsageError`s and adds information so they can generate a usage error
 
-    # ctx Dependancies
+    # Context Dependencies
     - `arc.command` (optional): Usage information comes from the current
     executing [`Command`][arc.define.command.Command] object
-    # ctx Additions
+
+    # Context Additions
     None
     """
 
@@ -52,10 +77,10 @@ class NormalizeInputMiddleware(MiddlewareBase):
     command is called, it will be normalized to an list. If input is not provided,
     `sys.argv` is used.
 
-    # ctx Dependancies
+    # Context Dependencies
     - `arc.input` (optional): Only exists if input was provided in the call to the command
 
-    # ctx Additions
+    # Context Additions
     - `arc.input`: Adds it if it's not already there, normalizes it if it is there
     """
 
@@ -127,12 +152,12 @@ class CheckParseReulstMiddleware(MiddlewareBase):
     """Checks the results of the input parsing against configutation options.
     Generates error messages for unrecognized arguments
 
-    # ctx Dependancies
+    # Context Dependencies
     - `arc.config`
     - `arc.command`
     - `arc.parse.extra` (optional)
 
-    # ctx Additions
+    # Context Additions
     """
 
     def __call__(self, ctx: Context):
@@ -147,6 +172,7 @@ class CheckParseReulstMiddleware(MiddlewareBase):
 class InitMiddleware(DefaultMiddlewareNamespace):
     """Namespace for all the default init middlewares"""
 
+    PerformDevChecks = PerformDevChecksMiddleware()
     AddUsageErrorInfo = AddUsageErrorInfoMiddleware()
     NormalizeInput = NormalizeInputMiddleware()
     CommandFinder = CommandFinderMiddleware()
@@ -154,6 +180,7 @@ class InitMiddleware(DefaultMiddlewareNamespace):
     CheckParseResult = CheckParseReulstMiddleware()
 
     _list: list[Middleware] = [
+        PerformDevChecks,
         AddUsageErrorInfo,
         NormalizeInput,
         CommandFinder,

@@ -72,11 +72,12 @@ def test_non_unique_names():
     class Group:
         value: int
 
-    with pytest.raises(errors.ParamError):
+    @arc.command
+    def command(value: int, group: Group):
+        print(value)
 
-        @arc.command
-        def command(value: int, group: Group):
-            print(value)
+    with pytest.raises(errors.ParamError):
+        command()
 
 
 def test_exclude():

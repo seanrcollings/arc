@@ -64,8 +64,8 @@ class Command(ParamMixin, MiddlewareContainer):
         self._autoload = autoload
         self.data = kwargs
 
-        if self.config.environment == "development":
-            self.param_def
+        # if self.config.environment == "development":
+        #     self.param_def
 
     __repr__ = api.display("name")
 
@@ -83,6 +83,15 @@ class Command(ParamMixin, MiddlewareContainer):
 
         app = App(self, state=state or {})
         return app(input_args)
+
+    def __iter__(self) -> t.Iterator[Command]:
+        stack: list[Command] = []
+        stack.append(self)
+
+        while stack:
+            curr = stack.pop()
+            stack.extend(curr.subcommands.values())
+            yield curr
 
     def run(self, ctx: Context):
         ctx.logger.debug("Executing: %s", self)
