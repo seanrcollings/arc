@@ -375,7 +375,10 @@ class Command(ParamMixin, MiddlewareContainer):
 
             return inner
 
-        raise errors.ParamError(f"No parameter with name: {param_name}")
+        raise errors.ParamError(
+            f"No parameter with name: {param_name}",
+            Join.with_space(self.doc.fullname),
+        )
 
     def get(self, param_name: str):
         param = self.get_param(param_name)
@@ -387,7 +390,10 @@ class Command(ParamMixin, MiddlewareContainer):
 
             return inner
 
-        raise errors.ParamError(f"No parameter with name: {param_name}")
+        raise errors.ParamError(
+            f"No parameter with name: {param_name}",
+            Join.with_space(self.doc.fullname),
+        )
 
     def autoload(self, *paths: str):
         Autoload(paths, self, self.config.autoload_overwrite).load()

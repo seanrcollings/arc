@@ -56,7 +56,7 @@ class Documentation:
         return formatter.value
 
     @property
-    def fullname(self):
+    def fullname(self) -> list[str]:
         return list(c.name for c in self.command.command_chain)[1:]
 
     @property

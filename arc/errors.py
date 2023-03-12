@@ -196,9 +196,17 @@ class CommandError(InternalError):
 
 
 class ParamError(InternalError):
-    def __init__(self, message, param=None):
+    def __init__(self, message, command_name: str, param=None):
         super().__init__(message)
+        self.command_name = command_name
         self.param = param
+
+    def __str__(self) -> str:
+        param_name = self.param.name if self.param else ""
+        return (
+            f"Parameter {param_name!r} for command "
+            f"{self.command_name!r} is invalid: {super().__str__()}"
+        )
 
 
 class TypeArgError(InternalError):

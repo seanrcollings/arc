@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import collections
 import inspect
+from multiprocessing.spawn import get_command_line
 import typing as t
 
 from arc import api, errors, safe
@@ -73,9 +74,13 @@ class ParamDefinition(collections.deque[Param]):
 
 
 class ParamDefinitionFactory:
-    def __init__(self, command: Command, transform_snake_case: bool = True):
+    def __init__(
+        self,
+        get_command_name: t.Callable[..., str],
+        transform_snake_case: bool = True,
+    ):
         self.param_names: set[str] = set()
-        self.command = command
+        self.get_command_name = get_command_name
         self.transform_snake_case = transform_snake_case
 
     def from_function(self, func: t.Callable) -> ParamDefinition:
@@ -114,7 +119,9 @@ class ParamDefinitionFactory:
             if groups.isgroup(param.annotation):
                 if param.default is not param.empty:
                     raise errors.ParamError(
-                        "Parameter groups cannot have a default value", param
+                        "Parameter groups cannot have a default value",
+                        self.get_command_name(),
+                        param,
                     )
                 definition = self._from_param_group(param.annotation, param.name)
                 root.children.append(definition)
@@ -125,13 +132,15 @@ class ParamDefinitionFactory:
                     if len(command_param.short_name) > 1:
                         raise errors.ParamError(
                             f"Parameter {command_param.param_name}'s shortened name is longer than 1 character",
-                            self,
+                            self.get_command_name(),
+                            command_param,
                         )
 
                     if command_param.short_name in self.param_names:
                         raise errors.ParamError(
                             f"Parameter {command_param.param_name} shortened name "
-                            f"{command_param.short_name!r} is non-unique."
+                            f"{command_param.short_name!r} is non-unique.",
+                            self.get_command_name(),
                         )
 
                 if command_param.type.is_union_type:
@@ -139,7 +148,8 @@ class ParamDefinitionFactory:
                         if safe.issubclass(sub.origin, (set, tuple, list)):
                             raise errors.ParamError(
                                 f"{command_param.type.original_type} is not a valid type. "
-                                f"lists, sets, and tuples cannot be members of a Union / Optional type"
+                                f"lists, sets, and tuples cannot be members of a Union / Optional type",
+                                self.get_command_name(),
                             )
 
                 root.append(command_param)
@@ -150,7 +160,8 @@ class ParamDefinitionFactory:
         if param.name in self.param_names:
             raise errors.ParamError(
                 f"Parameter name '{param.name}' is non-unique. "
-                "All parameters for a given command must have a unique name"
+                "All parameters for a given command must have a unique name",
+                self.get_command_name(),
             )
 
         self.param_names.add(param.name)
@@ -186,7 +197,8 @@ class ParamDefinitionFactory:
             if param.default is not param.empty:
                 raise errors.ParamError(
                     f"type {param.annotation} is a special type used for dependancy injection. "
-                    "As such, it cannot be provided with a default value or parameter value"
+                    "As such, it cannot be provided with a default value or parameter value",
+                    self.get_command_name(),
                 )
             info.callback = type_info.origin.__depends__
 
@@ -201,6 +213,7 @@ class ParamDefinitionFactory:
             raise errors.ParamError(
                 "Positional only arguments are not allowed. "
                 "please remove the '/' from your function definition",
+                self.get_command_name(),
                 param,
             )
 

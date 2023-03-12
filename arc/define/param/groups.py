@@ -127,14 +127,13 @@ def groupoptions(cls: type) -> dict[str, t.Any]:
         cls (type): Parameter Group Class
 
     Raises:
-        errors.ParamError: If the passed in type is
-            not a parameter group
+        TypeError: If the passed in type is not a parameter group
 
     Returns:
         dict[str, t.Any]: The options dictionary
     """
-    if not hasattr(cls, "__arc_group__"):
-        raise errors.ParamError(f"{cls} is not a parameter group")
+    if not isgroup(cls):
+        raise TypeError(f"{cls} is not a parameter group")
 
     return getattr(cls, "__arc_group__")
 

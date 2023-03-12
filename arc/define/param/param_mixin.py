@@ -3,13 +3,13 @@ from __future__ import annotations
 import typing as t
 from functools import cached_property
 
-from arc import autocompletions
 from arc.define.alias import AliasDict
-from arc.parser import CustomAutocompleteAction, CustomHelpAction, CustomVersionAction
+from arc.parser import CustomHelpAction
+from arc.present.joiner import Join
 from arc.types.type_info import TypeInfo
 
 from .param_definition import ParamDefinition, ParamDefinitionFactory
-from .param import FlagParam, OptionParam, Param
+from .param import FlagParam, Param
 
 if t.TYPE_CHECKING:
     from arc.config import Config
@@ -25,7 +25,8 @@ class ParamMixin:
     @cached_property
     def param_def(self) -> ParamDefinition:
         root = ParamDefinitionFactory(
-            t.cast("Command", self), self.config.transform_snake_case
+            lambda: Join.with_space(t.cast("Command", self).doc.fullname),
+            self.config.transform_snake_case,
         ).from_function(self.callback)
 
         self.__add_help_param(root)
