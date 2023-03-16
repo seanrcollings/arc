@@ -173,7 +173,7 @@ class Param(t.Generic[T]):
             and self.type.sub_types[-1].origin is not Ellipsis
         ):
             return len(self.type.sub_types)  # Consume a specific number
-        elif safe.issubclass(self.type.origin, constants.COLLECTION_TYPES):
+        elif self.type.is_collection_type:
             return "*"  # Consume one or more
 
         return "?"  # Optional
@@ -227,7 +227,7 @@ class OptionParam(KeywordParam[t.Any]):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if self.type.origin in constants.COLLECTION_TYPES:
+        if self.type.is_collection_type:
             self.action = Action.APPEND
 
     @property

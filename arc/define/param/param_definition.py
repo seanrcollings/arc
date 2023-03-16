@@ -21,9 +21,6 @@ from arc.define.param.param import (
 from arc.define.param.param_tree import ParamTree, ParamValue
 from arc.types.type_info import TypeInfo
 
-if t.TYPE_CHECKING:
-    from arc.define import Command
-
 
 class ParamDefinition(collections.deque[Param]):
     """A tree structure that represents how the parameters to a command look.

@@ -1,3 +1,4 @@
+from collections import UserList
 import typing as t
 
 
@@ -16,4 +17,4 @@ MISSING = Constant("MISSING")
 MISSING_DEFAULT = Constant("MISSING_DEFAULT")
 
 
-COLLECTION_TYPES = (list, set, tuple)
+COLLECTION_TYPES = (list, set, tuple, UserList)

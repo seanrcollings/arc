@@ -25,6 +25,6 @@ def convert(value: str, type: type[T]) -> T:
     converted = convert_type(info.resolved_type, value, info)
 
     for middleware in info.middleware:
-        converted = api.dispatch_args(middleware, converted, None)
+        converted = api.dispatch_args(middleware, converted, None, None)
 
     return converted

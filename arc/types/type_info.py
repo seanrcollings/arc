@@ -1,8 +1,10 @@
 from __future__ import annotations
+from collections import UserList
 
 import types
 import typing as t
 from functools import cached_property
+from arc.constants import COLLECTION_TYPES
 
 import arc.typing as at
 from arc.types.aliases import Alias
@@ -64,6 +66,10 @@ class TypeInfo(t.Generic[T]):
             and len(self.sub_types) == 2
             and self.sub_types[-1].original_type is type(None)
         )
+
+    @property
+    def is_collection_type(self) -> bool:
+        return self.origin in COLLECTION_TYPES
 
     @classmethod
     def analyze(cls, annotation) -> TypeInfo:

@@ -5,6 +5,10 @@ import typing as t
 
 from arc import errors
 
+if t.TYPE_CHECKING:
+    from arc.define.param.param import Param
+    from arc.runtime.context import Context
+
 
 class Matches:
     """Validator to match a regular expression.
@@ -45,15 +49,25 @@ class Len:
         self.min = min
         self.max = max
 
-    def __call__(self, value: SupportsLen):
+    def __call__(
+        self, value: SupportsLen, ctx: Context | None = None, param: Param | None = None
+    ):
         length = len(value)
 
         if self.max:
             if length < self.min or length > self.max:
+                if param and param.type.is_collection_type:
+                    raise errors.ValidationError(
+                        f"expects between {self.min} and {self.max} arguments"
+                    )
+
                 raise errors.ValidationError(
                     f"must have a length between {self.min} and {self.max}"
                 )
         elif length != self.min:
+            if param and param.type.is_collection_type:
+                raise errors.ValidationError(f"expects {self.min} arguments")
+
             raise errors.ValidationError(f"must have a length equal to {self.min}")
 
         return value
