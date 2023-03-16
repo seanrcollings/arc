@@ -17,14 +17,14 @@ T = t.TypeVar("T", bytes, str)
 class Console:
     def __init__(
         self,
-        default_print_stream: t.IO = sys.stdout,
-        default_log_stream: t.IO = sys.stderr,
+        default_print_stream: t.IO | None = None,
+        default_log_stream: t.IO | None = None,
         show_icons: bool = True,
         color_output: bool = True,
         indent: str = "  ",
     ) -> None:
-        self.default_print_stream = default_print_stream
-        self.default_log_stream = default_log_stream
+        self.default_print_stream = default_print_stream or sys.stdout
+        self.default_log_stream = default_log_stream or sys.stderr
         self.show_icons = show_icons
         self.color_output = color_output
         self._indent = indent

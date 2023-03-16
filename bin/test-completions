@@ -3,7 +3,7 @@
 shell=$1
 
 if [[ "$shell" == "fish" ]]; then
-    fish -C 'and direnv reload; and python cli.py --autocomplete fish | source'
+    fish -C 'and direnv reload; and cli --autocomplete fish | source'
 elif [[ "$shell" == "bash" ]]; then
     echo 'you picked bash'
 elif [[ "$shell" == "zsh" ]]; then

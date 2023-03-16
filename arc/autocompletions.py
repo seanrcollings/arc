@@ -1,4 +1,5 @@
 from __future__ import annotations
+from contextlib import redirect_stderr
 
 import dataclasses as dc
 import enum
@@ -9,19 +10,26 @@ from arc import errors
 from arc.present.joiner import Join
 
 if t.TYPE_CHECKING:
-    from arc.runtime import Context
     from arc.typing import CompletionProtocol
+    from arc.define.command import Command
 
 
-def completions(shell: str, ctx: Context):
-
+def run_completions(shell: str, command: Command):
     info = CompletionInfo.from_env()
     if shell not in shells:
         raise errors.ArgumentError(
             f"Unsupported shell: {shell}. Supported shells: {Join.with_comma(shells)}"
         )
-    comp: ShellCompletion = shells[shell](ctx, info)
-    return comp.complete() if comp.should_complete() else comp.source()
+    comp: ShellCompletion = shells[shell](command, info)
+    with open("completions.log", "w+") as f, redirect_stderr(f):
+        res = comp.complete() if comp.should_complete() else comp.source()
+        f.write("\n")
+        f.write(" ".join(info.words))
+        f.write("\n")
+        f.write(res)
+        f.write("\n\n")
+
+    return res
 
 
 def get_completions(
@@ -31,8 +39,8 @@ def get_completions(
     comps = obj.__completions__(info, *args, **kwargs)
     if comps is None:
         comps = []
-    elif not isinstance(comps, list):
-        comps = [comps]
+    else:
+        comps = list(comps)
     return comps
 
 
@@ -62,8 +70,8 @@ class CompletionType(enum.Enum):
 @dc.dataclass
 class Completion:
     value: t.Any
-    type: CompletionType = CompletionType.PLAIN
     description: t.Optional[str] = None
+    type: CompletionType = CompletionType.PLAIN
     data: dict = dc.field(default_factory=dict)
 
 
@@ -71,9 +79,8 @@ class ShellCompletion:
     template: t.ClassVar[str]
     name: t.ClassVar[str]
 
-    def __init__(self, ctx: Context, info: CompletionInfo):
-        self.ctx = ctx
-        self.command = ctx.command
+    def __init__(self, command: Command, info: CompletionInfo):
+        self.command = command
         self.info = info
         self.command_name = self.command.name
 

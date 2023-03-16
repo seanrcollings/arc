@@ -6,7 +6,7 @@ import shlex
 import sys
 import typing as t
 
-from arc import errors
+from arc import autocompletions, errors
 from arc import typing as at
 from arc.define.param.param import FlagParam, OptionParam
 from arc.parser import CustomAutocompleteAction, CustomVersionAction, Parser
@@ -20,7 +20,6 @@ from arc.types.type_info import TypeInfo
 
 if t.TYPE_CHECKING:
     from arc.define import Command
-    from arc.config import Config
     from arc.define.param import ParamDefinition
 
 
@@ -93,7 +92,7 @@ class AddRuntimeParmsMiddleware(MiddlewareBase):
         if ctx.config.autocomplete:
             self.__add_autocomplete_param(ctx.root.param_def)
 
-    def __add_version_param(self, group: ParamDefinition):
+    def __add_version_param(self, group: ParamDefinition) -> None:
         group.insert(
             1,
             FlagParam(
@@ -107,7 +106,7 @@ class AddRuntimeParmsMiddleware(MiddlewareBase):
             ),
         )
 
-    def __add_autocomplete_param(self, group: ParamDefinition):
+    def __add_autocomplete_param(self, group: ParamDefinition) -> None:
         annotation = t.Literal[1]
         annotation.__args__ = tuple(autocompletions.shells.keys())  # type: ignore
         group.insert(
@@ -182,28 +181,9 @@ class NormalizeInputMiddleware(MiddlewareBase):
 class CommandFinderMiddleware(MiddlewareBase):
     def __call__(self, ctx: Context):
         args: list[str] = ctx["arc.input"]
-        command, command_args = self.split_args(ctx.root, args)
+        command, command_args = ctx.root.find_command(args)
         ctx["arc.command"] = command
         ctx["arc.input"] = command_args
-
-    def split_args(self, root: Command, args: list[str]) -> tuple[Command, list[str]]:
-        """Seperates out a sequence of args into:
-        - a subcommand object
-        - command arguments
-        """
-        index = 0
-        command: Command = root
-
-        for value in args:
-            if value in command.subcommands:
-                index += 1
-                command = command.subcommands.get(value)
-            else:
-                break
-
-        command_args: list[str] = args[index:]
-
-        return command, command_args
 
 
 class ArgParseMiddleware(MiddlewareBase):

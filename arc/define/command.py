@@ -2,7 +2,9 @@ from __future__ import annotations
 from datetime import datetime
 
 import functools
+from gc import is_finalized
 import inspect
+import sys
 import typing as t
 
 import arc
@@ -125,37 +127,43 @@ class Command(ParamMixin, MiddlewareContainer):
 
     def __completions__(
         self, info: CompletionInfo, *_args, **_kwargs
-    ) -> list[Completion]:
-        # TODO: it does not take into
-        # account that collection types can include more than 1 positional
-        # argument.
-        return []
-        global_args, command, command_args = self.split_args(info.words)
+    ) -> t.Iterable[Completion]:
+        # TODO: This is a very naive approach it:
+        # - does not take into account that collection
+        #   types can include more than 1 positional argument.
+        # - Does not take into account that collection types
+        #   can be repeated when they're options
+        # - Assumes that the user's cursor is at the end of the line
+        command, args = self.find_command(info.words)
 
-        if command is self:
-            args = global_args
-        else:
-            args = command_args
-
-        if not args and command.subcommands:
-            return command.__complete_subcommands(info)
+        if len(args) == 0:
+            yield from command.__complete_subcommands(info)
+            yield from command.__complete_positional_value(info, args)
         elif info.current.startswith("-"):
-            return command.__complete_option(info)
-        elif len(args) >= 1 and args[-1].startswith("-"):
-            return command.__complete_param_value(info, args[-1].lstrip("-"))
-        elif len(args) >= 2 and args[-2].startswith("-"):
-            return command.__complete_param_value(info, args[-2].lstrip("-"))
-        else:
-            if command.is_root and command.subcommands:
-                return command.__complete_subcommands(info)
+            yield from command.__complete_options(info)
+        elif args[-1].startswith("-"):
+            name = args[-1].lstrip("-")
+            param = command.get_param(name)
+            if not param:
+                return
+            if param.is_flag:
+                yield from command.__complete_positional_value(info, args)
             else:
-                return command.__complete_positional_value(info, args)
+                yield from command.__complete_param_value(info, name)
+        else:
+            comps = command.__complete_positional_value(info, args)
+            if comps:
+                yield from comps
+            else:
+                yield from command.__complete_subcommands(info)
 
-    def __complete_subcommands(self, info: CompletionInfo) -> list[Completion]:
-        return [Completion(command.name) for command in self.subcommands.values()]
+    def __complete_subcommands(self, info: CompletionInfo) -> t.Iterable[Completion]:
+        for command in self.subcommands.values():
+            yield Completion(command.name, description=command.doc.short_description)
 
-    def __complete_option(self, info: CompletionInfo) -> list[Completion]:
-        return [Completion(param.cli_name) for param in self.key_params]
+    def __complete_options(self, info: CompletionInfo) -> t.Iterable[Completion]:
+        for param in self.key_params:
+            yield Completion(param.cli_name, description=param.description)
 
     def __complete_param_value(
         self, info: CompletionInfo, param_name: str
@@ -365,7 +373,28 @@ class Command(ParamMixin, MiddlewareContainer):
 
     # Helpers --------------------------------------------------------------------
 
-    def complete(self, param_name: str):
+    def find_command(self, names: list[str]) -> tuple[Command, list[str]]:
+        """Seperates out a sequence of args into:
+        - a subcommand object
+        - command arguments
+        """
+        index = 0
+        command: Command = self
+
+        for name in names:
+            if name in command.subcommands:
+                index += 1
+                command = command.subcommands.get(name)
+            else:
+                break
+
+        rest: list[str] = names[index:]
+
+        return command, rest
+
+    def complete(
+        self, param_name: str
+    ) -> t.Callable[[at.CompletionFunc], at.CompletionFunc]:
         param = self.get_param(param_name)
         if param:
 

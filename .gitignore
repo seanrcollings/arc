@@ -16,3 +16,4 @@ docs/site
 out
 docs/docs/reference
 .hypothesis
+*.log

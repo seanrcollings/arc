@@ -355,6 +355,10 @@ class PathAlias(Alias, of=pathlib.Path):
     def convert(cls, value: t.Any):
         return pathlib.Path(value)
 
+    @classmethod
+    def __completions__(cls, info: CompletionInfo, _param):
+        yield Completion(info.current, type=CompletionType.FILE)
+
 
 class IOAlias(Alias, of=(_io._IOBase, t.IO)):
     name = "file"
@@ -373,7 +377,7 @@ class IOAlias(Alias, of=(_io._IOBase, t.IO)):
 
     @classmethod
     def __completions__(cls, info: CompletionInfo, _param):
-        return Completion(info.current, CompletionType.FILE)
+        yield Completion(info.current, type=CompletionType.FILE)
 
 
 class _Address(Alias):

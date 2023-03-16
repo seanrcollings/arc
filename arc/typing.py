@@ -26,7 +26,7 @@ Env = t.Literal["production", "development", "test"]
 InputArgs = t.Union[str, t.Sequence[str], None]
 
 CompletionFunc = t.Callable[
-    [CompletionInfo, "Param"], t.Union[list[Completion], Completion, None]
+    [CompletionInfo, "Param"], t.Union[t.Iterable[Completion], None]
 ]
 
 TypeMiddleware = t.Callable[[t.Any, "Context", "Param"], t.Any]
@@ -76,7 +76,7 @@ class CompletionProtocol(t.Protocol):
 
     def __completions__(
         self, info: CompletionInfo, *args, **kwargs
-    ) -> list[Completion] | Completion | None:
+    ) -> t.Iterable[Completion] | None:
         ...
 
 
