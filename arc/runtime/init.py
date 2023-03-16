@@ -72,6 +72,19 @@ class PerformDevChecksMiddleware(MiddlewareBase):
 
 
 class AddRuntimeParmsMiddleware(MiddlewareBase):
+    """Adds runtime-params to the root Command object
+
+    # Context Dependencies
+    - `arc.root`
+
+    # Context Additions
+    None
+
+    # Added Parameters
+    - `--version / -v`: If there is a version set in the configuration
+    - `--autocomplete`: If shell completions are enabled
+    """
+
     def __call__(self, ctx: Context) -> t.Any:
 
         if ctx.config.version:
