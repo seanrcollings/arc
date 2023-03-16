@@ -12,7 +12,7 @@ class Round:
     ## Example
     ```py
     import arc
-    from arc.transforms import Round
+    from arc.types.middleware import Round
 
     @arc.command
     def command(val: Annotated[float, Round(2)])
@@ -50,7 +50,7 @@ class Truncate:
     ## Example
     ```py
     import arc
-    from arc.transforms import Truncate
+    from arc.types.middleware import Truncate
 
     @arc.command
     def command(val: Annotated[str, Truncate(6)])
@@ -92,7 +92,7 @@ class Pad:
     ## Example
     ```py
     import arc
-    from arc.transforms import Pad
+    from arc.types.middleware import Pad
 
     @arc.command
     def command(val: Annotated[str, Pad(6, 'b')])

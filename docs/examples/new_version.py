@@ -21,7 +21,7 @@ NewVersion = t.Annotated[types.SemVer, greater_than_previous]
 
 @arc.command
 def command(version: NewVersion):
-    print(version)
+    arc.print(version)
 
 
 command(state={"curr_version": types.SemVer.parse("1.0.0")})

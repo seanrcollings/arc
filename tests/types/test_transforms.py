@@ -1,9 +1,9 @@
 import pytest
-from arc.types import transforms
+from arc.types.middleware import transformers
 
 
 def test_truncate():
-    trunc = transforms.Truncate(5)
+    trunc = transformers.Truncate(5)
 
     assert trunc("123456789") == "12345"
     assert trunc("123") == "123"
@@ -11,7 +11,7 @@ def test_truncate():
 
 
 def test_pad():
-    pad = transforms.Pad(5, "b")
+    pad = transformers.Pad(5, "b")
 
     assert pad("a") == "abbbb"
     assert pad("aaaa") == "aaaab"
@@ -19,7 +19,7 @@ def test_pad():
     assert pad("aaaaaa") == "aaaaaa"
     assert pad("aaaaaaaaaa") == "aaaaaaaaaa"
 
-    pad = transforms.Pad(5, [2])
+    pad = transformers.Pad(5, [2])
     assert pad([1]) == [1, 2, 2, 2, 2]
     assert pad([1, 1, 1, 1]) == [1, 1, 1, 1, 2]
     assert pad([1, 1, 1, 1, 1]) == [1, 1, 1, 1, 1]
@@ -27,4 +27,4 @@ def test_pad():
 
 
 def test_round():
-    assert transforms.Round(2)(1.23456) == 1.23
+    assert transformers.Round(2)(1.23456) == 1.23

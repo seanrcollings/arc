@@ -1,6 +1,6 @@
 import typing as t
 import arc
-from arc.types.transforms import Round
+from arc.types.middleware import Round
 
 
 def test_middleware_exec():

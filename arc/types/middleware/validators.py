@@ -43,6 +43,9 @@ class Len:
 
     ## Type Constraints
     - Supports `len()`
+
+    **Note**: If you find yourself doing something similar to `Annotated[list[int], Len(2)]`,
+    it's generally going to be a bettter idea to do: `tuple[int, int]`
     """
 
     def __init__(self, min: int, max: int | None = None):

@@ -1,4 +1,4 @@
-Type Middleware are a powerful tool in *arc* to take control of the value of parameters and do what you need to with them.
+As stated before, *arc* is based on a Middleware design pattern. This also applies to *arc's* type system to give you further flexibility in defining your APIs.
 
 ## What is a Type Middleware?
 A Type Middleware is simply a callable object that recieves a value, and then returns a value of the same
@@ -7,8 +7,8 @@ type. It can be used to modify that value, validate some property of that value,
 Middlewares fall into a couple of rough categories, and so *arc* uses specific terms to refer to them.
 
 - **Validator**: A middleware that checks the value against some condition. It raises an exception if the condition is not met, and otherwise it returns the original value
-- **Transform**: A middleware that modifies the value and returns it.
-- **Middleware**: Anything that does not fall into the two above categories
+- **Transformer**: A middleware that modifies the value and returns it.
+- **Observer**: A middleware that just analyzes the type, but won't every raise an error / manipulate it
 
 These terms will be used throughout the rest of this page.
 
@@ -22,8 +22,8 @@ def round2(val: float):
 ```
 
 ???+ tip
-    *arc* already ships with a [`Round()`](../../../reference/types/transforms.md#arc.types.transforms.numbers.Round)
-    middleware, so you wouldn't actually need to implement this one yourself.
+    *arc* already ships with a [`Round()`](../../../reference/types/middleware/transformers.md#arc.types.middleware.transformers.Round)
+    transformer, so you wouldn't actually need to implement this one yourself.
 
 ## Using a Type Middleware
 
@@ -47,5 +47,18 @@ Type Middleware are *attched* to a type using an [Annotated Type](https://docs.p
 ## Builtin Middlewares
 *arc* ships with a set of general-use builtin middlewares
 
-- [Validators](../../../reference/types/validators.md)
-- [Transforms](../../../reference/types/transforms.md)
+- [Validators](../../../reference/types/middleware/validators.md)
+- [Transformers](../../../reference/types/middleware/transformers.md)
+- [Observers](../../../reference/types/middleware/observers.md)
+
+## Examples
+
+Middleware that ensure that a passed in version is greater than the current version
+
+```py title="examples/new_version.py"
+--8<-- "examples/new_version.py"
+```
+
+```console
+--8<-- "examples/outputs/new_version"
+```

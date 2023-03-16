@@ -1,6 +1,6 @@
 from typing import Annotated
 import arc
-from arc.types.validators import Len
+from arc.types.middleware import Len
 
 
 @arc.command()

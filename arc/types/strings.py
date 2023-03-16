@@ -7,7 +7,7 @@ from arc.prompt.prompts import input_prompt
 from arc.types.default import Default
 from arc.types.type_arg import TypeArg
 from arc.types.type_info import TypeInfo
-from arc.types.validators import Len
+from arc.types.middleware import Len
 
 if t.TYPE_CHECKING:
     from arc.define import Param
