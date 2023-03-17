@@ -1,6 +1,8 @@
 from enum import Enum
 import arc
 
+arc.configure(autocomplete=True)
+
 
 class Color(Enum):
     RED = "red"

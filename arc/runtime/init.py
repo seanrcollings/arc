@@ -108,7 +108,7 @@ class AddRuntimeParmsMiddleware(MiddlewareBase):
 
     def __add_autocomplete_param(self, group: ParamDefinition) -> None:
         annotation = t.Literal[1]
-        annotation.__args__ = tuple(autocompletions.shells.keys())  # type: ignore
+        annotation.__args__ = tuple(autocompletions.ShellCompletion.shells.keys())  # type: ignore
         group.insert(
             1,
             OptionParam(

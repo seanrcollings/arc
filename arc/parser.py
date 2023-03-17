@@ -7,7 +7,7 @@ from gettext import gettext as _
 import arc
 import arc.typing as at
 from arc import errors, safe
-from arc.autocompletions import run_completions
+from arc.autocompletions import ShellCompletion
 from arc.color import fg
 from arc.define.param import Action, Param
 from arc.present.joiner import Join
@@ -366,5 +366,5 @@ class CustomVersionAction(CustomAction, argparse._VersionAction):
 class CustomAutocompleteAction(CustomAction, argparse._StoreAction):
     def __call__(self, _parser, _ns, value, *args, **kwargs):
         # arc.exit(1, "Not currently working")
-        print(run_completions(value, self.command), end="")
+        print(ShellCompletion.run(value, self.command), end="")
         arc.exit()

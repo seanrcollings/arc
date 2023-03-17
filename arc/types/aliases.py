@@ -346,7 +346,7 @@ class EnumAlias(Alias, of=enum.Enum):
     def __completions__(cls, info, param):
         return [
             autocompletions.Completion(str(m.value))
-            for m in param.type_info.origin.__members__.values()
+            for m in param.type.origin.__members__.values()
         ]
 
 

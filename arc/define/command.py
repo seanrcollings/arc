@@ -151,11 +151,7 @@ class Command(ParamMixin, MiddlewareContainer):
             else:
                 yield from command.__complete_param_value(info, name)
         else:
-            comps = command.__complete_positional_value(info, args)
-            if comps:
-                yield from comps
-            else:
-                yield from command.__complete_subcommands(info)
+            yield from command.__complete_positional_value(info, args)
 
     def __complete_subcommands(self, info: CompletionInfo) -> t.Iterable[Completion]:
         for command in self.subcommands.values():
@@ -177,7 +173,7 @@ class Command(ParamMixin, MiddlewareContainer):
     def __complete_positional_value(
         self, info: CompletionInfo, args: list[str]
     ) -> list[Completion]:
-        # TODO: This approach does not take into consideration positonal
+        # TODO: This approach does not take into consideration positional
         # arguments that are peppered in between options. It only counts ones
         # at the end of the command line.
         pos_arg_count = 0

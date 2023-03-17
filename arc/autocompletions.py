@@ -2,7 +2,6 @@ from __future__ import annotations
 from contextlib import redirect_stderr
 
 import dataclasses as dc
-import enum
 import os
 import typing as t
 
@@ -12,24 +11,6 @@ from arc.present.joiner import Join
 if t.TYPE_CHECKING:
     from arc.typing import CompletionProtocol
     from arc.define.command import Command
-
-
-def run_completions(shell: str, command: Command):
-    info = CompletionInfo.from_env()
-    if shell not in shells:
-        raise errors.ArgumentError(
-            f"Unsupported shell: {shell}. Supported shells: {Join.with_comma(shells)}"
-        )
-    comp: ShellCompletion = shells[shell](command, info)
-    with open("completions.log", "w+") as f, redirect_stderr(f):
-        res = comp.complete() if comp.should_complete() else comp.source()
-        f.write("\n")
-        f.write(" ".join(info.words))
-        f.write("\n")
-        f.write(res)
-        f.write("\n\n")
-
-    return res
 
 
 def get_completions(
@@ -59,7 +40,9 @@ class CompletionInfo:
         return cls(words, current)
 
 
-class CompletionType(enum.Enum):
+class CompletionType:
+    """Constants for common completion types"""
+
     FILE = "file"
     DIR = "dir"
     USERS = "users"
@@ -71,18 +54,21 @@ class CompletionType(enum.Enum):
 class Completion:
     value: t.Any
     description: t.Optional[str] = None
-    type: CompletionType = CompletionType.PLAIN
+    type: str = CompletionType.PLAIN
     data: dict = dc.field(default_factory=dict)
 
 
 class ShellCompletion:
     template: t.ClassVar[str]
-    name: t.ClassVar[str]
+    shells: dict[str, type["ShellCompletion"]] = {}
 
     def __init__(self, command: Command, info: CompletionInfo):
         self.command = command
         self.info = info
         self.command_name = self.command.name
+
+    def __init_subclass__(cls, name: str) -> None:
+        ShellCompletion.shells[name] = cls
 
     @property
     def completion_vars(self) -> dict:
@@ -113,15 +99,34 @@ class ShellCompletion:
     def format_completion(self, comp: Completion) -> str:
         return ""
 
+    @classmethod
+    def run(cls, shell: str, command: Command):
+        info = CompletionInfo.from_env()
+        if shell not in cls.shells:
+            raise errors.ArgumentError(
+                f"Unsupported shell: {shell}. "
+                f"Supported shells: {Join.with_comma(cls.shells)}"
+            )
+        comp: ShellCompletion = cls.shells[shell](command, info)
 
-class BashCompletion(ShellCompletion):
-    name = "bash"
+        with open("completions.log", "w+") as f, redirect_stderr(f):
+            res = comp.complete() if comp.should_complete() else comp.source()
+            f.write("\n")
+            f.write(" ".join(info.words))
+            f.write("\n")
+            f.write(res)
+            f.write("\n\n")
+
+        return res
+
+
+class BashCompletion(ShellCompletion, name="bash"):
     template = """\
 {func_name}() {{
     local completions;
 
     completions=$(env {completion_var}=true COMP_WORDS="${{COMP_WORDS[*]}}" \
-        COMP_CURRENT="${{COMP_WORDS[COMP_CWORD]}}" {name} --autocomplete bash)
+        COMP_CURRENT="${{COMP_WORDS[COMP_CWORD]}}" {name_exe} --autocomplete bash)
 
     while IFS= read -r comp; do
         IFS="|" read -r type value <<< "$comp"
@@ -139,7 +144,7 @@ class BashCompletion(ShellCompletion):
     return 0
 }}
 
-complete -o nosort -F {func_name} {name}
+complete -o nosort -F {func_name} {name_exe}
 """
 
     def complete(self) -> str:
@@ -147,20 +152,19 @@ complete -o nosort -F {func_name} {name}
         return "\n".join([self.format_completion(comp) for comp in comps])
 
     def format_completion(self, comp: Completion) -> str:
-        return f"{comp.type.value}|{comp.value}"
+        return f"{comp.type}|{comp.value}"
 
 
-class ZshCompletion(BashCompletion):
-    name = "zsh"
+class ZshCompletion(BashCompletion, name="zsh"):
     template = """\
-#compdef {name}
+#compdef {name_exe}
 
 {func_name}() {{
     local -a completions;
     local -a array;
 
     completions=("${{(@f)$(env {completion_var}=true COMP_WORDS="${{words[*]}}" \
-        COMP_CURRENT=${{words[$CURRENT]}} {name} --autocomplete zsh)}}")
+        COMP_CURRENT=${{words[$CURRENT]}} {name_exe} --autocomplete zsh)}}")
 
     for comp in $completions; do
         parsed=(${{(@s/|/)comp}})
@@ -185,7 +189,7 @@ class ZshCompletion(BashCompletion):
     fi
 }}
 
-compdef {func_name} {name};
+compdef {func_name} {name_exe};
 """
 
     def complete(self) -> str:
@@ -193,15 +197,14 @@ compdef {func_name} {name};
         return "\n".join([self.format_completion(comp) for comp in comps])
 
     def format_completion(self, comp: Completion) -> str:
-        string = f"{comp.type.value}|{comp.value}"
+        string = f"{comp.type}|{comp.value}"
         # if comp.description:
         #     string += f"[{comp.description}]"
 
         return string
 
 
-class FishCompletion(ShellCompletion):
-    name = "fish"
+class FishCompletion(ShellCompletion, name="fish"):
     template = """\
 function {func_name}
     set -l completions (env {completion_var}=true COMP_WORDS=(commandline -cp) \
@@ -239,11 +242,8 @@ complete -f -c {name_com} -a "({func_name})";
         return "\n".join([self.format_completion(comp) for comp in comps])
 
     def format_completion(self, comp: Completion) -> str:
-        string = f"{comp.type.value}|{comp.value}"
+        string = f"{comp.type}|{comp.value}"
         if comp.description:
             string += f"\t{comp.description}"
 
         return string
-
-
-shells = {"bash": BashCompletion, "fish": FishCompletion, "zsh": ZshCompletion}
