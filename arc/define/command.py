@@ -2,7 +2,6 @@ from __future__ import annotations
 from datetime import datetime
 
 import functools
-from gc import is_finalized
 import inspect
 import sys
 import typing as t
@@ -93,38 +92,6 @@ class Command(ParamMixin, MiddlewareContainer):
             stack.extend(curr.subcommands.values())
             yield curr
 
-    def run(self, ctx: Context):
-        start_time: datetime | None = ctx.get("arc.debug.start")
-        if start_time:
-            diff = datetime.now() - start_time
-            ctx.logger.debug(f"Executing: {self} ({diff.total_seconds():.4f}s)")
-        else:
-            ctx.logger.debug(f"Executing: {self}")
-
-        stack = MiddlewareStack()
-        for command in self.command_chain:
-            stack.extend(command.stack)
-
-        ctx = stack.start(ctx)
-        if "arc.args" not in ctx:
-            raise errors.InternalError(
-                "The command's arguments were not set during execution "
-                "(ctx['arc.args] is not set). This likely means there "
-                "is a problem with your middleware stack"
-            )
-
-        args = ctx["arc.args"]
-
-        res = None
-        try:
-            res = self.callback(**args)
-        except Exception as e:
-            stack.throw(e)
-        else:
-            res = stack.close(res)
-
-        return res
-
     def __completions__(
         self, info: CompletionInfo, *_args, **_kwargs
     ) -> t.Iterable[Completion]:
@@ -151,7 +118,13 @@ class Command(ParamMixin, MiddlewareContainer):
             else:
                 yield from command.__complete_param_value(info, name)
         else:
-            yield from command.__complete_positional_value(info, args)
+            pos = command.__complete_positional_value(info, args)
+            if pos:
+                yield from pos
+            elif len(args) == 1 and any(
+                c.name.startswith(args[0]) for c in self.subcommands.values()
+            ):
+                yield from command.__complete_subcommands(info)
 
     def __complete_subcommands(self, info: CompletionInfo) -> t.Iterable[Completion]:
         for command in self.subcommands.values():
@@ -239,6 +212,38 @@ class Command(ParamMixin, MiddlewareContainer):
 
         chain.reverse()
         return chain
+
+    def run(self, ctx: Context):
+        start_time: datetime | None = ctx.get("arc.debug.start")
+        if start_time:
+            diff = datetime.now() - start_time
+            ctx.logger.debug(f"Executing: {self} ({diff.total_seconds():.4f}s)")
+        else:
+            ctx.logger.debug(f"Executing: {self}")
+
+        stack = MiddlewareStack()
+        for command in self.command_chain:
+            stack.extend(command.stack)
+
+        ctx = stack.start(ctx)
+        if "arc.args" not in ctx:
+            raise errors.InternalError(
+                "The command's arguments were not set during execution "
+                "(ctx['arc.args] is not set). This likely means there "
+                "is a problem with your middleware stack"
+            )
+
+        args = ctx["arc.args"]
+
+        res = None
+        try:
+            res = self.callback(**args)
+        except Exception as e:
+            stack.throw(e)
+        else:
+            res = stack.close(res)
+
+        return res
 
     # Subcommands ----------------------------------------------------------------
 

@@ -19,3 +19,4 @@ from arc.present import err, info, pager, print, usage, log
 from arc.runtime import App, ExecMiddleware, InitMiddleware
 from arc.runtime import Context
 from arc.types import State, convert
+from arc.autocompletions import Completion
