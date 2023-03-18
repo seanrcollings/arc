@@ -4,6 +4,7 @@ from arc import types, prompt, present
 from arc.config import ColorConfig, Config, LinksConfig, SuggestionConfig, configure
 from arc.constants import MISSING
 from arc.define import (
+    Param,
     Argument,
     Command,
     Count,
@@ -19,4 +20,4 @@ from arc.present import err, info, pager, print, usage, log
 from arc.runtime import App, ExecMiddleware, InitMiddleware
 from arc.runtime import Context
 from arc.types import State, convert
-from arc.autocompletions import Completion
+from arc.autocompletions import Completion, CompletionInfo

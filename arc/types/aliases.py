@@ -310,9 +310,8 @@ class LiteralAlias(Alias, of=t.Literal):
 
     @classmethod
     def __completions__(cls, info, param):
-        return [
-            autocompletions.Completion(str(tp.origin)) for tp in param.type.sub_types
-        ]
+        for tp in param.type.sub_types:
+            yield autocompletions.Completion(str(tp.origin))
 
 
 # Stdlib types ---------------------------------------------------------------------------------
@@ -344,10 +343,8 @@ class EnumAlias(Alias, of=enum.Enum):
 
     @classmethod
     def __completions__(cls, info, param):
-        return [
-            autocompletions.Completion(str(m.value))
-            for m in param.type.origin.__members__.values()
-        ]
+        for m in param.type.origin.__members__.values():
+            yield autocompletions.Completion(str(m.value))
 
 
 class PathAlias(Alias, of=pathlib.Path):

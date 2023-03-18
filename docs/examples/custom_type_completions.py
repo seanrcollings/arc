@@ -1,5 +1,4 @@
 import arc
-from arc import autocompletions as ac
 
 
 class CustomType:
@@ -17,11 +16,9 @@ class CustomType:
             raise arc.ConversionError(value, "must be an integer")
 
     @classmethod
-    def __completions__(self, info: ac.CompletionInfo, param):
-        return [
-            ac.Completion("1"),
-            ac.Completion("2"),
-        ]
+    def __completions__(self, info: arc.CompletionInfo, param: arc.Param):
+        yield arc.Completion("1")
+        yield arc.Completion("2")
 
 
 @arc.command

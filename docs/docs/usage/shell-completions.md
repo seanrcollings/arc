@@ -44,15 +44,16 @@ red yellow green
 The following types have builtin completion support:
 
 - `#!python enum.Enum`
+- `#!python pathlib.Path`
 - `#!python  typing.Literal`
 - `#!python  arc.types.ValidPath`
 - `#!python  arc.types.FilePath`
 - `#!python  arc.types.DirectoryPath`
 
 ### Custom Types
-When implenting your own types, you can provide completions for them implementing the `#!python __completions__()` method on your class.
+When implenting your own types, you can provide completions for them by implementing the `#!python __completions__()` method on your class.
 
-This method recieves an `info` object that contains information about the current state of the command line, and `param` which is the parameter that is being completed (in the below example, that parameter would be `foo`). The method should return a list of `#!python arc.autocompletions.Completion()` objects that are the possible completions for the parameter.
+This method recieves an `info` object that contains information about the current state of the command line, and `param` which is the parameter that is being completed (in the below example, that parameter would be `foo`). The method should return an iterable of `#!python arc.Completion()` objects that are the possible completions for the parameter.
 
 ```py title="examples/custom_type_completions.py"
 --8<-- "examples/custom_type_completions.py"
@@ -63,4 +64,13 @@ $ custom_type_example <tab>
 1 2
 ```
 
-## Custom Completions
+## Parameter Completions
+You can also provide completions on a parameter basis with the `#!python Command.complete` decorator.
+```py title="examples/param_completions.py"
+--8<-- "examples/param_completions.py"
+```
+
+```console
+$ param_completions <tab>
+Sean Brooke
+```
