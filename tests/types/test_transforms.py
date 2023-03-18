@@ -26,5 +26,15 @@ def test_pad():
     assert pad([1, 1, 1, 1, 1, 1, 1]) == [1, 1, 1, 1, 1, 1, 1]
 
 
+def test_side():
+    pad = transformers.Pad(5, "b", side="left")
+
+    assert pad("a") == "bbbba"
+    assert pad("aaaa") == "baaaa"
+    assert pad("aaaaa") == "aaaaa"
+    assert pad("aaaaaa") == "aaaaaa"
+    assert pad("aaaaaaaaaa") == "aaaaaaaaaa"
+
+
 def test_round():
     assert transformers.Round(2)(1.23456) == 1.23

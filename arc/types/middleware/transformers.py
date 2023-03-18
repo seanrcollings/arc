@@ -107,12 +107,19 @@ class Pad:
     ```
     """
 
-    def __init__(self, length: int, padding: t.Any = None):
+    def __init__(
+        self, length: int, padding: t.Any, side: t.Literal["left", "right"] = "right"
+    ):
         self.length = length
         self.padding = padding
+        self.side = side
 
     def __call__(self, value: PadProtocol):
-        while len(value) < self.length:
-            value += self.padding
+        if self.side == "right":
+            while len(value) < self.length:
+                value += self.padding
+        else:
+            while len(value) < self.length:
+                value = self.padding + value
 
         return value
