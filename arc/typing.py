@@ -38,6 +38,9 @@ GetterFunc = t.Union[
 ]
 
 
+Address = tuple[str, int]
+
+
 class ParamGroupOptions(t.TypedDict):
     exclude: t.Sequence[str] | None
 

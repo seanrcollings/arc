@@ -26,7 +26,9 @@ class ArcFormatter(logging.Formatter):
             fx.BOLD,
             fg.BLACK,
         )
-        record.name = colorize(f"{record.name:^5}", bg.GREY)
+        record.name = colorize(
+            format(record.name, f"^{len(record.name) + 2 }"), bg.GREY
+        )
         return super().format(record)
 
 

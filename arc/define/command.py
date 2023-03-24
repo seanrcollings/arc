@@ -238,11 +238,17 @@ class Command(ParamMixin, MiddlewareContainer):
         res = None
         try:
             res = self.callback(**args)
+            ctx.logger.debug(f"Callback result: {res}")
         except Exception as e:
+            ctx.logger.warning(
+                "Callback threw an error, "
+                "bubbling the error to command's middlewares"
+            )
             stack.throw(e)
         else:
             res = stack.close(res)
 
+        ctx.logger.debug(f"Command result:  {res}")
         return res
 
     # Subcommands ----------------------------------------------------------------

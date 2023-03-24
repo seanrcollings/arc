@@ -1,13 +1,15 @@
 from __future__ import annotations
-
+import logging
 import os
 import sys
 import typing as t
 
 import arc
+from arc.runtime.daemon import Daemon
 import arc.typing as at
+from arc.runtime.server import Server
 from arc import errors
-from arc.logging import WARNING, logger, mode_map, DEBUG
+from arc.logging import logger, mode_map
 from arc.runtime.init import InitMiddleware
 from arc.runtime.middleware import Middleware, MiddlewareContainer
 
@@ -23,12 +25,14 @@ class App(MiddlewareContainer):
         init_middlewares: t.Sequence[Middleware] = None,
         state: dict[str, t.Any] = None,
         ctx: dict[str, t.Any] = None,
+        logger: logging.Logger = logger,
     ) -> None:
         super().__init__(init_middlewares or InitMiddleware.all())
         self.root = root
         self.provided_ctx = ctx or {}
         self.state = state or {}
         self.config = root.config
+        self.logger = logger
 
     def __call__(self, input: at.InputArgs = None) -> t.Any:
         self._handle_dynamic_name()
@@ -49,6 +53,9 @@ class App(MiddlewareContainer):
                 res = command.run(ctx)
             except Exception as e:
                 res = None
+                ctx.logger.warning(
+                    "Command threw an error, bubbling the error to init middlewares"
+                )
                 self.stack.throw(e)
             else:
                 res = self.stack.close(res)
@@ -65,6 +72,14 @@ class App(MiddlewareContainer):
 
         return res
 
+    @classmethod
+    def __depends__(self, ctx: arc.Context):
+        return ctx.app
+
+    def daemon(self, address: at.Address):
+        daemon = Daemon(self, address)
+        return daemon()
+
     def execute(self, command: Command, **kwargs: t.Any) -> t.Any:
         ctx = self._create_ctx({"arc.command": command, "arc.parse.result": kwargs})
         return command.run(ctx)
@@ -74,10 +89,9 @@ class App(MiddlewareContainer):
             {
                 "arc.root": self.root,
                 "arc.config": self.config,
-                "arc.errors": [],
                 "arc.app": self,
                 "arc.state": self.state,
-                "arc.logger": logger,
+                "arc.logger": self.logger,
             }
             | self.provided_ctx
             | (data or {})
@@ -90,6 +104,6 @@ class App(MiddlewareContainer):
 
     def _setup_logger(self):
         if self.config.debug:
-            logger.setLevel(DEBUG)
+            self.logger.setLevel(logging.DEBUG)
         else:
-            logger.setLevel(mode_map.get(self.config.environment, WARNING))
+            self.logger.setLevel(mode_map.get(self.config.environment, logging.WARNING))
