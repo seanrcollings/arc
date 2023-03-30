@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 import typing as t
 from functools import cached_property
+from arc import color
 
 import arc.typing as at
 from arc.define.param import param
@@ -81,13 +82,12 @@ class Documentation:
         return self._param_helper(self.command)
 
     def _param_helper(self, command: Command) -> list[ParamDoc]:
-        descriptions = command.doc._parsed_argument_section
+        # descriptions = command.doc._parsed_argument_section
         return [
             {
                 "name": param.param_name,
                 "short_name": param.short_name,
-                "description": param.description
-                or descriptions.get(param.argument_name),
+                "description": param.description,
                 "kind": KIND_MAPPING[type(param)],
                 "optional": param.is_optional,
                 "nargs": param.nargs,
@@ -123,7 +123,8 @@ class Documentation:
             else:
                 parsed[current_section] += line + "\n"
 
-        return {key: value.strip() for key, value in parsed.items()}
+        md = Markdown()
+        return {key: md.replace(value) for key, value in parsed.items()}
 
     @cached_property
     def _parsed_argument_section(self) -> dict[str, str]:
@@ -144,3 +145,47 @@ class Documentation:
                 parsed[current_param] += " " + line.strip()
 
         return parsed
+
+
+rules = [
+    {
+        "regex": re.compile(r"\*\*(.+)\*\*"),
+        "replace": f"{color.fx.BOLD}{{value}}{color.fx.CLEAR}",
+    },
+    {
+        "regex": re.compile(r"\*(.+)\*"),
+        "replace": f"{color.fx.ITALIC}{{value}}{color.fx.CLEAR}",
+    },
+    {
+        "regex": re.compile(r"~~(.+)~~"),
+        "replace": f"{color.fx.STRIKETHROUGH}{{value}}{color.fx.CLEAR}",
+    },
+    {
+        "regex": re.compile(r"__(.+)__"),
+        "replace": f"{color.fx.UNDERLINE}{{value}}{color.fx.CLEAR}",
+    },
+    {
+        "regex": re.compile(r"`(.+)`"),
+        "replace": f"{color.bg.GREY}{color.fg.WHITE} {{value}} {color.fx.CLEAR}",
+    },
+    {
+        "regex": re.compile(r"\n\w+-(.+)\n"),
+        "replace": f"o{{value}}\n",
+    },
+]
+
+
+def func(match: re.Match, template: str) -> str:
+    interior = match.groups()[0]
+    return template.format(value=interior)
+
+
+class Markdown:
+    def replace(self, string: str) -> str:
+        for rule in rules:
+            regex: re.Pattern = rule["regex"]
+            replace: str = rule["replace"]
+
+            string = regex.sub(lambda match: func(match, replace), string)
+
+        return string

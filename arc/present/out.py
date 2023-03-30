@@ -21,9 +21,9 @@ def print(
     *values: object,
     sep: str | None = None,
     end: str | None = None,
-    file: t.IO | None = None,
+    file: t.IO[str] | None = None,
     flush: bool = False,
-):
+) -> None:
     """A wrapper around `print()` that handles removing escape
     codes when the output is not a TTY"""
 
@@ -35,7 +35,7 @@ def info(
     sep: str | None = None,
     end: str | None = None,
     flush: bool = False,
-):
+) -> None:
     """Wrapper around `print()` that emits to `stderr` instead of `stdout`"""
     _default_console().info(*values, sep=sep, end=end, flush=flush)
 
@@ -44,9 +44,9 @@ def log(
     *values: object,
     sep: str | None = None,
     end: str | None = None,
-    file: t.IO | None = None,
+    file: t.IO[str] | None = None,
     flush: bool = False,
-):
+) -> None:
     """`print()` to stderr with a timestamp"""
     _default_console().log(*values, sep=sep, end=end, file=file, flush=flush)
 
@@ -56,11 +56,11 @@ def err(
     sep: str | None = None,
     end: str | None = None,
     flush: bool = False,
-):
+) -> None:
     """Wrapper around `print()` that emits to an error in red"""
     _default_console().err(*values, sep=sep, end=end, flush=flush)
 
 
-def usage(command: Command):
+def usage(command: Command) -> None:
     """Display the usage string for a given command object. Writes it to `stderr`"""
     info(command.doc.usage())

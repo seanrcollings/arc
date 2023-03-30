@@ -22,7 +22,7 @@ hypothesis = "^6.68.2"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
-mypy = "^0.910"
+mypy = "^1.0"
 pylint = "^2.7.0"
 pytest = "^6.2.4"
 pdoc = "^7.1.1"
