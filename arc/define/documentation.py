@@ -97,7 +97,7 @@ class Documentation:
         ]
 
     @cached_property
-    def docstring(self):
+    def docstring(self) -> dict[str, str]:
         """Parsed docstring for the command
         Sections are denoted by a new line, and
         then a line beginning with `#`. Whatever
@@ -123,8 +123,7 @@ class Documentation:
             else:
                 parsed[current_section] += line + "\n"
 
-        md = Markdown()
-        return {key: md.replace(value) for key, value in parsed.items()}
+        return {key: value for key, value in parsed.items()}
 
     @cached_property
     def _parsed_argument_section(self) -> dict[str, str]:
@@ -178,14 +177,3 @@ rules = [
 def func(match: re.Match, template: str) -> str:
     interior = match.groups()[0]
     return template.format(value=interior)
-
-
-class Markdown:
-    def replace(self, string: str) -> str:
-        for rule in rules:
-            regex: re.Pattern = rule["regex"]
-            replace: str = rule["replace"]
-
-            string = regex.sub(lambda match: func(match, replace), string)
-
-        return string
