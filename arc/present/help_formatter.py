@@ -20,6 +20,8 @@ def paragraphize(string: str) -> list[str]:
     return [textwrap.dedent(para).strip("\n") for para in string.split("\n\n")]
 
 
+# TODO: I can probably get rid of a lot of this, since the most
+# of is handled by the markdown parser now.
 class HelpFormatter(TextFormatter):
     _longest_intro: int = 0
 
@@ -50,8 +52,8 @@ class HelpFormatter(TextFormatter):
         self.write_usage()
 
         if doc.description:
-            with self.section(self.default_section_name.upper()):
-                self.write_text(paragraphize(doc.description))
+            with self.section(f"# {self.default_section_name.upper()}"):
+                self.write(doc.description)
 
         args = self.get_params(self.argument_params)
         options = self.get_params(self.key_params)
@@ -62,26 +64,17 @@ class HelpFormatter(TextFormatter):
         longest = max(map(Ansi.len, (v[0] for v in args + options + subcommands))) + 2
 
         if args:
-            self.write_section("ARGUMENTS", args, longest)
+            self.write_section("# ARGUMENTS", args, longest)
         if options:
-            self.write_section("OPTIONS", options, longest)
+            self.write_section("# OPTIONS", options, longest)
         if subcommands:
-            self.write_section("SUBCOMMANDS", subcommands, longest)
-
-        for section, body in doc.docstring.items():
-            if section in {"arguments", self.default_section_name}:
-                continue
-
-            with self.section(section):
-                self.write_text(paragraphize(body))
-
-    def write_heading(self, heading: str):
-        super().write_heading(colorize(heading.upper(), fx.BOLD))
+            self.write_section("# SUBCOMMANDS", subcommands, longest)
 
     def write_usage(self):
         command = self.command
 
-        with self.section("USAGE"):
+        with self.section("# USAGE"):
+            self.write("```\n")
             if command.is_root and command.subcommands:
                 params_str = self.usage_params(self.key_params, self.argument_params)
                 self.write_text(
@@ -139,6 +132,7 @@ class HelpFormatter(TextFormatter):
                             remove_falsey=True,
                         )
                     )
+            self.write("\n```")
 
     def usage_params(self, key_params: list[ParamDoc], arg_params: list[ParamDoc]):
         formatted = []
@@ -242,6 +236,7 @@ class HelpFormatter(TextFormatter):
             for name, desc in data:
                 diff = longest - Ansi.len(name)
 
+                self.write("```\n")
                 self.write(
                     self.wrap_text(
                         f"{name}{' ' * diff}{desc}",
@@ -250,7 +245,7 @@ class HelpFormatter(TextFormatter):
                         subsequent_indent=(" " * self.current_indent) + (" " * longest),
                     )
                 )
-                self.write_paragraph()
+                self.write("\n```\n")
 
         # Quick fix for added empty line from self.section()
         self._buffer.pop()

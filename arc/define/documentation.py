@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import re
+import textwrap
 import typing as t
 from functools import cached_property
 from arc import color
+from arc.present.markdown import MarkdownParser
+from arc.present.markdown.config import MarkdownConfig
 
 import arc.typing as at
 from arc.define.param import param
@@ -44,12 +47,15 @@ class Documentation:
         self.default_section_name = default_section_name
         self.color = color
         self._description = description
-        self._docstring = self.command.callback.__doc__
+        self._docstring = textwrap.dedent(self.command.callback.__doc__ or "")
+        self.parser = MarkdownParser()
 
     def help(self) -> str:
         formatter = HelpFormatter(self, self.default_section_name, self.color)
         formatter.write_help()
-        return formatter.value
+        content = f"{formatter.value}\n{self.sections}"
+        doc = self.parser.parse(content)
+        return doc.fmt(MarkdownConfig())
 
     def usage(self) -> str:
         formatter = HelpFormatter(self, self.default_section_name, self.color)
@@ -62,7 +68,11 @@ class Documentation:
 
     @property
     def description(self) -> t.Optional[str]:
-        return self._description or self.docstring.get(self.default_section_name)
+        return self._split_sections()[0]
+
+    @property
+    def sections(self) -> str:
+        return self._split_sections()[1]
 
     @property
     def short_description(self) -> t.Optional[str]:
@@ -96,84 +106,15 @@ class Documentation:
             for param in command.cli_params
         ]
 
-    @cached_property
-    def docstring(self) -> dict[str, str]:
-        """Parsed docstring for the command
-        Sections are denoted by a new line, and
-        then a line beginning with `#`. Whatever
-        comes after the `#` will be the key in
-        the sections dict. And all content between
-        that `#` and the next `#` will be the value.
-        The first section of the docstring is not
-        required to possess a section header, and
-        will be entered in as the `description` section.
-        """
-        if not self._docstring:
-            return {}
+    def _split_sections(self) -> tuple[str, str]:
+        desc = ""
+        rest = ""
 
-        parsed: dict[str, str] = {self.default_section_name: ""}
-        lines = [line.strip() for line in self._docstring.split("\n")]
+        for idx, char in enumerate(self._docstring):
+            if char == "#":
+                rest = self._docstring[idx:]
+                break
 
-        current_section = self.default_section_name
+            desc += char
 
-        for line in lines:
-            if line.startswith("#"):
-                current_section = line[1:].strip().lower()
-                parsed[current_section] = ""
-            else:
-                parsed[current_section] += line + "\n"
-
-        return {key: value for key, value in parsed.items()}
-
-    @cached_property
-    def _parsed_argument_section(self) -> dict[str, str]:
-        arguments = self.docstring.get("arguments")
-        if not arguments:
-            return {}
-
-        parsed: dict[str, str] = {}
-        regex = re.compile(r"^\w+:.+")
-        current_param = ""
-
-        for line in arguments.splitlines():
-            if regex.match(line):
-                param, first_line = line.split(":", maxsplit=1)
-                current_param = param
-                parsed[current_param] = first_line.strip()
-            elif current_param:
-                parsed[current_param] += " " + line.strip()
-
-        return parsed
-
-
-rules = [
-    {
-        "regex": re.compile(r"\*\*(.+)\*\*"),
-        "replace": f"{color.fx.BOLD}{{value}}{color.fx.CLEAR}",
-    },
-    {
-        "regex": re.compile(r"\*(.+)\*"),
-        "replace": f"{color.fx.ITALIC}{{value}}{color.fx.CLEAR}",
-    },
-    {
-        "regex": re.compile(r"~~(.+)~~"),
-        "replace": f"{color.fx.STRIKETHROUGH}{{value}}{color.fx.CLEAR}",
-    },
-    {
-        "regex": re.compile(r"__(.+)__"),
-        "replace": f"{color.fx.UNDERLINE}{{value}}{color.fx.CLEAR}",
-    },
-    {
-        "regex": re.compile(r"`(.+)`"),
-        "replace": f"{color.bg.GREY}{color.fg.WHITE} {{value}} {color.fx.CLEAR}",
-    },
-    {
-        "regex": re.compile(r"\n\w+-(.+)\n"),
-        "replace": f"o{{value}}\n",
-    },
-]
-
-
-def func(match: re.Match, template: str) -> str:
-    interior = match.groups()[0]
-    return template.format(value=interior)
+        return desc, rest
