@@ -1,10 +1,10 @@
 # https://github.com/pallets/click/blob/main/src/click/formatting.py
 import shutil
-import textwrap
 import typing as t
 from contextlib import contextmanager
 
-from .ansi import Ansi
+from arc.present import wrap
+
 
 DEFAULT_MAX_WIDTH = 80
 
@@ -66,14 +66,13 @@ class TextFormatter:
         width: int,
         initial_indent: str = "",
         subsequent_indent: str = "",
-        paragraph_seperator: str = "\n\n",
     ):
         if isinstance(text, str):
             text = [text]
 
         wrapped = ""
 
-        wrapper = textwrap.TextWrapper(
+        wrapper = wrap.TextWrapper(
             width=width,
             initial_indent=initial_indent,
             subsequent_indent=subsequent_indent,
@@ -82,21 +81,7 @@ class TextFormatter:
         )
 
         for para in text:
-            if para.startswith("\b"):
-                wrapped += (
-                    self.wrap_text(
-                        para.lstrip("\b\n").split("\n"),
-                        width,
-                        initial_indent,
-                        subsequent_indent,
-                        "\n",
-                    )
-                    + paragraph_seperator
-                )
-            else:
-                width = width + (len(para) - Ansi.len(para))
-                wrapper.width = width
-                wrapped += wrapper.fill(para) + paragraph_seperator
+            wrapped += wrapper.fill(para)
 
         return wrapped.rstrip("\n")
 

@@ -10,17 +10,15 @@ from arc.config import ColorConfig
 from arc.present.ansi import Ansi
 from arc.present.formatters import TextFormatter
 from arc.present.joiner import Join
+from arc.present.markdown import MarkdownParser
+from arc.present.markdown.config import MarkdownConfig
 
 if t.TYPE_CHECKING:
     from arc.define.command import Command
     from arc.define.documentation import Documentation, ParamDoc
 
 
-def paragraphize(string: str) -> list[str]:
-    return [textwrap.dedent(para).strip("\n") for para in string.split("\n\n")]
-
-
-# TODO: I can probably get rid of a lot of this, since the most
+# TODO: I can probably get rid of a lot of this, since most
 # of is handled by the markdown parser now.
 class HelpFormatter(TextFormatter):
     _longest_intro: int = 0
@@ -47,6 +45,18 @@ class HelpFormatter(TextFormatter):
     def key_params(self):
         return [param for param in self.doc.params if param["kind"] != "argument"]
 
+    def format_help(self):
+        self.write_help()
+        parser = MarkdownParser()
+        res = parser.parse(self.value)
+        return res.fmt(MarkdownConfig(width=self.width))
+
+    def format_usage(self):
+        self.write_usage()
+        parser = MarkdownParser()
+        res = parser.parse(self.value)
+        return res.fmt(MarkdownConfig(width=self.width))
+
     def write_help(self):
         doc = self.doc
         self.write_usage()
@@ -69,6 +79,8 @@ class HelpFormatter(TextFormatter):
             self.write_section("# OPTIONS", options, longest)
         if subcommands:
             self.write_section("# SUBCOMMANDS", subcommands, longest)
+
+        self.write(doc.sections)
 
     def write_usage(self):
         command = self.command
@@ -233,10 +245,10 @@ class HelpFormatter(TextFormatter):
 
     def write_section(self, section: str, data: list[tuple[str, str]], longest: int):
         with self.section(section):
+            self.write("```\n")
             for name, desc in data:
                 diff = longest - Ansi.len(name)
 
-                self.write("```\n")
                 self.write(
                     self.wrap_text(
                         f"{name}{' ' * diff}{desc}",
@@ -245,7 +257,8 @@ class HelpFormatter(TextFormatter):
                         subsequent_indent=(" " * self.current_indent) + (" " * longest),
                     )
                 )
-                self.write("\n```\n")
+                self.write_paragraph()
+            self.write("```\n")
 
         # Quick fix for added empty line from self.section()
         self._buffer.pop()

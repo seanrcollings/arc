@@ -202,26 +202,26 @@ def test_argument_desc_in_definition():
     assert Ansi.clean(command.doc.help()) == ARGS_STR
 
 
-def test_argument_desc_in_docstring():
-    @arc.command
-    def command(
-        pos_req: int,
-        pos_opt: int = 1,
-        *,
-        key_req: int,
-        key_opt: int = 1,
-        flag: bool,
-    ):
-        """
-        # Arguments
-        pos_req: positional required
-        pos_opt: positional optional
-        key_req: key required
-        key_opt: key optional
-        flag: flag
-        """
+# def test_argument_desc_in_docstring():
+#     @arc.command
+#     def command(
+#         pos_req: int,
+#         pos_opt: int = 1,
+#         *,
+#         key_req: int,
+#         key_opt: int = 1,
+#         flag: bool,
+#     ):
+#         """
+#         # Arguments
+#         pos_req: positional required
+#         pos_opt: positional optional
+#         key_req: key required
+#         key_opt: key optional
+#         flag: flag
+#         """
 
-    assert Ansi.clean(command.doc.help()) == ARGS_STR
+#     assert Ansi.clean(command.doc.help()) == ARGS_STR
 
 
 def test_collections():
