@@ -76,7 +76,6 @@ class Config:
     of this class is created, then used where it is needed"""
 
     environment: at.Env = "production"
-    default_section_name: str = "description"
     transform_snake_case: bool = True
     env_prefix: str = ""
     version: str | SemVer | None = None
@@ -109,7 +108,6 @@ def configure(
     *,
     version: str | None = None,
     environment: at.Env | None = None,
-    default_section_name: str | None = None,
     transform_snake_case: bool | None = None,
     suggest: SuggestionConfig | None = None,
     env_prefix: str | None = None,
@@ -129,9 +127,6 @@ def configure(
         environment (str, optional): The current environment, either `production` or `development`.
             Defaults to `production`. When in `development` mode, the arc logger is set
             to level `logging.INFO`
-
-        default_section_name (str, optional): The name to use by default if the first section in a
-            command docstring is does not have a header. Defaults to `description`.
 
         transform_snake_case (bool, optional):  Transform `snake_case` to `kebab-case`.
             Defaults to `True`.
@@ -164,7 +159,6 @@ def configure(
     data: dict = {
         "version": version,
         "environment": environment,
-        "default_section_name": default_section_name,
         "transform_snake_case": transform_snake_case,
         "suggestions": suggest,
         "env_prefix": env_prefix,

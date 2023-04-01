@@ -25,7 +25,6 @@ class HelpFormatter(TextFormatter):
     def __init__(
         self,
         doc: Documentation,
-        default_section_name: str,
         config: PresentConfig,
         *args,
         **kwargs,
@@ -33,7 +32,6 @@ class HelpFormatter(TextFormatter):
         super().__init__(*args, **kwargs)
         self.doc = doc
         self.command = self.doc.command
-        self.default_section_name = default_section_name
         self.config = config
         self.color = config.color
         self.parser = MarkdownParser()
@@ -61,7 +59,7 @@ class HelpFormatter(TextFormatter):
         self.write_usage()
 
         if doc.description:
-            with self.section(f"# {self.default_section_name.upper()}"):
+            with self.section(f"# DESCRIPTION"):
                 self.write(doc.description)
 
         args = self.get_params(self.argument_params)

@@ -31,7 +31,10 @@ class Document(BlockNode):
     children: list[BlockNode]
 
     def fmt(self, config: PresentConfig) -> str:
-        return Join.together(child.fmt(config) for child in self.children)
+        return (
+            Join.together(child.fmt(config) for child in self.children).strip("\n")
+            + "\n"
+        )
 
 
 @dataclass

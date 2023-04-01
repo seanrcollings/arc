@@ -35,22 +35,22 @@ class Documentation:
     def __init__(
         self,
         command: Command,
-        default_section_name: str,
         config: PresentConfig,
         description: str = None,
     ):
         self.command = command
-        self.default_section_name = default_section_name
         self.config = config
         self._description = description
-        self._docstring = textwrap.dedent(self.command.callback.__doc__ or "")
+        self._docstring = textwrap.dedent(
+            self.command.callback.__doc__ or self._description or ""
+        )
 
     def help(self) -> str:
-        formatter = HelpFormatter(self, self.default_section_name, self.config)
+        formatter = HelpFormatter(self, self.config)
         return formatter.format_help()
 
     def usage(self) -> str:
-        formatter = HelpFormatter(self, self.default_section_name, self.config)
+        formatter = HelpFormatter(self, self.config)
         return formatter.format_usage()
 
     @property
