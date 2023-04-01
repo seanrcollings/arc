@@ -305,7 +305,7 @@ class LiteralAlias(Alias, of=t.Literal):
             ctx.prompt,
             t.cast(str, param.prompt),
             list(str(tp.origin) for tp in param.type.sub_types),
-            highlight_color=ctx.config.color.accent,
+            highlight_color=ctx.config.present.color.accent,
         )
 
     @classmethod
@@ -338,7 +338,7 @@ class EnumAlias(Alias, of=enum.Enum):
             ctx.prompt,
             t.cast(str, param.prompt),
             list(str(m.value) for m in enum_cls.__members__.values()),
-            highlight_color=ctx.config.color.accent,
+            highlight_color=ctx.config.present.color.accent,
         )
 
     @classmethod

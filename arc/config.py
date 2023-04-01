@@ -15,6 +15,46 @@ _config: Config | None = None
 
 
 @dataclass
+class ColorConfig:
+    """Configures Colors for the application"""
+
+    error: str = fg.RED
+    highlight: str = fg.YELLOW
+    accent: str = fg.ARC_BLUE
+    subtle: str = fg.GREY
+
+
+# MarkdownFormat = t.Union[str, t.Callable[[str, "PresentConfig"], str]]
+
+
+# @dataclass
+# class MarkdownConfig:
+#     """Configures Markdown presentation for the application"""
+
+#     header: MarkdownFormat = nodes.Heading.default_format
+#     link: MarkdownFormat = nodes.Link.default_format
+
+#     def apply(self, fmt: MarkdownFormat, value: str, config: PresentConfig) -> str:
+#         if isinstance(fmt, str):
+#             return fmt.format(value)
+#         return fmt(value, config)
+
+
+@dataclass
+class PresentConfig:
+    """Configures the presentation of the application"""
+
+    indent: str = " " * 4
+    """The indent to use for each level of indentation"""
+    width: int = 80
+    """The default width to present content at. This is used
+    for wrapping text. Will be ignored if the terminal width is smaller"""
+    color: ColorConfig = field(default_factory=ColorConfig)
+    """The color configuration for the application"""
+    # md: MarkdownConfig = field(default_factory=MarkdownConfig)
+
+
+@dataclass
 class LinksConfig:
     """Configures Links for the application"""
 
@@ -28,16 +68,6 @@ class SuggestionConfig:
     commands: bool = True
     params: bool = True
     distance: int = 2
-
-
-@dataclass
-class ColorConfig:
-    """Configures Colors for the application"""
-
-    error: str = fg.RED
-    highlight: str = fg.YELLOW
-    accent: str = fg.ARC_BLUE
-    subtle: str = fg.GREY
 
 
 @dataclass
@@ -56,8 +86,8 @@ class Config:
     debug: bool = False
     prompt: Prompt = field(default_factory=Prompt)
     suggest: SuggestionConfig = field(default_factory=SuggestionConfig)
-    color: ColorConfig = field(default_factory=ColorConfig)
     links: LinksConfig = field(default_factory=LinksConfig)
+    present: PresentConfig = field(default_factory=PresentConfig)
 
     @classmethod
     def load(cls) -> "Config":
@@ -88,8 +118,8 @@ def configure(
     allow_unrecognized_args: bool | None = None,
     autoload_overwrite: bool | None = None,
     debug: bool | None = None,
-    color: ColorConfig | None = None,
     links: LinksConfig | None = None,
+    present: PresentConfig | None = None,
 ):
     """Function for updating global `arc` configuration
 
@@ -143,8 +173,8 @@ def configure(
         "allow_unrecognized_args": allow_unrecognized_args,
         "autoload_overwrite": autoload_overwrite,
         "debug": debug,
-        "color": color,
         "links": links,
+        "present": present,
     }
 
     config = Config.load()

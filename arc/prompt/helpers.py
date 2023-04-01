@@ -120,7 +120,7 @@ class State(t.Generic[T]):
         self.private_name = "_" + name
 
     def __get__(self, instance, _owner) -> T:
-        return getattr(instance, self.private_name, self._initial_value)
+        return getattr(instance, self.private_name, self._initial_value)  # type: ignore
 
     def __set__(self, instance, value: T):
         prev = getattr(instance, self.private_name, self._initial_value)

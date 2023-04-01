@@ -194,7 +194,7 @@ class MiddlewareContainer:
         return inner
 
     @t.overload
-    def handle(
+    def handle(  # type: ignore
         self, *exceptions: type[BaseException]
     ) -> t.Callable[[ErrorHandler], ErrorHandler]:
         ...

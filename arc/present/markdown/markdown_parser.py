@@ -1,11 +1,6 @@
-import textwrap
 import typing as t
-import abc
 from collections import deque
-from dataclasses import dataclass
-from arc import color
-from arc.present.ansi import Ansi, colorize
-from arc.present.joiner import Join
+from arc import errors
 from arc.present.markdown.nodes import (
     BlockNode,
     Code,
@@ -23,6 +18,7 @@ from arc.present.markdown.nodes import (
     Text,
     Underline,
     Unformatted,
+    Colored,
 )
 
 
@@ -134,7 +130,11 @@ class MarkdownParser:
                     nodes.append(self.parse_emphasis(stream))
             elif curr == "[":
                 new_fragment()
-                nodes.append(self.parse_link(stream))
+                if stream.peek() == "[":
+                    stream.popleft()
+                    nodes.append(self.parse_colored(stream))
+                else:
+                    nodes.append(self.parse_link(stream))
             elif curr == "~":
                 if stream.peek() == "~":
                     stream.popleft()
@@ -177,6 +177,17 @@ class MarkdownParser:
 
     def parse_underline(self, stream: deque[str]) -> Underline:
         return Underline(self.parse_inline_until(stream, "__"))
+
+    def parse_colored(self, stream: deque[str]) -> Colored | InlineNode:
+        color_name = self.consume_until(stream, "]]")
+
+        # If we have a closing tag, but not opening tag, just return the text
+        if color_name.startswith("/"):
+            return Text([Fragment(f"[[{color_name}]]")])
+
+        return Colored(
+            self.parse_inline_until(stream, f"[[/{color_name}]]"), color_name
+        )
 
     def parse_inline_until(self, stream: deque[str], string: str) -> InlineNode:
         text = self.consume_until(stream, string)

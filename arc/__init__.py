@@ -1,7 +1,14 @@
 __version__ = "8.0.0"
 
 from arc import types, prompt, present, errors
-from arc.config import ColorConfig, Config, LinksConfig, SuggestionConfig, configure
+from arc.config import (
+    ColorConfig,
+    Config,
+    LinksConfig,
+    SuggestionConfig,
+    PresentConfig,
+    configure,
+)
 from arc.constants import MISSING
 from arc.define import (
     Param,

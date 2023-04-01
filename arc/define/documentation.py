@@ -2,6 +2,7 @@ from __future__ import annotations
 import typing as t
 from functools import cached_property
 import textwrap
+from arc.config import PresentConfig
 
 import arc.typing as at
 from arc.define.param import param
@@ -9,7 +10,7 @@ from arc.present.help_formatter import HelpFormatter
 
 if t.TYPE_CHECKING:
     from arc.define.command import Command
-    from arc.config import ColorConfig
+    from arc.config import PresentConfig
 
 ParamKinds = t.Literal["argument", "option", "flag"]
 
@@ -35,21 +36,21 @@ class Documentation:
         self,
         command: Command,
         default_section_name: str,
-        color: ColorConfig,
+        config: PresentConfig,
         description: str = None,
     ):
         self.command = command
         self.default_section_name = default_section_name
-        self.color = color
+        self.config = config
         self._description = description
         self._docstring = textwrap.dedent(self.command.callback.__doc__ or "")
 
     def help(self) -> str:
-        formatter = HelpFormatter(self, self.default_section_name, self.color)
+        formatter = HelpFormatter(self, self.default_section_name, self.config)
         return formatter.format_help()
 
     def usage(self) -> str:
-        formatter = HelpFormatter(self, self.default_section_name, self.color)
+        formatter = HelpFormatter(self, self.default_section_name, self.config)
         return formatter.format_usage()
 
     @property

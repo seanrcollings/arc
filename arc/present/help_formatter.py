@@ -6,12 +6,11 @@ from itertools import repeat
 
 from arc import constants
 from arc.color import colorize, fx
-from arc.config import ColorConfig
+from arc.config import PresentConfig
 from arc.present.ansi import Ansi
 from arc.present.formatters import TextFormatter
 from arc.present.joiner import Join
 from arc.present.markdown import MarkdownParser
-from arc.present.markdown.config import MarkdownConfig
 
 if t.TYPE_CHECKING:
     from arc.define.command import Command
@@ -27,7 +26,7 @@ class HelpFormatter(TextFormatter):
         self,
         doc: Documentation,
         default_section_name: str,
-        color: ColorConfig,
+        config: PresentConfig,
         *args,
         **kwargs,
     ):
@@ -35,7 +34,9 @@ class HelpFormatter(TextFormatter):
         self.doc = doc
         self.command = self.doc.command
         self.default_section_name = default_section_name
-        self.color = color
+        self.config = config
+        self.color = config.color
+        self.parser = MarkdownParser()
 
     @property
     def argument_params(self):
@@ -47,15 +48,13 @@ class HelpFormatter(TextFormatter):
 
     def format_help(self):
         self.write_help()
-        parser = MarkdownParser()
-        res = parser.parse(self.value)
-        return res.fmt(MarkdownConfig(width=self.width))
+        res = self.parser.parse(self.value)
+        return res.fmt(self.config)
 
     def format_usage(self):
         self.write_usage()
-        parser = MarkdownParser()
-        res = parser.parse(self.value)
-        return res.fmt(MarkdownConfig(width=self.width))
+        res = self.parser.parse(self.value)
+        return res.fmt(self.config)
 
     def write_help(self):
         doc = self.doc
@@ -213,6 +212,7 @@ class HelpFormatter(TextFormatter):
                     name += colorize(f" (-{param['short_name']})", self.color.subtle)
 
             desc = textwrap.dedent(param["description"] or "")
+            desc = self.parser.parse_inline(desc.strip("\n")).fmt(self.config)
             if (
                 param["default"] not in (None, constants.MISSING)
                 and param["kind"] != "flag"
@@ -223,8 +223,6 @@ class HelpFormatter(TextFormatter):
                     default = param["default"]
 
                 desc += colorize(f" (default: {default})", self.color.subtle)
-
-            desc = desc.strip("\n")
 
             data.append((name, desc))
 
@@ -244,6 +242,7 @@ class HelpFormatter(TextFormatter):
         return data
 
     def write_section(self, section: str, data: list[tuple[str, str]], longest: int):
+        parser = MarkdownParser()
         with self.section(section):
             self.write("```\n")
             for name, desc in data:

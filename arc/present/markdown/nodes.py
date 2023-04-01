@@ -1,17 +1,20 @@
+from __future__ import annotations
+import typing as t
 import abc
 from dataclasses import dataclass
-import textwrap
 
 from arc import color
-from arc.present.ansi import Ansi, colorize
+from arc.present.ansi import colorize
 from arc.present import wrap
 from arc.present.joiner import Join
-from arc.present.markdown.config import MarkdownConfig
+
+if t.TYPE_CHECKING:
+    from arc.config import PresentConfig
 
 
 class Node(abc.ABC):
     @abc.abstractmethod
-    def fmt(self, config: MarkdownConfig) -> str:
+    def fmt(self, config: PresentConfig) -> str:
         ...
 
 
@@ -27,10 +30,7 @@ class BlockNode(Node):
 class Document(BlockNode):
     children: list[BlockNode]
 
-    def __str__(self) -> str:
-        return self.fmt(MarkdownConfig())
-
-    def fmt(self, config: MarkdownConfig) -> str:
+    def fmt(self, config: PresentConfig) -> str:
         return Join.together(child.fmt(config) for child in self.children)
 
 
@@ -39,7 +39,7 @@ class Heading(BlockNode):
     content: InlineNode
     level: int
 
-    def fmt(self, config: MarkdownConfig) -> str:
+    def fmt(self, config: PresentConfig) -> str:
         return colorize(f"{self.content.fmt(config).upper()}", color.fx.BOLD) + "\n"
 
 
@@ -47,7 +47,7 @@ class Heading(BlockNode):
 class Paragraph(BlockNode):
     children: list[InlineNode]
 
-    def fmt(self, config: MarkdownConfig) -> str:
+    def fmt(self, config: PresentConfig) -> str:
         content = Join.together(child.fmt(config) for child in self.children)
         content = wrap.fill(content, config.width, config.indent, config.indent)
         return f"{content}\n\n"
@@ -57,7 +57,7 @@ class Paragraph(BlockNode):
 class List(BlockNode):
     elements: list[InlineNode]
 
-    def fmt(self, config: MarkdownConfig) -> str:
+    def fmt(self, config: PresentConfig) -> str:
         elements = (f"• {element.fmt(config)}" for element in self.elements)
 
         return (
@@ -75,7 +75,7 @@ class List(BlockNode):
 class Unformatted(BlockNode):
     content: str
 
-    def fmt(self, config: MarkdownConfig) -> str:
+    def fmt(self, config: PresentConfig) -> str:
         return self.content + "\n\n"
 
 
@@ -83,7 +83,7 @@ class Unformatted(BlockNode):
 class Text(InlineNode):
     children: list[InlineNode]
 
-    def fmt(self, config: MarkdownConfig) -> str:
+    def fmt(self, config: PresentConfig) -> str:
         return Join.together(child.fmt(config) for child in self.children)
 
 
@@ -91,13 +91,13 @@ class Text(InlineNode):
 class Fragment(InlineNode):
     content: str
 
-    def fmt(self, config: MarkdownConfig) -> str:
+    def fmt(self, config: PresentConfig) -> str:
         return self.content
 
 
 @dataclass
 class Spacer(InlineNode):
-    def fmt(self, config: MarkdownConfig) -> str:
+    def fmt(self, config: PresentConfig) -> str:
         return " "
 
 
@@ -105,7 +105,7 @@ class Spacer(InlineNode):
 class Emphasis(InlineNode):
     text: InlineNode
 
-    def fmt(self, config: MarkdownConfig) -> str:
+    def fmt(self, config: PresentConfig) -> str:
         return colorize(self.text.fmt(config), color.fx.ITALIC)
 
 
@@ -113,7 +113,7 @@ class Emphasis(InlineNode):
 class Strong(InlineNode):
     text: InlineNode
 
-    def fmt(self, config: MarkdownConfig) -> str:
+    def fmt(self, config: PresentConfig) -> str:
         return colorize(self.text.fmt(config), color.fx.BOLD)
 
 
@@ -121,7 +121,7 @@ class Strong(InlineNode):
 class Strikethrough(InlineNode):
     text: InlineNode
 
-    def fmt(self, config: MarkdownConfig) -> str:
+    def fmt(self, config: PresentConfig) -> str:
         return colorize(self.text.fmt(config), color.fx.STRIKETHROUGH)
 
 
@@ -129,7 +129,7 @@ class Strikethrough(InlineNode):
 class Underline(InlineNode):
     text: InlineNode
 
-    def fmt(self, config: MarkdownConfig) -> str:
+    def fmt(self, config: PresentConfig) -> str:
         return colorize(self.text.fmt(config), color.fx.UNDERLINE)
 
 
@@ -137,13 +137,28 @@ class Underline(InlineNode):
 class Link(InlineNode):
     text: InlineNode
 
-    def fmt(self, config: MarkdownConfig) -> str:
-        return colorize(self.text.fmt(config), color.fg.BLUE, color.fx.UNDERLINE)
+    def fmt(self, config: PresentConfig) -> str:
+        return colorize(self.text.fmt(config), config.color.accent, color.fx.UNDERLINE)
 
 
 @dataclass
 class Code(InlineNode):
     text: Fragment
 
-    def fmt(self, config: MarkdownConfig) -> str:
+    def fmt(self, config: PresentConfig) -> str:
         return colorize(self.text.fmt(config), color.bg.GREY, color.fg.WHITE)
+
+
+@dataclass
+class Colored(InlineNode):
+    text: InlineNode
+    color_name: str
+
+    def fmt(self, config: PresentConfig) -> str:
+        return colorize(self.text.fmt(config), self.color(config))
+
+    def color(self, config: PresentConfig):
+        return eval(
+            f"{self.color_name}",
+            {"fg": color.fg, "bg": color.bg, "color": config.color},
+        )
