@@ -20,7 +20,7 @@ packages=[{ include = "arc" }]
 python = "^3.10"
 hypothesis = "^6.68.2"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 black = "^20.8b1"
 mypy = "^1.0"
 pylint = "^2.7.0"
