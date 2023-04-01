@@ -210,7 +210,6 @@ class HelpFormatter(TextFormatter):
                     name += colorize(f" (-{param['short_name']})", self.color.subtle)
 
             desc = textwrap.dedent(param["description"] or "")
-            desc = self.parser.parse_inline(desc.strip("\n")).fmt(self.config)
             if (
                 param["default"] not in (None, constants.MISSING)
                 and param["kind"] != "flag"
@@ -220,7 +219,10 @@ class HelpFormatter(TextFormatter):
                 else:
                     default = param["default"]
 
-                desc += colorize(f" (default: {default})", self.color.subtle)
+                if desc:
+                    desc += " "
+
+                desc += f"[[color.subtle]](default: {default})[[/color.subtle]]"
 
             data.append((name, desc))
 
@@ -240,11 +242,12 @@ class HelpFormatter(TextFormatter):
         return data
 
     def write_section(self, section: str, data: list[tuple[str, str]], longest: int):
-        parser = MarkdownParser()
         with self.section(section):
             self.write("```\n")
             for name, desc in data:
                 diff = longest - Ansi.len(name)
+
+                desc = self.parser.parse_inline(desc.strip("\n")).fmt(self.config)
 
                 self.write(
                     self.wrap_text(

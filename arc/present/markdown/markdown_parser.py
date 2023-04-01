@@ -1,6 +1,6 @@
+from __future__ import annotations
 import typing as t
 from collections import deque
-from arc import errors
 from arc.present.markdown.nodes import (
     BlockNode,
     Code,
@@ -20,6 +20,9 @@ from arc.present.markdown.nodes import (
     Unformatted,
     Colored,
 )
+
+if t.TYPE_CHECKING:
+    from arc.config import PresentConfig
 
 
 class InputDeque(deque[str]):
@@ -210,3 +213,10 @@ class MarkdownParser:
                 stream.popleft()
 
         return text
+
+
+def markdown(text: str, config: PresentConfig) -> str:
+    """Converts a markdown string to a formatted string."""
+    parser = MarkdownParser()
+    doc = parser.parse(text)
+    return doc.fmt(config)

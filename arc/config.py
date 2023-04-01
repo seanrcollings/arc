@@ -4,11 +4,13 @@ import typing as t
 from dataclasses import dataclass, field
 
 import arc.typing as at
+
 from arc.color import fg
 from arc.prompt import Prompt
 
 if t.TYPE_CHECKING:
     from arc.types.semver import SemVer
+    from arc import Context
 
 
 _config: Config | None = None
@@ -102,6 +104,10 @@ class Config:
         for key, value in kwargs.items():
             if value is not None:
                 setattr(self, key, value)
+
+    @classmethod
+    def __depends__(cls, ctx: Context) -> Config:
+        return ctx.config
 
 
 def configure(

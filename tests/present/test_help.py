@@ -164,7 +164,7 @@ def test_collections():
         val: list[int],
         val2: tuple[int, int],
         val3: list[int] = [],
-        val4: tuple[int, int] = tuple(),  # type: ignore
+        val4: tuple[int, int] = (1, 2),
     ):
         assert Ansi.clean(command.doc.help) == (
             """\
@@ -181,3 +181,23 @@ OPTIONS
     --help (-h)  Displays this help message
 """
         )
+
+
+def test_default():
+    @arc.command
+    def command(val: int = 1):
+        ...
+
+    assert (
+        Ansi.clean(command.doc.help())
+        == """\
+USAGE
+    command [-h] [--] [val]
+
+ARGUMENTS
+    val          (default: 1)
+
+OPTIONS
+    --help (-h)  Displays this help message
+"""
+    )

@@ -23,7 +23,7 @@ from arc.define import (
     namespace,
 )
 from arc.errors import ConversionError, ExecutionError, ValidationError, exit
-from arc.present import err, info, pager, print, usage, log
+from arc.present import err, info, pager, print, usage, log, markdown
 from arc.runtime import App, ExecMiddleware, InitMiddleware
 from arc.runtime import Context
 from arc.types import State, convert
