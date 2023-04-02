@@ -14,7 +14,7 @@ if t.TYPE_CHECKING:
 
 ParamKinds = t.Literal["argument", "option", "flag"]
 
-KIND_MAPPING: dict[type[param.Param], ParamKinds] = {
+KIND_MAPPING: dict[type[param.Param[t.Any]], ParamKinds] = {
     param.ArgumentParam: "argument",
     param.OptionParam: "option",
     param.FlagParam: "flag",

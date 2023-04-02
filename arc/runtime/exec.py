@@ -301,6 +301,14 @@ class RunTypeMiddlewareMiddleware(ParamProcessor):
         return False  # Don't want to skip any of the params
 
 
+class RunCallbacksMiddleware(ParamProcessor):
+    def process(self, param: Param[t.Any], value: t.Any) -> t.Any:
+        if not param.callback:
+            return value
+
+        return api.dispatch_args(param.callback, value, param, self.ctx)
+
+
 class MissingParamsCheckerMiddleware(MiddlewareBase):
     """Checks to ensure that all params have been given a value
 
@@ -396,6 +404,7 @@ class ExecMiddleware(DefaultMiddlewareNamespace):
     DefaultValue = DefaultValueMiddleware()
     DependancyInjector = DependancyInjectorMiddleware()
     RunTypeMiddleware = RunTypeMiddlewareMiddleware()
+    RunCallbacks = RunCallbacksMiddleware()
     MissingParamsChecker = MissingParamsCheckerMiddleware()
     CompileParams = CompileParamsMiddleware()
     OpenResource = OpenResourceMiddleware()
@@ -411,6 +420,7 @@ class ExecMiddleware(DefaultMiddlewareNamespace):
         DefaultValue,
         DependancyInjector,
         RunTypeMiddleware,
+        RunCallbacks,
         MissingParamsChecker,
         CompileParams,
         OpenResource,

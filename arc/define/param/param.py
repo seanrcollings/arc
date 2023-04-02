@@ -64,7 +64,7 @@ class Param(t.Generic[T]):
     doesn't matter. This is used to implment the `--version` and `--help` flags"""
     comp_func: at.CompletionFunc | None
     """Function that can provide shell completions for the parameter"""
-    getter_func: at.GetterFunc | None
+    getter_func: at.ParamGetter | None
     """Function that can retrieve a value not provided on the command line"""
     data: dict[str, t.Any]
     """Dictionary of any other key values passed to the constructors"""
@@ -72,18 +72,18 @@ class Param(t.Generic[T]):
     def __init__(
         self,
         argument_name: str,
-        type: TypeInfo,
+        type: TypeInfo[T],
         default: T | None | Constant = MISSING,
         param_name: str | None = None,
         short_name: str | None = None,
         description: str | None = None,
-        callback: t.Callable | None = None,
+        callback: at.ParamCallback | None = None,
         envvar: str | None = None,
         prompt: str | None = None,
         action: Action | t.Type[argparse.Action] | None = None,
         expose: bool = True,
         comp_func: at.CompletionFunc | None = None,
-        getter_func: at.GetterFunc | None = None,
+        getter_func: at.ParamGetter | None = None,
         data: dict[str, t.Any] = None,
     ):
         self.argument_name = argument_name
@@ -106,15 +106,19 @@ class Param(t.Generic[T]):
 
     __repr__ = api.display("argument_name", "type")
 
-    def __completions__(self, info: CompletionInfo, *args, **kwargs):
+    def __completions__(
+        self, info: CompletionInfo, *args: t.Any, **kwargs: t.Any
+    ) -> at.CompletionReturn:
         if self.comp_func:
             return self.comp_func(info, self)
 
         if hasattr(self.type.resolved_type, "__completions__"):
             return get_completions(self.type.resolved_type, info, self)  # type: ignore
 
+        return None
+
     @property
-    def schema(self):
+    def schema(self) -> dict[str, t.Any]:
         return {
             "argument_name": self.argument_name,
             "type": self.type,
@@ -124,45 +128,47 @@ class Param(t.Generic[T]):
         }
 
     @property
-    def is_argument(self):
+    def is_argument(self) -> bool:
         return False
 
     @property
-    def is_keyword(self):
+    def is_keyword(self) -> bool:
         return False
 
     @property
-    def is_option(self):
+    def is_option(self) -> bool:
         return False
 
     @property
-    def is_flag(self):
+    def is_flag(self) -> bool:
         return False
 
     @property
-    def is_injected(self):
+    def is_injected(self) -> bool:
         return False
 
     @property
-    def is_optional(self):
+    def is_optional(self) -> bool:
         return self.type.is_optional_type or self.default is not MISSING
 
     @property
-    def is_required(self):
+    def is_required(self) -> bool:
         return not self.is_optional
 
     @property
-    def prompt_string(self):
+    def prompt_string(self) -> str:
+        assert isinstance(self.prompt, str), "No prompt string provided"
+
         if self.default is not MISSING:
             return self.prompt + colorize(f" ({self.default}) ", fg.GREY)
         return self.prompt
 
     @property
-    def cli_name(self):
+    def cli_name(self) -> str:
         return self.param_name
 
     @property
-    def parser_default(self):
+    def parser_default(self) -> t.Any:
         return MISSING
 
     @cached_property
@@ -181,7 +187,7 @@ class Param(t.Generic[T]):
     def convert(self, value: t.Any) -> T:
         return convert_type(self.type.resolved_type, value, self.type)
 
-    def run_middleware(self, value: t.Any, ctx: t.Any):
+    def run_middleware(self, value: t.Any, ctx: t.Any) -> t.Any:
         for middleware in self.type.middleware:
             value = api.dispatch_args(middleware, value, ctx, self)
 
@@ -191,9 +197,9 @@ class Param(t.Generic[T]):
         return []
 
 
-class ArgumentParam(Param[t.Any]):
+class ArgumentParam(Param[T]):
     @property
-    def is_argument(self):
+    def is_argument(self) -> bool:
         return True
 
     # @property
@@ -209,11 +215,11 @@ class ArgumentParam(Param[t.Any]):
 
 class KeywordParam(Param[T]):
     @property
-    def is_keyword(self):
+    def is_keyword(self) -> bool:
         return True
 
     @property
-    def cli_name(self):
+    def cli_name(self) -> str:
         return f"--{self.param_name}"
 
     def get_param_names(self) -> list[str]:
@@ -223,26 +229,26 @@ class KeywordParam(Param[T]):
         return [f"--{self.param_name}"]
 
 
-class OptionParam(KeywordParam[t.Any]):
-    def __init__(self, *args, **kwargs):
+class OptionParam(KeywordParam[T]):
+    def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
         super().__init__(*args, **kwargs)
 
         if self.type.is_collection_type:
             self.action = Action.APPEND
 
     @property
-    def is_option(self):
+    def is_option(self) -> bool:
         return True
 
     @property
-    def parser_default(self):
+    def parser_default(self) -> t.Any:
         if self.action is Action.APPEND:
             return None
         return MISSING
 
 
 class FlagParam(KeywordParam[bool]):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
         super().__init__(*args, **kwargs)
 
         # A default of false is always assumed with flags, so they
@@ -259,28 +265,28 @@ class FlagParam(KeywordParam[bool]):
                 self.action = Action.STORE_TRUE
 
     @property
-    def is_flag(self):
+    def is_flag(self) -> bool:
         return True
 
     @property
-    def parser_default(self):
+    def parser_default(self) -> t.Any:
         if self.action is Action.COUNT:
             return 0
         return MISSING
 
 
-class InjectedParam(Param):
+class InjectedParam(Param[T]):
     """Injected Params are params whose values do
     not come from the command line, but from a dependancy injection.
     Used to get access to things like the arc Context and State
     """
 
-    callback: t.Callable
+    callback: at.ParamGetter  # type: ignore[assignment]
 
     def get_injected_value(self, ctx: t.Any) -> t.Any:
-        value = api.dispatch_args(self.callback, ctx)
+        value = api.dispatch_args(self.callback, ctx, self)
         return value
 
     @property
-    def is_injected(self):
+    def is_injected(self) -> bool:
         return True

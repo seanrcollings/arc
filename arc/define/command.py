@@ -66,7 +66,9 @@ class Command(ParamMixin, MiddlewareContainer):
 
     __repr__ = api.display("name")
 
-    def __call__(self, input_args: at.InputArgs = None, state: dict = None) -> t.Any:
+    def __call__(
+        self, input_args: at.InputArgs = None, state: dict[str, t.Any] = None
+    ) -> t.Any:
         """Entry point for a command, call to execute your command object
 
         Args:
@@ -90,9 +92,7 @@ class Command(ParamMixin, MiddlewareContainer):
             stack.extend(curr.subcommands.values())
             yield curr
 
-    def __completions__(
-        self, info: CompletionInfo, *_args, **_kwargs
-    ) -> t.Iterable[Completion]:
+    def __completions__(self, info: CompletionInfo) -> t.Iterable[Completion]:
         # TODO: This is a very naive approach it:
         # - does not take into account that collection
         #   types can include more than 1 positional argument.
@@ -211,7 +211,7 @@ class Command(ParamMixin, MiddlewareContainer):
         chain.reverse()
         return chain
 
-    def run(self, ctx: Context):
+    def run(self, ctx: Context) -> t.Any:
         start_time: datetime | None = ctx.get("arc.debug.start")
         if start_time:
             diff = datetime.now() - start_time
@@ -249,7 +249,7 @@ class Command(ParamMixin, MiddlewareContainer):
     def subcommand(  # type: ignore
         self,
         /,
-        command: Command,
+        first: Command,
         *aliases: str,
     ) -> Command:
         ...
@@ -258,7 +258,7 @@ class Command(ParamMixin, MiddlewareContainer):
     def subcommand(  # type: ignore
         self,
         /,
-        callback: at.CommandCallback,
+        first: at.CommandCallback,
     ) -> Command:
         ...
 
@@ -266,14 +266,21 @@ class Command(ParamMixin, MiddlewareContainer):
     def subcommand(
         self,
         /,
-        name: str | None = None,
+        first: str | None = None,
         *aliases: str,
         desc: str | None = None,
         **kwargs: t.Any,
     ) -> t.Callable[[at.CommandCallback], Command]:
         ...
 
-    def subcommand(self, /, first=None, *aliases, desc=None, **kwargs):
+    def subcommand(  # type: ignore[return]
+        self,
+        /,
+        first: t.Any = None,
+        *aliases: str,
+        desc: str | None = None,
+        **kwargs: t.Any,
+    ) -> Command | t.Callable[[at.CommandCallback], Command]:
         """Create a new child commmand of this command OR
         adopt a already created command as the child.
 
@@ -296,7 +303,7 @@ class Command(ParamMixin, MiddlewareContainer):
             self.add_command(first, aliases)
         else:
 
-            def inner(callback: at.CommandCallback):
+            def inner(callback: at.CommandCallback) -> Command:
                 command_name = self.get_canonical_subcommand_name(
                     callback, first, self.config.transform_snake_case
                 )
@@ -383,7 +390,9 @@ class Command(ParamMixin, MiddlewareContainer):
         for name in names:
             if name in command.subcommands:
                 index += 1
-                command = command.subcommands.get(name)
+                child = command.subcommands.get(name)
+                assert child is not None
+                command = child
             else:
                 break
 
@@ -397,7 +406,7 @@ class Command(ParamMixin, MiddlewareContainer):
         param = self.get_param(param_name)
         if param:
 
-            def inner(func: at.CompletionFunc):
+            def inner(func: at.CompletionFunc) -> at.CompletionFunc:
                 param.comp_func = func  # type: ignore
                 return func
 
@@ -408,11 +417,11 @@ class Command(ParamMixin, MiddlewareContainer):
             Join.with_space(self.doc.fullname),
         )
 
-    def get(self, param_name: str):
+    def get(self, param_name: str) -> t.Callable[[at.ParamGetter], at.ParamGetter]:
         param = self.get_param(param_name)
         if param:
 
-            def inner(func: at.GetterFunc):
+            def inner(func: at.ParamGetter) -> at.ParamGetter:
                 param.getter_func = func  # type: ignore
                 return func
 
@@ -423,15 +432,15 @@ class Command(ParamMixin, MiddlewareContainer):
             Join.with_space(self.doc.fullname),
         )
 
-    def autoload(self, *paths: str):
+    def autoload(self, *paths: str) -> None:
         Autoload(paths, self, self.config.autoload_overwrite).load()
 
     @staticmethod
-    def wrap_class_callback(cls: type[at.ClassCallback]):
+    def wrap_class_callback(cls: type[at.ClassCallback]) -> at.CommandCallback:
         if not hasattr(cls, "handle"):
             raise errors.CommandError("class-style commands require a handle() method")
 
-        def wrapper(**kwargs):
+        def wrapper(**kwargs: t.Any) -> t.Any:
             inst = cls()
             for key, value in kwargs.items():
                 setattr(inst, key, value)
@@ -467,7 +476,7 @@ def command(
     desc: str | None = None,
     config: Config | None = None,
     **kwargs: t.Any,
-):
+) -> t.Callable[[at.CommandCallback], Command] | Command:
     """Create an arc Command
 
     ```py
@@ -517,7 +526,11 @@ def command(
 
 
 def namespace(
-    name: str, *, desc: str | None = None, config: Config | None = None, **kwargs
+    name: str,
+    *,
+    desc: str | None = None,
+    config: Config | None = None,
+    **kwargs: t.Any,
 ) -> Command:
     """Create an arc Command, that is not executable on it's own,
     but can have commands nested underneath it.
@@ -550,7 +563,7 @@ def namespace(
     return command
 
 
-def namespace_callback(ctx: Context):
+def namespace_callback(ctx: Context) -> t.NoReturn:
     command = ctx.command
     arc.usage(command)
     help_call = color.colorize(

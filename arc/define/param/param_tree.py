@@ -6,26 +6,28 @@ from dataclasses import dataclass
 if t.TYPE_CHECKING:
     from arc.define.param import Param
 
+T = t.TypeVar("T", bound=type)
+
 
 @dataclass
 class ParamValue:
     value: t.Any
-    param: Param
+    param: Param[t.Any]
 
 
 @dataclass
-class ParamTree:
+class ParamTree(t.Generic[T]):
     """Tree data stucture that represents all
     the param values for a particular command execution"""
 
-    data: dict[str, ParamTree | ParamValue]
-    cls: type
+    data: dict[str, ParamTree[t.Any] | ParamValue]
+    cls: T
 
-    def __getitem__(self, path: t.Sequence[str]):
+    def __getitem__(self, path: t.Sequence[str]) -> t.Any:
         curr = self.__get_from_path(path)
         return curr.value
 
-    def __setitem__(self, path: t.Sequence[str], value: t.Any):
+    def __setitem__(self, path: t.Sequence[str], value: t.Any) -> None:
         curr = self.__get_from_path(path)
         curr.value = value
 
@@ -33,7 +35,7 @@ class ParamTree:
         if isinstance(path, str):
             path = (path,)
 
-        curr: ParamTree | ParamValue = self
+        curr: ParamTree[t.Any] | ParamValue = self
 
         for component in path:
             if isinstance(curr, ParamTree):
@@ -53,7 +55,7 @@ class ParamTree:
             else:
                 yield value
 
-    def compile(self, include_hidden: bool = False):
+    def compile(self, include_hidden: bool = False) -> T:
         compiled: dict[str, t.Any] = {}
         for key, value in self.data.items():
             if isinstance(value, ParamTree):

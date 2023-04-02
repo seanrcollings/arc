@@ -62,7 +62,7 @@ def test_short_name():
     assert command("-v val") == "val"
 
 
-@pytest.mark.parametrize("cls", [list[int], set[int], tuple[int, ...]])  # type: ignore
+@pytest.mark.parametrize("cls", [list[int], set[int], tuple[int, ...]])
 def test_collections(cls):
     @arc.command
     def command(*, val: cls):

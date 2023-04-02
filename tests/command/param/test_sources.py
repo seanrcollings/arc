@@ -8,7 +8,7 @@ import arc
 from arc import Argument, Option, errors, configure
 from arc import constants
 from arc.define.param.param import Param, ValueOrigin
-from arc.prompt.helpers import ARROW_DOWN, Cursor
+from arc.prompt.helpers import Cursor
 
 
 @pytest.fixture(autouse=True)

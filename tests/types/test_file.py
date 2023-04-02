@@ -33,7 +33,7 @@ def test_mode(mode, content_file: Path):
     args = t.get_args(mode)[-1]
 
     @arc.command
-    def command(file: mode):  # type: ignore
+    def command(file: mode):
         return file
 
     file = command(str(content_file))
