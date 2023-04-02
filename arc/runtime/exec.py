@@ -34,7 +34,7 @@ class ExitStackMiddleware(MiddlewareBase):
     - `arc.exitstack`
     """
 
-    def __call__(self, ctx: Context):
+    def __call__(self, ctx: Context) -> t.Any:
         with contextlib.ExitStack() as stack:
             ctx["arc.exitstack"] = stack
             yield
@@ -62,15 +62,15 @@ class SetupParamMiddleware(MiddlewareBase):
 
 class ParamProcessor(MiddlewareBase):
     ctx: Context
-    param_tree: ParamTree
+    param_tree: ParamTree[type[dict[str, t.Any]]]
     config: Config
     origins: dict[str, ValueOrigin]
 
     __IGNORE = object()
 
-    def __call__(self, ctx: Context):
+    def __call__(self, ctx: Context) -> t.Any:
         self.ctx = ctx
-        self.param_tree: ParamTree = ctx["arc.args.tree"]
+        self.param_tree: ParamTree[type[dict[str, t.Any]]] = ctx["arc.args.tree"]
         self.config = ctx["arc.config"]
         self.origins = ctx["arc.args.origins"]
 
@@ -91,19 +91,19 @@ class ParamProcessor(MiddlewareBase):
                 if updated is not self.__IGNORE:
                     param_value.value = updated
 
-    def process(self, param: Param, value: t.Any) -> t.Any:
+    def process(self, param: Param[t.Any], value: t.Any) -> t.Any:
         return self.__IGNORE
 
-    def process_missing(self, param: Param) -> t.Any:
+    def process_missing(self, param: Param[t.Any]) -> t.Any:
         return self.__IGNORE
 
-    def process_not_missing(self, param: Param, value: t.Any) -> t.Any:
+    def process_not_missing(self, param: Param[t.Any], value: t.Any) -> t.Any:
         return self.__IGNORE
 
-    def skip(self, param: Param, value: t.Any) -> bool:
+    def skip(self, param: Param[t.Any], value: t.Any) -> bool:
         return param.is_injected or not param.expose
 
-    def set_origin(self, param: Param, origin: ValueOrigin) -> None:
+    def set_origin(self, param: Param[t.Any], origin: ValueOrigin) -> None:
         self.origins[param.argument_name] = origin
 
 
@@ -122,11 +122,11 @@ class ApplyParseResultMiddleware(ParamProcessor):
 
     res: at.ParseResult
 
-    def __call__(self, ctx: Context):
+    def __call__(self, ctx: Context) -> t.Any:
         self.res = ctx["arc.parse.result"]
         return super().__call__(ctx)
 
-    def process_missing(self, param: Param):
+    def process_missing(self, param: Param[t.Any]) -> t.Any:
         value: t.Any = self.res.pop(param.argument_name, constants.MISSING)
         self.set_origin(param, ValueOrigin.CLI)
 
@@ -151,12 +151,12 @@ class GetEnvValueMiddleware(ParamProcessor):
     None
     """
 
-    def process_missing(self, param: Param) -> t.Any:
+    def process_missing(self, param: Param[t.Any]) -> t.Any:
         value = self.get_env_value(param)
         self.set_origin(param, ValueOrigin.ENV)
         return value
 
-    def get_env_value(self, param: Param) -> str | constants.Constant:
+    def get_env_value(self, param: Param[t.Any]) -> str | constants.Constant:
         if not param.envvar:
             return constants.MISSING
 
@@ -175,12 +175,12 @@ class GetPromptValueMiddleware(ParamProcessor):
     None
     """
 
-    def process_missing(self, param: Param) -> t.Any:
+    def process_missing(self, param: Param[t.Any]) -> t.Any:
         value = self.get_prompt_value(param)
         self.set_origin(param, ValueOrigin.PROMPT)
         return value
 
-    def get_prompt_value(self, param: Param) -> str | constants.Constant:
+    def get_prompt_value(self, param: Param[t.Any]) -> str | constants.Constant:
         if not param.prompt:
             return constants.MISSING
 
@@ -200,12 +200,12 @@ class GetterValueMiddleware(ParamProcessor):
     None
     """
 
-    def process_missing(self, param: Param) -> t.Any:
+    def process_missing(self, param: Param[t.Any]) -> t.Any:
         value = self.get_getter_value(param)
         self.set_origin(param, ValueOrigin.GETTER)
         return value
 
-    def get_getter_value(self, param: Param) -> t.Any | constants.Constant:
+    def get_getter_value(self, param: Param[t.Any]) -> t.Any | constants.Constant:
         getter = param.getter_func
         if not getter:
             return constants.MISSING
@@ -225,7 +225,7 @@ class ConvertValuesMiddleware(ParamProcessor):
     None
     """
 
-    def process_not_missing(self, param: Param, value: t.Any):
+    def process_not_missing(self, param: Param[t.Any], value: t.Any) -> t.Any:
         if value in (None, constants.MISSING, True, False,) and param.type.origin in (
             bool,
             t.Any,
@@ -250,7 +250,7 @@ class DefaultValueMiddleware(ParamProcessor):
     None
     """
 
-    def process_missing(self, param: Param):
+    def process_missing(self, param: Param[t.Any]) -> t.Any:
         self.set_origin(param, ValueOrigin.DEFAULT)
         return param.default
 
@@ -267,13 +267,13 @@ class DependancyInjectorMiddleware(ParamProcessor):
     None
     """
 
-    def process(self, param: Param, value: t.Any) -> t.Any:
-        param = t.cast(InjectedParam, param)
+    def process(self, param: Param[t.Any], value: t.Any) -> t.Any:
+        param = t.cast(InjectedParam[t.Any], param)
         injected = param.get_injected_value(self.ctx)
         self.set_origin(param, ValueOrigin.INJECTED)
         return injected
 
-    def skip(self, param: Param, _value: t.Any) -> bool:
+    def skip(self, param: Param[t.Any], _value: t.Any) -> bool:
         return not param.is_injected
 
 
@@ -289,7 +289,7 @@ class RunTypeMiddlewareMiddleware(ParamProcessor):
     None
     """
 
-    def process(self, param: Param, value: t.Any) -> t.Any:
+    def process(self, param: Param[t.Any], value: t.Any) -> t.Any:
         if value not in (None, constants.MISSING):
             try:
                 value = param.run_middleware(value, self.ctx)
@@ -297,7 +297,7 @@ class RunTypeMiddlewareMiddleware(ParamProcessor):
                 raise errors.InvalidParamValueError(str(e), param) from e
         return value
 
-    def skip(self, _param: Param, _value: t.Any) -> bool:
+    def skip(self, _param: Param[t.Any], _value: t.Any) -> bool:
         return False  # Don't want to skip any of the params
 
 
@@ -320,7 +320,7 @@ class MissingParamsCheckerMiddleware(MiddlewareBase):
     """
 
     def __call__(self, ctx: Context) -> t.Any:
-        tree: ParamTree = ctx["arc.args.tree"]
+        tree: ParamTree[t.Any] = ctx["arc.args.tree"]
         missing = [
             value.param
             for value in tree.values()
@@ -344,7 +344,7 @@ class CompileParamsMiddleware(MiddlewareBase):
     """
 
     def __call__(self, ctx: Context) -> t.Any:
-        instance: ParamTree = ctx["arc.args.tree"]
+        instance: ParamTree[t.Any] = ctx["arc.args.tree"]
         ctx["arc.args"] = instance.compile()
 
 

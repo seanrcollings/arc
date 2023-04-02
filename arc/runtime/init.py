@@ -179,7 +179,7 @@ class NormalizeInputMiddleware(MiddlewareBase):
 
 
 class CommandFinderMiddleware(MiddlewareBase):
-    def __call__(self, ctx: Context):
+    def __call__(self, ctx: Context) -> t.Any:
         args: list[str] = ctx["arc.input"]
         command, command_args = ctx.root.find_command(args)
         ctx["arc.command"] = command
@@ -187,14 +187,16 @@ class CommandFinderMiddleware(MiddlewareBase):
 
 
 class ArgParseMiddleware(MiddlewareBase):
-    def __call__(self, ctx: Context):
+    def __call__(self, ctx: Context) -> t.Any:
         args: list[str] = ctx["arc.input"]
 
         result, extra = self.parse_args(ctx.command, args)
         ctx["arc.parse.result"] = result
         ctx["arc.parse.extra"] = extra
 
-    def parse_args(self, command: Command, args: list[str]) -> tuple[dict, list[str]]:
+    def parse_args(
+        self, command: Command, args: list[str]
+    ) -> tuple[at.ParseResult, list[str]]:
         parser = self.create_parser(command)
         return parser.parse_known_intermixed_args(args)
 
@@ -217,7 +219,7 @@ class CheckParseResultsMiddleware(MiddlewareBase):
     # Context Additions
     """
 
-    def __call__(self, ctx: Context):
+    def __call__(self, ctx: Context) -> t.Any:
         extra: list[str] | None = ctx.get("arc.parse.extra")
 
         if extra and not ctx.config.allow_unrecognized_args:

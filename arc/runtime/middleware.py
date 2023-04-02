@@ -29,13 +29,10 @@ class MiddlewareBase(abc.ABC):
 class MiddlewareStack(collections.UserList[Middleware]):
     __gens: list[t.Generator[None, t.Any, None]]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"MiddlewareStack({self.data!r})"
 
-    def __contains__(self, value):
-        return value in self.__decos
-
-    def start(self, ctx):
+    def start(self, ctx: Context) -> Context:
         self.__gens = []
 
         for handler in self:
@@ -44,12 +41,14 @@ class MiddlewareStack(collections.UserList[Middleware]):
                 self.__gens.append(res)
                 res = next(res)
 
+            res = t.cast(t.Union["Context", None], res)
+
             if res is not None:
                 ctx = res
 
         return ctx
 
-    def close(self, result: t.Any):
+    def close(self, result: t.Any) -> t.Any:
         """Closes each callback by calling `next()` on them"""
         for gen in reversed(self.__gens):
             try:
@@ -60,7 +59,7 @@ class MiddlewareStack(collections.UserList[Middleware]):
 
         return result
 
-    def throw(self, exception: Exception):
+    def throw(self, exception: Exception) -> None:
         """Used if an error occurs in command execution.
         Notifies each of the callbacks that an error occured.
 
@@ -93,7 +92,7 @@ class MiddlewareStack(collections.UserList[Middleware]):
         if not exception_handled:
             raise exception
 
-    def try_remove(self, m: Middleware):
+    def try_remove(self, m: Middleware) -> None:
         try:
             self.remove(m)
         except ValueError:
@@ -142,13 +141,13 @@ class MiddlewareContainer:
 
     def use(
         self,
-        handler=None,
+        handler: t.Any = None,
         *,
         pos: int | None = None,
         replace: Middleware | None = None,
         before: Middleware | None = None,
         after: Middleware | None = None,
-    ):
+    ) -> t.Any:
         """Register a middleware with this object.
 
         Args:
@@ -160,14 +159,14 @@ class MiddlewareContainer:
             after (Middleware | None, optional): Insert the provided `handler` after this middleware. Defaults to None.
         """
 
-        def ensure_single_operation():
+        def ensure_single_operation() -> None:
             ops = [op for op in (pos, replace, before, after) if op is not None]
             if len(ops) > 1:
                 raise errors.InternalError(
                     "Cannot provide multiple operations for a single middleware"
                 )
 
-        def inner(handler: Middleware):
+        def inner(handler: Middleware) -> Middleware:
             ensure_single_operation()
             if pos is not None:
                 self.stack.insert(pos, handler)
@@ -207,11 +206,11 @@ class MiddlewareContainer:
 
     @t.overload
     def handle(
-        self, handlers: t.Sequence[ErrorHandler], *exceptions: type[BaseException]
+        self, handler: t.Sequence[ErrorHandler], *exceptions: type[BaseException]
     ) -> list[ErrorHandler]:
         ...
 
-    def handle(self, handler=None, *exceptions):
+    def handle(self, handler: t.Any | type = None, *exceptions: t.Any) -> t.Any:
         """Register an exception handler to this object
 
         Args:
@@ -219,13 +218,15 @@ class MiddlewareContainer:
                 and the exception object.
         """
 
-        def inner(func: ErrorHandler):
+        def inner(func: ErrorHandler) -> ErrorHandler:
             @self.use
-            def error_handler(ctx: Context):
+            def error_handler(ctx: Context) -> t.Any:
                 try:
                     yield
                 except exceptions as e:
                     return func(ctx, e)
+
+            return func
 
         if issubclass(handler, BaseException):
             exceptions = (handler, *exceptions)
@@ -245,7 +246,7 @@ class DefaultMiddlewareNamespace:
         return cls._list
 
     @classmethod
-    def regsiter(cls, name: str, middleware: Middleware):
+    def regsiter(cls, name: str, middleware: Middleware) -> None:
         """Register a new default middleware."""
         cls._list.append(middleware)
         setattr(cls, name, middleware)

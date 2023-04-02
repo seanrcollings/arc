@@ -69,7 +69,7 @@ class App(MiddlewareContainer):
         ctx = self._create_ctx({"arc.command": command, "arc.parse.result": kwargs})
         return command.run(ctx)
 
-    def _create_ctx(self, data: dict = None) -> arc.Context:
+    def _create_ctx(self, data: dict[str, t.Any] = None) -> arc.Context:
         return arc.Context(
             {
                 "arc.root": self.root,
@@ -83,12 +83,12 @@ class App(MiddlewareContainer):
             | (data or {})
         )
 
-    def _handle_dynamic_name(self):
+    def _handle_dynamic_name(self) -> None:
         if not self.root.explicit_name:
             name = sys.argv[0]
             self.root.name = os.path.basename(name)
 
-    def _setup_logger(self):
+    def _setup_logger(self) -> None:
         if self.config.debug:
             logger.setLevel(DEBUG)
         else:
