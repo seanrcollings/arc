@@ -72,11 +72,7 @@ class InputQuestion(Question[T]):
         self.convert_to = convert
         self.default = default
 
-    @property
-    def required(self):
-        return self.default is None
-
-    def render(self):
+    def render(self) -> t.Iterable[str]:
         yield self.prompt
 
     def handle_answer(self, value: str) -> T:
@@ -89,7 +85,7 @@ class InputQuestion(Question[T]):
         value = self.validate(value)
         return self.convert(value, self.convert_to)
 
-    def validate(self, value: str):
+    def validate(self, value: str) -> t.Any:
         return value
 
     def convert(self, value: str, type: type[C]) -> C:
@@ -102,7 +98,7 @@ class InputQuestion(Question[T]):
 class RangeQuestion(InputQuestion[int]):
     """Question for a number in a given range"""
 
-    def __init__(self, prompt: str, min: int, max: int, **kwargs):
+    def __init__(self, prompt: str, min: int, max: int, **kwargs: t.Any):
         """
         Args:
             min: the smallest number possible
@@ -125,7 +121,7 @@ class MappedInputQuestion(InputQuestion[T]):
         self,
         prompt: str,
         mapping: t.Mapping[str, T],
-        **kwargs,
+        **kwargs: t.Any,
     ) -> None:
         super().__init__(prompt, **kwargs)
         self.mapping = mapping
@@ -145,7 +141,7 @@ class ConfirmQuestion(MappedInputQuestion[bool]):
     `Prompt.confirm()` is an alias for asking this question
     """
 
-    def __init__(self, prompt: str, **kwargs) -> None:
+    def __init__(self, prompt: str, **kwargs: t.Any) -> None:
         super().__init__(
             prompt,
             mapping={
@@ -169,11 +165,11 @@ class MultipleChoiceQuestion(InputQuestion[tuple[int, str]]):
     ```
     """
 
-    def __init__(self, prompt: str, choices: list[str], **kwargs):
+    def __init__(self, prompt: str, choices: list[str], **kwargs: t.Any):
         super().__init__(prompt, **kwargs)
         self.choices = choices
 
-    def render(self):
+    def render(self) -> t.Iterable[str]:
         yield self.prompt + "\n"
 
         for idx, choice in enumerate(self.choices):
@@ -196,16 +192,16 @@ class RawQuestion(BaseQuestion[T]):
         self.result: T | None = None
         self.update_occured = False
 
-    def on_key(self, key: str):
+    def on_key(self, key: str) -> None:
         ...
 
-    def on_line(self, line: str):
+    def on_line(self, line: str) -> None:
         ...
 
-    def on_done(self, content: str):
+    def on_done(self, content: str) -> None:
         ...
 
-    def done(self, value: T | None = None):
+    def done(self, value: T | None = None) -> None:
         self.is_done = True
         self.result = value
 
@@ -227,7 +223,7 @@ class SelectQuestion(RawQuestion[tuple[int, T]]):
         self.options = options
         self.highlight_color = highlight_color
 
-    def on_key(self, key: str):
+    def on_key(self, key: str) -> None:
         if key == ARROW_UP:
             self.selected = max(0, self.selected - 1)
         elif key == ARROW_DOWN:
@@ -237,10 +233,10 @@ class SelectQuestion(RawQuestion[tuple[int, T]]):
             if index < len(self.options):
                 self.selected = index
 
-    def on_line(self, _line):
+    def on_line(self, _line: str) -> None:
         self.done((self.selected, self.options[self.selected]))
 
-    def render(self):
+    def render(self) -> t.Iterable[str]:
         yield self.prompt
         yield "\n\r"
         for idx, item in enumerate(self.options):
