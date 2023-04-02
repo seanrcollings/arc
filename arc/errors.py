@@ -17,8 +17,8 @@ class Exit(SystemExit):
         super().__init__(code)
         self.message = message
 
-    def fmt(self, ctx: Context):
-        return self.message
+    def fmt(self, ctx: Context) -> str:
+        return self.message or ""
 
 
 def exit(code: int = 0, message: str | None = None) -> t.NoReturn:
@@ -29,7 +29,7 @@ def exit(code: int = 0, message: str | None = None) -> t.NoReturn:
 
 
 class ArcError(Exception):
-    def fmt(self, ctx: Context):
+    def fmt(self, ctx: Context) -> str:
         return str(self)
 
 
@@ -48,7 +48,7 @@ class ArgumentError(ExternalError):
 class ConversionError(ArgumentError):
     """Raised if a type conversion fails"""
 
-    def __init__(self, value, message: str, details=None):
+    def __init__(self, value: t.Any, message: str, details: t.Any | None = None):
         self.value = value
         self.details = details
         super().__init__(message)
@@ -63,7 +63,7 @@ class UsageError(ExternalError):
         self.message = message
         self.command = command
 
-    def fmt(self, ctx: Context):
+    def fmt(self, ctx: Context) -> str:
         return f"{self.usage()}{self.message}"
 
     def usage(self) -> str:
@@ -75,7 +75,11 @@ class UsageError(ExternalError):
 
 class InvalidParamValueError(UsageError, ArgumentError):
     def __init__(
-        self, message: str, param: Param, detail: str = None, command: Command = None
+        self,
+        message: str,
+        param: Param[t.Any],
+        detail: str = None,
+        command: Command = None,
     ):
         super().__init__(message, command)
         self.param = param
@@ -93,7 +97,7 @@ class InvalidParamValueError(UsageError, ArgumentError):
 
 
 class MissingArgValueError(UsageError, ArgumentError):
-    def __init__(self, params: list[Param], command: Command = None):
+    def __init__(self, params: list[Param[t.Any]], command: Command = None):
         super().__init__("", command)
         self.params = params
 
@@ -106,7 +110,7 @@ class MissingArgValueError(UsageError, ArgumentError):
 
 
 class MissingOptionValueError(UsageError, ArgumentError):
-    def __init__(self, param: Param, command: Command = None):
+    def __init__(self, param: Param[t.Any], command: Command = None):
         super().__init__("", command)
         self.param = param
 
@@ -197,13 +201,13 @@ class CommandError(InternalError):
 
 
 class ParamError(InternalError):
-    def __init__(self, message, command_name: str, param=None):
+    def __init__(self, message: str, command_name: str, param: t.Any = None):
         super().__init__(message)
         self.command_name = command_name
         self.param = param
 
     def __str__(self) -> str:
-        param_name = self.param.name if self.param else ""
+        param_name = self.param.argument_name if self.param else ""
         return (
             f"Parameter {param_name!r} for command "
             f"{self.command_name!r} is invalid: {super().__str__()}"

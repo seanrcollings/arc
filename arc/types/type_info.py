@@ -55,13 +55,13 @@ class TypeInfo(t.Generic[T]):
     @property
     def is_union_type(self) -> bool:
         """The type is `Union[T...]`"""
-        return self.origin in (t.Union, types.UnionType)  # type: ignore
+        return self.origin in (t.Union, types.UnionType)
 
     @property
     def is_optional_type(self) -> bool:
         """The type is `Optional[T]`"""
         return (
-            self.origin in (t.Union, types.UnionType)  # type: ignore
+            self.origin in (t.Union, types.UnionType)
             and len(self.sub_types) == 2
             and self.sub_types[-1].original_type is type(None)
         )

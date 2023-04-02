@@ -18,7 +18,7 @@ class ArcFormatter(logging.Formatter):
         CRITICAL: bg.BRIGHT_RED,
     }
 
-    def format(self, record: logging.LogRecord):
+    def format(self, record: logging.LogRecord) -> str:
         record.message = record.getMessage()
         record.levelname = colorize(
             f" {record.levelname:^8} ",

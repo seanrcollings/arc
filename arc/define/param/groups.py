@@ -28,14 +28,14 @@ def _default_repr(inst: object) -> str:
 
 def _default_enter(inst: object) -> object:
     if hasattr(inst, "pre_exec"):
-        inst.pre_exec()  # type: ignore
+        inst.pre_exec()
 
     return inst
 
 
 def _default_exit(inst: object, *args: t.Any) -> object:
     if hasattr(inst, "post_exec"):
-        inst.post_exec()  # type: ignore
+        inst.post_exec()
 
     return inst
 

@@ -100,7 +100,7 @@ class Config:
 
         return _config
 
-    def update(self, **kwargs: t.Any):
+    def update(self, **kwargs: t.Any) -> None:
         for key, value in kwargs.items():
             if value is not None:
                 setattr(self, key, value)
@@ -124,7 +124,7 @@ def configure(
     debug: bool | None = None,
     links: LinksConfig | None = None,
     present: PresentConfig | None = None,
-):
+) -> None:
     """Function for updating global `arc` configuration
 
     Args:
@@ -162,7 +162,7 @@ def configure(
 
         links (LinksConfig, optional): configure the links that arc may use in some output
     """
-    data: dict = {
+    data: dict[str, t.Any] = {
         "version": version,
         "environment": environment,
         "transform_snake_case": transform_snake_case,

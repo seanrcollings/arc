@@ -271,7 +271,7 @@ class NoneAlias(Alias, of=types.NoneType):
 # Typing types ---------------------------------------------------------------------------------
 
 
-class UnionAlias(Alias, of=(t.Union, types.UnionType)):  # type: ignore
+class UnionAlias(Alias, of=(t.Union, types.UnionType)):
     @classmethod
     def g_convert(cls, value: t.Any, info: TypeInfo[t.Any]) -> t.Any:
 

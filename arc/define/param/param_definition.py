@@ -166,7 +166,7 @@ class ParamDefinitionFactory:
 
         self.param_names.add(param.name)
         annotation = t.Any if param.annotation is param.empty else param.annotation
-        type_info = TypeInfo.analyze(annotation)
+        type_info = TypeInfo[t.Any].analyze(annotation)
         info = self.get_param_info(param, type_info)
 
         annotation = param.annotation

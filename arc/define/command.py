@@ -49,11 +49,11 @@ class Command(ParamMixin, MiddlewareContainer):
         ParamMixin.__init__(self)
         MiddlewareContainer.__init__(self, [])
         if inspect.isclass(callback):
-            self.callback = self.wrap_class_callback(  # type: ignore
+            self.callback = self.wrap_class_callback(
                 t.cast(type[at.ClassCallback], callback)
             )
         else:
-            self.callback = callback  # type: ignore
+            self.callback = callback
 
         self.config = config or Config.load()
         self.name = name or callback.__name__
@@ -246,7 +246,7 @@ class Command(ParamMixin, MiddlewareContainer):
     # Subcommands ----------------------------------------------------------------
 
     @t.overload
-    def subcommand(  # type: ignore
+    def subcommand(
         self,
         /,
         first: Command,
@@ -255,7 +255,7 @@ class Command(ParamMixin, MiddlewareContainer):
         ...
 
     @t.overload
-    def subcommand(  # type: ignore
+    def subcommand(
         self,
         /,
         first: at.CommandCallback,
@@ -273,7 +273,7 @@ class Command(ParamMixin, MiddlewareContainer):
     ) -> t.Callable[[at.CommandCallback], Command]:
         ...
 
-    def subcommand(  # type: ignore[return]
+    def subcommand(
         self,
         /,
         first: t.Any = None,
@@ -301,6 +301,7 @@ class Command(ParamMixin, MiddlewareContainer):
 
         if isinstance(first, type(self)):
             self.add_command(first, aliases)
+            return first
         else:
 
             def inner(callback: at.CommandCallback) -> Command:

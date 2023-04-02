@@ -29,7 +29,7 @@ class Autoload:
                     )
                 self.parent.add_command(command)
 
-    def __load_files(self, paths: t.Iterable[str]):
+    def __load_files(self, paths: t.Iterable[str]) -> t.Iterator[Path]:
         for filepath in paths:
             path = self.path(filepath)
             if not path:

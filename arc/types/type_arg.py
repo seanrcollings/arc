@@ -40,7 +40,7 @@ class TypeArg:
             else:
                 merged[attr] = other_value
 
-        return type(self)(**merged)  # type: ignore
+        return type(self)(**merged)
 
     def __hash__(self) -> int:
         return id(self)

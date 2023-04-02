@@ -5,16 +5,14 @@ import inspect
 import typing as t
 from types import MethodType
 
-import arc.typing as at
-
 if t.TYPE_CHECKING:
     from arc.define import Command
 
 
-def display(*members: str):
+def display(*members: str) -> t.Callable[[object], str]:
     """Construct a repr that displays the values of the provided members"""
 
-    def __repr__(self):
+    def __repr__(self: object) -> str:
         values = ", ".join(
             [f"{member}={repr(getattr(self, member))}" for member in members]
         )
@@ -23,7 +21,10 @@ def display(*members: str):
     return __repr__
 
 
-def dispatch_args(func: t.Callable, *args):
+T = t.TypeVar("T")
+
+
+def dispatch_args(func: t.Callable[..., T], *args: t.Any) -> T:
     """Calls the given `func` with the maximum
     slice of `*args` that it can accept. Handles
     function and method types

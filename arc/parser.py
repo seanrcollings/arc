@@ -18,9 +18,9 @@ if t.TYPE_CHECKING:
 
 
 class Parser(argparse.ArgumentParser):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
         super().__init__(*args, **kwargs)
-        self.param_map: dict[str, Param] = {}
+        self.param_map: dict[str, Param[t.Any]] = {}
 
     def parse_intermixed_args(  # type: ignore
         self, args: t.Sequence[str] | None = None, namespace=None
@@ -34,7 +34,7 @@ class Parser(argparse.ArgumentParser):
         parsed, rest = super().parse_known_intermixed_args(args, namespace)
         return (dict(parsed._get_kwargs()), rest)
 
-    def add_param(self, param: Param, command: Command):
+    def add_param(self, param: Param[t.Any], command: Command) -> None:
         kwargs: dict[str, t.Any] = {}
 
         kwargs["action"] = (
@@ -62,7 +62,7 @@ class Parser(argparse.ArgumentParser):
     # the actual argparse implementation, because
     # argparse's error handling cusomization is doodoo
     # All modificatiosn to this method will be marked
-    def _parse_known_args(self, arg_strings, namespace):
+    def _parse_known_args(self, arg_strings, namespace):  # type: ignore
         # replace arg strings that are file references
         if self.fromfile_prefix_chars is not None:
             arg_strings = self._read_args_from_files(arg_strings)
@@ -109,7 +109,7 @@ class Parser(argparse.ArgumentParser):
         seen_actions = set()
         seen_non_default_actions = set()
 
-        def take_action(action, argument_strings, option_string=None):
+        def take_action(action, argument_strings, option_string=None):  # type: ignore
             seen_actions.add(action)
             argument_values = self._get_values(action, argument_strings)
 
@@ -130,7 +130,7 @@ class Parser(argparse.ArgumentParser):
                 action(self, namespace, argument_values, option_string)
 
         # function to convert arg_strings into an optional action
-        def consume_optional(start_index):
+        def consume_optional(start_index):  # type: ignore
 
             # get the optional identified at this index
             option_tuple = option_string_indices[start_index]
@@ -140,7 +140,7 @@ class Parser(argparse.ArgumentParser):
             # (e.g. -xyz is the same as -x -y -z if no args are required)
 
             # MODIFIED ------------------------------------------
-            def _wrapped_match_argument(action, args_str_pattern):
+            def _wrapped_match_argument(action, args_str_pattern):  # type: ignore
                 try:
                     return self._match_argument(action, args_str_pattern)
                 except argparse.ArgumentError as e:
@@ -222,7 +222,7 @@ class Parser(argparse.ArgumentParser):
         positionals = self._get_positional_actions()
 
         # function to convert arg_strings into positional actions
-        def consume_positionals(start_index):
+        def consume_positionals(start_index):  # type: ignore
             # match as many Positionals as possible
             match_partial = self._match_arguments_partial
             selected_pattern = arg_strings_pattern[start_index:]
@@ -346,25 +346,31 @@ class Parser(argparse.ArgumentParser):
 
 
 class CustomAction(argparse.Action):
-    def __init__(self, *args, command: Command, **kwargs) -> None:
+    def __init__(self, *args: t.Any, command: Command, **kwargs: t.Any) -> None:
         super().__init__(*args, **kwargs)
         self.command = command
 
 
 class CustomHelpAction(CustomAction, argparse._HelpAction):
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: t.Any, **kwargs: t.Any) -> None:
         arc.info(self.command.doc.help())
         arc.exit()
 
 
 class CustomVersionAction(CustomAction, argparse._VersionAction):
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: t.Any, **kwargs: t.Any) -> None:
         arc.info(self.command.config.version)
         arc.exit()
 
 
 class CustomAutocompleteAction(CustomAction, argparse._StoreAction):
-    def __call__(self, _parser, _ns, value, *args, **kwargs):
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        ns: argparse.Namespace,
+        value: t.Any,
+        option_string: str | None = None,
+    ) -> None:
         # arc.exit(1, "Not currently working")
         print(ShellCompletion.run(value, self.command), end="")
         arc.exit()
