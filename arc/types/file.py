@@ -25,7 +25,7 @@ OpenErrors = t.Literal[
 ]
 
 
-class File(t.IO, abc.ABC):
+class File(t.IO[str], abc.ABC):
     """Obtains a handler to a file. Handles
     the access to the file, and gurantees that
     it is closed before exiting.
@@ -76,7 +76,7 @@ class File(t.IO, abc.ABC):
             errors: OpenErrors = Default(None),
             newline: OpenNewline = Default(None),
             closefd: bool = Default(True),
-            opener: t.Optional[t.Callable] = Default(None),
+            opener: t.Optional[t.Callable[..., t.Any]] = Default(None),
         ):
             self.mode = mode
             self.buffering = buffering
@@ -124,7 +124,7 @@ class Stream(t.Generic[T]):
         self.origin = origin
 
     @classmethod
-    def __convert__(cls, value, info: TypeInfo):
+    def __convert__(cls, value: str, info: TypeInfo[t.Any]) -> "Stream[T]":
         arg: Stream.Args = TypeArg.ensure(
             t.cast(t.Optional[Stream.Args], info.type_arg), cls.__name__
         )
@@ -141,7 +141,7 @@ class Stream(t.Generic[T]):
     class Args(TypeArg):
         __slots__ = ("stream", "char")
 
-        def __init__(self, stream: t.IO = sys.stdin, char: str = Default("-")):
+        def __init__(self, stream: t.IO[str] = sys.stdin, char: str = Default("-")):
             self.stream = stream
             self.char = char
 

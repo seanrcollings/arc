@@ -60,7 +60,7 @@ class Url(str):
         "fragment",
     )
 
-    def __new__(cls, url: str, **_kwargs):
+    def __new__(cls, url: str, **_kwargs: t.Any) -> Url:
         return super().__new__(cls, url)
 
     def __init__(
@@ -92,7 +92,7 @@ class Url(str):
         self.fragment = fragment
 
     @classmethod
-    def parse(cls, url: str):
+    def parse(cls, url: str) -> Url:
 
         url = url.strip()
 
@@ -115,7 +115,7 @@ class Url(str):
         return parsed
 
     @classmethod
-    def __convert__(cls, value) -> Url:
+    def __convert__(cls, value: str) -> Url:
         try:
             return cls.parse(value)
         except ValueError as e:

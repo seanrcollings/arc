@@ -32,7 +32,7 @@ class Round:
     def __init__(self, ndigits: int) -> None:
         self.ndigits = ndigits
 
-    def __call__(self, value: t.SupportsRound) -> t.SupportsRound:
+    def __call__(self, value: t.SupportsRound[t.Any]) -> t.SupportsRound[t.Any]:
         return round(value, self.ndigits)
 
 
@@ -73,7 +73,7 @@ class Truncate:
 
 
 class PadProtocol(t.Protocol):
-    def __add__(self, other) -> PadProtocol:
+    def __add__(self, other: t.Any) -> PadProtocol:
         ...
 
     def __len__(self) -> int:
@@ -114,7 +114,7 @@ class Pad:
         self.padding = padding
         self.side = side
 
-    def __call__(self, value: PadProtocol):
+    def __call__(self, value: PadProtocol) -> PadProtocol:
         if self.side == "right":
             while len(value) < self.length:
                 value += self.padding

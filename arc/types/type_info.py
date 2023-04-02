@@ -17,7 +17,7 @@ class TypeInfo(t.Generic[T]):
         self,
         original_type: at.Annotation,
         origin: type[T],
-        sub_types: tuple[TypeInfo, ...],
+        sub_types: tuple[TypeInfo[t.Any], ...],
         annotations: tuple[t.Any, ...],
         name: str | None = None,
     ):
@@ -71,11 +71,11 @@ class TypeInfo(t.Generic[T]):
         return self.origin in COLLECTION_TYPES
 
     @classmethod
-    def analyze(cls, annotation) -> TypeInfo:
+    def analyze(cls, annotation: at.Annotation) -> TypeInfo[T]:
         """Create a `TypeInfo` object based on a type annotation"""
         original_type = annotation
         origin = t.get_origin(annotation) or annotation
-        annotated_args: tuple = tuple()
+        annotated_args: tuple[t.Any, ...] = tuple()
 
         if origin is t.Annotated:
             args = t.get_args(annotation)
@@ -87,7 +87,7 @@ class TypeInfo(t.Generic[T]):
 
         return cls(
             original_type=original_type,
-            origin=origin,
+            origin=origin,  # type: ignore
             sub_types=sub_types,
             annotations=annotated_args,
         )
