@@ -155,7 +155,7 @@ def configure(
 
         debug (bool, optional): enable / disable arc debug logs.
 
-        color (ColorConfig, optional): set the color configuration used throughout the application
+        present (PresentConfig, optional): set the presentation configuration for arc
 
         suggest (SuggestConfig, optional): configure the settings for suggesting replacements when
             arc does not recognize a command / parameter

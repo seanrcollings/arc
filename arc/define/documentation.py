@@ -41,9 +41,7 @@ class Documentation:
         self.command = command
         self.config = config
         self._description = description
-        self._docstring = textwrap.dedent(
-            self.command.callback.__doc__ or self._description or ""
-        )
+        self.docstring = self._get_docstring()
 
     def help(self) -> str:
         formatter = HelpFormatter(self, self.config)
@@ -79,9 +77,9 @@ class Documentation:
         desc = ""
         rest = ""
 
-        for idx, char in enumerate(self._docstring):
+        for idx, char in enumerate(self.docstring):
             if char == "#":
-                rest = self._docstring[idx:]
+                rest = self.docstring[idx:]
                 break
 
             desc += char
@@ -102,3 +100,12 @@ class Documentation:
             }
             for param in command.cli_params
         ]
+
+    def _get_docstring(self) -> str:
+        doc = self.command.callback.__doc__ or self._description or ""
+        doc = doc.lstrip()
+        # we add some spaces to the beginning of the docstring so that
+        # textwrap.dedent removes all of the lines indentation
+        doc = " " * 10 + doc
+        doc = textwrap.dedent(doc)
+        return doc

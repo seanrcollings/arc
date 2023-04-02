@@ -22,7 +22,7 @@ In additon to `value`, you can also add the following arguments to the signature
 
 ### Context Managers
 
-Any type that is considered a context manager (by `#!python contextlib.contextmanager()`) will be opened before the command callback executes, and then closed after the command executes
+Any type that is considered a context manager will be opened before the command callback executes, and then closed after the command executes
 
 ```py title="examples/context_manager.py"
 --8<-- "examples/context_manager.py"
@@ -66,5 +66,3 @@ array(['x', 'y', 'z'], dtype='<U1')
 All other principles about custom types hold for alias types.
 
 Note that this is a simplified example, a more complete implementation would support the use of generics using `#!python numpy.typing`
-## Generic Types
-TODO
