@@ -161,7 +161,7 @@ class Table:
 
         resolved = {}
         for col, value in itertools.zip_longest(self.__columns, row, fillvalue=""):
-            resolved[col["name"]] = value
+            resolved[col["name"]] = value  # type: ignore
 
         self.__rows.append(resolved)
 

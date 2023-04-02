@@ -59,9 +59,7 @@ class Command(ParamMixin, MiddlewareContainer):
         self.name = name or callback.__name__
         self.parent = parent
         self.subcommands = AliasDict()
-        self.doc = Documentation(
-            self, self.config.default_section_name, self.config.color, description
-        )
+        self.doc = Documentation(self, self.config.present, description)
         self.explicit_name = explicit_name
         self._autoload = autoload
         self.data = kwargs

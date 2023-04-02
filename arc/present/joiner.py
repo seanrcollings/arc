@@ -28,6 +28,10 @@ class Join:
         return Join.together(values, ", ", *args, **kwargs)
 
     @staticmethod
+    def with_newline(values: t.Iterable, *args, **kwargs) -> str:
+        return Join.together(values, "\n", *args, **kwargs)
+
+    @staticmethod
     def in_groups(
         first: t.Iterable,
         second: t.Iterable,

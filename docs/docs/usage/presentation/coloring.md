@@ -47,3 +47,21 @@ arc.print(f"{fg.RED}{bg.GREY}{fx.UNDERLINE}This is a colored string{fx.CLEAR})
 ![Output](../../img/colorized.png)
 
 
+## Configured arc Colors
+*arc* also colors some of it's own output using the colors defined in `#!python config.present.color`. You may configure these colors to your liking by setting them in your `#!python arc.configure()` call. The following colors are  configurable with the builtin in `ColorConfig` class:
+
+```py
+
+import arc
+
+arc.configure(
+    present=arc.PresentConfig(
+        color=arc.ColorConfig(
+            accent=arc.fg.GREEN,
+            error=arc.fg.RED,
+            highlight=arc.fg.WHITE,
+        )
+    )
+)
+
+```

@@ -1,5 +1,4 @@
 from __future__ import annotations
-from collections import UserList
 
 import types
 import typing as t
@@ -23,7 +22,7 @@ class TypeInfo(t.Generic[T]):
         name: str | None = None,
     ):
         self.original_type = original_type
-        self.origin = origin
+        self.origin: t.Any = origin
         self.sub_types = sub_types
         self.annotations = annotations
         self.name = (

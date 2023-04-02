@@ -132,8 +132,8 @@ class SemVer:
         elif not pr2:
             return -1
 
-        pr1 = tuple(int(p) if p.isnumeric() else p for p in pr1)  # type: ignore
-        pr2 = tuple(int(p) if p.isnumeric() else p for p in pr2)  # type: ignore
+        pr1 = tuple(int(p) if p.isnumeric() else p for p in pr1)
+        pr2 = tuple(int(p) if p.isnumeric() else p for p in pr2)
 
         for part1, part2 in zip(pr1, pr2):
             comp = self._cmp_prerelease_tag(part1, part2)

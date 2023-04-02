@@ -8,3 +8,4 @@ from .joiner import Join
 from .out import err, info, print, usage, log
 from .pager import pager
 from .table import Table
+from .markdown import markdown

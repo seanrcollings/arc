@@ -4,14 +4,56 @@ import typing as t
 from dataclasses import dataclass, field
 
 import arc.typing as at
+
 from arc.color import fg
 from arc.prompt import Prompt
 
 if t.TYPE_CHECKING:
     from arc.types.semver import SemVer
+    from arc import Context
 
 
 _config: Config | None = None
+
+
+@dataclass
+class ColorConfig:
+    """Configures Colors for the application"""
+
+    error: str = fg.RED
+    highlight: str = fg.YELLOW
+    accent: str = fg.ARC_BLUE
+    subtle: str = fg.GREY
+
+
+# MarkdownFormat = t.Union[str, t.Callable[[str, "PresentConfig"], str]]
+
+
+# @dataclass
+# class MarkdownConfig:
+#     """Configures Markdown presentation for the application"""
+
+#     header: MarkdownFormat = nodes.Heading.default_format
+#     link: MarkdownFormat = nodes.Link.default_format
+
+#     def apply(self, fmt: MarkdownFormat, value: str, config: PresentConfig) -> str:
+#         if isinstance(fmt, str):
+#             return fmt.format(value)
+#         return fmt(value, config)
+
+
+@dataclass
+class PresentConfig:
+    """Configures the presentation of the application"""
+
+    indent: str = " " * 4
+    """The indent to use for each level of indentation"""
+    width: int = 80
+    """The default width to present content at. This is used
+    for wrapping text. Will be ignored if the terminal width is smaller"""
+    color: ColorConfig = field(default_factory=ColorConfig)
+    """The color configuration for the application"""
+    # md: MarkdownConfig = field(default_factory=MarkdownConfig)
 
 
 @dataclass
@@ -31,22 +73,11 @@ class SuggestionConfig:
 
 
 @dataclass
-class ColorConfig:
-    """Configures Colors for the application"""
-
-    error: str = fg.RED
-    highlight: str = fg.YELLOW
-    accent: str = fg.ARC_BLUE
-    subtle: str = fg.GREY
-
-
-@dataclass
 class Config:
     """arc's Config object. A single global instance
     of this class is created, then used where it is needed"""
 
     environment: at.Env = "production"
-    default_section_name: str = "description"
     transform_snake_case: bool = True
     env_prefix: str = ""
     version: str | SemVer | None = None
@@ -56,8 +87,8 @@ class Config:
     debug: bool = False
     prompt: Prompt = field(default_factory=Prompt)
     suggest: SuggestionConfig = field(default_factory=SuggestionConfig)
-    color: ColorConfig = field(default_factory=ColorConfig)
     links: LinksConfig = field(default_factory=LinksConfig)
+    present: PresentConfig = field(default_factory=PresentConfig)
 
     @classmethod
     def load(cls) -> "Config":
@@ -74,12 +105,15 @@ class Config:
             if value is not None:
                 setattr(self, key, value)
 
+    @classmethod
+    def __depends__(cls, ctx: Context) -> Config:
+        return ctx.config
+
 
 def configure(
     *,
     version: str | None = None,
     environment: at.Env | None = None,
-    default_section_name: str | None = None,
     transform_snake_case: bool | None = None,
     suggest: SuggestionConfig | None = None,
     env_prefix: str | None = None,
@@ -88,8 +122,8 @@ def configure(
     allow_unrecognized_args: bool | None = None,
     autoload_overwrite: bool | None = None,
     debug: bool | None = None,
-    color: ColorConfig | None = None,
     links: LinksConfig | None = None,
+    present: PresentConfig | None = None,
 ):
     """Function for updating global `arc` configuration
 
@@ -99,9 +133,6 @@ def configure(
         environment (str, optional): The current environment, either `production` or `development`.
             Defaults to `production`. When in `development` mode, the arc logger is set
             to level `logging.INFO`
-
-        default_section_name (str, optional): The name to use by default if the first section in a
-            command docstring is does not have a header. Defaults to `description`.
 
         transform_snake_case (bool, optional):  Transform `snake_case` to `kebab-case`.
             Defaults to `True`.
@@ -124,7 +155,7 @@ def configure(
 
         debug (bool, optional): enable / disable arc debug logs.
 
-        color (ColorConfig, optional): set the color configuration used throughout the application
+        present (PresentConfig, optional): set the presentation configuration for arc
 
         suggest (SuggestConfig, optional): configure the settings for suggesting replacements when
             arc does not recognize a command / parameter
@@ -134,7 +165,6 @@ def configure(
     data: dict = {
         "version": version,
         "environment": environment,
-        "default_section_name": default_section_name,
         "transform_snake_case": transform_snake_case,
         "suggestions": suggest,
         "env_prefix": env_prefix,
@@ -143,8 +173,8 @@ def configure(
         "allow_unrecognized_args": allow_unrecognized_args,
         "autoload_overwrite": autoload_overwrite,
         "debug": debug,
-        "color": color,
         "links": links,
+        "present": present,
     }
 
     config = Config.load()

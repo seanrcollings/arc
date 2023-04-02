@@ -2,10 +2,6 @@ import arc
 from arc.present import Ansi
 
 
-def get_lines(string: str, from_line: int, to_line: int):
-    return "\n".join(string.split("\n")[from_line:to_line])
-
-
 def test_basic():
     @arc.command
     def command():
@@ -39,46 +35,6 @@ DESCRIPTION
 
 OPTIONS
     --help (-h)  Displays this help message
-"""
-    )
-
-
-def test_advanced_parsing():
-    @arc.command
-    def command():
-        """Here's a description
-
-        Here's another description paragraph
-
-        # Section
-        Here's an additional section
-
-        \b
-        - 1
-        - 2
-        - 3
-        """
-
-    assert (
-        Ansi.clean(command.doc.help())
-        == """\
-USAGE
-    command [-h]
-
-DESCRIPTION
-    Here's a description
-
-    Here's another description paragraph
-
-OPTIONS
-    --help (-h)  Displays this help message
-
-SECTION
-    Here's an additional section
-
-    - 1
-    - 2
-    - 3
 """
     )
 
@@ -202,35 +158,13 @@ def test_argument_desc_in_definition():
     assert Ansi.clean(command.doc.help()) == ARGS_STR
 
 
-def test_argument_desc_in_docstring():
-    @arc.command
-    def command(
-        pos_req: int,
-        pos_opt: int = 1,
-        *,
-        key_req: int,
-        key_opt: int = 1,
-        flag: bool,
-    ):
-        """
-        # Arguments
-        pos_req: positional required
-        pos_opt: positional optional
-        key_req: key required
-        key_opt: key optional
-        flag: flag
-        """
-
-    assert Ansi.clean(command.doc.help()) == ARGS_STR
-
-
 def test_collections():
     @arc.command
     def command(
         val: list[int],
         val2: tuple[int, int],
         val3: list[int] = [],
-        val4: tuple[int, int] = tuple(),  # type: ignore
+        val4: tuple[int, int] = (1, 2),
     ):
         assert Ansi.clean(command.doc.help) == (
             """\
@@ -247,3 +181,23 @@ OPTIONS
     --help (-h)  Displays this help message
 """
         )
+
+
+def test_default():
+    @arc.command
+    def command(val: int = 1):
+        ...
+
+    assert (
+        Ansi.clean(command.doc.help())
+        == """\
+USAGE
+    command [-h] [--] [val]
+
+ARGUMENTS
+    val          (default: 1)
+
+OPTIONS
+    --help (-h)  Displays this help message
+"""
+    )

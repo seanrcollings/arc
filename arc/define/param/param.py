@@ -278,7 +278,7 @@ class InjectedParam(Param):
     callback: t.Callable
 
     def get_injected_value(self, ctx: t.Any) -> t.Any:
-        value = api.dispatch_args(self.callback, ctx) if self.callback else None
+        value = api.dispatch_args(self.callback, ctx)
         return value
 
     @property

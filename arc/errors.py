@@ -82,12 +82,12 @@ class InvalidParamValueError(UsageError, ArgumentError):
         self.detail = detail
 
     def fmt(self, ctx: Context) -> str:
-        name = colorize(self.param.cli_name, ctx.config.color.highlight)
+        name = colorize(self.param.cli_name, ctx.config.present.color.highlight)
         string = f"{self.usage()}invalid value for {name}: {self.message}"
 
         if self.detail:
             string += " "
-            string += colorize(f"({self.detail})", ctx.config.color.subtle)
+            string += colorize(f"({self.detail})", ctx.config.present.color.subtle)
 
         return string
 
@@ -99,7 +99,8 @@ class MissingArgValueError(UsageError, ArgumentError):
 
     def fmt(self, ctx: Context) -> str:
         params = Join.with_comma(
-            (param.cli_name for param in self.params), style=ctx.config.color.highlight
+            (param.cli_name for param in self.params),
+            style=ctx.config.present.color.highlight,
         )
         return f"{self.usage()}The following arguments are required: {params}"
 
@@ -110,7 +111,7 @@ class MissingOptionValueError(UsageError, ArgumentError):
         self.param = param
 
     def fmt(self, ctx: Context) -> str:
-        name = colorize(self.param.cli_name, ctx.config.color.highlight)
+        name = colorize(self.param.cli_name, ctx.config.present.color.highlight)
         return f"{self.usage()}option {name} expected 1 argument"
 
 
@@ -121,7 +122,7 @@ class UnrecognizedArgError(UsageError, ArgumentError):
 
     def fmt(self, ctx: Context) -> str:
         message = self.usage()
-        message += f"Unrecognized arguments: {Join.with_space(self.unrecognized, style=ctx.config.color.highlight)}"
+        message += f"Unrecognized arguments: {Join.with_space(self.unrecognized, style=ctx.config.present.color.highlight)}"
         message += self.__get_suggestions(self.unrecognized, ctx.config, ctx.command)
         return message
 
@@ -159,8 +160,8 @@ class UnrecognizedArgError(UsageError, ArgumentError):
         for param_name, param_sug in suggestions.items():
             if param_sug:
                 message += (
-                    f"\nUnrecognized {kind} {colorize(param_name, config.color.highlight)}, "
-                    f"did you mean: {Join.with_or(param_sug, style=config.color.accent)}"
+                    f"\nUnrecognized {kind} {colorize(param_name, config.present.color.highlight)}, "
+                    f"did you mean: {Join.with_or(param_sug, style=config.present.color.accent)}"
                 )
 
         return message
@@ -181,7 +182,7 @@ class InternalError(ArcError):
 
     def fmt(self, ctx: Context) -> str:
         message = (
-            f"{colorize('ERROR:', ctx.config.color.error, fx.BOLD)} {str(self)}\n\n"
+            f"{colorize('ERROR:', ctx.config.present.color.error, fx.BOLD)} {str(self)}\n\n"
             "This is probably a bug, please report it to the maintainer"
         )
 

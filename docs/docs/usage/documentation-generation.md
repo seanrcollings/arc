@@ -8,44 +8,48 @@ Every *arc* application / command comes with a builtin `--help` flag.
 --8<-- "examples/outputs/hello_help"
 ```
 
-## Docstrings as documentation
-As seen above, *arc* uses function docstrings as a source for documentation. Arc understands the following format for docstrings:
-```py
-def func():
-    """[description]
-
-    # <section-name>
-    section body
-
-    with paragraphs!
-
-    # <second-section-name>
-    ...
-    """
-```
-
-For example, given the following:
-```py title="docstring_example.py"
---8<-- "examples/docstring_example.py"
-```
-arc will format it as follows:
-```console
---8<-- "examples/outputs/docstring_example"
-```
 
 ## Paramater Documentation
-Command parameters may be documented in two ways.
+Command parameters are documented using the `desc` argument of `Argument` / `Option` / `Flag`.
 
-1. Using the `desc` argument of `Argument` / `Option` / `Flag`. This option takes precedence if both are present.
-2. Adding an `# Arguments` section to the docstring with the correct formatting.
-
-For example these two commands:
+Example:
 ```py title="arguments_documentation.py"
 --8<-- "examples/arguments_documentation.py"
 ```
-Will produce near-identical output:
+Will produce the following help output:
 ```console
 --8<-- "examples/outputs/arguments_documentation"
 ```
 
-Which to use is really up to personal preference, however I prefer to place documentation in the docstring because I think it cleans up the function definition.
+## Formatting
+*arc* supports a markdown-like syntax for formatting help output.
+
+
+
+### Example
+```py title="examples/formatting_help.py"
+--8<-- "examples/formatting_help.py"
+```
+
+![Markdown Example](../img/markdown.png)
+
+### Inline Formatting
+The above example outlines the block-level formatting (paragraphs, lists, etc). Inline formatting is used to format individual words or phrases. The following syntax is supported:
+
+| Syntax                     | Description                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------ |
+| `**bold**`                 | Bolds Text                                                                           |
+| `*italic*`                 | Italicizes Text                                                                      |
+| `~~strikethrough~~`        | Strikethrough Text                                                                   |
+| `__underline__`            | Underlines Text                                                                      |
+| `` `code` ``               | Inline Code Block. Useful for when you want to indicate how to run another command   |
+| `[www.example.com]`        | Marks text as a link. Colors it with `config.present.color.accent` and underlines it |
+| `[[fg.RED]]red[[/fg.RED]]` | Colors Text. See [Colors](#colors) for more information                              |
+
+
+### Colors
+You are able to color text using the `[[fg.COLOR]]text[[/fg.COLOR]]` syntax. The following objects are available for use:
+
+- `fg` - [Foreground Colors](../reference/present/ansi.md#arc.present.ansi.fg)
+- `bg` - [Background Colors](../reference/present/ansi.md#arc.present.ansi.bg)
+- `color` - [Configured Colors](./presentation/coloring.md#configured-arc-colors)

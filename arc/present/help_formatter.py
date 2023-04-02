@@ -6,36 +6,35 @@ from itertools import repeat
 
 from arc import constants
 from arc.color import colorize, fx
-from arc.config import ColorConfig
+from arc.config import PresentConfig
 from arc.present.ansi import Ansi
 from arc.present.formatters import TextFormatter
 from arc.present.joiner import Join
+from arc.present.markdown import MarkdownParser
 
 if t.TYPE_CHECKING:
     from arc.define.command import Command
     from arc.define.documentation import Documentation, ParamDoc
 
 
-def paragraphize(string: str) -> list[str]:
-    return [textwrap.dedent(para).strip("\n") for para in string.split("\n\n")]
-
-
+# TODO: I can probably get rid of a lot of this, since most
+# of is handled by the markdown parser now.
 class HelpFormatter(TextFormatter):
     _longest_intro: int = 0
 
     def __init__(
         self,
         doc: Documentation,
-        default_section_name: str,
-        color: ColorConfig,
+        config: PresentConfig,
         *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.doc = doc
         self.command = self.doc.command
-        self.default_section_name = default_section_name
-        self.color = color
+        self.config = config
+        self.color = config.color
+        self.parser = MarkdownParser()
 
     @property
     def argument_params(self):
@@ -45,13 +44,23 @@ class HelpFormatter(TextFormatter):
     def key_params(self):
         return [param for param in self.doc.params if param["kind"] != "argument"]
 
+    def format_help(self):
+        self.write_help()
+        res = self.parser.parse(self.value)
+        return res.fmt(self.config)
+
+    def format_usage(self):
+        self.write_usage()
+        res = self.parser.parse(self.value)
+        return res.fmt(self.config)
+
     def write_help(self):
         doc = self.doc
         self.write_usage()
 
         if doc.description:
-            with self.section(self.default_section_name.upper()):
-                self.write_text(paragraphize(doc.description))
+            with self.section(f"# DESCRIPTION"):
+                self.write(doc.description)
 
         args = self.get_params(self.argument_params)
         options = self.get_params(self.key_params)
@@ -62,26 +71,19 @@ class HelpFormatter(TextFormatter):
         longest = max(map(Ansi.len, (v[0] for v in args + options + subcommands))) + 2
 
         if args:
-            self.write_section("ARGUMENTS", args, longest)
+            self.write_section("# ARGUMENTS", args, longest)
         if options:
-            self.write_section("OPTIONS", options, longest)
+            self.write_section("# OPTIONS", options, longest)
         if subcommands:
-            self.write_section("SUBCOMMANDS", subcommands, longest)
+            self.write_section("# SUBCOMMANDS", subcommands, longest)
 
-        for section, body in doc.docstring.items():
-            if section in {"arguments", self.default_section_name}:
-                continue
-
-            with self.section(section):
-                self.write_text(paragraphize(body))
-
-    def write_heading(self, heading: str):
-        super().write_heading(colorize(heading.upper(), fx.BOLD))
+        self.write(doc.sections)
 
     def write_usage(self):
         command = self.command
 
-        with self.section("USAGE"):
+        with self.section("# USAGE"):
+            self.write("```\n")
             if command.is_root and command.subcommands:
                 params_str = self.usage_params(self.key_params, self.argument_params)
                 self.write_text(
@@ -139,6 +141,7 @@ class HelpFormatter(TextFormatter):
                             remove_falsey=True,
                         )
                     )
+            self.write("\n```")
 
     def usage_params(self, key_params: list[ParamDoc], arg_params: list[ParamDoc]):
         formatted = []
@@ -216,9 +219,10 @@ class HelpFormatter(TextFormatter):
                 else:
                     default = param["default"]
 
-                desc += colorize(f" (default: {default})", self.color.subtle)
+                if desc:
+                    desc += " "
 
-            desc = desc.strip("\n")
+                desc += f"[[color.subtle]](default: {default})[[/color.subtle]]"
 
             data.append((name, desc))
 
@@ -239,8 +243,11 @@ class HelpFormatter(TextFormatter):
 
     def write_section(self, section: str, data: list[tuple[str, str]], longest: int):
         with self.section(section):
+            self.write("```\n")
             for name, desc in data:
                 diff = longest - Ansi.len(name)
+
+                desc = self.parser.parse_inline(desc.strip("\n")).fmt(self.config)
 
                 self.write(
                     self.wrap_text(
@@ -251,6 +258,7 @@ class HelpFormatter(TextFormatter):
                     )
                 )
                 self.write_paragraph()
+            self.write("```\n")
 
         # Quick fix for added empty line from self.section()
         self._buffer.pop()
