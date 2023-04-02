@@ -160,7 +160,7 @@ class Colored(InlineNode):
     def fmt(self, config: PresentConfig) -> str:
         return colorize(self.text.fmt(config), self.color(config))
 
-    def color(self, config: PresentConfig):
+    def color(self, config: PresentConfig) -> str:
         return eval(
             f"{self.color_name}",
             {"fg": color.fg, "bg": color.bg, "color": config.color},

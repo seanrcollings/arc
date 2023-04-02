@@ -6,7 +6,7 @@ from arc import color
 class Join:
     @staticmethod
     def together(
-        values: t.Iterable,
+        values: t.Iterable[t.Any],
         string: str = "",
         remove_falsey: bool = False,
         style: str = None,
@@ -20,25 +20,25 @@ class Join:
         return string.join(str(v) for v in values)
 
     @staticmethod
-    def with_space(values: t.Iterable, *args, **kwargs) -> str:
+    def with_space(values: t.Iterable[t.Any], *args: t.Any, **kwargs: t.Any) -> str:
         return Join.together(values, " ", *args, **kwargs)
 
     @staticmethod
-    def with_comma(values: t.Iterable, *args, **kwargs) -> str:
+    def with_comma(values: t.Iterable[t.Any], *args: t.Any, **kwargs: t.Any) -> str:
         return Join.together(values, ", ", *args, **kwargs)
 
     @staticmethod
-    def with_newline(values: t.Iterable, *args, **kwargs) -> str:
+    def with_newline(values: t.Iterable[t.Any], *args: t.Any, **kwargs: t.Any) -> str:
         return Join.together(values, "\n", *args, **kwargs)
 
     @staticmethod
     def in_groups(
-        first: t.Iterable,
-        second: t.Iterable,
+        first: t.Iterable[t.Any],
+        second: t.Iterable[t.Any],
         string: str,
         between: str,
-        *args,
-        **kwargs
+        *args: t.Any,
+        **kwargs: t.Any,
     ) -> str:
         """Joins two groups objects with `string`, then joins the two groups together with `between`"""
         return Join.together(
@@ -51,7 +51,11 @@ class Join:
 
     @staticmethod
     def with_last(
-        values: t.Sequence, string: str, last_string: str, *args, **kwargs
+        values: t.Sequence[t.Any],
+        string: str,
+        last_string: str,
+        *args: t.Any,
+        **kwargs: t.Any,
     ) -> str:
         """Joins values together with an additional `last_string` to format how
         the final value is joined to the rest of the list
@@ -72,7 +76,7 @@ class Join:
         )
 
     @staticmethod
-    def with_and(values: t.Sequence) -> str:
+    def with_and(values: t.Sequence[t.Any]) -> str:
         """Joins a Sequence of items with commas
         and an "and" at the end
 
@@ -85,7 +89,7 @@ class Join:
         return Join.with_last(values, ", ", " and ")
 
     @staticmethod
-    def with_or(values: t.Sequence, *args, **kwargs) -> str:
+    def with_or(values: t.Sequence[t.Any], *args: t.Any, **kwargs: t.Any) -> str:
         """Joins a Sequence of items with commas
         and an "or" at the end
 

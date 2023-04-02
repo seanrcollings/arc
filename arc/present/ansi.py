@@ -10,11 +10,11 @@ class Ansi:
     def __init__(self, content: t.Any):
         self.__content = content
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"\033[{self.__content}"
 
     @classmethod
-    def clean(cls, string: str):
+    def clean(cls, string: str) -> str:
         """Gets rid of escape sequences"""
         return cls.__ansi_escape().sub("", string)
 
@@ -36,7 +36,7 @@ class Ansi:
 
     @classmethod
     @functools.cache
-    def __ansi_escape(self):
+    def __ansi_escape(self) -> re.Pattern[str]:
         return re.compile(r"(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]")
 
 
@@ -79,13 +79,13 @@ class fg:
     """The blue used in arc branding"""
 
     @staticmethod
-    def rgb(red: int = 0, green: int = 0, blue: int = 0):
+    def rgb(red: int = 0, green: int = 0, blue: int = 0) -> str:
         """Returns the **foreground** escape
         sequence for the provided rgb values"""
         return _rgb(38, red, green, blue)
 
     @staticmethod
-    def hex(hex_code: str | int):
+    def hex(hex_code: str | int) -> str:
         """Returns the **foreground** escape
         sequence for the provided hex values"""
         return _rgb(38, *_hex_to_rgb(hex_code))
@@ -130,13 +130,13 @@ class bg:
     """The blue used in arc branding"""
 
     @staticmethod
-    def rgb(red: int = 0, green: int = 0, blue: int = 0):
+    def rgb(red: int = 0, green: int = 0, blue: int = 0) -> str:
         """Returns the **background** escape
         sequence for the provided rgb values"""
         return _rgb(48, red, green, blue)
 
     @staticmethod
-    def hex(hex_code: str | int):
+    def hex(hex_code: str | int) -> str:
         """Returns the **background** escape
         sequence for the provided hex value"""
         return _rgb(48, *_hex_to_rgb(hex_code))
@@ -157,8 +157,8 @@ def _rgb(val: int, red: int = 0, green: int = 0, blue: int = 0) -> str:
     return f"\033[{val};2;{red};{green};{blue}m"
 
 
-def _hex_to_rgb(hex_rep: str | int):
-    def pull_apart(hex_string: str):
+def _hex_to_rgb(hex_rep: str | int) -> tuple[int, int, int]:
+    def pull_apart(hex_string: str) -> tuple[int, int, int]:
         return (
             int(hex_string[0:2], 16),
             int(hex_string[2:4], 16),

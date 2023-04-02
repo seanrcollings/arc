@@ -54,7 +54,7 @@ class Box:
         self.__padding = self.__get_padding(padding)
         self.__color = color
 
-    def __str__(self):
+    def __str__(self) -> str:
         cleaned = list(
             self.pad_line(Ansi.clean(string)) for string in self.string.split("\n")
         )
@@ -80,22 +80,22 @@ class Box:
         return f"{top}\n{content}{bottom}"
 
     @property
-    def border(self):
+    def border(self) -> Border:
         """Dictionary containting the border stylings"""
         return self.__border
 
     @border.setter
-    def border(self, value: str):
+    def border(self, value: str) -> None:
         self.__border = borders[value]
 
     # Utils
 
-    def horizontal_border(self, width: int, side: str):
+    def horizontal_border(self, width: int, side: str) -> str:
         return Join.together(
             (
-                self.border["corner"][f"{side}_left"],
+                self.border["corner"][f"{side}_left"],  # type: ignore
                 self.border["horizontal"] * (width - 2),
-                self.border["corner"][f"{side}_right"],
+                self.border["corner"][f"{side}_right"],  # type: ignore
             ),
             style=self.__color,
         )
@@ -105,7 +105,7 @@ class Box:
         line: str,
         width: int,
         cleaned: Optional[str] = None,
-    ):
+    ) -> str:
         cleaned = cleaned or line
         formatted = (
             f"{self.__color}{self.border['vertical']}{fx.CLEAR}"
@@ -123,7 +123,7 @@ class Box:
         formatted = regex.sub(self.pad_line(line), formatted)
         return formatted
 
-    def pad_line(self, line: str):
+    def pad_line(self, line: str) -> str:
         return " " * self.__padding["left"] + line + " " * self.__padding["right"]
 
     @staticmethod

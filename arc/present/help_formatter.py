@@ -26,8 +26,8 @@ class HelpFormatter(TextFormatter):
         self,
         doc: Documentation,
         config: PresentConfig,
-        *args,
-        **kwargs,
+        *args: t.Any,
+        **kwargs: t.Any,
     ):
         super().__init__(*args, **kwargs)
         self.doc = doc
@@ -37,24 +37,24 @@ class HelpFormatter(TextFormatter):
         self.parser = MarkdownParser()
 
     @property
-    def argument_params(self):
+    def argument_params(self) -> list[ParamDoc]:
         return [param for param in self.doc.params if param["kind"] == "argument"]
 
     @property
-    def key_params(self):
+    def key_params(self) -> list[ParamDoc]:
         return [param for param in self.doc.params if param["kind"] != "argument"]
 
-    def format_help(self):
+    def format_help(self) -> str:
         self.write_help()
         res = self.parser.parse(self.value)
         return res.fmt(self.config)
 
-    def format_usage(self):
+    def format_usage(self) -> str:
         self.write_usage()
         res = self.parser.parse(self.value)
         return res.fmt(self.config)
 
-    def write_help(self):
+    def write_help(self) -> None:
         doc = self.doc
         self.write_usage()
 
@@ -79,7 +79,7 @@ class HelpFormatter(TextFormatter):
 
         self.write(doc.sections)
 
-    def write_usage(self):
+    def write_usage(self) -> None:
         command = self.command
 
         with self.section("# USAGE"):
@@ -143,7 +143,9 @@ class HelpFormatter(TextFormatter):
                     )
             self.write("\n```")
 
-    def usage_params(self, key_params: list[ParamDoc], arg_params: list[ParamDoc]):
+    def usage_params(
+        self, key_params: list[ParamDoc], arg_params: list[ParamDoc]
+    ) -> str:
         formatted = []
         for param in sorted(
             key_params,
@@ -161,7 +163,7 @@ class HelpFormatter(TextFormatter):
 
         return Join.with_space(formatted, remove_falsey=True)
 
-    def format_single_param(self, param: ParamDoc):
+    def format_single_param(self, param: ParamDoc) -> str:
         fmt = ""
         kind = param["kind"]
         name = param["name"]
@@ -198,7 +200,7 @@ class HelpFormatter(TextFormatter):
 
         return fmt
 
-    def get_params(self, params: t.Collection[ParamDoc]):
+    def get_params(self, params: t.Collection[ParamDoc]) -> list[tuple[str, str]]:
         data = []
         for param in params:
             name: str = ""
@@ -228,7 +230,9 @@ class HelpFormatter(TextFormatter):
 
         return data
 
-    def get_subcommands(self, parent: Command, commands: t.Collection[Command]):
+    def get_subcommands(
+        self, parent: Command, commands: t.Collection[Command]
+    ) -> list[tuple[str, str]]:
         data = []
         for command in commands:
             name = colorize(command.name, self.color.accent)
@@ -241,7 +245,9 @@ class HelpFormatter(TextFormatter):
 
         return data
 
-    def write_section(self, section: str, data: list[tuple[str, str]], longest: int):
+    def write_section(
+        self, section: str, data: list[tuple[str, str]], longest: int
+    ) -> None:
         with self.section(section):
             self.write("```\n")
             for name, desc in data:

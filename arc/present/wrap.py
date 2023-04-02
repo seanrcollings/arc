@@ -6,7 +6,7 @@ from arc.present.ansi import Ansi
 class TextWrapper(textwrap.TextWrapper):
     # Copy of the implementation from textwrap, but replaces len()
     # with Ansi.len() to support ANSI escape sequences.
-    def _wrap_chunks(self, chunks: list[str]):
+    def _wrap_chunks(self, chunks: list[str]) -> list[str]:
         """
         Wrap a sequence of text chunks and return a list of lines of
         length 'self.width' or less.  (If 'break_long_words' is false,
@@ -123,7 +123,7 @@ def fill(
     width: int,
     initial_indent: str = "",
     subsequent_indent: str = "",
-):
+) -> str:
     wrapper = TextWrapper(
         width=width,
         initial_indent=initial_indent,
