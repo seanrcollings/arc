@@ -154,8 +154,9 @@ class HelpFormatter(TextFormatter):
             if param["kind"] != "argument":
                 formatted.append(self.format_single_param(param))
 
-        if len(formatted) > 0 and len(arg_params) > 0:
-            formatted.append("[--]")
+        # TODO: get this working in the parser
+        # if len(formatted) > 0 and len(arg_params) > 0:
+        #     formatted.append("[--]")
 
         for param in arg_params:
             if param["kind"] == "argument":
