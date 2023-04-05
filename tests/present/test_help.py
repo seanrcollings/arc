@@ -129,8 +129,8 @@ SUBCOMMANDS
 
 ARGS_STR = """\
 USAGE
-    command [-h] [--key-opt KEY-OPT] [--flag] --key-req KEY-REQ [--] pos-req
-    [pos-opt]
+    command [-h] [--key-opt KEY-OPT] [--flag] --key-req KEY-REQ pos-req [pos-
+    opt]
 
 ARGUMENTS
     pos-req      positional required
@@ -169,7 +169,7 @@ def test_collections():
         assert Ansi.clean(command.doc.help) == (
             """\
 USAGE
-    cli.py [-h] [--] val [val...] val2 val2 [val3 [val3...]] [val4] [val4]
+    cli.py [-h] val [val...] val2 val2 [val3 [val3...]] [val4] [val4]
 
 ARGUMENTS
     val
@@ -192,7 +192,7 @@ def test_default():
         Ansi.clean(command.doc.help())
         == """\
 USAGE
-    command [-h] [--] [val]
+    command [-h] [val]
 
 ARGUMENTS
     val          (default: 1)

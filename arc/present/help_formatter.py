@@ -17,8 +17,6 @@ if t.TYPE_CHECKING:
     from arc.define.documentation import Documentation, ParamDoc
 
 
-# TODO: I can probably get rid of a lot of this, since most
-# of is handled by the markdown parser now.
 class HelpFormatter(TextFormatter):
     _longest_intro: int = 0
 
