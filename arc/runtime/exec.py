@@ -371,6 +371,13 @@ class OpenResourceMiddleware(MiddlewareBase):
         args: dict[str, t.Any] = ctx["arc.args"]
 
         for key, val in args.items():
+            if isinstance(val, constants.COLLECTION_TYPES):
+                cls = type(val)
+                args[key] = cls(
+                    item if not iscontextmanager(item) else stack.enter_context(item)
+                    for item in val
+                )
+
             if iscontextmanager(val):
                 args[key] = stack.enter_context(val)
 

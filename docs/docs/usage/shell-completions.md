@@ -49,6 +49,7 @@ The following types have builtin completion support:
 - `#!python  arc.types.ValidPath`
 - `#!python  arc.types.FilePath`
 - `#!python  arc.types.DirectoryPath`
+- `#!python  arc.types.File.*`
 
 ### Custom Types
 When implenting your own types, you can provide completions for them by implementing the `#!python __completions__()` method on your class.

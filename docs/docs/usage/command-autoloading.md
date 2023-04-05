@@ -79,7 +79,7 @@ $ python cli.py sub
 I've been autoladed!
 ```
 
-You can disable this with a [configuration option](../reference/config.md#configure)
+You can disable this with a [configuration option](../reference/config.md#arc.config.configure)
 ```py
 arc.configure(autoload_overwrite=False)
 ```

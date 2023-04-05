@@ -68,6 +68,4 @@ For example, you can set a version string for you application. This will add a `
 ```
 
 
-
-
-*View the [reference](reference/config.md#arc.config.configure) for details on all the configuration options*
+*View the [reference](../reference/config.md#arc.config.configure) for details on all the configuration options*
