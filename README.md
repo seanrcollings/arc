@@ -17,7 +17,7 @@ import arc
 @arc.command
 def hello(name: str):
     """My first arc program!"""
-    arc.arc.print(f"Hello {name}!")
+    arc.print(f"Hello {name}!")
 
 hello()
 ```
