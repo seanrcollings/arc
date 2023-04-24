@@ -12,6 +12,8 @@ if t.TYPE_CHECKING:
 
 
 class Autoload:
+    """Autoloads commands from files and adds them to the parent command"""
+
     def __init__(
         self, paths: t.Iterable[str], parent: Command, allow_overrite: bool = False
     ) -> None:

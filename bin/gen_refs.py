@@ -5,6 +5,7 @@ ROOT_DIR = Path(".")
 SRC_DIR = ROOT_DIR / "arc"
 DOCS_DIR = ROOT_DIR / "docs"
 REFERENCE_DIR = DOCS_DIR / "docs" / "reference"
+EXCLUDE = ["api", "constants", "suggest"]
 
 
 def init():
@@ -23,6 +24,9 @@ def main():
             continue
 
         module = ".".join([*path.parts[1:-1], path.stem])
+        if module in EXCLUDE:
+            continue
+
         ref_path = REFERENCE_DIR / Path(*path.parts[1:-1], f"{path.stem}.md")
         ref_path.parent.mkdir(parents=True, exist_ok=True)
         print(module, "->", ref_path)
