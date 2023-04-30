@@ -1,7 +1,6 @@
 from __future__ import annotations
 import re
 import sys
-import termios
 import tty
 import typing as t
 from contextlib import contextmanager
@@ -24,9 +23,15 @@ class RawTerminal:
     __raw: bool = False
     __old_settings: list[t.Any]
 
+    def __init__(self) -> None:
+        # Moved into here to support pyodide
+        import termios
+
+        self.termios = termios
+
     def __enter__(self) -> RawTerminal:
         fd = sys.stdin.fileno()
-        self.__old_settings = termios.tcgetattr(fd)
+        self.__old_settings = self.termios.tcgetattr(fd)
         tty.setraw(sys.stdin.fileno())
         self.__raw = True
         return self
@@ -34,7 +39,7 @@ class RawTerminal:
     def __exit__(self, *args: t.Any) -> None:
         fd = sys.stdin.fileno()
         self.__raw = False
-        termios.tcsetattr(fd, termios.TCSADRAIN, self.__old_settings)
+        self.termios.tcsetattr(fd, self.termios.TCSADRAIN, self.__old_settings)
 
     def getch(self) -> str:
         assert self.__raw, "Cannot getch() when not in raw mode"
