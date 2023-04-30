@@ -50,7 +50,7 @@ class Console:
         codes when the output is not a TTY"""
         file = file or self.default_print_stream
 
-        if file and not file.isatty():
+        if (file and not file.isatty()) or not self.color_output:
             values = tuple(Ansi.clean(str(v)) for v in values)
 
         if self._indent_count and values:
