@@ -10,5 +10,5 @@ from .state import State
 from .strings import *
 from .type_info import TypeInfo
 
-if sys.platform != "win32":
+if sys.platform not in ("win32", "cygwin", "emscripten"):
     from .users import *
