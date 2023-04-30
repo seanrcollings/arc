@@ -1,7 +1,4 @@
-"""
-.. include:: ../../wiki/Data-Types.md
-"""
-
+import sys
 from .aliases import Alias
 from .convert import convert
 from .file import File, Stdin, Stream
@@ -12,4 +9,6 @@ from .semver import SemVer
 from .state import State
 from .strings import *
 from .type_info import TypeInfo
-from .users import *
+
+if sys.platform != "win32":
+    from .users import *
