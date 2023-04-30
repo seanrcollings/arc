@@ -1,7 +1,6 @@
 from __future__ import annotations
 import re
 import sys
-import tty
 import typing as t
 from contextlib import contextmanager
 
@@ -26,13 +25,15 @@ class RawTerminal:
     def __init__(self) -> None:
         # Moved into here to support pyodide
         import termios
+        import tty
 
         self.termios = termios
+        self.tty = tty
 
     def __enter__(self) -> RawTerminal:
         fd = sys.stdin.fileno()
         self.__old_settings = self.termios.tcgetattr(fd)
-        tty.setraw(sys.stdin.fileno())
+        self.tty.setraw(sys.stdin.fileno())
         self.__raw = True
         return self
 
