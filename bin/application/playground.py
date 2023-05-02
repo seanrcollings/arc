@@ -1,8 +1,8 @@
 import json
 import os
 from pathlib import Path
-import github
 
+import github
 
 ROOT_DIR = Path(".")
 DOCS_DIR = ROOT_DIR / "docs"
@@ -21,6 +21,16 @@ def get_examples(file) -> list[dict]:
             pl = item["playground"]
             pl["slug"] = item["file"].replace(".py", "").replace("_", "-")
             pl["file"] = item["file"]
+            if item.get("exec"):
+                pl["suggestions"] = (
+                    [item["exec"]] if isinstance(item["exec"], str) else item["exec"]
+                )
+            else:
+                pl["suggestions"] = []
+
+            if "--help" not in pl["suggestions"]:
+                pl["suggestions"].append("--help")
+
             print(f"{item['file']} -> {pl['slug']}")
 
             examples.append(pl)
