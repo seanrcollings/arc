@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
 
+
 new_version=$1
 curr_version=$(poetry version -s)
-
-if [ -z "$new_version" ]; then
-    echo "USAGE: bin/deploy [VERSION]"
-    exit 1
-fi
 
 sed -i "s/$curr_version/$new_version/" arc/__init__.py
 poetry version $new_version

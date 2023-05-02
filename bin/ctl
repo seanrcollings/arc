@@ -1,0 +1,84 @@
+#!./.venv/bin/python
+import subprocess
+import typing as t
+import webbrowser
+
+import arc
+from arc import types
+from arc.present import Console
+
+from bin import application
+
+ctl = arc.namespace("ctl", desc="Utilities for managing arc")
+
+
+@ctl.subcommand
+def version():
+    """Prints the current version of arc"""
+    arc.print(arc.__version__)
+
+
+@ctl.subcommand("open")
+def open_url(
+    item: t.Literal["docs", "playground", "repo", "playground-gist"] = arc.Argument(
+        desc="Item to open"
+    )
+):
+    """Opens the docs, playground or repo in the browser"""
+
+    links = {
+        "docs": "https://arc.seancollings.dev",
+        "playground": "https://playground.arc.seancollings.dev",
+        "playground-gist": "https://gist.github.com/seanrcollings/c314336f9ddf2c95144412121203a17c",
+        "repo": "https://github.com/seanrcollings/arc",
+    }
+
+    webbrowser.open(links[item])
+
+
+build = arc.namespace("build")
+ctl.subcommand(build)
+
+
+@build.subcommand
+def docs(console: Console):
+    """Performs build steps needed before publishing docs.
+    Generates outputs for all examples defined in `docs/examples.json`
+    and generates references for all modules in arc"""
+    console.act("---- EXECUTING EXAMPLES ---")
+    application.generate_examples()
+    console.print()
+    console.ok("Finished\n")
+
+    console.act("---- GENERATING REFERENCES ---")
+    application.generate_reference()
+    console.print()
+    console.ok("Finished\n")
+
+
+@build.subcommand
+def playground():
+    """Builds and updates the Github Gist containing the playground examples"""
+    application.update_playground()
+
+
+def greater_than_current(value: types.SemVer):
+    current_version: types.SemVer | None = types.SemVer.parse(arc.__version__)
+
+    if current_version >= value:
+        raise arc.ValidationError(
+            f"New version must be greater than current version ({current_version})"
+        )
+
+    return value
+
+
+NewVersion = t.Annotated[types.SemVer, greater_than_current]
+
+
+@ctl.subcommand
+def deploy(version: NewVersion):
+    subprocess.run(["./bin/application/deploy", str(version)], check=True)
+
+
+ctl()

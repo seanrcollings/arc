@@ -10,6 +10,10 @@ class Color(Enum):
     GREEN = "green"
 
 
+# Could also use:
+# Color = Literal["red", "yellow", "green"]
+
+
 @arc.command
 def paint(color: Color):
     if color is Color.RED:

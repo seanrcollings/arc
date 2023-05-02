@@ -1,9 +1,12 @@
 from pathlib import Path
 import shutil
+import sys
 
-ROOT_DIR = Path(".")
-SRC_DIR = ROOT_DIR / "arc"
-DOCS_DIR = ROOT_DIR / "docs"
+import arc
+
+from .constants import SRC_DIR, DOCS_DIR
+
+
 REFERENCE_DIR = DOCS_DIR / "docs" / "reference"
 EXCLUDE = ["api", "constants", "suggest"]
 
@@ -15,8 +18,7 @@ def init():
     REFERENCE_DIR.mkdir()
 
 
-def main():
-    print("--- GENERATING REFERENCE DOCS ---")
+def generate_reference():
     init()
 
     for path in SRC_DIR.glob("**/*.py"):
@@ -29,11 +31,7 @@ def main():
 
         ref_path = REFERENCE_DIR / Path(*path.parts[1:-1], f"{path.stem}.md")
         ref_path.parent.mkdir(parents=True, exist_ok=True)
-        print(module, "->", ref_path)
+        arc.log(module, "->", ref_path, file=sys.stderr)
         with ref_path.open("w") as f:
             f.write(f"# {module}\n")
             f.write(f"::: arc.{module}")
-
-
-if __name__ == "__main__":
-    main()
