@@ -6,7 +6,6 @@ from itertools import repeat
 
 from arc import constants
 from arc.color import colorize, fx
-from arc.config import PresentConfig
 from arc.present.ansi import Ansi
 from arc.present.formatters import TextFormatter
 from arc.present.joiner import Join
@@ -15,9 +14,27 @@ from arc.present.markdown import MarkdownParser
 if t.TYPE_CHECKING:
     from arc.define.command import Command
     from arc.define.documentation import Documentation, ParamDoc
+    from arc.config import PresentConfig
 
 
-class HelpFormatter(TextFormatter):
+class HelpFormatter(t.Protocol):
+    def __init__(
+        self,
+        doc: Documentation,
+        config: PresentConfig,
+        *args: t.Any,
+        **kwargs: t.Any,
+    ):
+        ...
+
+    def format_help(self) -> str:
+        ...
+
+    def format_usage(self) -> str:
+        ...
+
+
+class DefaultHelpFormatter(TextFormatter):
     _longest_intro: int = 0
 
     def __init__(

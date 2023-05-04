@@ -38,9 +38,9 @@ class Command(ParamMixin, MiddlewareContainer):
     def __init__(
         self,
         callback: at.CommandCallback,
+        config: Config,
         name: str | None = None,
         description: str | None = None,
-        config: Config | None = None,
         parent: Command | None = None,
         explicit_name: bool = True,
         autoload: bool = False,
@@ -55,7 +55,7 @@ class Command(ParamMixin, MiddlewareContainer):
         else:
             self.callback = callback
 
-        self.config = config or Config.load()
+        self.config = config
         self.name = name or callback.__name__
         self.parent = parent
         self.subcommands = AliasDict()
@@ -498,19 +498,16 @@ def command(
     name = None
 
     def inner(callback: at.CommandCallback) -> Command:
+        cmdconfig = config or Config.load()
         command_name = Command.get_canonical_subcommand_name(
-            callback,
-            name,
-            config.transform_snake_case
-            if config
-            else Config.load().transform_snake_case,
+            callback, name, cmdconfig.transform_snake_case
         )
 
         command = Command(
             callback=callback,
+            config=cmdconfig,
             name=command_name,
             description=desc,
-            config=config,
             parent=None,
             explicit_name=bool(name),
             autoload=True,
@@ -551,11 +548,13 @@ def namespace(
     Returns:
         command: A command object without a callback associated with it
     """
+    config = config or Config.load()
+
     command = Command(
         callback=namespace_callback,
+        config=config,
         name=name,
         description=desc,
-        config=config,
         parent=None,
         autoload=True,
         **kwargs,

@@ -2,13 +2,12 @@ from __future__ import annotations
 import typing as t
 from functools import cached_property
 import textwrap
-from arc.config import PresentConfig
 
 import arc.typing as at
 from arc.define.param import param
-from arc.present.help_formatter import HelpFormatter
 
 if t.TYPE_CHECKING:
+    from arc.present.help_formatter import HelpFormatter
     from arc.define.command import Command
     from arc.config import PresentConfig
 
@@ -44,11 +43,11 @@ class Documentation:
         self.docstring = self._get_docstring()
 
     def help(self) -> str:
-        formatter = HelpFormatter(self, self.config)
+        formatter = self.config.formatter(self, self.config)
         return formatter.format_help()
 
     def usage(self) -> str:
-        formatter = HelpFormatter(self, self.config)
+        formatter = self.config.formatter(self, self.config)
         return formatter.format_usage()
 
     @property

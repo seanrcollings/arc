@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 
 import arc.typing as at
 
+from arc.present.help_formatter import HelpFormatter, DefaultHelpFormatter
 from arc.color import fg
 from arc.prompt import Prompt
 
@@ -26,22 +27,6 @@ class ColorConfig:
     subtle: str = fg.GREY
 
 
-# MarkdownFormat = t.Union[str, t.Callable[[str, "PresentConfig"], str]]
-
-
-# @dataclass
-# class MarkdownConfig:
-#     """Configures Markdown presentation for the application"""
-
-#     header: MarkdownFormat = nodes.Heading.default_format
-#     link: MarkdownFormat = nodes.Link.default_format
-
-#     def apply(self, fmt: MarkdownFormat, value: str, config: PresentConfig) -> str:
-#         if isinstance(fmt, str):
-#             return fmt.format(value)
-#         return fmt(value, config)
-
-
 @dataclass
 class PresentConfig:
     """Configures the presentation of the application"""
@@ -53,7 +38,8 @@ class PresentConfig:
     for wrapping text. Will be ignored if the terminal width is smaller"""
     color: ColorConfig = field(default_factory=ColorConfig)
     """The color configuration for the application"""
-    # md: MarkdownConfig = field(default_factory=MarkdownConfig)
+    formatter: type[HelpFormatter] = DefaultHelpFormatter
+    """Class to use when formatting help messages"""
 
 
 @dataclass
