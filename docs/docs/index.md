@@ -46,3 +46,7 @@ Pretty cool, huh? *arc* will pull *all* of the information that it needs from yo
 
 
 Check out the [Usage](./usage/intro.md) section for more information on how to use *arc*.
+
+## Playground
+
+You can check out the [playground](https://playground.arc.seancollings.dev) to try out *arc* in your browser.

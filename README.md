@@ -7,7 +7,11 @@ A tool for building declarative, and highly extendable CLI systems for Python 3.
 - Automatic `--help` documentation
 - Fully Extensible with custom middlewares,  types, validators, parameter configurations, etc...
 
-# [Docs](http://arc.seanrcollings.com)
+# Links
+- [Docs](https://arc.seancollings.dev)
+- [Playground](https://playground.arc.seancollings.dev)
+- [PyPi](https://pypi.org/project/arc-cli/)
+
 
 # Quick Start
 
