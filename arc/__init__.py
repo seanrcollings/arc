@@ -1,4 +1,4 @@
-__version__ = "8.1.5"
+__version__ = "8.2.0"
 
 from arc import types, prompt, present, errors
 from arc.config import (
