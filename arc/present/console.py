@@ -133,6 +133,10 @@ class Console:
             **kwargs,
         )
 
+    def rule(self, string: str = "", width: int = 80, **kwargs: t.Any) -> None:
+        """Display a horizontal rule to the user"""
+        self.print(string.center(width, "─"), **kwargs)
+
     def ok(self, *values: object, **kwargs: t.Any) -> None:
         """Display a successful message to the user"""
         self._decorate(*values, color=fg.GREEN, icon=self.icons["ok"], **kwargs)

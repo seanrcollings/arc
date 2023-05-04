@@ -19,6 +19,7 @@ from arc.present.markdown.nodes import (
     Underline,
     Unformatted,
     Colored,
+    HorizontalRule,
 )
 
 if t.TYPE_CHECKING:
@@ -49,6 +50,9 @@ class MarkdownParser:
             if curr.startswith("#"):
                 stream.popleft()
                 nodes.append(self.parse_heading(curr))
+            elif curr.startswith("---"):
+                stream.popleft()
+                nodes.append(HorizontalRule())
             elif curr.startswith("-"):
                 nodes.append(self.parse_list(stream))
             elif curr == "```":

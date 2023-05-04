@@ -83,6 +83,12 @@ class Unformatted(BlockNode):
 
 
 @dataclass
+class HorizontalRule(BlockNode):
+    def fmt(self, config: PresentConfig) -> str:
+        return "—" * config.width + "\n\n"
+
+
+@dataclass
 class Text(InlineNode):
     children: list[InlineNode]
 

@@ -45,6 +45,7 @@ The above example outlines the block-level formatting (paragraphs, lists, etc). 
 | `` `code` ``               | Inline Code Block. Useful for when you want to indicate how to run another command   |
 | `[www.example.com]`        | Marks text as a link. Colors it with `config.present.color.accent` and underlines it |
 | `[[fg.RED]]red[[/fg.RED]]` | Colors Text. See [Colors](#colors) for more information                              |
+| `---`                      | Inserts a horizontal rule                                                            |
 
 
 ### Colors
