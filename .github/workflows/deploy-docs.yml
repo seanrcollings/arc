@@ -19,7 +19,7 @@ jobs:
           pip install poetry
           poetry install
       - name: Setup
-        run: poetry run bin/ctl build docs
+        run: poetry run python bin/ctl build docs
       - name: Deploy
         working-directory: ./docs
         run: poetry run mkdocs gh-deploy --force
