@@ -63,6 +63,6 @@ nav:
       - Documentation Generation: usage/documentation-generation.md
       - Middleware: usage/middleware.md
       - Command State: usage/command-state.md
-      - Command Autoloading: usage/command-autoloading.md
+      - Plugins: usage/plugins.md
       - Shell Completions: usage/shell-completions.md
   - ...
