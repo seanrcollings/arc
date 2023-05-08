@@ -1,5 +1,4 @@
 from __future__ import annotations
-from collections import UserList
 
 import types
 import typing as t
@@ -18,12 +17,12 @@ class TypeInfo(t.Generic[T]):
         self,
         original_type: at.Annotation,
         origin: type[T],
-        sub_types: tuple[TypeInfo, ...],
+        sub_types: tuple[TypeInfo[t.Any], ...],
         annotations: tuple[t.Any, ...],
         name: str | None = None,
     ):
         self.original_type = original_type
-        self.origin = origin
+        self.origin: t.Any = origin
         self.sub_types = sub_types
         self.annotations = annotations
         self.name = (
@@ -56,13 +55,13 @@ class TypeInfo(t.Generic[T]):
     @property
     def is_union_type(self) -> bool:
         """The type is `Union[T...]`"""
-        return self.origin in (t.Union, types.UnionType)  # type: ignore
+        return self.origin in (t.Union, types.UnionType)
 
     @property
     def is_optional_type(self) -> bool:
         """The type is `Optional[T]`"""
         return (
-            self.origin in (t.Union, types.UnionType)  # type: ignore
+            self.origin in (t.Union, types.UnionType)
             and len(self.sub_types) == 2
             and self.sub_types[-1].original_type is type(None)
         )
@@ -72,11 +71,11 @@ class TypeInfo(t.Generic[T]):
         return self.origin in COLLECTION_TYPES
 
     @classmethod
-    def analyze(cls, annotation) -> TypeInfo:
+    def analyze(cls, annotation: at.Annotation) -> TypeInfo[T]:
         """Create a `TypeInfo` object based on a type annotation"""
         original_type = annotation
         origin = t.get_origin(annotation) or annotation
-        annotated_args: tuple = tuple()
+        annotated_args: tuple[t.Any, ...] = tuple()
 
         if origin is t.Annotated:
             args = t.get_args(annotation)
@@ -88,7 +87,7 @@ class TypeInfo(t.Generic[T]):
 
         return cls(
             original_type=original_type,
-            origin=origin,
+            origin=origin,  # type: ignore
             sub_types=sub_types,
             annotations=annotated_args,
         )

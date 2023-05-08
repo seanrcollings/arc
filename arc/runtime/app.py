@@ -11,14 +11,14 @@ from arc.runtime.server import Server
 from arc import errors
 from arc.logging import logger, mode_map
 from arc.runtime.init import InitMiddleware
-from arc.runtime.middleware import Middleware, MiddlewareContainer
-
+from arc.runtime.middleware import Middleware, MiddlewareManager
+from arc.runtime.plugin import PluginManager
 
 if t.TYPE_CHECKING:
     from arc.define import Command
 
 
-class App(MiddlewareContainer):
+class App(MiddlewareManager):
     def __init__(
         self,
         root: Command,
@@ -32,7 +32,7 @@ class App(MiddlewareContainer):
         self.provided_ctx = ctx or {}
         self.state = state or {}
         self.config = root.config
-        self.logger = logger
+        self.plugins = PluginManager()
 
     def __call__(self, input: at.InputArgs = None) -> t.Any:
         self._handle_dynamic_name()
@@ -40,7 +40,7 @@ class App(MiddlewareContainer):
         ctx = self._create_ctx({"arc.input": input})
         try:
             try:
-                ctx = self.stack.start(ctx)
+                ctx = self._stack.start(ctx)
                 if "arc.command" not in ctx:
                     raise errors.CommandError(
                         "The command was not decided upon during initialization "
@@ -53,12 +53,9 @@ class App(MiddlewareContainer):
                 res = command.run(ctx)
             except Exception as e:
                 res = None
-                ctx.logger.warning(
-                    "Command threw an error, bubbling the error to init middlewares"
-                )
-                self.stack.throw(e)
+                self._stack.throw(e)
             else:
-                res = self.stack.close(res)
+                res = self._stack.close(res)
         except errors.ArcError as exc:
             if self.config.environment == "production":
                 arc.info(exc.fmt(ctx))
@@ -73,10 +70,10 @@ class App(MiddlewareContainer):
         return res
 
     @classmethod
-    def __depends__(self, ctx: arc.Context):
+    def __depends__(self, ctx: arc.Context) -> App:
         return ctx.app
 
-    def daemon(self, address: at.Address):
+    def daemon(self, address: at.Address) -> Daemon:
         daemon = Daemon(self, address)
         return daemon()
 
@@ -84,26 +81,27 @@ class App(MiddlewareContainer):
         ctx = self._create_ctx({"arc.command": command, "arc.parse.result": kwargs})
         return command.run(ctx)
 
-    def _create_ctx(self, data: dict = None) -> arc.Context:
+    def _create_ctx(self, data: dict[str, t.Any] = None) -> arc.Context:
         return arc.Context(
             {
                 "arc.root": self.root,
                 "arc.config": self.config,
                 "arc.app": self,
                 "arc.state": self.state,
-                "arc.logger": self.logger,
+                "arc.logger": logger,
+                "arc.plugins": self.plugins,
             }
             | self.provided_ctx
             | (data or {})
         )
 
-    def _handle_dynamic_name(self):
+    def _handle_dynamic_name(self) -> None:
         if not self.root.explicit_name:
             name = sys.argv[0]
             self.root.name = os.path.basename(name)
 
-    def _setup_logger(self):
+    def _setup_logger(self) -> None:
         if self.config.debug:
-            self.logger.setLevel(logging.DEBUG)
+            logger.setLevel(logging.DEBUG)
         else:
-            self.logger.setLevel(mode_map.get(self.config.environment, logging.WARNING))
+            logger.setLevel(mode_map.get(self.config.environment, logging.WARNING))

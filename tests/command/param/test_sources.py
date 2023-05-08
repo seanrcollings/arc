@@ -1,4 +1,6 @@
+import contextlib
 import io
+import os
 
 import pytest
 
@@ -6,13 +8,24 @@ import arc
 from arc import Argument, Option, errors, configure
 from arc import constants
 from arc.define.param.param import Param, ValueOrigin
-from tests.utils import environ  # type: ignore
-from arc.prompt.helpers import ARROW_DOWN, Cursor
+from arc.prompt.helpers import Cursor
 
 
 @pytest.fixture(autouse=True)
 def setup(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr("arc.prompt.prompt.Prompt.max_height", lambda *args: 100)
+
+
+@contextlib.contextmanager
+def environ(**env: str):
+    copy = os.environ.copy()
+    os.environ.clear()
+    os.environ.update(env)
+    try:
+        yield
+    finally:
+        os.environ.clear()
+        os.environ.update(copy)
 
 
 class TestEnv:

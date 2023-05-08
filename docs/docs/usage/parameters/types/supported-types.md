@@ -139,7 +139,7 @@ When used as an option, it allows the option to be used multiple times:
 ```
 
 #### Collection Lengths
-You can specify how many items should be provided to a collection type with a [type validator](./type-middleware.md), specifically [`#!python Len()`](../../../reference/types/validators.md#Len)
+You can specify how many items should be provided to a collection type with a [type validator](./type-middleware.md), specifically [`#!python Len()`](../../../reference/types/middleware/validators.md#Len)
 
 ```py title="examples/length.py"
 --8<-- "examples/length.py"

@@ -17,8 +17,8 @@ class Exit(SystemExit):
         super().__init__(code)
         self.message = message
 
-    def fmt(self, ctx: Context):
-        return self.message
+    def fmt(self, ctx: Context) -> str:
+        return self.message or ""
 
 
 def exit(code: int = 0, message: str | None = None) -> t.NoReturn:
@@ -29,7 +29,7 @@ def exit(code: int = 0, message: str | None = None) -> t.NoReturn:
 
 
 class ArcError(Exception):
-    def fmt(self, ctx: Context):
+    def fmt(self, ctx: Context) -> str:
         return str(self)
 
 
@@ -48,7 +48,7 @@ class ArgumentError(ExternalError):
 class ConversionError(ArgumentError):
     """Raised if a type conversion fails"""
 
-    def __init__(self, value, message: str, details=None):
+    def __init__(self, value: t.Any, message: str, details: t.Any | None = None):
         self.value = value
         self.details = details
         super().__init__(message)
@@ -63,7 +63,7 @@ class UsageError(ExternalError):
         self.message = message
         self.command = command
 
-    def fmt(self, ctx: Context):
+    def fmt(self, ctx: Context) -> str:
         return f"{self.usage()}{self.message}"
 
     def usage(self) -> str:
@@ -75,42 +75,47 @@ class UsageError(ExternalError):
 
 class InvalidParamValueError(UsageError, ArgumentError):
     def __init__(
-        self, message: str, param: Param, detail: str = None, command: Command = None
+        self,
+        message: str,
+        param: Param[t.Any],
+        detail: str = None,
+        command: Command = None,
     ):
         super().__init__(message, command)
         self.param = param
         self.detail = detail
 
     def fmt(self, ctx: Context) -> str:
-        name = colorize(self.param.cli_name, ctx.config.color.highlight)
+        name = colorize(self.param.cli_name, ctx.config.present.color.highlight)
         string = f"{self.usage()}invalid value for {name}: {self.message}"
 
         if self.detail:
             string += " "
-            string += colorize(f"({self.detail})", ctx.config.color.subtle)
+            string += colorize(f"({self.detail})", ctx.config.present.color.subtle)
 
         return string
 
 
 class MissingArgValueError(UsageError, ArgumentError):
-    def __init__(self, params: list[Param], command: Command = None):
+    def __init__(self, params: list[Param[t.Any]], command: Command = None):
         super().__init__("", command)
         self.params = params
 
     def fmt(self, ctx: Context) -> str:
         params = Join.with_comma(
-            (param.cli_name for param in self.params), style=ctx.config.color.highlight
+            (param.cli_name for param in self.params),
+            style=ctx.config.present.color.highlight,
         )
         return f"{self.usage()}The following arguments are required: {params}"
 
 
 class MissingOptionValueError(UsageError, ArgumentError):
-    def __init__(self, param: Param, command: Command = None):
+    def __init__(self, param: Param[t.Any], command: Command = None):
         super().__init__("", command)
         self.param = param
 
     def fmt(self, ctx: Context) -> str:
-        name = colorize(self.param.cli_name, ctx.config.color.highlight)
+        name = colorize(self.param.cli_name, ctx.config.present.color.highlight)
         return f"{self.usage()}option {name} expected 1 argument"
 
 
@@ -121,7 +126,7 @@ class UnrecognizedArgError(UsageError, ArgumentError):
 
     def fmt(self, ctx: Context) -> str:
         message = self.usage()
-        message += f"Unrecognized arguments: {Join.with_space(self.unrecognized, style=ctx.config.color.highlight)}"
+        message += f"Unrecognized arguments: {Join.with_space(self.unrecognized, style=ctx.config.present.color.highlight)}"
         message += self.__get_suggestions(self.unrecognized, ctx.config, ctx.command)
         return message
 
@@ -159,8 +164,8 @@ class UnrecognizedArgError(UsageError, ArgumentError):
         for param_name, param_sug in suggestions.items():
             if param_sug:
                 message += (
-                    f"\nUnrecognized {kind} {colorize(param_name, config.color.highlight)}, "
-                    f"did you mean: {Join.with_or(param_sug, style=config.color.accent)}"
+                    f"\nUnrecognized {kind} {colorize(param_name, config.present.color.highlight)}, "
+                    f"did you mean: {Join.with_or(param_sug, style=config.present.color.accent)}"
                 )
 
         return message
@@ -181,7 +186,7 @@ class InternalError(ArcError):
 
     def fmt(self, ctx: Context) -> str:
         message = (
-            f"{colorize('ERROR:', ctx.config.color.error, fx.BOLD)} {str(self)}\n\n"
+            f"{colorize('ERROR:', ctx.config.present.color.error, fx.BOLD)} {str(self)}\n\n"
             "This is probably a bug, please report it to the maintainer"
         )
 
@@ -196,13 +201,13 @@ class CommandError(InternalError):
 
 
 class ParamError(InternalError):
-    def __init__(self, message, command_name: str, param=None):
+    def __init__(self, message: str, command_name: str, param: t.Any = None):
         super().__init__(message)
         self.command_name = command_name
         self.param = param
 
     def __str__(self) -> str:
-        param_name = self.param.name if self.param else ""
+        param_name = self.param.argument_name if self.param else ""
         return (
             f"Parameter {param_name!r} for command "
             f"{self.command_name!r} is invalid: {super().__str__()}"

@@ -34,7 +34,7 @@ class Context(collections.UserDict[str, t.Any]):
         return self["arc.command"]
 
     @property
-    def state(self) -> dict:
+    def state(self) -> dict[str, t.Any]:
         """The state object passed in. Alias for `ctx["arc.state"]`"""
         return self["arc.state"]
 
@@ -58,7 +58,7 @@ class Context(collections.UserDict[str, t.Any]):
         """The prompt object congigured. Alias for `ctx["arc.config"].prompt`"""
         return self.config.prompt
 
-    def execute(self, command: Command, **kwargs) -> t.Any:
+    def execute(self, command: Command, **kwargs: t.Any) -> t.Any:
         """Execute a command within the context of another command
         ```py
         import arc
@@ -83,7 +83,9 @@ class Context(collections.UserDict[str, t.Any]):
     def get_origin(self, param_name: str, default: T) -> ValueOrigin | T:
         ...
 
-    def get_origin(self, param_name: str, default=None):
+    def get_origin(
+        self, param_name: str, default: T | None = None
+    ) -> ValueOrigin | T | None:
         """Gets the origin of a paramter"""
         origins: dict[str, ValueOrigin] | None = self.get("arc.args.origins")
 
@@ -93,6 +95,6 @@ class Context(collections.UserDict[str, t.Any]):
         return origins.get(param_name, default)
 
     @classmethod
-    def __depends__(cls, ctx: Context):
+    def __depends__(cls, ctx: Context) -> Context:
         """Makes the context a dependency"""
         return ctx

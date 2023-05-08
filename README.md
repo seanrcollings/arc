@@ -5,9 +5,13 @@ A tool for building declarative, and highly extendable CLI systems for Python 3.
 - Command line arguments based on python type hints
 - Arbitrary command nesting
 - Automatic `--help` documentation
-- Dynamic command loading at runtime
+- Fully Extensible with custom middlewares,  types, validators, parameter configurations, etc...
 
-# [Docs](http://arc.seanrcollings.com)
+# Links
+- [Docs](https://arc.seancollings.dev)
+- [Playground](https://playground.arc.seancollings.dev)
+- [PyPi](https://pypi.org/project/arc-cli/)
+
 
 # Quick Start
 
@@ -17,7 +21,7 @@ import arc
 @arc.command
 def hello(name: str):
     """My first arc program!"""
-    arc.arc.print(f"Hello {name}!")
+    arc.print(f"Hello {name}!")
 
 hello()
 ```
@@ -28,6 +32,7 @@ Hello, Sean!
 ```
 
 ```
+$ python hello.py --help
 USAGE
     hello.py [-h] [--] name
 

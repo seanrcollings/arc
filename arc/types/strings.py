@@ -54,11 +54,11 @@ class Password(UserString):
         return super().__str__()
 
     @classmethod
-    def __prompt__(cls, param: Param, ctx: Context):
+    def __prompt__(cls, param: Param[str], ctx: Context) -> str:
         return input_prompt(param, ctx, echo=False)
 
     @classmethod
-    def __convert__(cls, value: str, info: TypeInfo):
+    def __convert__(cls, value: str, info: TypeInfo[str]) -> Password:
         args = info.type_arg or cls.Args()
         return cls(value, **args.dict())
 

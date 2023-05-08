@@ -14,7 +14,10 @@ if t.TYPE_CHECKING:
 
 
 def get_completions(
-    obj: CompletionProtocol, info: CompletionInfo, *args, **kwargs
+    obj: CompletionProtocol,
+    info: CompletionInfo,
+    *args: t.Any,
+    **kwargs: t.Any,
 ) -> list[Completion]:
     """Gets the completions for a particular object that supports the `CompletionProtocol`"""
     comps = obj.__completions__(info, *args, **kwargs)
@@ -30,7 +33,7 @@ class CompletionInfo:
     words: list[str]
     current: str
 
-    def empty(self):
+    def empty(self) -> bool:
         return not self.words and not self.current
 
     @classmethod
@@ -55,7 +58,7 @@ class Completion:
     value: t.Any
     description: t.Optional[str] = None
     type: str = CompletionType.PLAIN
-    data: dict = dc.field(default_factory=dict)
+    data: dict[str, t.Any] = dc.field(default_factory=dict)
 
 
 class ShellCompletion:
@@ -71,7 +74,7 @@ class ShellCompletion:
         ShellCompletion.shells[name] = cls
 
     @property
-    def completion_vars(self) -> dict:
+    def completion_vars(self) -> dict[str, t.Any]:
         return {
             "name_exe": "python cli.py"
             if os.getenv("ARC_DEVELOPMENT")
@@ -100,7 +103,7 @@ class ShellCompletion:
         return ""
 
     @classmethod
-    def run(cls, shell: str, command: Command):
+    def run(cls, shell: str, command: Command) -> str:
         info = CompletionInfo.from_env()
         if shell not in cls.shells:
             raise errors.ArgumentError(

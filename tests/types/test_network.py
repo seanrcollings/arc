@@ -48,7 +48,7 @@ class TestAddresses:
     @pytest.mark.parametrize(
         "value,cls",
         [(ip, ipaddress.IPv4Address) for ip in IPV4]
-        + [(ip, ipaddress.IPv6Address) for ip in IPV6],  # type: ignore
+        + [(ip, ipaddress.IPv6Address) for ip in IPV6],
     )
     def test_ip(self, value, cls):
         @arc.command

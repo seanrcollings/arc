@@ -60,19 +60,19 @@ def has_next(seq: t.Sequence[T]) -> t.Generator[tuple[T, bool], None, None]:
         yield val, idx < length - 1
 
 
-def _format_cell(value: t.Any):
+def _format_cell(value: t.Any) -> str:
     return str(value)
 
 
-def _format_header_cell(value: t.Any):
+def _format_header_cell(value: t.Any) -> str:
     return colorize(str(value), fx.BOLD)
 
 
-def _format_bool(val: bool):
+def _format_bool(val: bool) -> str:
     return colorize(str(val), fg.GREEN if val else fg.RED)
 
 
-def _format_int(val: int):
+def _format_int(val: int) -> str:
     return colorize(str(val), fg.BLUE)
 
 
@@ -135,7 +135,7 @@ class Table:
         if rows:
             self.add_rows(rows)
 
-    def __str__(self):
+    def __str__(self) -> str:
         for col in self.__columns:
             cells = [row[col["name"]] for row in self.__rows]
             cells.append(col["name"])
@@ -155,22 +155,24 @@ class Table:
 
         return table
 
-    def add_row(self, row: t.Sequence[t.Any]):
+    def add_row(self, row: t.Sequence[t.Any]) -> None:
         if len(row) > len(self.__columns):
             raise errors.ArcError("Too many values")
 
         resolved = {}
         for col, value in itertools.zip_longest(self.__columns, row, fillvalue=""):
-            resolved[col["name"]] = value
+            resolved[col["name"]] = value  # type: ignore
 
         self.__rows.append(resolved)
 
-    def add_rows(self, rows: t.Sequence[t.Sequence[t.Any]]):
+    def add_rows(self, rows: t.Sequence[t.Sequence[t.Any]]) -> None:
         for row in rows:
             self.add_row(row)
 
-    def fmt_header_cell(self, func: TableFormatter | None = None):
-        def inner(func: TableFormatter):
+    def fmt_header_cell(
+        self, func: TableFormatter | None = None
+    ) -> TableFormatter | t.Callable[[TableFormatter], TableFormatter]:
+        def inner(func: TableFormatter) -> TableFormatter:
             self._cell_formatter = func
             return func
 
@@ -179,7 +181,9 @@ class Table:
 
         return inner
 
-    def fmt_cell(self, func: TableFormatter | None = None):
+    def fmt_cell(
+        self, func: TableFormatter | None = None
+    ) -> TableFormatter | t.Callable[[TableFormatter], TableFormatter]:
         """Formats any cell that does not already have a formatter applied
 
         ```py
@@ -195,7 +199,7 @@ class Table:
         ```
         """
 
-        def inner(func: TableFormatter):
+        def inner(func: TableFormatter) -> TableFormatter:
             self._cell_formatter = func
             return func
 
@@ -204,8 +208,8 @@ class Table:
 
         return inner
 
-    def fmt_type(self, cls: type):
-        def inner(func: t.Callable[[t.Any], str]):
+    def fmt_type(self, cls: type) -> t.Callable[[TableFormatter], TableFormatter]:
+        def inner(func: t.Callable[[t.Any], str]) -> TableFormatter:
             self._type_formatters[cls] = func
             return func
 
@@ -245,7 +249,7 @@ class Table:
 
         return header
 
-    def _fmt_row(self, row: Row, next_row: bool):
+    def _fmt_row(self, row: Row, next_row: bool) -> str:
         border = self._border
         fmt = ""
 
@@ -274,7 +278,7 @@ class Table:
         width: int,
         justify: drawing.Justification,
         header: bool = False,
-    ):
+    ) -> str:
         formatted_cell = self._fmt_cell_contents(cell, header)
         width = width - 2
         padding = " " * (width - Ansi.len(formatted_cell))
@@ -291,7 +295,7 @@ class Table:
             )
 
     @functools.cache
-    def _fmt_cell_contents(self, cell: t.Any, header: bool = False):
+    def _fmt_cell_contents(self, cell: t.Any, header: bool = False) -> str:
         if header:
             return self._header_cell_formatter(cell)
         if type(cell) in self._type_formatters:

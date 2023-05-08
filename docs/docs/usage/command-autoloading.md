@@ -1,7 +1,7 @@
 
 *arc* support dynamic loading of subcommands via the `#!python Command.autoload()` method.
 
-This allows you to offer your users to option to extend the functionality of your CLI with their
+This allows you to offer your users the option to extend the functionality of your CLI with their
 own custom commands.
 
 `#!python Command.autoload()` can accept an arbitrary number of paths to either files or directories. When given a file, it will attempt to load commands from that file. When given a directory, it will attempt to load every file in that directory. In both cases, if no command is found, it will continue onto the next path rather than erroring.
@@ -79,7 +79,7 @@ $ python cli.py sub
 I've been autoladed!
 ```
 
-You can disable this with a [configuration option](../reference/config.md#configure)
+You can disable this with a [configuration option](../reference/config.md#arc.config.configure)
 ```py
 arc.configure(autoload_overwrite=False)
 ```

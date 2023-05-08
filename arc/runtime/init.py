@@ -1,10 +1,9 @@
 """Contains all of the middlewares used during initialization of a command"""
 from __future__ import annotations
+import typing as t
 from datetime import datetime
-
 import shlex
 import sys
-import typing as t
 
 from arc import autocompletions, errors
 from arc import typing as at
@@ -44,6 +43,22 @@ class StartTimeMiddleware(MiddlewareBase):
             ctx["arc.debug.end"] = end
             diff = end - start
             ctx.logger.debug(f"Execution took: {diff.total_seconds():.4f}s")
+
+
+class LoadPluginsMiddleware(MiddlewareBase):
+    def __call__(self, ctx: Context) -> t.Any:
+        ctx.logger.debug("Loading plugins...")
+        app = ctx.app
+        app.plugins.paths(*ctx.config.plugins.paths)
+        app.plugins.groups(*ctx.config.plugins.groups)
+        app.plugins.entrypoints(*ctx.config.plugins.entrypoints)
+
+        if app.plugins:
+            ctx.logger.debug("Plugins loaded: %s", ", ".join(app.plugins))
+            ctx.logger.debug("Calling plugin hooks...")
+            for name, p in app.plugins.items():
+                ctx.logger.debug("  Calling plugin hook: %s", name)
+                p(ctx)
 
 
 class PerformDevChecksMiddleware(MiddlewareBase):
@@ -179,7 +194,7 @@ class NormalizeInputMiddleware(MiddlewareBase):
 
 
 class CommandFinderMiddleware(MiddlewareBase):
-    def __call__(self, ctx: Context):
+    def __call__(self, ctx: Context) -> t.Any:
         args: list[str] = ctx["arc.input"]
         command, command_args = ctx.root.find_command(args)
         ctx["arc.command"] = command
@@ -187,14 +202,16 @@ class CommandFinderMiddleware(MiddlewareBase):
 
 
 class ArgParseMiddleware(MiddlewareBase):
-    def __call__(self, ctx: Context):
+    def __call__(self, ctx: Context) -> t.Any:
         args: list[str] = ctx["arc.input"]
 
         result, extra = self.parse_args(ctx.command, args)
         ctx["arc.parse.result"] = result
         ctx["arc.parse.extra"] = extra
 
-    def parse_args(self, command: Command, args: list[str]) -> tuple[dict, list[str]]:
+    def parse_args(
+        self, command: Command, args: list[str]
+    ) -> tuple[at.ParseResult, list[str]]:
         parser = self.create_parser(command)
         return parser.parse_known_intermixed_args(args)
 
@@ -217,7 +234,7 @@ class CheckParseResultsMiddleware(MiddlewareBase):
     # Context Additions
     """
 
-    def __call__(self, ctx: Context):
+    def __call__(self, ctx: Context) -> t.Any:
         extra: list[str] | None = ctx.get("arc.parse.extra")
 
         if extra and not ctx.config.allow_unrecognized_args:
@@ -251,6 +268,7 @@ class InitMiddleware(DefaultMiddlewareNamespace):
     """
 
     StartTime = StartTimeMiddleware()
+    LoadPlugins = LoadPluginsMiddleware()
     PerformDevChecks = PerformDevChecksMiddleware()
     AddRuntimeParms = AddRuntimeParmsMiddleware()
     AddUsageErrorInfo = AddUsageErrorInfoMiddleware()
@@ -261,6 +279,7 @@ class InitMiddleware(DefaultMiddlewareNamespace):
 
     _list: list[Middleware] = [
         StartTime,
+        LoadPlugins,
         PerformDevChecks,
         AddRuntimeParms,
         AddUsageErrorInfo,

@@ -7,8 +7,7 @@
   exec: ""
 - file: arguments_documentation.py
   exec:
-    - command1 --help
-    - command2 --help
+    - --help
 - file: docstring_example.py
   out: docstring_example
   exec: --help
@@ -67,11 +66,6 @@
     - "1"
     - other
   exit_code: 1
-- file: paint.py
-  exit_code: 1
-  exec:
-    - red
-    - blue
 - file: custom_type.py
   exit_code: 1
   exec:
@@ -180,3 +174,8 @@
     - "0.1.1"
     - "1.2.1"
   exit_code: 1
+- file: paint.py
+  exit_code: 1
+  exec:
+    - red
+    - blue

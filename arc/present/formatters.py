@@ -1,10 +1,10 @@
 # https://github.com/pallets/click/blob/main/src/click/formatting.py
 import shutil
-import textwrap
 import typing as t
 from contextlib import contextmanager
 
-from .ansi import Ansi
+from arc.present import wrap
+
 
 DEFAULT_MAX_WIDTH = 80
 
@@ -27,25 +27,25 @@ class TextFormatter:
         self._buffer: list[str] = []
 
     @property
-    def value(self):
+    def value(self) -> str:
         """Current value of the formatter"""
         return "".join(self._buffer)
 
-    def indent(self):
+    def indent(self) -> None:
         """Indents text by `indent_increment`"""
         self.current_indent += self.indent_increment
 
-    def dedent(self):
+    def dedent(self) -> None:
         """Dedents text by `indent_increment`"""
         self.current_indent -= self.indent_increment
 
-    def write(self, string: str):
+    def write(self, string: str) -> None:
         self._buffer.append(string)
 
-    def write_heading(self, heading: str):
+    def write_heading(self, heading: str) -> None:
         self.write(f"{'':>{self.current_indent}}{heading}\n")
 
-    def write_text(self, text: t.Union[str, list[str]]):
+    def write_text(self, text: t.Union[str, list[str]]) -> None:
         self.write(
             self.wrap_text(
                 text,
@@ -55,7 +55,7 @@ class TextFormatter:
             )
         )
 
-    def write_paragraph(self):
+    def write_paragraph(self) -> None:
         if self._buffer:
             self.write("\n")
 
@@ -66,14 +66,13 @@ class TextFormatter:
         width: int,
         initial_indent: str = "",
         subsequent_indent: str = "",
-        paragraph_seperator: str = "\n\n",
-    ):
+    ) -> str:
         if isinstance(text, str):
             text = [text]
 
         wrapped = ""
 
-        wrapper = textwrap.TextWrapper(
+        wrapper = wrap.TextWrapper(
             width=width,
             initial_indent=initial_indent,
             subsequent_indent=subsequent_indent,
@@ -82,26 +81,12 @@ class TextFormatter:
         )
 
         for para in text:
-            if para.startswith("\b"):
-                wrapped += (
-                    self.wrap_text(
-                        para.lstrip("\b\n").split("\n"),
-                        width,
-                        initial_indent,
-                        subsequent_indent,
-                        "\n",
-                    )
-                    + paragraph_seperator
-                )
-            else:
-                width = width + (len(para) - Ansi.len(para))
-                wrapper.width = width
-                wrapped += wrapper.fill(para) + paragraph_seperator
+            wrapped += wrapper.fill(para)
 
         return wrapped.rstrip("\n")
 
     @contextmanager
-    def indentation(self):
+    def indentation(self) -> t.Generator[None, None, None]:
         self.indent()
         try:
             yield
@@ -109,7 +94,7 @@ class TextFormatter:
             self.dedent()
 
     @contextmanager
-    def section(self, name: str):
+    def section(self, name: str) -> t.Generator[None, None, None]:
         self.write_paragraph()
         self.write_heading(name)
         self.indent()

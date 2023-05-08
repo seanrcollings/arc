@@ -2,7 +2,7 @@ import inspect
 import typing as t
 
 
-def class_signature(cls: type):
+def class_signature(cls: type) -> inspect.Signature:
     """Constructs a `inspect.Signature` object for a type.
     It uses the class-level annotations as the parameters so
     that we can treat the classes and functions the same
@@ -44,12 +44,12 @@ def class_signature(cls: type):
     return sig
 
 
-def lazy_class_signature(cls: type):
+def lazy_class_signature(cls: type) -> type:
     setattr(cls, "__signature__", classmethod(property(class_signature)))  # type: ignore
     return cls
 
 
-def isdunder(string: str, double_dunder: bool = False):
+def isdunder(string: str, double_dunder: bool = False) -> bool:
     if double_dunder:
         return string.startswith("__") and string.endswith("__")
 

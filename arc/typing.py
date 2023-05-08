@@ -4,6 +4,7 @@ from __future__ import annotations
 import typing as t
 
 from arc.autocompletions import Completion, CompletionInfo
+from arc.constants import Constant
 
 if t.TYPE_CHECKING:
     from arc.define.param import Param
@@ -13,13 +14,11 @@ T = t.TypeVar("T")
 
 ExecEnv = dict[str, t.Any]
 
-ExecMode = t.Literal["root", "subcommand"]
-
 Annotation = t.Union[t._SpecialForm, type]
 
 NArgs = t.Union[int, t.Literal["+", "*", "?"], None]
 
-ParseResult = dict[str, t.Union[str, list[str], None]]
+ParseResult = dict[str, t.Union[str, list[str], None, Constant]]
 
 Env = t.Literal["production", "development", "test"]
 
@@ -29,11 +28,20 @@ CompletionFunc = t.Callable[
     [CompletionInfo, "Param"], t.Union[t.Iterable[Completion], None]
 ]
 
+CompletionReturn = t.Iterable[Completion] | None
+
 TypeMiddleware = t.Callable[[t.Any, "Context", "Param"], t.Any]
 
-GetterFunc = t.Union[
+ParamGetter = t.Union[
     t.Callable[["Param", "Context"], t.Any],
     t.Callable[["Param"], t.Any],
+    t.Callable[[], t.Any],
+]
+
+ParamCallback = t.Union[
+    t.Callable[[t.Any, "Param", "Context"], t.Any],
+    t.Callable[[t.Any, "Param"], t.Any],
+    t.Callable[[t.Any], t.Any],
     t.Callable[[], t.Any],
 ]
 
@@ -47,11 +55,13 @@ class ParamGroupOptions(t.TypedDict):
 
 @t.runtime_checkable
 class ClassCallback(t.Protocol):
-    def handle(self):
+    def handle(self) -> t.Any:
         ...
 
 
-CommandCallback = t.Union[t.Callable, type[ClassCallback]]
+FunctionCallback = t.Callable[..., t.Any]
+
+CommandCallback = t.Union[FunctionCallback, type[ClassCallback]]
 """The type of a command's callback.
 
 May be a function
@@ -78,7 +88,8 @@ class CompletionProtocol(t.Protocol):
     """Protocal that objects need to implement if they are expected to provide completions"""
 
     def __completions__(
-        self, info: CompletionInfo, *args, **kwargs
+        self,
+        info: CompletionInfo,
     ) -> t.Iterable[Completion] | None:
         ...
 
@@ -88,7 +99,7 @@ class TypeProtocol(t.Protocol):
     """Protocol that custom types need to conform to"""
 
     @classmethod
-    def __convert__(cls, value, *args):
+    def __convert__(cls, value: t.Any, *args: t.Any) -> t.Any:
         ...
 
 

@@ -46,7 +46,7 @@ class Log:
         self,
         value: t.Any,
         ctx: Context | None = None,
-        param: Param | None = None,
+        param: Param[t.Any] | None = None,
     ) -> t.Any:
         if param and ctx:
             names = {

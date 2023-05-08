@@ -10,9 +10,10 @@ title: Home
 
 * [Command line Arguments, Options, and Flags](./usage/parameters/intro.md) - Using Python function arguments
 * [Data Validation](./usage/parameters/types/types-intro.md) - Via Python type hints
-* [Subcommands](./usage/subcommands.md) - Breaking functionality into discrete components
+* [Subcommands](./usage/subcommands.md) - For breaking functionality of your CLI into discrete components
 * [Documentation](./usage/documentation-generation.md) - Automatic `--help` generation from your command definitons
-* [User Extension](./usage/command-autoloading.md) - Dynamic command loading at runtime
+* [Developer Extension](./usage/middleware.md) - Middleware for extending the functionality of your CLI
+* [User Extension](./usage/command-autoloading.md) - Dynamic command loading at runtime for useres to extend your CLI
 
 ## Installation
 *arc* can be installed with pip
@@ -43,18 +44,9 @@ And a quick demonstration of the documention generation:
 ```
 Pretty cool, huh? *arc* will pull *all* of the information that it needs from your [function docstrings and parameter definitons.](usage/documentation-generation.md)
 
-### Configuration
-*arc* is easily configurable via the `#!python arc.configure()` function.
 
-For example, you can set a version string for you application. This will add a `--version` flag to your application.
+Check out the [Usage](./usage/intro.md) section for more information on how to use *arc*.
 
-```py title="examples/hello_configuration.py"
---8<-- "examples/hello_configuration.py"
-```
+## Playground
 
-```console
---8<-- "examples/outputs/hello_configuration"
-```
-
-
-*View the [reference](reference/config.md#arc.config.configure) for details on all the configuration options*
+You can check out the [playground](https://playground.arc.seancollings.dev) to try out *arc* in your browser.

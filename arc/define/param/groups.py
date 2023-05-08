@@ -11,7 +11,7 @@ if t.TYPE_CHECKING:
 T = t.TypeVar("T", bound=type)
 
 
-def _default_init(inst: object, **kwargs):
+def _default_init(inst: object, **kwargs: t.Any) -> None:
     for key, value in kwargs.items():
         setattr(inst, key, value)
 
@@ -28,14 +28,14 @@ def _default_repr(inst: object) -> str:
 
 def _default_enter(inst: object) -> object:
     if hasattr(inst, "pre_exec"):
-        inst.pre_exec()  # type: ignore
+        inst.pre_exec()
 
     return inst
 
 
-def _default_exit(inst: object, *args):
+def _default_exit(inst: object, *args: t.Any) -> object:
     if hasattr(inst, "post_exec"):
-        inst.post_exec()  # type: ignore
+        inst.post_exec()
 
     return inst
 
@@ -72,7 +72,7 @@ def group(cls: T) -> T:
 
 
 def group(
-    cls: T = None, *, exclude: t.Sequence[str] | None = None, **kwargs
+    cls: T = None, *, exclude: t.Sequence[str] | None = None, **kwargs: t.Any
 ) -> T | t.Callable[[T], T]:
     """Construct a Parameter group.
 
@@ -106,7 +106,7 @@ def group(
     if cls:
         return modify_group_cls(cls, t.cast(dict[str, t.Any], _default_group_options))
 
-    def inner(cls: T):
+    def inner(cls: T) -> T:
         return modify_group_cls(cls, {"exclude": exclude or [], **kwargs})
 
     return inner

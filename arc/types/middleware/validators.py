@@ -21,7 +21,7 @@ class Matches:
         self.pattern = pattern
         self.flags = flags
 
-    def __call__(self, value: t.Any):
+    def __call__(self, value: t.Any) -> t.Any:
         if not re.match(self.pattern, str(value), self.flags):
             raise errors.ValidationError(
                 f"does not match expected format: {self.pattern}"
@@ -53,8 +53,11 @@ class Len:
         self.max = max
 
     def __call__(
-        self, value: SupportsLen, ctx: Context | None = None, param: Param | None = None
-    ):
+        self,
+        value: SupportsLen,
+        ctx: Context | None = None,
+        param: Param[t.Any] | None = None,
+    ) -> SupportsLen:
         length = len(value)
 
         if self.max:
@@ -103,7 +106,7 @@ class GreaterThan:
     def __init__(self, smallest: SupportsComparison):
         self.smallest = smallest
 
-    def __call__(self, value: SupportsComparison):
+    def __call__(self, value: SupportsComparison) -> SupportsComparison:
         if value <= self.smallest:
             raise errors.ValidationError(f"must be greater than {self.smallest}")
 
@@ -120,7 +123,7 @@ class LessThan:
     def __init__(self, largest: SupportsComparison):
         self.largest = largest
 
-    def __call__(self, value: SupportsComparison):
+    def __call__(self, value: SupportsComparison) -> SupportsComparison:
         if value >= self.largest:
             raise errors.ValidationError(f"must be less than {self.largest}")
 
@@ -138,7 +141,7 @@ class Between:
         self.lower = lower
         self.upper = upper
 
-    def __call__(self, value: SupportsComparison):
+    def __call__(self, value: SupportsComparison) -> SupportsComparison:
         if value <= self.lower or value >= self.upper:
             raise errors.ValidationError(
                 f"must be between {self.lower} and {self.upper}"

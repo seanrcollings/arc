@@ -8,17 +8,17 @@ from arc.define.param import param
 class ParamInfo:
     def __init__(
         self,
-        param_cls: type[param.Param],
+        param_cls: type[param.Param[t.Any]],
         param_name: str = None,
         short: str = None,
         default: t.Any = constants.MISSING,
         desc: str = None,
-        callback: t.Callable = None,
+        callback: at.ParamCallback = None,
         action: param.Action = None,
         prompt: str = None,
         envvar: str = None,
         complete: at.CompletionFunc = None,
-        getter_func: at.GetterFunc = None,
+        getter_func: at.ParamGetter = None,
         data: dict[str, t.Any] = None,
     ):
         self.param_cls = param_cls
@@ -34,7 +34,7 @@ class ParamInfo:
         self.getter_func = getter_func
         self.data = data or {}
 
-    def dict(self):
+    def dict(self) -> dict[str, t.Any]:
         """Used to pass to `Param()` as **kwargs"""
         return {
             "param_name": self.param_name,
@@ -56,10 +56,10 @@ def Argument(
     name: str = None,
     default: t.Any = constants.MISSING,
     desc: str = None,
-    callback: t.Callable = None,
+    callback: at.ParamCallback = None,
     prompt: str = None,
     envvar: str = None,
-    get: at.GetterFunc = None,
+    get: at.ParamGetter = None,
     complete: at.CompletionFunc = None,
     **kwargs: t.Any,
 ) -> t.Any:
@@ -112,10 +112,10 @@ def Option(
     short: str = None,
     default: t.Any = constants.MISSING,
     desc: str = None,
-    callback: t.Callable = None,
+    callback: at.ParamCallback = None,
     prompt: str = None,
     envvar: str = None,
-    get: at.GetterFunc = None,
+    get: at.ParamGetter = None,
     complete: at.CompletionFunc = None,
     **kwargs: t.Any,
 ) -> t.Any:
@@ -170,7 +170,7 @@ def Flag(
     short: str = None,
     default: bool = False,
     desc: str = None,
-    callback: t.Callable = None,
+    callback: at.ParamCallback = None,
     **kwargs: t.Any,
 ) -> t.Any:
     """An option that represents a boolean value.
@@ -214,7 +214,7 @@ def Count(
     short: str = None,
     default: int = 0,
     desc: str = None,
-    callback: t.Callable = None,
+    callback: at.ParamCallback = None,
     **kwargs: t.Any,
 ) -> t.Any:
     """A Flag that counts it's number of apperances on the command line
@@ -254,5 +254,5 @@ def Count(
     )
 
 
-def Depends(callback: t.Callable, **kwargs: t.Any) -> t.Any:
+def Depends(callback: at.ParamCallback, **kwargs: t.Any) -> t.Any:
     return ParamInfo(param_cls=param.InjectedParam, callback=callback, data=kwargs)

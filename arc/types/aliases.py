@@ -30,6 +30,8 @@ if t.TYPE_CHECKING:
 
 AliasFor = t.Union[Annotation, t.Tuple[Annotation, ...]]
 
+T = t.TypeVar("T")
+
 
 class Alias:
     """Parent class for all aliases. Stores references to all
@@ -42,11 +44,11 @@ class Alias:
     aliases: dict[Annotation, type[TypeProtocol]] = {}
     alias_for: t.ClassVar[AliasFor | tuple[AliasFor]] = None  # type: ignore
     name: t.ClassVar[t.Optional[str]] = None
-    convert: t.Callable
-    g_convert: t.Callable
+    convert: t.Callable[..., t.Any]
+    g_convert: t.Callable[..., t.Any]
 
     @classmethod
-    def __convert__(cls, value, typ: TypeInfo):
+    def __convert__(cls, value: str, typ: TypeInfo[T]) -> T:
         if cls.name:
             typ.name = cls.name
 
@@ -130,7 +132,7 @@ class IntAlias(Alias, of=int):
 
 class FloatAlias(Alias, of=float):
     @classmethod
-    def convert(cls, value, info: TypeInfo[float]) -> float:
+    def convert(cls, value: str, info: TypeInfo[float]) -> float:
         try:
             return info.origin(value)
         except ValueError as e:
@@ -141,13 +143,13 @@ class _CollectionAlias(Alias):
     alias_for: t.ClassVar[type]
 
     @classmethod
-    def convert(cls, value: t.Any):
+    def convert(cls, value: t.Any) -> t.Any:
         if isinstance(value, str):
             return cls.alias_for(value.split(","))
         return cls.alias_for(value)
 
     @classmethod
-    def g_convert(cls, value: str, typ: TypeInfo):
+    def g_convert(cls, value: str, typ: TypeInfo[t.Any]) -> t.Any:
         lst = cls.convert(value)
         sub = typ.sub_types[0]
         sub_type = sub.resolved_type
@@ -164,17 +166,17 @@ class _CollectionAlias(Alias):
             raise e
 
 
-class ListAlias(list, _CollectionAlias, of=list):
+class ListAlias(list[t.Any], _CollectionAlias, of=list):
     ...
 
 
-class SetAlias(set, _CollectionAlias, of=set):
+class SetAlias(set[t.Any], _CollectionAlias, of=set):
     ...
 
 
-class TupleAlias(tuple, _CollectionAlias, of=tuple):
+class TupleAlias(tuple[t.Any], _CollectionAlias, of=tuple):
     @classmethod
-    def g_convert(cls, value: str, info: TypeInfo):
+    def g_convert(cls, value: str, info: TypeInfo[T]) -> tuple[t.Any, ...]:
         tup = cls.convert(value)
 
         # Arbitraryily sized tuples
@@ -195,16 +197,15 @@ class TupleAlias(tuple, _CollectionAlias, of=tuple):
         )
 
     @classmethod
-    def any_size(cls, info: TypeInfo):
+    def any_size(cls, info: TypeInfo[T]) -> bool:
         return info.sub_types[-1].origin is Ellipsis
 
 
-class DictAlias(dict, Alias, of=dict):
+class DictAlias(dict[str, t.Any], Alias, of=dict):
     alias_for: t.ClassVar[type]
-    name = "dictionary"
 
     @classmethod
-    def convert(cls, value: str, info: TypeInfo) -> dict[str, str]:
+    def convert(cls, value: str, info: TypeInfo[t.Any]) -> dict[str, str]:
         dct = cls.alias_for(i.split("=") for i in value.split(","))
         if isinstance(info.origin, t._TypedDictMeta):  # type: ignore
             return cls.__typed_dict_convert(dct, info)
@@ -212,8 +213,8 @@ class DictAlias(dict, Alias, of=dict):
         return dct
 
     @classmethod
-    def g_convert(cls, value, info: TypeInfo):
-        dct: dict = cls.convert(value, info)
+    def g_convert(cls, value: str, info: TypeInfo[t.Any]) -> dict[str, t.Any]:
+        dct: dict[str, t.Any] = cls.convert(value, info)
         key_sub = info.sub_types[0]
         key_type = key_sub.resolved_type
         value_sub = info.sub_types[1]
@@ -238,7 +239,9 @@ class DictAlias(dict, Alias, of=dict):
             ) from e
 
     @classmethod
-    def __typed_dict_convert(cls, elements: dict[str, str], info: TypeInfo):
+    def __typed_dict_convert(
+        cls, elements: dict[str, str], info: TypeInfo[t.Any]
+    ) -> dict[str, t.Any]:
         hints = t.get_type_hints(info.origin, include_extras=True)
         for key, value in elements.items():
             if key not in hints:
@@ -261,16 +264,16 @@ class DictAlias(dict, Alias, of=dict):
 
 class NoneAlias(Alias, of=types.NoneType):
     @classmethod
-    def convert(self, value: t.Any):
+    def convert(self, value: t.Any) -> t.NoReturn:
         raise errors.ConversionError(value, "")
 
 
 # Typing types ---------------------------------------------------------------------------------
 
 
-class UnionAlias(Alias, of=(t.Union, types.UnionType)):  # type: ignore
+class UnionAlias(Alias, of=(t.Union, types.UnionType)):
     @classmethod
-    def g_convert(cls, value: t.Any, info: TypeInfo):
+    def g_convert(cls, value: t.Any, info: TypeInfo[t.Any]) -> t.Any:
 
         for sub in info.sub_types:
             try:
@@ -289,7 +292,7 @@ class UnionAlias(Alias, of=(t.Union, types.UnionType)):  # type: ignore
 
 class LiteralAlias(Alias, of=t.Literal):
     @classmethod
-    def g_convert(cls, value: t.Any, info: TypeInfo):
+    def g_convert(cls, value: t.Any, info: TypeInfo[t.Any]) -> t.Any:
         for sub in info.sub_types:
             if str(sub.original_type) == value:
                 return sub.original_type
@@ -300,16 +303,18 @@ class LiteralAlias(Alias, of=t.Literal):
         )
 
     @classmethod
-    def __prompt__(cls, param: Param, ctx: Context):
+    def __prompt__(cls, param: Param[t.Any], ctx: Context) -> str:
         return select_prompt(
             ctx.prompt,
             t.cast(str, param.prompt),
             list(str(tp.origin) for tp in param.type.sub_types),
-            highlight_color=ctx.config.color.accent,
+            highlight_color=ctx.config.present.color.accent,
         )
 
     @classmethod
-    def __completions__(cls, info, param):
+    def __completions__(
+        cls, info: CompletionInfo, param: Param[t.Any]
+    ) -> t.Iterator[autocompletions.Completion]:
         for tp in param.type.sub_types:
             yield autocompletions.Completion(str(tp.origin))
 
@@ -338,22 +343,26 @@ class EnumAlias(Alias, of=enum.Enum):
             ctx.prompt,
             t.cast(str, param.prompt),
             list(str(m.value) for m in enum_cls.__members__.values()),
-            highlight_color=ctx.config.color.accent,
+            highlight_color=ctx.config.present.color.accent,
         )
 
     @classmethod
-    def __completions__(cls, info, param):
+    def __completions__(
+        cls, info: CompletionInfo, param: Param[enum.Enum]
+    ) -> t.Iterator[autocompletions.Completion]:
         for m in param.type.origin.__members__.values():
             yield autocompletions.Completion(str(m.value))
 
 
 class PathAlias(Alias, of=pathlib.Path):
     @classmethod
-    def convert(cls, value: t.Any):
+    def convert(cls, value: t.Any) -> pathlib.Path:
         return pathlib.Path(value)
 
     @classmethod
-    def __completions__(cls, info: CompletionInfo, _param):
+    def __completions__(
+        cls, info: CompletionInfo, _param: Param[pathlib.Path]
+    ) -> t.Iterator[Completion]:
         yield Completion(info.current, type=CompletionType.FILE)
 
 
@@ -361,11 +370,11 @@ class IOAlias(Alias, of=(_io._IOBase, t.IO)):
     name = "file"
 
     @classmethod
-    def convert(cls, value: str, info: TypeInfo) -> t.IO:
+    def convert(cls, value: str, info: TypeInfo[t.Any]) -> t.IO[str]:
         error_msg = f"Cannot access {value}:"
         arg = TypeArg.ensure(info.type_arg, str(info.origin))
         try:
-            file: t.IO = open(value, **arg.dict())
+            file: t.IO[str] = open(value, **arg.dict())
             return file
         except FileNotFoundError as e:
             raise errors.ConversionError(value, f"{error_msg} file not found") from e
@@ -373,7 +382,9 @@ class IOAlias(Alias, of=(_io._IOBase, t.IO)):
             raise errors.ConversionError(value, f"{error_msg} permission denied") from e
 
     @classmethod
-    def __completions__(cls, info: CompletionInfo, _param):
+    def __completions__(
+        cls, info: CompletionInfo, _param: Param[t.IO[str]]
+    ) -> t.Iterator[Completion]:
         yield Completion(info.current, type=CompletionType.FILE)
 
 
@@ -381,7 +392,9 @@ class _Address(Alias):
     alias_for: t.ClassVar[type]
 
     @classmethod
-    def convert(cls, value: str, info: TypeInfo):
+    def convert(
+        cls, value: str, info: TypeInfo[t.Any]
+    ) -> ipaddress.IPv4Address | ipaddress.IPv6Address:
         try:
             if value.isnumeric():
                 return cls.alias_for(int(value))
@@ -403,7 +416,7 @@ class IPv6Alias(ipaddress.IPv6Address, _Address, of=ipaddress.IPv6Address):
 
 class PatternAlias(Alias, of=re.Pattern):
     @classmethod
-    def convert(cls, value: str, info: TypeInfo):
+    def convert(cls, value: str, info: TypeInfo[t.Any]) -> re.Pattern[str]:
         try:
             return re.compile(value, cls.flags(info))
         except re.error as e:
@@ -412,7 +425,7 @@ class PatternAlias(Alias, of=re.Pattern):
             ) from e
 
     @classmethod
-    def flags(cls, info: TypeInfo):
+    def flags(cls, info: TypeInfo[t.Any]) -> int:
         if len(info.annotations) == 0:
             return 0
         return info.annotations[0]

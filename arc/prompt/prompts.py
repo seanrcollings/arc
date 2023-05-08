@@ -10,7 +10,7 @@ if t.TYPE_CHECKING:
     from arc.runtime import Context
 
 
-def input_prompt(param: Param, ctx: Context, **kwargs) -> t.Any:
+def input_prompt(param: Param[t.Any], ctx: Context, **kwargs: t.Any) -> t.Any:
     default = (
         constants.MISSING_DEFAULT
         if param.default is constants.MISSING
@@ -24,7 +24,9 @@ def input_prompt(param: Param, ctx: Context, **kwargs) -> t.Any:
     )
 
 
-def select_prompt(prompt: Prompt, string: str, values: list, **kwargs):
+def select_prompt(
+    prompt: Prompt, string: str, values: list[str], **kwargs: t.Any
+) -> t.Any:
     res = prompt.select(string, values, **kwargs)
 
     if res is None:

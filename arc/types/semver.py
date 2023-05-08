@@ -4,12 +4,11 @@ import re
 import typing as t
 
 from arc import errors
-from arc import typing as at
 
 CompareReturn = t.Literal[-1, 0, 1]
 
 
-def cmp(a, b) -> CompareReturn:
+def cmp(a: t.Any, b: t.Any) -> CompareReturn:
     """Compare two values
 
     Args:
@@ -59,7 +58,7 @@ class SemVer:
             tuple(build.split(self._metadata_sep)) if build else tuple()
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         string = f"{self.major}.{self.minor}.{self.patch}"
         if self.prerelease:
             string += (
@@ -70,30 +69,30 @@ class SemVer:
 
         return string
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"SemVer({str(self)!r})"
 
-    def __iter__(self):
+    def __iter__(self) -> t.Iterator[t.Any]:
         yield from (a for a in self.tuple() if a)
 
     @property
-    def major(self):
+    def major(self) -> int:
         return self._major
 
     @property
-    def minor(self):
+    def minor(self) -> int:
         return self._minor
 
     @property
-    def patch(self):
+    def patch(self) -> int:
         return self._patch
 
     @property
-    def prerelease(self):
+    def prerelease(self) -> tuple[str, ...]:
         return self._prerelease
 
     @property
-    def build(self):
+    def build(self) -> tuple[str, ...]:
         return self._build
 
     # Comparison Operators --------------------------------------------------------------------
@@ -162,30 +161,30 @@ class SemVer:
         # Compared lexically
         return cmp(a, b)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         return self.compare(other) == 0
 
-    def __ne__(self, other) -> bool:
+    def __ne__(self, other: object) -> bool:
         return self.compare(other) != 0
 
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other: object) -> bool:
         return self.compare(other) == -1
 
-    def __le__(self, other) -> bool:
+    def __le__(self, other: object) -> bool:
         return self.compare(other) <= 0
 
-    def __gt__(self, other) -> bool:
+    def __gt__(self, other: object) -> bool:
         return self.compare(other) == 1
 
-    def __ge__(self, other) -> bool:
+    def __ge__(self, other: object) -> bool:
         return self.compare(other) >= 0
 
     # Utility Functions -----------------------------------------------------------------------
 
-    def tuple(self):
+    def tuple(self) -> tuple[int, int, int, tuple[str, ...], tuple[str, ...]]:
         return (self.major, self.minor, self.patch, self.prerelease, self.build)
 
-    def dict(self):
+    def dict(self) -> dict[str, t.Any]:
         return {
             "major": self.major,
             "minor": self.minor,
@@ -194,22 +193,22 @@ class SemVer:
             "build": self.build,
         }
 
-    def bump_major(self):
+    def bump_major(self) -> SemVer:
         cls = type(self)
         return cls(self.major + 1)
 
-    def bump_minor(self):
+    def bump_minor(self) -> SemVer:
         cls = type(self)
         return cls(self.major, self.minor + 1)
 
-    def bump_patch(self):
+    def bump_patch(self) -> SemVer:
         cls = type(self)
         return cls(self.major, self.minor, self.patch + 1)
 
     # Conversion Utilities --------------------------------------------------------------------
 
     @classmethod
-    def parse(cls, string: str):
+    def parse(cls, string: str) -> SemVer:
         match = SEMVAR_REGEX.match(string)
         if not match:
             raise ValueError("Invalid semantic version string")
@@ -225,7 +224,7 @@ class SemVer:
         )
 
     @classmethod
-    def __convert__(cls, value: str):
+    def __convert__(cls, value: str) -> SemVer:
         try:
             return cls.parse(value)
         except ValueError as e:

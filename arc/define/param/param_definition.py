@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import collections
 import inspect
-from multiprocessing.spawn import get_command_line
 import typing as t
 
 from arc import api, errors, safe
@@ -22,7 +21,7 @@ from arc.define.param.param_tree import ParamTree, ParamValue
 from arc.types.type_info import TypeInfo
 
 
-class ParamDefinition(collections.deque[Param]):
+class ParamDefinition(collections.deque[Param[t.Any]]):
     """A tree structure that represents how the parameters to a command look.
     This represents the definition of a command's paramaters, and not a particular
     execution of that comamnd with particular values"""
@@ -31,7 +30,13 @@ class ParamDefinition(collections.deque[Param]):
     """A group with name `BASE` is the base group and
     gets spread into the function arguments"""
 
-    def __init__(self, name: str, cls: type | None = None, *args, **kwargs):
+    def __init__(
+        self,
+        name: str,
+        cls: type | None = None,
+        *args: t.Any,
+        **kwargs: t.Any,
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.name: str = name
         self.cls: type | None = cls
@@ -43,7 +48,7 @@ class ParamDefinition(collections.deque[Param]):
     def is_base(self) -> bool:
         return self.name == self.BASE
 
-    def all_params(self) -> t.Generator[Param, None, None]:
+    def all_params(self) -> t.Generator[Param[t.Any], None, None]:
         """Generator that yields all params in the tree"""
         yield from self
 
@@ -51,14 +56,12 @@ class ParamDefinition(collections.deque[Param]):
             for child in self.children:
                 yield from child.all_params()
 
-    def create_instance(self) -> ParamTree:
+    def create_instance(self) -> ParamTree[type[dict[str, t.Any]]]:
         return self.__create_param_instance(self)
 
-    def __create_param_instance(self, definition: ParamDefinition) -> ParamTree:
-        values: dict[str, ParamTree | ParamValue] = {
-            param.argument_name: ParamValue(MISSING, param)
-            for param in definition
-            # if param.expose
+    def __create_param_instance(self, definition: ParamDefinition) -> ParamTree[t.Any]:
+        values: dict[str, ParamTree[t.Any] | ParamValue] = {
+            param.argument_name: ParamValue(MISSING, param) for param in definition
         }
 
         for child in definition.children:
@@ -80,7 +83,7 @@ class ParamDefinitionFactory:
         self.get_command_name = get_command_name
         self.transform_snake_case = transform_snake_case
 
-    def from_function(self, func: t.Callable) -> ParamDefinition:
+    def from_function(self, func: t.Callable[..., t.Any]) -> ParamDefinition:
         self.param_names.clear()
         sig = self._get_sig(func)
         return self.build(sig)
@@ -153,7 +156,7 @@ class ParamDefinitionFactory:
 
         return root
 
-    def create_param(self, param: inspect.Parameter) -> Param:
+    def create_param(self, param: inspect.Parameter) -> Param[t.Any]:
         if param.name in self.param_names:
             raise errors.ParamError(
                 f"Parameter name '{param.name}' is non-unique. "
@@ -163,7 +166,7 @@ class ParamDefinitionFactory:
 
         self.param_names.add(param.name)
         annotation = t.Any if param.annotation is param.empty else param.annotation
-        type_info = TypeInfo.analyze(annotation)
+        type_info = TypeInfo[t.Any].analyze(annotation)
         info = self.get_param_info(param, type_info)
 
         annotation = param.annotation
@@ -180,7 +183,7 @@ class ParamDefinitionFactory:
         )
 
     def get_param_info(
-        self, param: inspect.Parameter, type_info: TypeInfo
+        self, param: inspect.Parameter, type_info: TypeInfo[t.Any]
     ) -> ParamInfo:
         if isinstance(param.default, ParamInfo):
             info = param.default
@@ -202,8 +205,8 @@ class ParamDefinitionFactory:
         return info
 
     def get_param_cls(
-        self, param: inspect.Parameter, type_info: TypeInfo
-    ) -> type[Param]:
+        self, param: inspect.Parameter, type_info: TypeInfo[t.Any]
+    ) -> type[Param[t.Any]]:
         origin = type_info.origin
 
         if param.kind is param.POSITIONAL_ONLY:
@@ -223,7 +226,7 @@ class ParamDefinitionFactory:
         else:
             return ArgumentParam
 
-    def _get_sig(self, obj: t.Callable | type) -> inspect.Signature:
+    def _get_sig(self, obj: t.Callable[..., t.Any] | type) -> inspect.Signature:
         sig = inspect.signature(obj)
         annotations = t.get_type_hints(obj, include_extras=True)
 

@@ -21,7 +21,7 @@ def _get_pager_command() -> str:
     raise errors.ArcError("No pager found")
 
 
-def pager(contents: object, command: list[str] | None = None):
+def pager(contents: object, command: list[str] | None = None) -> None:
     """Display `contents` in the user's preferred pager.
     Essentially equivalent to
     ```bash

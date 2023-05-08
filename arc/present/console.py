@@ -17,8 +17,8 @@ T = t.TypeVar("T", bytes, str)
 class Console:
     def __init__(
         self,
-        default_print_stream: t.IO | None = None,
-        default_log_stream: t.IO | None = None,
+        default_print_stream: t.IO[str] | None = None,
+        default_log_stream: t.IO[str] | None = None,
         show_icons: bool = True,
         color_output: bool = True,
         indent: str = "  ",
@@ -43,14 +43,14 @@ class Console:
         *values: object,
         sep: str | None = None,
         end: str | None = None,
-        file: t.IO | None = None,
+        file: t.IO[str] | None = None,
         flush: bool = False,
-    ):
+    ) -> None:
         """A wrapper around `print()` that handles removing escape
         codes when the output is not a TTY"""
         file = file or self.default_print_stream
 
-        if file and not file.isatty():
+        if (file and not file.isatty()) or not self.color_output:
             values = tuple(Ansi.clean(str(v)) for v in values)
 
         if self._indent_count and values:
@@ -66,7 +66,7 @@ class Console:
         sep: str | None = None,
         end: str | None = None,
         flush: bool = False,
-    ):
+    ) -> None:
         """Wrapper around `print()` that emits to the
         `Console.log` stream instead of the `Console.print` stream"""
         self.print(*values, sep=sep, end=end, file=self.default_log_stream, flush=flush)
@@ -78,9 +78,9 @@ class Console:
         *values: object,
         sep: str | None = None,
         end: str | None = None,
-        file: t.IO | None = None,
+        file: t.IO[str] | None = None,
         flush: bool = False,
-    ):
+    ) -> None:
         """Useful for simple logging. Writes to stderr
         instead of stdout and includes a timestamps"""
         file = file or self.default_log_stream
@@ -90,7 +90,7 @@ class Console:
         self.print(first, *values, sep=sep, end=end, file=file, flush=flush)
 
     @contextmanager
-    def indent(self):
+    def indent(self) -> t.Generator[None, None, None]:
         """Context manager that will indent
         any prints done within it's block"""
         try:
@@ -104,8 +104,8 @@ class Console:
         *values: object,
         color: str = "",
         icon: str = "",
-        **kwargs,
-    ):
+        **kwargs: t.Any,
+    ) -> None:
         if len(values) == 0:
             self.print(**kwargs)
             return
@@ -133,30 +133,34 @@ class Console:
             **kwargs,
         )
 
-    def ok(self, *values: object, **kwargs):
+    def rule(self, string: str = "", width: int = 80, **kwargs: t.Any) -> None:
+        """Display a horizontal rule to the user"""
+        self.print(string.center(width, "─"), **kwargs)
+
+    def ok(self, *values: object, **kwargs: t.Any) -> None:
         """Display a successful message to the user"""
         self._decorate(*values, color=fg.GREEN, icon=self.icons["ok"], **kwargs)
 
-    def err(self, *values: object, **kwargs):
+    def err(self, *values: object, **kwargs: t.Any) -> None:
         """Display an unsuccessful message to the user"""
         self._decorate(*values, color=fg.RED, icon=self.icons["error"], **kwargs)
 
-    def act(self, *values: object, **kwargs):
+    def act(self, *values: object, **kwargs: t.Any) -> None:
         """Display an action message to the user"""
         self._decorate(*values, color=fg.BLUE, icon=self.icons["act"], **kwargs)
 
-    def warn(self, *values: object, **kwargs):
+    def warn(self, *values: object, **kwargs: t.Any) -> None:
         """Display a warning message to the user"""
         self._decorate(*values, color=fg.YELLOW, icon=self.icons["warn"], **kwargs)
 
-    def subtle(self, *values: object, **kwargs):
+    def subtle(self, *values: object, **kwargs: t.Any) -> None:
         """Display a subtle (light grey) message to the user"""
         self._decorate(*values, color=fg.GREY, icon=self.icons["subtle"], **kwargs)
 
-    def snake(self, *values: object, **kwargs):
+    def snake(self, *values: object, **kwargs: t.Any) -> None:
         """Display a Pythonic message to the user"""
         self._decorate(*values, icon=self.icons["snake"], **kwargs)
 
     @classmethod
-    def __depends__(cls, ctx: Context):
+    def __depends__(cls, ctx: Context) -> Console:
         return cls()

@@ -1,0 +1,303 @@
+[
+  {
+    "file": "hello.py",
+    "exec": "Joseph"
+  },
+  {
+    "file": "hello.py",
+    "exec": "--help",
+    "out": "hello_help"
+  },
+  {
+    "file": "hello_world.py",
+    "exec": "",
+    "playground": {
+      "name": "Hello World",
+      "description": "A simple hello world example."
+    }
+  },
+  {
+    "file": "arguments_documentation.py",
+    "exec": ["--help"]
+  },
+  {
+    "file": "docstring_example.py",
+    "out": "docstring_example",
+    "exec": "--help"
+  },
+  {
+    "file": "parameter_argument.py",
+    "out": "parameter_argument",
+    "exec": "Joseph"
+  },
+  {
+    "file": "parameter_argument.py",
+    "out": "parameter_argument_lastname",
+    "exec": "Joseph Joestar",
+    "playground": {
+      "name": "Positional Parameters",
+      "description": "An example of a command argument."
+    }
+  },
+  {
+    "file": "parameter_argument.py",
+    "out": "parameter_argument_help",
+    "exec": "--help"
+  },
+  {
+    "file": "parameter_default.py",
+    "exec": ["Sean", "Sean Collings"]
+  },
+  {
+    "file": "parameter_default.py",
+    "out": "parameter_default_error",
+    "exec": "",
+    "error_allowed": true,
+    "exit_code": 1
+  },
+  {
+    "file": "parameter_option.py",
+    "out": "parameter_option",
+    "exec": "--firstname Joesph --lastname Joestar",
+    "playground": {
+      "name": "Option Parameters",
+      "description": "An example of a command option."
+    }
+  },
+  {
+    "file": "parameter_option.py",
+    "exec": "--help",
+    "out": "parameter_option_help"
+  },
+  {
+    "file": "parameter_flag.py",
+    "exec": ["Joseph", "Joseph --reverse"],
+    "out": "parameter_flag",
+    "playground": {
+      "name": "Flag Parameter",
+      "description": "An example of a command flag."
+    }
+  },
+  {
+    "file": "parameter_count.py",
+    "out": "parameter_count",
+    "exec": ["Joseph", "Joseph --repeat", "Joseph --repeat --repeat"]
+  },
+  {
+    "file": "add.py",
+    "exec": "5 10",
+    "playground": {
+      "name": "Type Conversion",
+      "description": "An example of using type conversion for command arguments."
+    }
+  },
+  {
+    "file": "list_argument.py",
+    "exec": "Jonathen Joseph Jotaro",
+    "playground": {
+      "name": "Argument: Collection Types",
+      "description": "Using collection types for command arguments."
+    }
+  },
+  {
+    "file": "list_option.py",
+    "exec": "--names Josuke --names Giorno --names Joylene",
+    "playground": {
+      "name": "Options: Collection Types",
+      "description": "Using collection types for command options."
+    }
+  },
+  {
+    "file": "subcommand.py",
+    "out": "subcommand",
+    "exec": ["sub1", "sub2"],
+    "playground": {
+      "name": "Subcommands",
+      "description": "An example of using subcommands to create a command hierarchy"
+    }
+  },
+  {
+    "file": "sum.py",
+    "exec": "1 2 3 4 5 6 7 8 9"
+  },
+  {
+    "file": "set_argument.py",
+    "exec": "1 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4"
+  },
+  {
+    "file": "dict_argument.py",
+    "exec": "one=1,two=2,three=3"
+  },
+  {
+    "file": "union_argument.py",
+    "exec": ["5", "hello"]
+  },
+  {
+    "file": "literal_argument.py",
+    "exec": ["foo", "1", "other"],
+    "exit_code": 1
+  },
+  {
+    "file": "custom_type.py",
+    "exit_code": 1,
+    "exec": ["2", "string"],
+    "playground": {
+      "name": "Custom Types",
+      "description": "An example of implemeting a custom type that can be used as a command argument"
+    }
+  },
+  {
+    "file": "from_env.py",
+    "exec": ["", "10"]
+  },
+  {
+    "file": "hello_configuration.py",
+    "exec": ["--help", "--version"]
+  },
+  {
+    "file": "grep_clone/1_grep_clone.py",
+    "name": "grep.py",
+    "exec": ["", "--help"]
+  },
+  {
+    "file": "grep_clone/2_grep_clone.py",
+    "name": "grep.py",
+    "exec": "^[\\\\d+] docs/docs/index.md docs/docs/usage/intro.md"
+  },
+  {
+    "file": "grep_clone/3_grep_clone.py",
+    "name": "grep.py",
+    "exec": "arc docs/docs/index.md docs/docs/usage/intro.md"
+  },
+  {
+    "file": "context_manager.py",
+    "exec": "1",
+    "playground": {
+      "name": "Context Managers",
+      "description": "Context managers are opened and closed automatically."
+    }
+  },
+  {
+    "file": "subcommand.py",
+    "out": "subcommand_help",
+    "exec": ["--help", "sub1 --help", "sub2 --help"]
+  },
+  {
+    "file": "nested_subcommands.py",
+    "exec": ["sub1 nested1", "sub2 nested2"]
+  },
+  {
+    "file": "group.py",
+    "out": "group",
+    "exec": ["--help", "Joseph --reverse"]
+  },
+  {
+    "file": "group_exclude.py",
+    "exec": ["--help"]
+  },
+  {
+    "file": "group_callbacks.py",
+    "exec": ["Jonathan"]
+  },
+  {
+    "file": "add.py",
+    "exec": "5 not-a-number",
+    "out": "add_error",
+    "error_allowed": true,
+    "exit_code": 1
+  },
+  {
+    "file": "error_handlers.py",
+    "exec": ""
+  },
+  {
+    "file": "state.py",
+    "exec": "",
+    "playground": {
+      "name": "Command State",
+      "description": "An example of using command state to share data between commands."
+    }
+  },
+  {
+    "file": "state.py",
+    "out": "state_help",
+    "exec": "--help"
+  },
+  {
+    "file": "state_inherit.py",
+    "exec": ""
+  },
+  {
+    "file": "round.py",
+    "exec": "1.123456789",
+    "playground": {
+      "name": "Type Middlewares",
+      "description": "Using a type middleware to round a float value"
+    }
+  },
+  {
+    "file": "from_getter.py",
+    "exec": ["Sean", ""]
+  },
+  {
+    "file": "command_string.py",
+    "exec": ""
+  },
+  {
+    "file": "file.py",
+    "exec": "README.md"
+  },
+  {
+    "file": "namespace.py",
+    "exec": ["", "sub"],
+    "exit_code": 1
+  },
+  {
+    "file": "table.py",
+    "exec": ""
+  },
+  {
+    "file": "box.py",
+    "exec": ""
+  },
+  {
+    "file": "dependency.py",
+    "exec": "",
+    "playground": {
+      "name": "Dependency Injection",
+      "description": "An example of using dependency injection to inject a dependency into a command as an argument."
+    }
+  },
+  {
+    "file": "dependency.py",
+    "out": "dependency_help",
+    "exec": "--help"
+  },
+  {
+    "file": "type_dependency.py",
+    "exec": ""
+  },
+  {
+    "file": "origins.py",
+    "exec": ["", "10"]
+  },
+  {
+    "file": "length.py",
+    "exec": ["1 2 3 4 5 6", "1"],
+    "exit_code": 1
+  },
+  {
+    "file": "new_version.py",
+    "exec": ["0.1.1", "1.2.1"],
+    "exit_code": 1
+  },
+  {
+    "file": "paint.py",
+    "exit_code": 1,
+    "exec": ["red", "blue"],
+    "playground": {
+      "name": "Enumeration Types",
+      "description": "An example of using enumeration types to specify the specific values that a parameter can take."
+    }
+  }
+]

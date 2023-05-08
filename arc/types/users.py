@@ -1,13 +1,12 @@
 from __future__ import annotations
-
+import typing as t
 import functools
 import grp
 import pathlib
 import pwd
 
-from arc import api
 from arc import autocompletions as ac
-from arc import errors
+from arc import errors, typing as at, api
 
 
 class User:
@@ -32,7 +31,7 @@ class User:
     __repr__ = api.display("name", "id", "group_id", "gecos", "directory", "shell")
 
     @classmethod
-    def __convert__(cls, value):
+    def __convert__(cls, value: str) -> User:
         users = {p[0]: p for p in pwd.getpwall()}
 
         if value in users:
@@ -41,8 +40,10 @@ class User:
         raise errors.ConversionError(value, f"{value} is not a valid user")
 
     @classmethod
-    def __completions__(cls, info: ac.CompletionInfo, *_args, **_kwargs):
-        return ac.Completion(info.current, ac.CompletionType.USERS)
+    def __completions__(
+        cls, info: ac.CompletionInfo, *_args: t.Any, **_kwargs: t.Any
+    ) -> at.CompletionReturn:
+        yield ac.Completion(info.current, type=ac.CompletionType.USERS)
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, User):
@@ -51,16 +52,16 @@ class User:
         return NotImplemented
 
     @classmethod
-    def all(cls):
+    def all(cls) -> list[User]:
         return [cls(*g) for g in pwd.getpwall()]
 
     @functools.cached_property
-    def group(self):
+    def group(self) -> Group:
         group = grp.getgrgid(self.group_id)
         return Group(*group)
 
     @functools.cached_property
-    def groups(self):
+    def groups(self) -> list[Group]:
         return [Group(*g) for g in grp.getgrall() if self.name in g.gr_mem]
 
 
@@ -76,7 +77,7 @@ class Group:
     __repr__ = api.display("name", "id", "members")
 
     @classmethod
-    def __convert__(cls, value):
+    def __convert__(cls, value: str) -> Group:
         groups = {p[0]: p for p in grp.getgrall()}
 
         if value in groups:
@@ -85,8 +86,10 @@ class Group:
         raise errors.ConversionError(value, f"{value} is not a valid group")
 
     @classmethod
-    def __completions__(cls, info: ac.CompletionInfo, *_args, **_kwargs):
-        return ac.Completion(info.current, ac.CompletionType.GROUPS)
+    def __completions__(
+        cls, info: ac.CompletionInfo, *_args: t.Any, **_kwargs: t.Any
+    ) -> at.CompletionReturn:
+        yield ac.Completion(info.current, type=ac.CompletionType.GROUPS)
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, Group):
@@ -104,9 +107,9 @@ class Group:
             return user.pw_name in self._mem
 
     @classmethod
-    def all(cls):
+    def all(cls) -> list[Group]:
         return [cls(*g) for g in grp.getgrall()]
 
     @functools.cached_property
-    def members(self):
+    def members(self) -> list[User]:
         return [User(*pwd.getpwnam(m)) for m in self._mem]

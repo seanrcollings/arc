@@ -12,6 +12,8 @@ if t.TYPE_CHECKING:
 
 
 class Autoload:
+    """Autoloads commands from files and adds them to the parent command"""
+
     def __init__(
         self, paths: t.Iterable[str], parent: Command, allow_overrite: bool = False
     ) -> None:
@@ -29,7 +31,7 @@ class Autoload:
                     )
                 self.parent.add_command(command)
 
-    def __load_files(self, paths: t.Iterable[str]):
+    def __load_files(self, paths: t.Iterable[str]) -> t.Iterator[Path]:
         for filepath in paths:
             path = self.path(filepath)
             if not path:

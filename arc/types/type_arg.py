@@ -27,12 +27,12 @@ class TypeArg:
             getattr(self, attr) == getattr(other, attr) for attr in self.__slots__
         )
 
-    def __iter__(self):
+    def __iter__(self) -> t.Iterator[t.Tuple[str, t.Any]]:
         for slot in self.__slots__:
             yield slot, getattr(self, slot)
 
-    def __or__(self, other: TypeArg):
-        merged: dict = {}
+    def __or__(self, other: TypeArg) -> TypeArg:
+        merged: dict[str, t.Any] = {}
 
         for (attr, value), (_, other_value) in zip(self, other):
             if isdefault(other_value):
@@ -40,16 +40,16 @@ class TypeArg:
             else:
                 merged[attr] = other_value
 
-        return type(self)(**merged)  # type: ignore
+        return type(self)(**merged)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def __init_subclass__(cls) -> None:
-        init: t.Callable = getattr(cls, "__init__")
-        setattr: t.Callable = cls.__setattr__
+        init: t.Callable[..., None] = getattr(cls, "__init__")
+        setattr: t.Callable[..., None] = cls.__setattr__
 
-        def __init__(self, *args, **kwargs) -> None:
+        def __init__(self: object, *args: t.Any, **kwargs: t.Any) -> None:
             cls.__setattr__ = object.__setattr__  # type: ignore
             init(self, *args, **kwargs)
             cls.__setattr__ = setattr  # type: ignore

@@ -7,7 +7,7 @@ if t.TYPE_CHECKING:
     from arc.define import Command, Param
 
 # https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
-def levenshtein(s1: str, s2: str):
+def levenshtein(s1: str, s2: str) -> int:
     if len(s1) < len(s2):
         return levenshtein(s2, s1)
 
@@ -57,7 +57,7 @@ def subcommand_suggestions(
 
 
 def param_suggestions(
-    source: t.Iterable[str], params: t.Iterable[Param], distance: int
+    source: t.Iterable[str], params: t.Iterable[Param[t.Any]], distance: int
 ) -> Suggestions:
     return string_suggestions(
         source,
