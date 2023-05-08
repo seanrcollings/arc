@@ -9,14 +9,14 @@ import arc.typing as at
 from arc import errors
 from arc.logging import WARNING, logger, mode_map, DEBUG
 from arc.runtime.init import InitMiddleware
-from arc.runtime.middleware import Middleware, MiddlewareContainer
-
+from arc.runtime.middleware import Middleware, MiddlewareManager
+from arc.runtime.plugin import PluginManager
 
 if t.TYPE_CHECKING:
     from arc.define import Command
 
 
-class App(MiddlewareContainer):
+class App(MiddlewareManager):
     def __init__(
         self,
         root: Command,
@@ -29,6 +29,7 @@ class App(MiddlewareContainer):
         self.provided_ctx = ctx or {}
         self.state = state or {}
         self.config = root.config
+        self.plugins = PluginManager()
 
     def __call__(self, input: at.InputArgs = None) -> t.Any:
         self._handle_dynamic_name()
@@ -36,7 +37,7 @@ class App(MiddlewareContainer):
         ctx = self._create_ctx({"arc.input": input})
         try:
             try:
-                ctx = self.stack.start(ctx)
+                ctx = self._stack.start(ctx)
                 if "arc.command" not in ctx:
                     raise errors.CommandError(
                         "The command was not decided upon during initialization "
@@ -49,9 +50,9 @@ class App(MiddlewareContainer):
                 res = command.run(ctx)
             except Exception as e:
                 res = None
-                self.stack.throw(e)
+                self._stack.throw(e)
             else:
-                res = self.stack.close(res)
+                res = self._stack.close(res)
         except errors.ArcError as exc:
             if self.config.environment == "production":
                 arc.info(exc.fmt(ctx))
@@ -78,6 +79,7 @@ class App(MiddlewareContainer):
                 "arc.app": self,
                 "arc.state": self.state,
                 "arc.logger": logger,
+                "arc.plugins": self.plugins,
             }
             | self.provided_ctx
             | (data or {})

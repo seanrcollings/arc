@@ -7,6 +7,7 @@ from arc.config import (
     LinksConfig,
     SuggestionConfig,
     PresentConfig,
+    PluginConfig,
     configure,
 )
 from arc.constants import MISSING

@@ -5,7 +5,7 @@ from arc.runtime.init import InitMiddleware
 from arc.runtime.middleware import (
     Middleware,
     MiddlewareBase,
-    MiddlewareContainer,
+    MiddlewareManager,
     MiddlewareGenerator,
     MiddlewareStack,
 )

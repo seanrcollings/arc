@@ -59,6 +59,32 @@ class SuggestionConfig:
 
 
 @dataclass
+class PluginConfig:
+    """Configures Plugins locations for the application"""
+
+    paths: list[str] = field(default_factory=list)
+    """List of paths to search for plugins. These paths will be searched
+    for python  modules that contain a `plugin` function. If the file does
+    not exist, or the function is not found, it will be ignored
+
+    The paths provided can be to a specific file, or a directory. If a directory
+    is provided, all files in that directory will be searched for plugins.
+    """
+
+    groups: list[str] = field(default_factory=lambda: ["arc.plugins"])
+    """List of entrypoint groups to search for plugins. The entrypoint's value must be
+    a callable that accepts a single argument, the `Context` object.
+
+    Defaults to using the `arc.plugins` entrypoint group
+    """
+
+    entrypoints: list[str] = field(default_factory=list)
+    """List of explicit entrypoints to search for plugins. The entrypoint's value must be
+    a callable that accepts a single argument, the `Context` object.
+    """
+
+
+@dataclass
 class Config:
     """arc's Config object. A single global instance
     of this class is created, then used where it is needed"""
@@ -75,6 +101,7 @@ class Config:
     suggest: SuggestionConfig = field(default_factory=SuggestionConfig)
     links: LinksConfig = field(default_factory=LinksConfig)
     present: PresentConfig = field(default_factory=PresentConfig)
+    plugins: PluginConfig = field(default_factory=PluginConfig)
 
     @classmethod
     def load(cls) -> "Config":
@@ -110,6 +137,7 @@ def configure(
     debug: bool | None = None,
     links: LinksConfig | None = None,
     present: PresentConfig | None = None,
+    plugins: PluginConfig | None = None,
 ) -> None:
     """Function for updating global `arc` configuration
 
@@ -161,6 +189,7 @@ def configure(
         "debug": debug,
         "links": links,
         "present": present,
+        "plugins": plugins,
     }
 
     config = Config.load()

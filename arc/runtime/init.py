@@ -1,10 +1,9 @@
 """Contains all of the middlewares used during initialization of a command"""
 from __future__ import annotations
+import typing as t
 from datetime import datetime
-
 import shlex
 import sys
-import typing as t
 
 from arc import autocompletions, errors
 from arc import typing as at
@@ -44,6 +43,22 @@ class StartTimeMiddleware(MiddlewareBase):
             ctx["arc.debug.end"] = end
             diff = end - start
             ctx.logger.debug(f"Execution took: {diff.total_seconds():.4f}s")
+
+
+class LoadPluginsMiddleware(MiddlewareBase):
+    def __call__(self, ctx: Context) -> t.Any:
+        ctx.logger.debug("Loading plugins...")
+        app = ctx.app
+        app.plugins.paths(*ctx.config.plugins.paths)
+        app.plugins.groups(*ctx.config.plugins.groups)
+        app.plugins.entrypoints(*ctx.config.plugins.entrypoints)
+
+        if app.plugins:
+            ctx.logger.debug("Plugins loaded: %s", ", ".join(app.plugins))
+            ctx.logger.debug("Calling plugin hooks...")
+            for name, p in app.plugins.items():
+                ctx.logger.debug("  Calling plugin hook: %s", name)
+                p(ctx)
 
 
 class PerformDevChecksMiddleware(MiddlewareBase):
@@ -253,6 +268,7 @@ class InitMiddleware(DefaultMiddlewareNamespace):
     """
 
     StartTime = StartTimeMiddleware()
+    LoadPlugins = LoadPluginsMiddleware()
     PerformDevChecks = PerformDevChecksMiddleware()
     AddRuntimeParms = AddRuntimeParmsMiddleware()
     AddUsageErrorInfo = AddUsageErrorInfoMiddleware()
@@ -263,6 +279,7 @@ class InitMiddleware(DefaultMiddlewareNamespace):
 
     _list: list[Middleware] = [
         StartTime,
+        LoadPlugins,
         PerformDevChecks,
         AddRuntimeParms,
         AddUsageErrorInfo,

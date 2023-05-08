@@ -11,20 +11,19 @@ from arc.config import Config
 import arc.typing as at
 from arc import api, color, errors
 from arc.autocompletions import Completion, CompletionInfo, get_completions
-from arc.autoload import Autoload
 from arc.define import classful
 from arc.define.alias import AliasDict
 from arc.define.documentation import Documentation
 from arc.define.param import ParamMixin
 from arc.present.joiner import Join
-from arc.runtime import App, ExecMiddleware, MiddlewareContainer, MiddlewareStack
+from arc.runtime import App, ExecMiddleware, MiddlewareManager, MiddlewareStack
 from arc.runtime import Context
 
 if t.TYPE_CHECKING:
     from .param import ParamDefinition
 
 
-class Command(ParamMixin, MiddlewareContainer):
+class Command(ParamMixin, MiddlewareManager):
     name: str
     parent: Command | None
     config: Config
@@ -32,7 +31,6 @@ class Command(ParamMixin, MiddlewareContainer):
     param_def: ParamDefinition
     doc: Documentation
     explicit_name: bool
-    _autoload: bool
     data: dict[str, t.Any]
 
     def __init__(
@@ -47,7 +45,7 @@ class Command(ParamMixin, MiddlewareContainer):
         **kwargs: t.Any,
     ) -> None:
         ParamMixin.__init__(self)
-        MiddlewareContainer.__init__(self, [])
+        MiddlewareManager.__init__(self, [])
         if inspect.isclass(callback):
             self.callback = self.wrap_class_callback(
                 t.cast(type[at.ClassCallback], callback)
@@ -61,7 +59,6 @@ class Command(ParamMixin, MiddlewareContainer):
         self.subcommands = AliasDict()
         self.doc = Documentation(self, self.config.present, description)
         self.explicit_name = explicit_name
-        self._autoload = autoload
         self.data = kwargs
 
     __repr__ = api.display("name")
@@ -221,7 +218,7 @@ class Command(ParamMixin, MiddlewareContainer):
 
         stack = MiddlewareStack()
         for command in self.command_chain:
-            stack.extend(command.stack)
+            stack.extend(command._stack)
 
         ctx = stack.start(ctx)
         if "arc.args" not in ctx:
@@ -352,7 +349,7 @@ class Command(ParamMixin, MiddlewareContainer):
         if command.parent is None:
             command.parent = self
             for m in ExecMiddleware.all():
-                command.stack.try_remove(m)
+                command._stack.try_remove(m)
 
         if aliases:
             self.subcommands.add_aliases(command.name, *aliases)
@@ -432,9 +429,6 @@ class Command(ParamMixin, MiddlewareContainer):
             f"No parameter with name: {param_name}",
             Join.with_space(self.doc.fullname),
         )
-
-    def autoload(self, *paths: str) -> None:
-        Autoload(paths, self, self.config.autoload_overwrite).load()
 
     @staticmethod
     def wrap_class_callback(cls: type[at.ClassCallback]) -> at.CommandCallback:

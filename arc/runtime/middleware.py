@@ -99,9 +99,9 @@ class MiddlewareStack(collections.UserList[Middleware]):
             ...
 
 
-class MiddlewareContainer:
+class MiddlewareManager:
     def __init__(self, middlewares: t.Sequence[Middleware]):
-        self.stack = MiddlewareStack(middlewares)
+        self._stack = MiddlewareStack(middlewares)
 
     @t.overload
     def use(
@@ -169,18 +169,18 @@ class MiddlewareContainer:
         def inner(handler: Middleware) -> Middleware:
             ensure_single_operation()
             if pos is not None:
-                self.stack.insert(pos, handler)
+                self._stack.insert(pos, handler)
             elif replace:
-                idx = self.stack.index(replace)
-                self.stack[idx] = handler
+                idx = self._stack.index(replace)
+                self._stack[idx] = handler
             elif before:
-                idx = self.stack.index(before)
-                self.stack.insert(idx - 1, handler)
+                idx = self._stack.index(before)
+                self._stack.insert(idx - 1, handler)
             elif after:
-                idx = self.stack.index(after)
-                self.stack.insert(idx + 1, handler)
+                idx = self._stack.index(after)
+                self._stack.insert(idx + 1, handler)
             else:
-                self.stack.append(handler)
+                self._stack.append(handler)
 
             return handler
 
