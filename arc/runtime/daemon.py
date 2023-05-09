@@ -15,7 +15,6 @@ if t.TYPE_CHECKING:
 
 class Daemon:
     def __init__(self, app: App, address: at.Address) -> None:
-        self.server = Server(app, address, daemon=False)
         self.address = address
         self.app = app
 
@@ -29,7 +28,8 @@ class Daemon:
             input = input or sys.argv[1:]
             return self._send_message(input)
         else:
-            self.server.start()
+            server = Server(self.app, self.address, daemon=False)
+            server.start()
 
     def _send_message(self, input: at.InputArgs):
         client = connection.Client(self.address)

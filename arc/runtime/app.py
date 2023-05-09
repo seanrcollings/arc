@@ -33,6 +33,7 @@ class App(MiddlewareManager):
         self.state = state or {}
         self.config = root.config
         self.plugins = PluginManager()
+        self.logger = logger
 
     def __call__(self, input: at.InputArgs = None) -> t.Any:
         self._handle_dynamic_name()
@@ -88,7 +89,7 @@ class App(MiddlewareManager):
                 "arc.config": self.config,
                 "arc.app": self,
                 "arc.state": self.state,
-                "arc.logger": logger,
+                "arc.logger": self.logger,
                 "arc.plugins": self.plugins,
             }
             | self.provided_ctx
@@ -102,6 +103,6 @@ class App(MiddlewareManager):
 
     def _setup_logger(self) -> None:
         if self.config.debug:
-            logger.setLevel(logging.DEBUG)
+            self.logger.setLevel(logging.DEBUG)
         else:
-            logger.setLevel(mode_map.get(self.config.environment, logging.WARNING))
+            self.logger.setLevel(mode_map.get(self.config.environment, logging.WARNING))
