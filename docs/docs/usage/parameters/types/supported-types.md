@@ -315,10 +315,11 @@ Enforces that the string can only be a single character long
 
 `Password`
 
-
 When prompted for input, the user's input will not be echoed to the screen.
 
+`Email`
 
+Enforces that the string is a valid email address
 
 
 
