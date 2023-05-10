@@ -13,7 +13,7 @@ title: Home
 * [Subcommands](./usage/subcommands.md) - For breaking functionality of your CLI into discrete components
 * [Documentation](./usage/documentation-generation.md) - Automatic `--help` generation from your command definitons
 * [Developer Extension](./usage/middleware.md) - Middleware for extending the functionality of your CLI
-* [User Extension](./usage/command-autoloading.md) - Dynamic command loading at runtime for useres to extend your CLI
+* [User Extension](./usage/plugins.md) - Plugin support for extending the functionality of your CLI
 
 ## Installation
 *arc* can be installed with pip
@@ -24,7 +24,7 @@ $ pip install arc-cli
 ## Example
 To start off, here's a simple example application that can be used to greet someone
 
-```py title="hello.py"
+```py title="examples/hello.py"
 --8<-- "examples/hello.py"
 ```
 !!! tip

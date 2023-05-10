@@ -1,13 +1,12 @@
 [tool.poetry]
 name = "arc-cli"
 version = "8.3.0"
-description = "A Regular CLI"
-authors = ["Sean Collings <seanrcollings@gmail.com>"]
+description = "Package for creating CLI's with ease."
+authors = ["Sean Collings <me@seancollings.dev>"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/seanrcollings/arc"
-documentation = "https://arc.seanrcollings.com"
-keywords = ["CLI", "extendable", "easy", "arc"]
+documentation = "https://arc.seancollings.dev"
 classifiers= [
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3.10",
@@ -34,9 +33,6 @@ Jinja2 = "3.0.3"
 mkdocs-awesome-pages-plugin = "^2.8.0"
 hypothesis = "^6.68.2"
 pygithub = "^1.58.1"
-
-# [tool.poetry.plugins."arc.plugins"]
-# "test_plugin" = "plugin:plugin"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
