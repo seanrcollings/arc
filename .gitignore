@@ -17,3 +17,4 @@ out
 docs/docs/reference
 .hypothesis
 *.log
+.coverage
