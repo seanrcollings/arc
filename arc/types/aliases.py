@@ -10,6 +10,7 @@ import pathlib
 import re
 import types
 import typing as t
+import uuid
 
 import _io  # type: ignore
 
@@ -429,3 +430,12 @@ class PatternAlias(Alias, of=re.Pattern):
         if len(info.annotations) == 0:
             return 0
         return info.annotations[0]
+
+
+class UUIDAlias(Alias, of=uuid.UUID):
+    @classmethod
+    def convert(cls, value: str, info: TypeInfo[t.Any]) -> uuid.UUID:
+        try:
+            return uuid.UUID(value)
+        except ValueError as e:
+            raise errors.ConversionError(value, "Not a valid UUID", e) from e
