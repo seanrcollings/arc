@@ -10,7 +10,6 @@ if t.TYPE_CHECKING:
 
     from arc.config import Config
     from arc.define.command import Command
-    from arc.define.param.param import ValueOrigin
     from arc.prompt.prompt import Prompt
     from arc.runtime import App
 

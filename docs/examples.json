@@ -300,6 +300,14 @@
     }
   },
   {
+    "file": "middleware/middleware.py",
+    "exec": ["Joseph"],
+    "playground": {
+      "name": "Middlewares",
+      "description": "An example of using middlewares to modify the behavior of a command."
+    }
+  },
+  {
     "file": "paint.py",
     "exit_code": 1,
     "exec": ["red", "blue"],
