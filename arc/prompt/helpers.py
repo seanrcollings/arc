@@ -74,9 +74,10 @@ class Cursor:
 
     @staticmethod
     def getpos() -> tuple[int, int]:
-        sys.stdout.write(f"\x1b[6n")
-        sys.stdout.flush()
         with RawTerminal() as term:
+            sys.stdout.write(f"\x1b[6n")
+            sys.stdout.flush()
+
             seq = term.getch()
             while seq[-1] != "R":
                 seq += term.getch()
