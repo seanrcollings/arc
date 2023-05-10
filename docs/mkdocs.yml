@@ -61,6 +61,7 @@ nav:
       - User Input: usage/user-input.md
       - Subcommands: usage/subcommands.md
       - Documentation Generation: usage/documentation-generation.md
+      - Classful Commands: usage/classful-commands.md
       - Middleware: usage/middleware.md
       - Command State: usage/command-state.md
       - Plugins: usage/plugins.md

@@ -292,6 +292,14 @@
     "exit_code": 1
   },
   {
+    "file": "classful.py",
+    "exec": ["Joseph", "--help"],
+    "playground": {
+      "name": "Classful Commands",
+      "description": "Defining a command using a class instead of a function."
+    }
+  },
+  {
     "file": "paint.py",
     "exit_code": 1,
     "exec": ["red", "blue"],
