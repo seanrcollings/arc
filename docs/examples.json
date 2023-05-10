@@ -207,7 +207,11 @@
     "exit_code": 1
   },
   {
-    "file": "error_handlers.py",
+    "file": "errors/error_handlers.py",
+    "exec": ""
+  },
+  {
+    "file": "errors/bubbling.py",
     "exec": ""
   },
   {

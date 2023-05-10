@@ -110,13 +110,14 @@ If the handler can't handle a particular error, you can `raise` the exception ag
 ??? TIP "Alternative Error Handler Syntax"
     Because error handling in middlewares is a common pattern, *arc* supports
     an alternate syntax for defining them.
-    ```py title="examples/error_handlers.py"
-    --8<-- "examples/error_handlers.py"
+    ```py title="examples/errors/error_handlers.py"
+    --8<-- "examples/errors/error_handlers.py"
     ```
 
     ```console
-    --8<-- "examples/outputs/error_handlers"
+    --8<-- "examples/outputs/errors/error_handlers"
     ```
+    See [Error Handling](./error-handlers.md) for more information
 
 
 ## Modifying the Middleware Stack
