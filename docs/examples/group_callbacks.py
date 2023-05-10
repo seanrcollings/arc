@@ -8,7 +8,7 @@ class Group:
     def pre_exec(self):
         arc.print("Before the command executes")
 
-    def post_exec(sefl):
+    def post_exec(self):
         arc.print("After the command executes")
 
 
