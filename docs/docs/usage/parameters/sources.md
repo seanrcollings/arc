@@ -2,18 +2,20 @@ While generally, input is parsed from the command line, there are a few other so
 
 The precedence of sources is:
 
-1. Command Line
-2. Environment Variables
-3. Input Prompt
-4. Getter Function
-5. Default Value
+1. Command Argument
+2. Command Line
+3. Environment Variables
+4. Input Prompt
+5. Getter Function
+6. Default Value
 
 !!! note "Type Conversion"
-    All input sources, except for default value, will still pass through the type
-    conversion systems that *arc* provides. If the value you return for something
-    is already the correct type, it will be passed over.
+    All input sources, except for default values and getter functions, will still pass through the type
+    conversion systems that *arc* provides. So you're free to use `int`, `float`, `bool`, or any other type
+    that you've defined. *arc* will handle the conversion from enviroment variables and input prompts for you.
 
-### Command Line
+### Command Argument
+
 When an *arc* command is executed it will check `#!python sys.argv` for input. However, you can actually provide explcit input as the first argument to call:
 
 ```py title="examples/command_string.py"
@@ -23,8 +25,20 @@ When an *arc* command is executed it will check `#!python sys.argv` for input. H
 ```console
 --8<-- "examples/outputs/command_string"
 ```
-You generally don't need to do this, but it's useful for when you want to test your interface. (In fact, that's how pretty much all of *arc's* own tests are defined)
+You generally don't need to do this, but it's useful for when you want to test your interface. (In fact, that's how pretty much all of *arc's* own tests are defined).
 
+Note that the command string is treated as if it was the command line input, so if the command string is provided, `sys.argv` will be ignored.
+
+### Command Line
+This is the default you're probably used to. If you provide an argument on the command line, it will be parsed as the value for that parameter.
+
+```py title="examples/hello.py"
+--8<-- "examples/hello.py"
+```
+
+```console
+--8<-- "examples/outputs/hello"
+```
 
 ### Environment Variables
 ```py title="examples/from_env.py"
@@ -50,7 +64,7 @@ Hello, Jolyne
 ```
 If the parameter is optional, the user will be still be prompted, but the user can enter an empty input by just pressing *Enter* and the default will be used.
 
-TODO: Customzing the prompt object
+You can customize the prompt via a [configuration](../../reference/config.md) parameter.
 
 ### Getter Function
 Getter functions are a way to provide a default for an argument, based on the result of a function call.

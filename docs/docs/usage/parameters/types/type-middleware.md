@@ -1,4 +1,4 @@
-As stated before, *arc* is based on a Middleware design pattern. This also applies to *arc's* type system to give you further flexibility in defining your APIs.
+*arc* is based on a [middleware](../../middleware.md) design pattern. This also applies to *arc's* type system to give you further flexibility in defining your APIs.
 
 ## What is a Type Middleware?
 A Type Middleware is simply a callable object that recieves a value, and then returns a value of the same
@@ -27,14 +27,14 @@ def round2(val: float):
 
 ## Using a Type Middleware
 
-Type Middleware are *attched* to a type using an [Annotated Type](https://docs.python.org/3.9/library/typing.html#typing.Annotated)
+Type Middleware are *attached* to a type using an [Annotated Type](https://docs.python.org/3.9/library/typing.html#typing.Annotated)
 
-```py title="examples/type_middleware_round.py"
---8<-- "examples/type_middleware_round.py"
+```py title="examples/round.py"
+--8<-- "examples/round.py"
 ```
 
 ```console
---8<-- "examples/outputs/type_middleware_round"
+--8<-- "examples/outputs/round"
 ```
 
 ???+ tip

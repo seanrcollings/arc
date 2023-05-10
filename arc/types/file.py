@@ -1,13 +1,16 @@
+from __future__ import annotations
 import abc
 import sys
-import types
 import typing as t
-from dataclasses import dataclass
+from arc.define.param.param import ValueOrigin
 
 from arc.types.convert import convert_type
 from arc.types.default import Default, unwrap
 from arc.types.type_arg import TypeArg
 from arc.types.type_info import TypeInfo
+
+if t.TYPE_CHECKING:
+    from arc import Context
 
 __all__ = ["File", "Stdin"]
 
@@ -115,13 +118,10 @@ class File(t.IO[str], abc.ABC):
 
 T = t.TypeVar("T")
 
-StreamOrigin = t.Literal["cli", "stream"]
-
 
 class Stream(t.Generic[T]):
-    def __init__(self, value: T, origin: StreamOrigin) -> None:
+    def __init__(self, value: T) -> None:
         self.value: T = value
-        self.origin = origin
 
     @classmethod
     def __convert__(cls, value: str, info: TypeInfo[t.Any]) -> "Stream[T]":
@@ -129,14 +129,11 @@ class Stream(t.Generic[T]):
             t.cast(t.Optional[Stream.Args], info.type_arg), cls.__name__
         )
 
-        origin: StreamOrigin = "cli"
-
         if value == unwrap(arg.char):
             value = arg.stream.read()
-            origin = "stream"
 
         sub = info.sub_types[0]
-        return cls(convert_type(sub.resolved_type, value, sub), origin)
+        return cls(convert_type(sub.resolved_type, value, sub))
 
     class Args(TypeArg):
         __slots__ = ("stream", "char")
@@ -147,3 +144,4 @@ class Stream(t.Generic[T]):
 
 
 Stdin = t.Annotated[Stream[T], Stream.Args(sys.stdin)]
+"""Read input from command line, or from stdin if `-` is passed as the argument"""

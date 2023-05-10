@@ -49,6 +49,7 @@ nav:
               - Types Intro: usage/parameters/types/types-intro.md
               - Supported Types: usage/parameters/types/supported-types.md
               - Type Middleware: usage/parameters/types/type-middleware.md
+              - Type Arguments: usage/parameters/types/type-arguments.md
               - Custom Types: usage/parameters/types/custom-types.md
           - Parameter Sources: usage/parameters/sources.md
           - Parameter Groups: usage/parameters/groups.md

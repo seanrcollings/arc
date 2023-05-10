@@ -83,7 +83,7 @@ class TestEnv:
         def env(ctx: arc.Context, val: int = Argument(envvar="VAL")):
             return ctx.get_origin("val")
 
-        assert env("2") == ValueOrigin.CLI
+        assert env("2") == ValueOrigin.COMMAND_LINE
 
         with environ(VAL="2"):
             assert env("") == ValueOrigin.ENV

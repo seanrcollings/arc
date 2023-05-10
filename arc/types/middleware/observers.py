@@ -58,6 +58,6 @@ class Log:
             origin = ctx.get_origin(param.argument_name, ValueOrigin.DEFAULT)
             name = names.get(self.name_kind, param.argument_name)
 
-            ctx.logger.log(self.level, f"{name} = {value} ({origin.value})")
+            ctx.logger.log(self.level, f"{name} = {value} ({origin})")
 
         return value

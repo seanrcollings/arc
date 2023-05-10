@@ -9,6 +9,9 @@ T = t.TypeVar("T")
 
 
 class TypeArg:
+    """A type argument that can be used to annotate a type.
+    This is used to provide additional information neccessary to convert a type."""
+
     __slots__: tuple[str, ...]
 
     def __repr__(self) -> str:
