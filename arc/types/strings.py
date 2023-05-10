@@ -25,9 +25,7 @@ class Password(UserString):
 
     When prompted for input, the user's input will not be echoed to the screen.
 
-    By default, `str(Password())` will emit only asterisks to prevent you from emitting it to places you don't intend.
-    If you need the actual string representation you can use `repr(Password())`. Alternatively you can disable this using
-    an  annotated type argument:
+    Additionally, the string will be obscured when printed. For example:
 
     ```py
     from typing import Annotated
@@ -35,35 +33,22 @@ class Password(UserString):
     from arc.types import Password
 
     @arc.command
-    def command(password: Annotated[Password, Password.Args(obscure=False)]):
-        print(password)
+    def command(password: Password):
+        print(password) # This would be obscured
+        print(password.data) # This would be the actual password
     ```
     """
 
-    def __init__(self, seq: object, obscure: bool = True) -> None:
-        super().__init__(seq)
-        self.__obscure = obscure
-
     def __str__(self) -> str:
-        if self.__obscure:
-            return "*" * len(self)
-
-        return super().__str__()
+        return "*" * len(self)
 
     def __repr__(self) -> str:
-        return super().__str__()
+        return "Password()"
 
     @classmethod
     def __prompt__(cls, param: Param[str], ctx: Context) -> str:
         return input_prompt(param, ctx, echo=False)
 
     @classmethod
-    def __convert__(cls, value: str, info: TypeInfo[str]) -> Password:
-        args = info.type_arg or cls.Args()
-        return cls(value, **args.dict())
-
-    class Args(TypeArg):
-        __slots__ = ("obscure",)
-
-        def __init__(self, obscure: bool = Default(True)) -> None:
-            self.obscure = obscure
+    def __convert__(cls, value: str) -> Password:
+        return cls(value)

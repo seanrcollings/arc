@@ -9,3 +9,10 @@ def test_char():
 
     with pytest.raises(errors.ValidationError):
         arc.convert("longer", strings.Char)
+
+
+def test_password():
+    assert arc.convert("password", strings.Password) == strings.Password("password")
+    password = arc.convert("password", strings.Password)
+    assert password.data == "password"
+    assert str(password) == "********"
