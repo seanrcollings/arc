@@ -9,10 +9,10 @@ Every *arc* application / command comes with a builtin `--help` flag.
 ```
 
 
-## Paramater Documentation
+## Parameter Documentation
 Command parameters are documented using the `desc` argument of `Argument` / `Option` / `Flag`.
 
-Example:
+The following command:
 ```py title="arguments_documentation.py"
 --8<-- "examples/arguments_documentation.py"
 ```
@@ -33,8 +33,8 @@ Will produce the following help output:
 
 ![Markdown Example](../img/markdown.png)
 
-### Inline Formatting
-The above example outlines the block-level formatting (paragraphs, lists, etc). Inline formatting is used to format individual words or phrases. The following syntax is supported:
+### Syntax
+The following syntax is supported:
 
 | Syntax                     | Description                                                                          |
 | -------------------------- | ------------------------------------------------------------------------------------ |

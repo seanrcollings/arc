@@ -23,18 +23,17 @@ def command():
     - This is a third list item
 
     # Unformatted text
-    You can add unformatted text by using the
-    surrounding the text with three backticks
+    You can add unformatted text by surrounding the
+    text with three backticks
 
     ```
-    arc will not perform any formatting of this text.
-        This lets you fully control how the text
-        is displayed (Like tabbing it in!)
+        arc will not perform any formatting of this text.
+            This lets you fully control how the text is displayed (Like tabbing it in!)
+    ```
 
-    arc actually takes advantage of this fact
+    `arc` actually takes advantage of this fact
     to have more more control over how the
     Argument and Options are displayed in the help text.
-    ```
     """
 
 
