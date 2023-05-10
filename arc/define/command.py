@@ -216,6 +216,8 @@ class Command(ParamMixin, MiddlewareManager):
         else:
             ctx.logger.debug(f"Executing: {self}")
 
+        ctx.logger.debug("—" * 50)
+
         stack = MiddlewareStack()
         for command in self.command_chain:
             stack.extend(command._stack)
@@ -237,7 +239,7 @@ class Command(ParamMixin, MiddlewareManager):
             stack.throw(e)
         else:
             res = stack.close(res)
-
+        ctx.logger.debug("—" * 50)
         return res
 
     # Subcommands ----------------------------------------------------------------
