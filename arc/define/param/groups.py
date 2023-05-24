@@ -33,11 +33,9 @@ def _default_enter(inst: object) -> object:
     return inst
 
 
-def _default_exit(inst: object, *args: t.Any) -> object:
+def _default_exit(inst: object, *args: t.Any) -> None:
     if hasattr(inst, "post_exec"):
         inst.post_exec()
-
-    return inst
 
 
 _default_group_methods = {
