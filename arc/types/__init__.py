@@ -8,6 +8,7 @@ from .path import *
 from .semver import SemVer
 from .state import State
 from .strings import *
+from .dates import *
 from .type_info import TypeInfo
 
 if sys.platform not in ("win32", "cygwin", "emscripten"):

@@ -4,6 +4,7 @@ All builtin types (int, str, float, etc...) have a corresponding Alias type.
 from __future__ import annotations
 
 import collections
+import datetime
 import enum
 import ipaddress
 import pathlib
@@ -20,7 +21,9 @@ from arc.color import colorize, fg
 from arc.present.joiner import Join
 from arc.prompt.prompts import select_prompt
 from arc.types.convert import convert_type
+from arc.types.dates import DateArgs, DateTimeArgs, TimeArgs
 from arc.types.type_arg import TypeArg
+from arc.types.default import unwrap
 from arc.typing import Annotation, TypeProtocol
 
 if t.TYPE_CHECKING:
@@ -434,8 +437,43 @@ class PatternAlias(Alias, of=re.Pattern):
 
 class UUIDAlias(Alias, of=uuid.UUID):
     @classmethod
-    def convert(cls, value: str, info: TypeInfo[t.Any]) -> uuid.UUID:
+    def convert(cls, value: str, info: TypeInfo[uuid.UUID]) -> uuid.UUID:
         try:
             return uuid.UUID(value)
         except ValueError as e:
             raise errors.ConversionError(value, "Not a valid UUID", e) from e
+
+
+class DateTimeAlias(Alias, of=datetime.datetime):
+    @classmethod
+    def convert(
+        cls, value: str, info: TypeInfo[datetime.datetime]
+    ) -> datetime.datetime:
+        type_arg: DateTimeArgs = t.cast(DateTimeArgs, info.type_arg) or DateTimeArgs()
+
+        try:
+            return datetime.datetime.strptime(value, unwrap(type_arg.format))
+        except ValueError as e:
+            raise errors.ConversionError(value, "Not a valid datetime", e) from e
+
+
+class DateAlias(Alias, of=datetime.date):
+    @classmethod
+    def convert(cls, value: str, info: TypeInfo[datetime.date]) -> datetime.date:
+        type_arg: DateArgs = t.cast(DateArgs, info.type_arg) or DateArgs()
+
+        try:
+            return datetime.datetime.strptime(value, unwrap(type_arg.format)).date()
+        except ValueError as e:
+            raise errors.ConversionError(value, "Not a valid date", e) from e
+
+
+class TimeAlias(Alias, of=datetime.time):
+    @classmethod
+    def convert(cls, value: str, info: TypeInfo[datetime.time]) -> datetime.time:
+        type_arg: TimeArgs = t.cast(TimeArgs, info.type_arg) or TimeArgs()
+
+        try:
+            return datetime.datetime.strptime(value, unwrap(type_arg.format)).time()
+        except ValueError as e:
+            raise errors.ConversionError(value, "Not a valid time", e) from e
