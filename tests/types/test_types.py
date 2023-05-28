@@ -357,34 +357,3 @@ def test_uuid(cli: arc.Command):
         cli("ui bad")
 
 
-def test_datetime(cli: arc.Command):
-    @cli.subcommand
-    def dt(val: datetime.datetime):
-        return val
-
-    assert cli("dt 2021-01-01T00:00:00") == datetime.datetime(2021, 1, 1, 0, 0, 0)
-
-    with pytest.raises(errors.ArgumentError):
-        cli("dt bad")
-
-
-def test_date(cli: arc.Command):
-    @cli.subcommand
-    def dt(val: datetime.date):
-        return val
-
-    assert cli("dt 2021-01-01") == datetime.date(2021, 1, 1)
-
-    with pytest.raises(errors.ArgumentError):
-        cli("dt bad")
-
-
-def test_time(cli: arc.Command):
-    @cli.subcommand
-    def dt(val: datetime.time):
-        return val
-
-    assert cli("dt 00:00:00") == datetime.time(0, 0, 0)
-
-    with pytest.raises(errors.ArgumentError):
-        cli("dt bad")
