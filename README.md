@@ -1,4 +1,4 @@
-# ARC: A Regular CLI
+# ARC
 A tool for building declarative, and highly extendable CLI systems for Python 3.10+
 
 # ARC Features

@@ -312,6 +312,10 @@
     }
   },
   {
+    "file": "dates.py",
+    "exec": ["2022-01-01"]
+  },
+  {
     "file": "paint.py",
     "exit_code": 1,
     "exec": ["red", "blue"],

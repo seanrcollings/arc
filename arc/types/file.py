@@ -2,7 +2,7 @@ from __future__ import annotations
 import abc
 import sys
 import typing as t
-from arc.define.param.param import ValueOrigin
+import io
 
 from arc.types.convert import convert_type
 from arc.types.default import Default, unwrap
