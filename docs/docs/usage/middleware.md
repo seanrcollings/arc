@@ -127,7 +127,7 @@ By default `#!python use()` adds the provided middleware to the end of the stack
 command.use(mid1, pos=4) # at index 4
 command.use(mid2, after=mid1) # Inserted directly after mid1
 command.use(mid3, before=mid1) # Inserted directly before mid1
-command.use(mid4, replace=mid2) # Replaces mid2 with mid1
+command.use(mid4, replace=mid2) # Replaces mid2 with mid4
 ```
 
 This can be used to override the default behavior of *arc*. For example, this could be used to replace arc's parsing middleware with your own.
@@ -150,6 +150,6 @@ def parsing(ctx):
 app()
 ```
 
-Be careful when replacing middlewares, as it may break the functionality of *arc*. Most middlewares expect certain data to be in the Context object and will fail if it is not present. For example, if you replace the `#!python arc.InitMiddleware.Parser` middleware, you will need to ensure that the `arc.parser.result` key is present in the context object and contains the parsed arguments.
+Be careful when replacing middlewares, as it may break the functionality of *arc*. Most middlewares expect certain data to be in the Context object and will fail if it is not present. For example, if you replace the `#!python arc.InitMiddleware.Parser` middleware, you will need to ensure that the `arc.parse.result` key is present in the context object and contains the parsed arguments.
 
 You can review the reference for both the [init middlewares](../reference/runtime/init.md) and [execution middlewares](../reference/runtime/exec.md) to see what data they expect to be present in and what data they add to the context object.

@@ -102,6 +102,7 @@ class Config:
     links: LinksConfig = field(default_factory=LinksConfig)
     present: PresentConfig = field(default_factory=PresentConfig)
     plugins: PluginConfig = field(default_factory=PluginConfig)
+    extra: dict[str, t.Any] = field(default_factory=dict)
 
     @classmethod
     def load(cls) -> "Config":
@@ -138,6 +139,7 @@ def configure(
     links: LinksConfig | None = None,
     present: PresentConfig | None = None,
     plugins: PluginConfig | None = None,
+    **kwargs: t.Any,
 ) -> None:
     """Function for updating global `arc` configuration
 
@@ -190,6 +192,7 @@ def configure(
         "links": links,
         "present": present,
         "plugins": plugins,
+        "extra": kwargs or None,
     }
 
     config = Config.load()
