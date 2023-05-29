@@ -6,6 +6,7 @@ from __future__ import annotations
 import collections
 import datetime
 import enum
+import io
 import ipaddress
 import pathlib
 import re
@@ -76,11 +77,11 @@ class Alias:
                 Alias.aliases[alias] = cls  # type: ignore
 
     @classmethod
-    def resolve(cls, annotation: type) -> type[TypeProtocol]:
+    def resolve(cls, annotation: Annotation) -> type[TypeProtocol]:
         """Handles resolving alias types"""
 
         if safe.issubclass(annotation, TypeProtocol):
-            return annotation
+            return t.cast(type[TypeProtocol], annotation)
         elif annotation in cls.aliases:
             # Type is a key
             # We perform this check once before hand
@@ -88,6 +89,8 @@ class Alias:
             # the mro() method
             return cls.aliases[annotation]
         else:
+            assert isinstance(annotation, type), f"{annotation} is not a type"
+
             # Type is a subclass of a key
             for parent in annotation.mro():
                 if parent in cls.aliases:
@@ -121,6 +124,8 @@ class BytesAlias(bytes, Alias, of=bytes):
 
 
 class IntAlias(Alias, of=int):
+    name = "integer"
+
     @classmethod
     def convert(cls, value: str, info: TypeInfo[int]) -> int:
         args = info.type_arg
@@ -477,3 +482,11 @@ class TimeAlias(Alias, of=datetime.time):
             return datetime.datetime.strptime(value, unwrap(type_arg.format)).time()
         except ValueError as e:
             raise errors.ConversionError(value, "Not a valid time", e) from e
+
+
+class StringIOAlias(Alias, of=io.StringIO):
+    name = "string"
+
+    @classmethod
+    def convert(cls, value: str, info: TypeInfo[t.Any]) -> io.StringIO:
+        return io.StringIO(value)

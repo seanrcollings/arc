@@ -79,19 +79,8 @@ def test_stream():
     io = StringIO("value")
 
     @arc.command
-    def command(contents: t.Annotated[Stream[str], Stream.Args(io)]):
-        return contents.value
+    def command(contents: t.Annotated[Stream, Stream.Args(io)]):
+        return contents.read()
 
     assert command("-") == "value"
     assert command("provided") == "provided"
-
-
-def test_stream_conversion():
-    io = StringIO("1")
-
-    @arc.command
-    def command(contents: t.Annotated[Stream[int], Stream.Args(io)]):
-        return contents.value
-
-    assert command("-") == 1
-    assert command("2") == 2

@@ -1,18 +1,20 @@
 from __future__ import annotations
 import abc
+import io
 import sys
 import typing as t
-import io
 
+from arc import errors
 from arc.types.convert import convert_type
 from arc.types.default import Default, unwrap
 from arc.types.type_arg import TypeArg
 from arc.types.type_info import TypeInfo
+from arc.types.aliases import Alias
 
 if t.TYPE_CHECKING:
     from arc import Context
 
-__all__ = ["File", "Stdin"]
+__all__ = ["File", "Stdin", "StdinFile", "Stream"]
 
 
 OpenNewline = t.Literal[None, "", "\n", "\r", "\r\n"]
@@ -116,24 +118,19 @@ class File(t.IO[str], abc.ABC):
     """Equivalent to `open(filename, "ab+")`"""
 
 
-T = t.TypeVar("T")
-
-
-class Stream(t.Generic[T]):
-    def __init__(self, value: T) -> None:
-        self.value: T = value
+class Stream(t.IO[str], abc.ABC):
+    name = "stream"
 
     @classmethod
-    def __convert__(cls, value: str, info: TypeInfo[t.Any]) -> "Stream[T]":
+    def __convert__(cls, value: str, info: TypeInfo[t.Any]) -> "t.IO[str]":
         arg: Stream.Args = TypeArg.ensure(
             t.cast(t.Optional[Stream.Args], info.type_arg), cls.__name__
         )
 
         if value == unwrap(arg.char):
-            value = arg.stream.read()
+            return arg.stream
 
-        sub = info.sub_types[0]
-        return cls(convert_type(sub.resolved_type, value, sub))
+        raise errors.ConversionError(value, f"expected {arg.char!r} to read from stdin")
 
     class Args(TypeArg):
         __slots__ = ("stream", "char")
@@ -143,5 +140,22 @@ class Stream(t.Generic[T]):
             self.char = char
 
 
-Stdin = t.Annotated[Stream[T], Stream.Args(sys.stdin)]
+Stdin = t.Union[t.Annotated[Stream, Stream.Args(sys.stdin)], io.StringIO]
 """Read input from command line, or from stdin if `-` is passed as the argument"""
+
+
+_FileOrStdin = t.Union[File.Read, t.Annotated[Stream, Stream.Args(sys.stdin)]]
+_info: TypeInfo[t.Any] = TypeInfo.analyze(_FileOrStdin)
+
+
+class StdinFile(Stream):
+    """Read input from a file, or from a stdin if '-' is passed as the argument"""
+
+    @classmethod
+    def __convert__(cls, value: str, info: TypeInfo[t.Any]) -> "t.IO[str]":
+        try:
+            return convert_type(_info.resolved_type, value, _info)
+        except errors.ConversionError as e:
+            raise errors.ConversionError(
+                value, f"expected file or '-' to read from stdin"
+            ) from e
