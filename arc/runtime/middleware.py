@@ -88,6 +88,8 @@ class MiddlewareStack(collections.UserList[Middleware]):
                 exception_handled = True
             except Exception as e:
                 exception = e
+                exc_type = type(e)
+                trace = e.__traceback__
 
         if not exception_handled:
             raise exception

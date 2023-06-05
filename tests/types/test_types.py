@@ -1,5 +1,7 @@
+import datetime
 import re
 from typing import Literal, Union, TypedDict, Any, Optional
+import uuid
 from hypothesis import given, example, infer, strategies as st
 from pathlib import Path
 import enum
@@ -340,3 +342,18 @@ def test_pattern(cli: arc.Command):
 
     with pytest.raises(errors.ArgumentError):
         cli("rg [")
+
+
+def test_uuid(cli: arc.Command):
+    @cli.subcommand
+    def ui(val: uuid.UUID):
+        return val
+
+    assert cli("ui 123e4567-e89b-12d3-a456-426614174000") == uuid.UUID(
+        "123e4567-e89b-12d3-a456-426614174000"
+    )
+
+    with pytest.raises(errors.ArgumentError):
+        cli("ui bad")
+
+

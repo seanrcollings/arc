@@ -207,7 +207,11 @@
     "exit_code": 1
   },
   {
-    "file": "error_handlers.py",
+    "file": "errors/error_handlers.py",
+    "exec": ""
+  },
+  {
+    "file": "errors/bubbling.py",
     "exec": ""
   },
   {
@@ -290,6 +294,26 @@
     "file": "new_version.py",
     "exec": ["0.1.1", "1.2.1"],
     "exit_code": 1
+  },
+  {
+    "file": "classful.py",
+    "exec": ["Joseph", "--help"],
+    "playground": {
+      "name": "Classful Commands",
+      "description": "Defining a command using a class instead of a function."
+    }
+  },
+  {
+    "file": "middleware/middleware.py",
+    "exec": ["Joseph"],
+    "playground": {
+      "name": "Middlewares",
+      "description": "An example of using middlewares to modify the behavior of a command."
+    }
+  },
+  {
+    "file": "dates.py",
+    "exec": ["2022-01-01"]
   },
   {
     "file": "paint.py",

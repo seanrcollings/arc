@@ -6,7 +6,7 @@ import typing as t
 from functools import cached_property
 
 import arc.typing as at
-from arc import api, constants, errors, safe
+from arc import api, safe
 from arc.autocompletions import CompletionInfo, get_completions
 from arc.color import colorize, fg
 from arc.constants import MISSING, Constant
@@ -24,8 +24,8 @@ class Action(enum.Enum):
     COUNT = "count"
 
 
-class ValueOrigin(enum.Enum):
-    CLI = "cli"
+class ValueOrigin:
+    COMMAND_LINE = "command_line"
     ENV = "env"
     PROMPT = "prompt"
     DEFAULT = "default"

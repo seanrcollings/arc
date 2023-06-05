@@ -1,19 +1,17 @@
 from __future__ import annotations
+import re
 
 import typing as t
 from collections import UserString
 
 from arc.prompt.prompts import input_prompt
-from arc.types.default import Default
-from arc.types.type_arg import TypeArg
-from arc.types.type_info import TypeInfo
-from arc.types.middleware import Len
+from arc.types.middleware import Len, Matches
 
 if t.TYPE_CHECKING:
     from arc.define import Param
     from arc.runtime import Context
 
-__all__ = ["Char", "Password"]
+__all__ = ["Char", "Password", "Email"]
 
 
 Char = t.Annotated[str, Len(1)]
@@ -25,9 +23,7 @@ class Password(UserString):
 
     When prompted for input, the user's input will not be echoed to the screen.
 
-    By default, `str(Password())` will emit only asterisks to prevent you from emitting it to places you don't intend.
-    If you need the actual string representation you can use `repr(Password())`. Alternatively you can disable this using
-    an  annotated type argument:
+    Additionally, the string will be obscured when printed. For example:
 
     ```py
     from typing import Annotated
@@ -35,35 +31,32 @@ class Password(UserString):
     from arc.types import Password
 
     @arc.command
-    def command(password: Annotated[Password, Password.Args(obscure=False)]):
-        print(password)
+    def command(password: Password):
+        print(password) # This would be obscured
+        print(password.data) # This would be the actual password
     ```
     """
 
-    def __init__(self, seq: object, obscure: bool = True) -> None:
-        super().__init__(seq)
-        self.__obscure = obscure
-
     def __str__(self) -> str:
-        if self.__obscure:
-            return "*" * len(self)
-
-        return super().__str__()
+        return "*" * len(self)
 
     def __repr__(self) -> str:
-        return super().__str__()
+        return "Password()"
 
     @classmethod
     def __prompt__(cls, param: Param[str], ctx: Context) -> str:
         return input_prompt(param, ctx, echo=False)
 
     @classmethod
-    def __convert__(cls, value: str, info: TypeInfo[str]) -> Password:
-        args = info.type_arg or cls.Args()
-        return cls(value, **args.dict())
+    def __convert__(cls, value: str) -> Password:
+        return cls(value)
 
-    class Args(TypeArg):
-        __slots__ = ("obscure",)
 
-        def __init__(self, obscure: bool = Default(True)) -> None:
-            self.obscure = obscure
+# https://stackoverflow.com/questions/201323/how-can-i-validate-an-email-address-using-a-regular-expression
+
+email_regex = re.compile(
+    r'(?:[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&\'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])'
+)
+
+Email = t.Annotated[str, Matches(email_regex, message="is not a valid email address")]
+"""String type with email validation"""

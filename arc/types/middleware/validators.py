@@ -17,14 +17,23 @@ class Matches:
     - Matches against `str(value)`, so the type must have a sensible string representation
     """
 
-    def __init__(self, pattern: str | re.Pattern[str], flags: int = 0):
+    def __init__(
+        self,
+        pattern: str | re.Pattern[str],
+        flags: int = 0,
+        message: str = "does not match expected format: {pattern}",
+    ):
         self.pattern = pattern
         self.flags = flags
+        self.message = message
 
     def __call__(self, value: t.Any) -> t.Any:
         if not re.match(self.pattern, str(value), self.flags):
             raise errors.ValidationError(
-                f"does not match expected format: {self.pattern}"
+                self.message.format(
+                    pattern=self.pattern,
+                    value=value,
+                )
             )
 
         return value

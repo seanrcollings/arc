@@ -8,7 +8,7 @@ def command():
 
 
 @command.handle(RuntimeError)
-def handle_exception(exc, context):
+def handle_exception(ctx: arc.Context, exc):
     arc.print("handled!")
 
 

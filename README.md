@@ -1,5 +1,5 @@
-# ARC: A Regular CLI
-A tool for building declarative, and highly extendable CLI systems for Python 3.9
+# ARC
+A tool for building declarative, and highly extendable CLI systems for Python 3.10+
 
 # ARC Features
 - Command line arguments based on python type hints

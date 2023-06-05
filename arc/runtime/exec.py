@@ -57,14 +57,14 @@ class SetupParamMiddleware(MiddlewareBase):
         command: Command = ctx["arc.command"]
         param_instance = command.param_def.create_instance()
         ctx["arc.args.tree"] = param_instance
-        ctx["arc.args.origins"] = {}
+        ctx.setdefault("arc.args.origins", {})
 
 
 class ParamProcessor(MiddlewareBase):
     ctx: Context
     param_tree: ParamTree[type[dict[str, t.Any]]]
     config: Config
-    origins: dict[str, ValueOrigin]
+    origins: dict[str, str]
 
     __IGNORE = object()
 
@@ -103,7 +103,7 @@ class ParamProcessor(MiddlewareBase):
     def skip(self, param: Param[t.Any], value: t.Any) -> bool:
         return param.is_injected or not param.expose
 
-    def set_origin(self, param: Param[t.Any], origin: ValueOrigin) -> None:
+    def set_origin(self, param: Param[t.Any], origin: str) -> None:
         self.origins[param.argument_name] = origin
 
 
@@ -128,7 +128,7 @@ class ApplyParseResultMiddleware(ParamProcessor):
 
     def process_missing(self, param: Param[t.Any]) -> t.Any:
         value: t.Any = self.res.pop(param.argument_name, constants.MISSING)
-        self.set_origin(param, ValueOrigin.CLI)
+        self.set_origin(param, ValueOrigin.COMMAND_LINE)
 
         # This is dependent on the fact that the current parser
         # adds a None to the result when you input a keyword, but
@@ -226,7 +226,7 @@ class ConvertValuesMiddleware(ParamProcessor):
     """
 
     def process_not_missing(self, param: Param[t.Any], value: t.Any) -> t.Any:
-        if value in (None, constants.MISSING, True, False,) and param.type.origin in (
+        if value in (None, constants.MISSING, True, False) and param.type.origin in (
             bool,
             t.Any,
         ):
@@ -235,7 +235,12 @@ class ConvertValuesMiddleware(ParamProcessor):
         try:
             return param.convert(value)
         except errors.ConversionError as e:
-            raise errors.InvalidParamValueError(str(e), param, e.details) from e
+            details = e.details
+
+            if self.ctx.get_origin(param.argument_name) == ValueOrigin.ENV:
+                details = f"Invalid value in enviroment variable: {self.config.env_prefix}{param.envvar}"
+
+            raise errors.InvalidParamValueError(str(e), param, details) from e
 
 
 class DefaultValueMiddleware(ParamProcessor):

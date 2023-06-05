@@ -113,3 +113,16 @@ def test_callbacks():
     group = command("")
     assert group.pre
     assert group.post
+
+
+def test_errors_bubbleing():
+    @arc.group
+    class Group:
+        val: int
+
+    @arc.command
+    def command(group: Group):
+        raise RuntimeError("This is an error")
+
+    with pytest.raises(RuntimeError):
+        command("1")

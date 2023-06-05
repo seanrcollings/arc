@@ -48,7 +48,7 @@ class InputQuestion(Question[T]):
     def __init__(
         self,
         prompt: str,
-        convert: type[T] = str,  # type: ignore
+        convert: type[T] = None,  # type: ignore
         *,
         default: T | constants.Constant = constants.MISSING_DEFAULT,
         echo: bool = True,
@@ -83,7 +83,11 @@ class InputQuestion(Question[T]):
                 self.err("Cannot be blank")
 
         value = self.validate(value)
-        return self.convert(value, self.convert_to)
+
+        if self.convert_to is None:
+            return t.cast(T, value)
+        else:
+            return self.convert(value, self.convert_to)
 
     def validate(self, value: str) -> t.Any:
         return value

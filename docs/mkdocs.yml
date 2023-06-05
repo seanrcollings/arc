@@ -49,6 +49,7 @@ nav:
               - Types Intro: usage/parameters/types/types-intro.md
               - Supported Types: usage/parameters/types/supported-types.md
               - Type Middleware: usage/parameters/types/type-middleware.md
+              - Type Arguments: usage/parameters/types/type-arguments.md
               - Custom Types: usage/parameters/types/custom-types.md
           - Parameter Sources: usage/parameters/sources.md
           - Parameter Groups: usage/parameters/groups.md
@@ -61,6 +62,8 @@ nav:
       - User Input: usage/user-input.md
       - Subcommands: usage/subcommands.md
       - Documentation Generation: usage/documentation-generation.md
+      - Classful Commands: usage/classful-commands.md
+      - Error Handling: usage/error-handlers.md
       - Middleware: usage/middleware.md
       - Command State: usage/command-state.md
       - Plugins: usage/plugins.md

@@ -46,6 +46,17 @@ class StartTimeMiddleware(MiddlewareBase):
 
 
 class LoadPluginsMiddleware(MiddlewareBase):
+    """Utility Middleware that loads plugins defined in the
+    configuration into the application and calls their hooks
+
+    # Context Dependencies
+    - `arc.config` - Configuration object
+    - `arc.app` - Application object
+
+    # Context Additions
+    None
+    """
+
     def __call__(self, ctx: Context) -> t.Any:
         ctx.logger.debug("Loading plugins...")
         app = ctx.app
@@ -194,6 +205,19 @@ class NormalizeInputMiddleware(MiddlewareBase):
 
 
 class CommandFinderMiddleware(MiddlewareBase):
+    """Middleware that finds the command to execute based on the input.
+    Finds the command by walking the tree of commands from the root and
+    comparing them with each next word in the input
+
+    # Context Dependencies
+    - `arc.input`: The input to find the command from
+
+    # Context Additions
+    - `arc.command`: The command to execute
+    - `arc.input`: The input to pass to the command.
+    Will be what's left of the input after removing the command path
+    """
+
     def __call__(self, ctx: Context) -> t.Any:
         args: list[str] = ctx["arc.input"]
         command, command_args = ctx.root.find_command(args)
@@ -202,6 +226,17 @@ class CommandFinderMiddleware(MiddlewareBase):
 
 
 class ArgParseMiddleware(MiddlewareBase):
+    """Middleware that parses the input using the `argparse` library
+
+    # Context Dependencies
+    - `arc.command`: The command to parse the input for
+    - `arc.input`: The input to parse
+
+    # Context Additions
+    - `arc.parse.result`: The result of the parsing
+    - `arc.parse.extra`: Any extra arguments that were not parsed
+    """
+
     def __call__(self, ctx: Context) -> t.Any:
         args: list[str] = ctx["arc.input"]
 
@@ -257,7 +292,7 @@ class InitMiddleware(DefaultMiddlewareNamespace):
     # create the App object explicitly
     app = arc.App(command)
 
-    @app.use(before=arc.InitMiddleware.Parse)
+    @app.use(before=arc.InitMiddleware.Parser)
     def before_parse(ctx: arc.Context):
         # Will run before the middleware that performs the parsing operation
         ...

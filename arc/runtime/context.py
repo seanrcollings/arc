@@ -10,7 +10,6 @@ if t.TYPE_CHECKING:
 
     from arc.config import Config
     from arc.define.command import Command
-    from arc.define.param.param import ValueOrigin
     from arc.prompt.prompt import Prompt
     from arc.runtime import App
 
@@ -75,19 +74,22 @@ class Context(collections.UserDict[str, t.Any]):
         """
         return self.app.execute(command, **kwargs)
 
+    def set_origin(self, param_name: str, origin: str) -> None:
+        """Sets the origin of a parameter"""
+        origins = self.setdefault("arc.args.origins", {})
+        origins[param_name] = origin
+
     @t.overload
-    def get_origin(self, param_name: str) -> ValueOrigin | None:
+    def get_origin(self, param_name: str) -> str | None:
         ...
 
     @t.overload
-    def get_origin(self, param_name: str, default: T) -> ValueOrigin | T:
+    def get_origin(self, param_name: str, default: T) -> str | T:
         ...
 
-    def get_origin(
-        self, param_name: str, default: T | None = None
-    ) -> ValueOrigin | T | None:
+    def get_origin(self, param_name: str, default: T | None = None) -> str | T | None:
         """Gets the origin of a paramter"""
-        origins: dict[str, ValueOrigin] | None = self.get("arc.args.origins")
+        origins: dict[str, str] | None = self.get("arc.args.origins")
 
         if not origins:
             return default

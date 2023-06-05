@@ -15,6 +15,7 @@ __all__ = [
     "PositiveFloat",
     "NegativeFloat",
     "AnyNumber",
+    "IntArgs",
 ]
 
 

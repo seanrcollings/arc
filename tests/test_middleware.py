@@ -1,3 +1,4 @@
+from collections import UserDict
 import arc
 from arc.runtime import Context
 
@@ -27,13 +28,18 @@ def test_ctx():
 
 
 def test_replace_ctx():
+    class FakeContext(UserDict):
+        def __init__(self, data=None, *, logger):
+            super().__init__(data)
+            self.logger = logger
+
     @arc.command
     def command(ctx: Context):
         return ctx
 
     @command.use
     def middleware(ctx: Context):
-        return {"arc.args": {"ctx": {}}}
+        return FakeContext({"arc.args": {"ctx": {}}}, logger=ctx.logger)
 
     assert not isinstance(command(), Context)
 

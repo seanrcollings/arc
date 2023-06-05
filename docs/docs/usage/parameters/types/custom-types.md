@@ -1,6 +1,6 @@
 
 ## Implement Your Own Type
-By implmenting a simple protocol, your custom classes can be easily used as the type of an *arc* parameter.
+By implementing a simple protocol, your custom classes can be easily used as the type of an *arc* parameter.
 
 ### Example
 
@@ -18,7 +18,6 @@ Some notes about custom types:
 In additon to `value`, you can also add the following arguments to the signature (in the given order, but the names don't need to match):
 
 - `info`: Description of the provided type. Instance of `#!python arc.types.TypeInfo`
-- `ctx`: The current execution context. Instance of `#!python arc.context.Context`
 
 ### Context Managers
 

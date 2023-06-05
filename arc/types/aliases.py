@@ -4,12 +4,15 @@ All builtin types (int, str, float, etc...) have a corresponding Alias type.
 from __future__ import annotations
 
 import collections
+import datetime
 import enum
+import io
 import ipaddress
 import pathlib
 import re
 import types
 import typing as t
+import uuid
 
 import _io  # type: ignore
 
@@ -19,7 +22,9 @@ from arc.color import colorize, fg
 from arc.present.joiner import Join
 from arc.prompt.prompts import select_prompt
 from arc.types.convert import convert_type
+from arc.types.dates import DateArgs, DateTimeArgs, TimeArgs
 from arc.types.type_arg import TypeArg
+from arc.types.default import unwrap
 from arc.typing import Annotation, TypeProtocol
 
 if t.TYPE_CHECKING:
@@ -72,11 +77,11 @@ class Alias:
                 Alias.aliases[alias] = cls  # type: ignore
 
     @classmethod
-    def resolve(cls, annotation: type) -> type[TypeProtocol]:
+    def resolve(cls, annotation: Annotation) -> type[TypeProtocol]:
         """Handles resolving alias types"""
 
         if safe.issubclass(annotation, TypeProtocol):
-            return annotation
+            return t.cast(type[TypeProtocol], annotation)
         elif annotation in cls.aliases:
             # Type is a key
             # We perform this check once before hand
@@ -84,6 +89,8 @@ class Alias:
             # the mro() method
             return cls.aliases[annotation]
         else:
+            assert isinstance(annotation, type), f"{annotation} is not a type"
+
             # Type is a subclass of a key
             for parent in annotation.mro():
                 if parent in cls.aliases:
@@ -117,6 +124,8 @@ class BytesAlias(bytes, Alias, of=bytes):
 
 
 class IntAlias(Alias, of=int):
+    name = "integer"
+
     @classmethod
     def convert(cls, value: str, info: TypeInfo[int]) -> int:
         args = info.type_arg
@@ -429,3 +438,55 @@ class PatternAlias(Alias, of=re.Pattern):
         if len(info.annotations) == 0:
             return 0
         return info.annotations[0]
+
+
+class UUIDAlias(Alias, of=uuid.UUID):
+    @classmethod
+    def convert(cls, value: str, info: TypeInfo[uuid.UUID]) -> uuid.UUID:
+        try:
+            return uuid.UUID(value)
+        except ValueError as e:
+            raise errors.ConversionError(value, "Not a valid UUID", e) from e
+
+
+class DateTimeAlias(Alias, of=datetime.datetime):
+    @classmethod
+    def convert(
+        cls, value: str, info: TypeInfo[datetime.datetime]
+    ) -> datetime.datetime:
+        type_arg: DateTimeArgs = t.cast(DateTimeArgs, info.type_arg) or DateTimeArgs()
+
+        try:
+            return datetime.datetime.strptime(value, unwrap(type_arg.format))
+        except ValueError as e:
+            raise errors.ConversionError(value, "Not a valid datetime", e) from e
+
+
+class DateAlias(Alias, of=datetime.date):
+    @classmethod
+    def convert(cls, value: str, info: TypeInfo[datetime.date]) -> datetime.date:
+        type_arg: DateArgs = t.cast(DateArgs, info.type_arg) or DateArgs()
+
+        try:
+            return datetime.datetime.strptime(value, unwrap(type_arg.format)).date()
+        except ValueError as e:
+            raise errors.ConversionError(value, "Not a valid date", e) from e
+
+
+class TimeAlias(Alias, of=datetime.time):
+    @classmethod
+    def convert(cls, value: str, info: TypeInfo[datetime.time]) -> datetime.time:
+        type_arg: TimeArgs = t.cast(TimeArgs, info.type_arg) or TimeArgs()
+
+        try:
+            return datetime.datetime.strptime(value, unwrap(type_arg.format)).time()
+        except ValueError as e:
+            raise errors.ConversionError(value, "Not a valid time", e) from e
+
+
+class StringIOAlias(Alias, of=io.StringIO):
+    name = "string"
+
+    @classmethod
+    def convert(cls, value: str, info: TypeInfo[t.Any]) -> io.StringIO:
+        return io.StringIO(value)
