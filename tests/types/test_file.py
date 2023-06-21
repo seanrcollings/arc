@@ -1,9 +1,12 @@
 from io import StringIO
+import sys
 import typing as t
 from pathlib import Path
 import pytest
 import arc
 from arc.types import File, Stream
+
+from arc.types.file import Stdin, StdinFile
 
 
 @pytest.fixture(scope="function")
@@ -84,3 +87,24 @@ def test_stream():
 
     assert command("-") == "value"
     assert command("provided") == "provided"
+
+
+def test_stdin():
+    @arc.command
+    def command(stream: Stdin):
+        return stream
+
+    assert command("-") is sys.stdin
+    assert isinstance(command("provided"), StringIO)
+
+
+def test_stdin_file(content_file: Path):
+    @arc.command
+    def command(file: StdinFile):
+        return file
+
+    assert command("-") is sys.stdin
+    assert command(str(content_file)).name == str(content_file)
+
+    with pytest.raises(arc.errors.InvalidParamValueError):
+        command("provided")
