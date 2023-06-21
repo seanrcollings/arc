@@ -1,7 +1,7 @@
 from __future__ import annotations
 import typing as t
 from collections import deque
-from arc.present.markdown.nodes import (
+from arc.present._markdown.nodes import (
     BlockNode,
     Code,
     Document,
@@ -217,10 +217,3 @@ class MarkdownParser:
                 stream.popleft()
 
         return text
-
-
-def markdown(text: str, config: PresentConfig) -> str:
-    """Converts a markdown string to a formatted string."""
-    parser = MarkdownParser()
-    doc = parser.parse(text)
-    return doc.fmt(config)

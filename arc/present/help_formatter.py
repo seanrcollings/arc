@@ -9,7 +9,7 @@ from arc.color import colorize, fx
 from arc.present.ansi import Ansi
 from arc.present.formatters import TextFormatter
 from arc.present.joiner import Join
-from arc.present.markdown import MarkdownParser
+from arc.present import MarkdownParser
 
 if t.TYPE_CHECKING:
     from arc.define.command import Command

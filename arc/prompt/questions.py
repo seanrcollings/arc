@@ -48,7 +48,7 @@ class InputQuestion(Question[T]):
     def __init__(
         self,
         prompt: str,
-        convert: type[T] = None,  # type: ignore
+        convert: type[T] = None,
         *,
         default: T | constants.Constant = constants.MISSING_DEFAULT,
         echo: bool = True,
