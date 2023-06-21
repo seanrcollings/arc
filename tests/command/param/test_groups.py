@@ -6,7 +6,7 @@ from arc import errors
 # to account for --help and --autocomplete
 
 
-def test_group():
+def test_group() -> None:
     @arc.group
     class Group:
         val: int
@@ -22,7 +22,7 @@ def test_group():
     assert group.other_val == 2
 
 
-def test_subgroup():
+def test_subgroup() -> None:
     @arc.group
     class Sub:
         other_val: int
@@ -43,7 +43,7 @@ def test_subgroup():
     assert group.sub.other_val == 2
 
 
-def test_dependencies():
+def test_dependencies() -> None:
     def depfunc1():
         return 1
 
@@ -67,7 +67,7 @@ def test_dependencies():
     assert isinstance(group.ctx, arc.State)
 
 
-def test_non_unique_names():
+def test_non_unique_names() -> None:
     @arc.group
     class Group:
         value: int
@@ -80,7 +80,7 @@ def test_non_unique_names():
         command()
 
 
-def test_exclude():
+def test_exclude() -> None:
     @arc.group(exclude=["val2"])
     class Group:
         val1: int
@@ -94,7 +94,7 @@ def test_exclude():
     assert "val2" not in [p.argument_name for p in command.params]
 
 
-def test_callbacks():
+def test_callbacks() -> None:
     @arc.group(exclude=["pre", "post"])
     class Group:
         pre: bool = False
@@ -115,7 +115,7 @@ def test_callbacks():
     assert group.post
 
 
-def test_errors_bubbleing():
+def test_errors_bubbling() -> None:
     @arc.group
     class Group:
         val: int

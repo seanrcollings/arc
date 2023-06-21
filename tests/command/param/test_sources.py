@@ -1,6 +1,4 @@
-import contextlib
 import io
-import os
 
 import pytest
 
@@ -10,22 +8,12 @@ from arc import constants
 from arc.define.param.param import Param, ValueOrigin
 from arc.prompt.helpers import Cursor
 
+from tests import helpers
+
 
 @pytest.fixture(autouse=True)
 def setup(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr("arc.prompt.prompt.Prompt.max_height", lambda *args: 100)
-
-
-@contextlib.contextmanager
-def environ(**env: str):
-    copy = os.environ.copy()
-    os.environ.clear()
-    os.environ.update(env)
-    try:
-        yield
-    finally:
-        os.environ.clear()
-        os.environ.update(copy)
 
 
 class TestEnv:
@@ -39,7 +27,7 @@ class TestEnv:
         with pytest.raises(errors.MissingArgValueError):
             env("")
 
-        with environ(VAL="2"):
+        with helpers.environ(VAL="2"):
             assert env("") == 2
 
     def test_prefix(self):
@@ -51,7 +39,7 @@ class TestEnv:
             def env(val: int = Argument(envvar="VAL")):
                 return val
 
-            with environ(TEST_VAL="2"):
+            with helpers.environ(TEST_VAL="2"):
                 assert env("") == 2
         finally:
             configure(env_prefix="")
@@ -69,10 +57,10 @@ class TestEnv:
         with pytest.raises(errors.MissingArgValueError):
             env("10")
 
-        with environ(VAL="2", KEY="10"):
+        with helpers.environ(VAL="2", KEY="10"):
             assert env("") == (2, 10)
 
-        with environ(VAL="2"):
+        with helpers.environ(VAL="2"):
             with pytest.raises(errors.MissingArgValueError):
                 env("")
 
@@ -85,7 +73,7 @@ class TestEnv:
 
         assert env("2") == ValueOrigin.COMMAND_LINE
 
-        with environ(VAL="2"):
+        with helpers.environ(VAL="2"):
             assert env("") == ValueOrigin.ENV
 
 
@@ -187,7 +175,7 @@ def test_precedence(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(Cursor, "getpos", lambda *args: (1, 2))
     monkeypatch.setattr("sys.stdin", io.StringIO("2"))
 
-    with environ(VAL="3"):
+    with helpers.environ(VAL="3"):
         assert c1("") == 3
 
     assert c1("") == 2

@@ -1,6 +1,6 @@
 from __future__ import annotations
-
 import typing as t
+import os
 from dataclasses import dataclass, field
 
 import arc.typing as at
@@ -92,10 +92,11 @@ class Config:
     environment: at.Env = "production"
     transform_snake_case: bool = True
     env_prefix: str = ""
+    config_env_prefix: str = "ARC_"
+    load_env: bool = True
     version: str | SemVer | None = None
     autocomplete: bool = False
     allow_unrecognized_args: bool = False
-    autoload_overwrite: bool = True
     debug: bool = False
     prompt: Prompt = field(default_factory=Prompt)
     suggest: SuggestionConfig = field(default_factory=SuggestionConfig)
@@ -103,6 +104,10 @@ class Config:
     present: PresentConfig = field(default_factory=PresentConfig)
     plugins: PluginConfig = field(default_factory=PluginConfig)
     extra: dict[str, t.Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if self.load_env:
+            self._load_from_env()
 
     @classmethod
     def load(cls) -> "Config":
@@ -119,6 +124,15 @@ class Config:
             if value is not None:
                 setattr(self, key, value)
 
+    def _load_from_env(self) -> None:
+        env = os.environ.get(f"{self.config_env_prefix}ENVIRONMENT", "").lower()
+
+        if env in ("production", "development", "test"):
+            self.environment = t.cast(at.Env, env)
+
+        if os.environ.get(f"{self.config_env_prefix}DEBUG", "").lower() == "true":
+            self.debug = True
+
     @classmethod
     def __depends__(cls, ctx: Context) -> Config:
         return ctx.config
@@ -131,10 +145,11 @@ def configure(
     transform_snake_case: bool | None = None,
     suggest: SuggestionConfig | None = None,
     env_prefix: str | None = None,
+    config_env_prefix: str | None = None,
+    load_env: bool | None = None,
     prompt: Prompt | None = None,
     autocomplete: bool | None = None,
     allow_unrecognized_args: bool | None = None,
-    autoload_overwrite: bool | None = None,
     debug: bool | None = None,
     links: LinksConfig | None = None,
     present: PresentConfig | None = None,
@@ -153,8 +168,14 @@ def configure(
         transform_snake_case (bool, optional):  Transform `snake_case` to `kebab-case`.
             Defaults to `True`.
 
-        env_prefix (str, optional): A prefix to use when selecting values from environmental
-                variables. Will be combined with the name specified by parameter.
+        env_prefix (str, optional): A prefix to use when selecting values for parameters
+            from enviroment variables. Will be combined with the name specified by parameter.
+
+        config_env_prefix (str, optional): A prefix to use when selecting values from enviroment
+            for the configuration.
+
+        load_env (bool, optional): Enable / disable loading config values from environment variables.
+            Currently, arc can only load `environment` and `debug` from environment variables.
 
         prompt (Prompt, optional): A prompt object will be used when prompting
             for parameter values. Is also made available via `Context.prompt`.
@@ -165,9 +186,6 @@ def configure(
         allow_unrecognized_args (bool, optional): arc will not error when there are arguments provided
             that arc does not recognize. Their values will be stored in the context under the
             key `arc.parse.extra`. Defaults to `False`
-
-        autoload_overwrite (bool, optional): allow / disallow a command that has been autoloaded to overwrite
-            a pre-existing command object. Defaults to `True`
 
         debug (bool, optional): enable / disable arc debug logs.
 
@@ -184,10 +202,11 @@ def configure(
         "transform_snake_case": transform_snake_case,
         "suggestions": suggest,
         "env_prefix": env_prefix,
+        "config_env_prefix": config_env_prefix,
+        "load_env": load_env,
         "prompt": prompt,
         "autocomplete": autocomplete,
         "allow_unrecognized_args": allow_unrecognized_args,
-        "autoload_overwrite": autoload_overwrite,
         "debug": debug,
         "links": links,
         "present": present,

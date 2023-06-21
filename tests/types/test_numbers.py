@@ -60,7 +60,7 @@ FLOATS = [
 @pytest.mark.parametrize(("cls", "value", "result"), FLOATS)
 def test_strict_floats(cls, value, result):
     @arc.command
-    def command(val: cls):  # type: ignore
+    def command(val: cls):
         return val
 
     if result is not None:

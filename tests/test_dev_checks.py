@@ -1,21 +1,7 @@
 import pytest
-import contextlib
 import arc
 from arc import errors
 from arc.config import Config
-import arc.typing as at
-
-config = Config.load()
-
-
-@contextlib.contextmanager
-def set_env(env: at.Env):
-    prev = config.environment
-    try:
-        arc.configure(environment=env)
-        yield
-    finally:
-        arc.configure(environment=prev)
 
 
 def test_no_pos_only():
