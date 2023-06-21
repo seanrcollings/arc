@@ -28,8 +28,8 @@ T = t.TypeVar("T")
 class Prompt:
     def __init__(self) -> None:
         self.out_stream = sys.stdout
-        self._buffer: str = ""
-        self._prev_buffer: str = ""
+        self._buffer: list[str] = []
+        self._prev_buffer: list[str] = []
         self._answers: list[tuple[BaseQuestion[t.Any], t.Any]] = []
         self._max_line_lengths: dict[int, int] = {}
 
@@ -39,7 +39,12 @@ class Prompt:
 
     @property
     def buffered_lines(self) -> int:
-        return len(self._buffer.split("\n"))
+        count = 0
+        for string in self._buffer:
+            for char in string:
+                if char == "\n":
+                    count += 1
+        return count
 
     def ask(self, question: BaseQuestion[T]) -> T:
         if isinstance(question, RawQuestion):
@@ -105,8 +110,11 @@ class Prompt:
     def _raw_ask(self, question: RawQuestion[t.Any]) -> t.Any:
         row, col = Cursor.getpos()
         self.write_many(question.render())
-        row, col = self.ensure_space(row, col)
+        new_row, col = self.ensure_space(row, col)
+        self.scroll_terminal(new_row - row)
         self.flush()
+        row = new_row
+        Cursor.setpos(row, col)
 
         full_input: list[str] = [""]
         with Cursor.hide(), RawTerminal() as term:
@@ -131,8 +139,7 @@ class Prompt:
                     question.on_key(key)
 
         self.write("\n")
-        self._buffer = ""
-        self._prev_buffer = ""
+        self.clear_buffers()
         result = question.result
         question.result = None
         self._answers.append((question, result))
@@ -154,9 +161,12 @@ class Prompt:
 
     def write(self, value: t.Any, flush: bool = False) -> None:
         text = str(value)
-        self._buffer += text
+        self._buffer.append(text)
         if flush:
             self.flush()
+
+    def write_front(self, value: t.Any) -> None:
+        self._buffer.insert(0, str(value))
 
     def write_many(self, values: t.Iterable[t.Any]) -> None:
         for v in values:
@@ -165,11 +175,18 @@ class Prompt:
     def flush(self) -> None:
         self.out_stream.write("".join(self._buffer))
         self.out_stream.flush()
-        self._buffer = ""
+        self._buffer = []
 
     def cycle_buffers(self) -> None:
         self._prev_buffer = self._buffer
-        self._buffer = ""
+        self._buffer = []
+
+    def clear_buffers(self) -> None:
+        self._prev_buffer = []
+        self._buffer = []
+
+    def scroll_terminal(self, lines: int) -> None:
+        self.write(f"\x1b[{lines}S")
 
     def should_update(self) -> bool:
         return self._buffer != self._prev_buffer
