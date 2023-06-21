@@ -7,7 +7,7 @@ import socket
 
 import arc
 import arc.typing as at
-from arc.runtime.server import Server
+from arc.runtime.serve import Server
 
 if t.TYPE_CHECKING:
     from arc.runtime.app import App

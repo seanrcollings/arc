@@ -5,9 +5,9 @@ import textwrap
 
 import arc.typing as at
 from arc.define.param import param
+from arc.logging import logging
 
 if t.TYPE_CHECKING:
-    from arc.present.help_formatter import HelpFormatter
     from arc.define.command import Command
     from arc.config import PresentConfig
 

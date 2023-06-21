@@ -1,20 +1,24 @@
 from __future__ import annotations
-
 import typing as t
+import threading
 
 from arc.present.console import Console
 
 if t.TYPE_CHECKING:
     from arc.define.command import Command
 
-_console: Console | None = None
+
+_console_local: threading.local = threading.local()
 
 
 def _default_console() -> Console:
-    global _console
-    if not _console:
-        _console = Console()
-    return _console
+    if not hasattr(_console_local, "console"):
+        console = Console()
+        _console_local.console = console
+    else:
+        console = _console_local.console
+
+    return console
 
 
 def print(

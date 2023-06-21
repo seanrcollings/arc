@@ -48,6 +48,7 @@ class Console:
     ) -> None:
         """A wrapper around `print()` that handles removing escape
         codes when the output is not a TTY"""
+
         file = file or self.default_print_stream
 
         if (file and not file.isatty()) or not self.color_output:
