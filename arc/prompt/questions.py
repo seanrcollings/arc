@@ -169,7 +169,7 @@ class MultipleChoiceQuestion(InputQuestion[tuple[int, str]]):
     ```
     """
 
-    def __init__(self, prompt: str, choices: list[str], **kwargs: t.Any):
+    def __init__(self, prompt: str, choices: t.Sequence[str], **kwargs: t.Any):
         super().__init__(prompt, **kwargs)
         self.choices = choices
 
@@ -219,7 +219,7 @@ class SelectQuestion(RawQuestion[tuple[int, T]]):
     selected = State(0)
 
     def __init__(
-        self, prompt: str, options: list[T], highlight_color: str = fg.ARC_BLUE
+        self, prompt: str, options: t.Sequence[T], highlight_color: str = fg.ARC_BLUE
     ) -> None:
         super().__init__()
         self.prompt = prompt

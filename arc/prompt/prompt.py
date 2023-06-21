@@ -69,7 +69,7 @@ class Prompt:
         return self.ask(question)
 
     def select(
-        self, prompt: str, options: list[str], **kwargs: t.Any
+        self, prompt: str, options: t.Sequence[str], **kwargs: t.Any
     ) -> tuple[int, str]:
         """Prompt the user to select from a list of options"""
         question = SelectQuestion(prompt, options, **kwargs)
