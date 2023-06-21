@@ -12,6 +12,8 @@ def markdown(text: str, config: PresentConfig | None = None) -> str:
     doc = parse_markdown(text)
 
     if config is None:
+        from arc.config import PresentConfig
+
         config = PresentConfig()
 
     return doc.fmt(config)
