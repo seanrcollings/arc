@@ -130,7 +130,9 @@ class Stream(t.IO[str], abc.ABC):
         if value == unwrap(arg.char):
             return arg.stream
 
-        raise errors.ConversionError(value, f"expected {arg.char!r} to read from stdin")
+        raise errors.ConversionError(
+            value, f"expected {unwrap(arg.char)!r} to read from stdin"
+        )
 
     class Args(TypeArg):
         __slots__ = ("stream", "char")

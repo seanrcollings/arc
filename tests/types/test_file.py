@@ -79,7 +79,7 @@ def test_stream():
     io = StringIO("value")
 
     @arc.command
-    def command(contents: t.Annotated[Stream, Stream.Args(io)]):
+    def command(contents: t.Union[t.Annotated[Stream, Stream.Args(io)], StringIO]):
         return contents.read()
 
     assert command("-") == "value"
