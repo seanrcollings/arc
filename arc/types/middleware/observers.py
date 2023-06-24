@@ -3,7 +3,6 @@ from __future__ import annotations
 import typing as t
 
 from arc import logging
-from arc.define.param import ValueOrigin
 
 if t.TYPE_CHECKING:
     from arc import Context
@@ -55,7 +54,7 @@ class Log:
                 "cli": param.cli_name,
             }
 
-            origin = ctx.get_origin(param.argument_name, ValueOrigin.DEFAULT)
+            origin = ctx.get_origin(param.argument_name, "default")
             name = names.get(self.name_kind, param.argument_name)
 
             ctx.logger.log(self.level, f"{name} = {value} ({origin})")

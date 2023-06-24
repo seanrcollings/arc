@@ -1,6 +1,3 @@
-__version__ = "8.6.0"
-
-from arc import types, prompt, present, errors
 from arc.config import (
     ColorConfig,
     Config,
@@ -10,11 +7,10 @@ from arc.config import (
     PluginConfig,
     configure,
 )
-from arc.constants import MISSING
 from arc.define import (
+    Command,
     Param,
     Argument,
-    Command,
     Count,
     Depends,
     Flag,
@@ -25,7 +21,7 @@ from arc.define import (
 )
 from arc.errors import ConversionError, ExecutionError, ValidationError, exit
 from arc.present import err, info, pager, print, usage, log, markdown, parse_markdown
-from arc.runtime import App, ExecMiddleware, InitMiddleware
-from arc.runtime import Context
+from arc.runtime import App, ExecMiddleware, InitMiddleware, Context
 from arc.types import State, convert
 from arc.autocompletions import Completion, CompletionInfo
+from arc.version import __version__

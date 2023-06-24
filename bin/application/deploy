@@ -2,9 +2,7 @@
 
 
 new_version=$1
-curr_version=$(poetry version -s)
 
-sed -i "s/$curr_version/$new_version/" arc/__init__.py
 poetry version $new_version
 
 git add .
