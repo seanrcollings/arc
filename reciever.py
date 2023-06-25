@@ -1,8 +1,8 @@
 import time
 import arc
 from arc.runtime.serve import Server
-
 from arc.present.console import Console
+from arc.prompt.prompt import Prompt
 
 arc.configure(debug=True)
 
@@ -29,6 +29,12 @@ def expected_error() -> None:
 @command.subcommand
 def unexpected_error() -> None:
     raise Exception("Unexpected error")
+
+
+@command.subcommand
+def name(prompt: Prompt):
+    name = input("What is your name? ")
+    arc.print(f"Hello, {name}!")
 
 
 app = arc.App(command)

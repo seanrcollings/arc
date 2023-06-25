@@ -3,6 +3,8 @@ import arc.typing as at
 from arc.runtime.serve import Client
 from arc.runtime.serve.messages import (
     Close,
+    InputRequest,
+    InputResponse,
     Output,
     CommandResult,
     Exit,
@@ -65,23 +67,26 @@ class Repl:
         while True:
             res = client.recv()
 
-            if isinstance(res, CommandResult):
-                break
+            match res:
+                case CommandResult():
+                    if isinstance(res, CommandResult):
+                        arc.print(f"Result: {res.result}")
+                        return False
+                    else:
+                        arc.err(f"Command failed: {res.error}")
+                        return True
+                case Error(error):
+                    arc.err(error)
+                    break
+                case Output(output, stream):
+                    assert isinstance(res, Output)
 
-            if isinstance(res, Error):
-                arc.err(res.error)
-                break
+                    if stream == "stdout":
+                        sys.stdout.write(output)
+                    else:
+                        sys.stderr.write(output)
+                case InputRequest():
+                    text = input()
+                    client.send(InputResponse(text))
 
-            assert isinstance(res, Output)
-
-            if res.stream == "stdout":
-                sys.stdout.write(res.output)
-            else:
-                sys.stderr.write(res.output)
-
-        if isinstance(res, CommandResult):
-            arc.print(f"Result: {res.result}")
-            return False
-        else:
-            arc.err(f"Command failed: {res.error}")
-            return True
+        return False

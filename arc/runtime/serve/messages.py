@@ -48,6 +48,26 @@ class Text:
     text: str
 
 
+@dataclass
+class InputRequest:
+    ...
+
+
+@dataclass
+class InputResponse:
+    text: str
+
+
 Message = (
-    Exit | RunCommand | Text | Close | Ping | Pong | Output | CommandResult | Error
+    Exit
+    | RunCommand
+    | Text
+    | Close
+    | Ping
+    | Pong
+    | Output
+    | CommandResult
+    | Error
+    | InputRequest
+    | InputResponse
 )

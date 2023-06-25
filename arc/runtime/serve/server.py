@@ -1,16 +1,13 @@
 from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 import typing as t
-from contextlib import redirect_stderr, redirect_stdout
-from io import StringIO
 from multiprocessing import connection
 
 from arc import errors
-from arc.present import out
-from arc.logging import logger
+
+from arc.runtime.serve import io
 from .messages import (
     Close,
-    Output,
     CommandResult,
     Message,
     Ping,
@@ -23,32 +20,6 @@ from .messages import (
 
 if t.TYPE_CHECKING:
     from arc.runtime.app import App
-
-
-class NetworkIO(StringIO):
-    def __init__(
-        self, conn: connection.Connection, stream: t.Literal["stdout", "stderr"]
-    ) -> None:
-        super().__init__()
-        self.conn = conn
-        self.stream = stream
-
-    def isatty(self) -> bool:
-        return True
-
-    def flush(self) -> None:
-        logger.debug(f"Flushing {self.stream} over network")
-        value = self.getvalue()
-
-        if not value:
-            logger.debug(f"Nothing to flush for {self.stream}")
-            super().flush()
-            return
-
-        self.conn.send(Output(value, self.stream))
-        self.truncate(0)
-        self.seek(0)
-        super().flush()
 
 
 class Server:
@@ -125,22 +96,13 @@ class Server:
         return False
 
     def run_command(self, conn: connection.Connection, command: str) -> t.Any:
-        with (
-            redirect_stdout(NetworkIO(conn, "stdout")) as stdout,
-            redirect_stderr(NetworkIO(conn, "stderr")) as stderr,
-        ):
-            console = out._default_console()
-            console.default_print_stream = stdout
-            console.default_log_stream = stderr
-
+        with io.redirect_streams(conn, self.app.logger):
             try:
                 return self.app(
-                    command, ctx={"arc.serve.conn": conn, "arc.serve": True}
+                    command,
+                    ctx={"arc.serve.conn": conn, "arc.serve": True},
                 )
             except errors.ArcError as exc:
                 return str(exc)
             except errors.Exit as exc:
                 return f"Exited with code: {exc.code}"
-            finally:
-                stdout.flush()
-                stderr.flush()
