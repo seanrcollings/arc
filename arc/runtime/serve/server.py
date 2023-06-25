@@ -1,5 +1,5 @@
 from __future__ import annotations
-from concurrent.futures import ThreadPoolExecutor, wait
+from concurrent.futures import ThreadPoolExecutor
 import typing as t
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
@@ -54,9 +54,10 @@ class NetworkIO(StringIO):
 class Server:
     listener: connection.Listener | None = None
 
-    def __init__(self, app: App, address: tuple[str, int]) -> None:
+    def __init__(self, app: App, address: tuple[str, int], workers: int = 8) -> None:
         self.app = app
         self.address = address
+        self.workers = workers
         self._running = False
 
     def __enter__(self) -> Server:
@@ -73,18 +74,14 @@ class Server:
 
         self._running = True
 
-        futures = []
-        with ThreadPoolExecutor(max_workers=2) as executor:
+        with ThreadPoolExecutor(max_workers=self.workers) as executor:
             while self._running:
                 try:
                     conn = self.listener.accept()
-                    future = executor.submit(self.handle_connection, conn)
-                    futures.append(future)
+                    executor.submit(self.handle_connection, conn)
                 except TimeoutError:
                     # TODO: Is there a better way to do this?
                     ...
-
-            wait(futures)
 
     def handle_connection(self, conn: connection.Connection) -> None:
         self.app.logger.info(f"Server got connection from {conn.fileno()}")
@@ -98,10 +95,12 @@ class Server:
                     except Exception as exc:
                         self.app.logger.exception(exc)
                         conn.send(Error(str(exc)))
-                        conn.send(Close())
+                        should_close = True
 
                     if should_close:
                         break
+
+        self.app.logger.info(f"Closing connection {conn.fileno()}")
 
     def handle_message(self, conn: connection.Connection, msg: Message) -> bool:
         self.app.logger.info(f"Processing message: {msg}")
@@ -115,7 +114,6 @@ class Server:
                 self._running = False
                 self.app.logger.info("Exiting")
             case Close():
-                self.app.logger.info("Closing connection")
                 return True
             case RunCommand(command):
                 self.app.logger.info(f"Running command: {command}")

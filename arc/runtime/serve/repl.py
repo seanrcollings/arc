@@ -12,6 +12,7 @@ from arc.runtime.serve.messages import (
 )
 
 import arc
+from numpy import isin
 
 
 class Repl:
@@ -20,7 +21,7 @@ class Repl:
 
     def run(self) -> None:
         print("Server REPL")
-        with Client(("localhost", 6001)) as client:
+        with Client(self.address) as client:
             while True:
                 command = input(">>> ")
                 should_exit = self._handle_command(client, command)
@@ -38,8 +39,8 @@ class Repl:
                 return True
             case "ping":
                 self._ping_command(client)
-            case s if s.startswith("run "):
-                self._run_command(client, s[4:])
+            case s if s.startswith("run"):
+                return self._run_command(client, s[3:].strip())
             case "help" | "?":
                 print("COMMANDS")
                 print(
@@ -58,7 +59,7 @@ class Repl:
         res = client.recv()
         print(res)
 
-    def _run_command(self, client: Client, command: str) -> None:
+    def _run_command(self, client: Client, command: str) -> bool:
         client.send(RunCommand(command))
 
         while True:
@@ -78,4 +79,9 @@ class Repl:
             else:
                 sys.stderr.write(res.output)
 
-        print(f"Result: {res.result}")
+        if isinstance(res, CommandResult):
+            arc.print(f"Result: {res.result}")
+            return False
+        else:
+            arc.err(f"Command failed: {res.error}")
+            return True

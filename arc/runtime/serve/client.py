@@ -1,8 +1,5 @@
 from __future__ import annotations
 import typing as t
-from contextlib import redirect_stderr, redirect_stdout
-from io import StringIO
-import logging
 from multiprocessing import connection
 
 from .messages import Message

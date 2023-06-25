@@ -75,7 +75,9 @@ def exec_examples(config: list[ExecConfig]) -> None:
         (OUTPUT_DIR / entry.out).parent.mkdir(parents=True, exist_ok=True)
 
         with open(OUTPUT_DIR / entry.out, "w+") as f:
-            out._console = Console(default_print_stream=f, default_log_stream=f)
+            out._console_local.console = Console(
+                default_print_stream=f, default_log_stream=f
+            )
             arc.log(entry.file, "->", entry.out, file=sys.stderr)
             for args in entry.exec:
                 logging.root.handlers.clear()

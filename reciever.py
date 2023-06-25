@@ -21,6 +21,16 @@ def sub() -> None:
     arc.print("End 2", flush=True)
 
 
+@command.subcommand
+def expected_error() -> None:
+    raise arc.ExecutionError("Expected error")
+
+
+@command.subcommand
+def unexpected_error() -> None:
+    raise Exception("Unexpected error")
+
+
 app = arc.App(command)
 
 app.serve(("localhost", 6001))
