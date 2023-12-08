@@ -58,6 +58,7 @@ class SetupParamMiddleware(MiddlewareBase):
         param_instance = command.param_def.create_instance()
         ctx["arc.args.tree"] = param_instance
         ctx.setdefault("arc.args.origins", {})
+        ctx.logger.debug("Parsed input: %s", ctx.get("arc.parse.result"))
 
 
 class ParamProcessor(MiddlewareBase):

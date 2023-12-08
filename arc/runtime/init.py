@@ -111,7 +111,6 @@ class AddRuntimeParmsMiddleware(MiddlewareBase):
     """
 
     def __call__(self, ctx: Context) -> t.Any:
-
         if ctx.config.version:
             self.__add_version_param(ctx.root.param_def)
 

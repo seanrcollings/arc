@@ -155,6 +155,7 @@ class _CollectionAlias(Alias):
     def convert(cls, value: t.Any) -> t.Any:
         if isinstance(value, str):
             return cls.alias_for(value.split(","))
+
         return cls.alias_for(value)
 
     @classmethod
@@ -194,7 +195,6 @@ class TupleAlias(tuple[t.Any], _CollectionAlias, of=tuple):
 
         # Statically sized tuples
         if len(info.sub_types) != len(tup):
-
             raise errors.ConversionError(
                 value,
                 f"accepts {len(info.sub_types)} arguments, but recieved {len(tup)}",
@@ -283,7 +283,6 @@ class NoneAlias(Alias, of=types.NoneType):
 class UnionAlias(Alias, of=(t.Union, types.UnionType)):
     @classmethod
     def g_convert(cls, value: t.Any, info: TypeInfo[t.Any]) -> t.Any:
-
         for sub in info.sub_types:
             try:
                 return convert_type(sub.resolved_type, value, sub)
