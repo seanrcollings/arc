@@ -1,0 +1,51 @@
+name: Publish to PyPi
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Download release archive
+        uses: dsaltares/fetch-gh-release-asset@master
+        with:
+          repo: ${{ github.repository }}
+          version: tags/${{ github.event.release.tag_name }}
+          target: dist/arc_cli-${{ github.ref_name }}.tar.gz
+          file: arc_cli-${{ github.ref_name }}.tar.gz
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Download release wheel
+        uses: dsaltares/fetch-gh-release-asset@master
+        with:
+          repo: ${{ github.repository }}
+          version: tags/${{ github.event.release.tag_name }}
+          target: dist/arc_cli-${{ github.ref_name }}-py3-none-any.whl
+          file: arc_cli-${{ github.ref_name }}-py3-none-any.whl
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Publish to PyPi
+        run: poetry publish
+        env:
+          PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
