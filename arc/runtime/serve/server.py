@@ -1,5 +1,6 @@
 from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
+import time
 import typing as t
 from multiprocessing import connection
 
@@ -70,6 +71,8 @@ class Server:
 
                     if should_close:
                         break
+                else:
+                    time.sleep(0.1)
 
         self.app.logger.info(f"Closing connection {conn.fileno()}")
 

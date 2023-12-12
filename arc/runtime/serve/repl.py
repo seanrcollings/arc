@@ -14,7 +14,6 @@ from arc.runtime.serve.messages import (
 )
 
 import arc
-from numpy import isin
 
 
 class Repl:
@@ -86,7 +85,7 @@ class Repl:
                     else:
                         sys.stderr.write(output)
                 case InputRequest():
-                    text = input()
+                    text = input() + "\n"
                     client.send(InputResponse(text))
 
         return False
