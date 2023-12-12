@@ -111,7 +111,7 @@ class Prompt:
         row, col = Cursor.getpos()
         self.write_many(question.render())
         new_row, col = self.ensure_space(row, col)
-        self.scroll_terminal(new_row - row)
+        self.scroll_terminal(new_row - row - 1)
         self.flush()
         row = new_row
         Cursor.setpos(row, col)

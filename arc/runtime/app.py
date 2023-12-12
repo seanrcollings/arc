@@ -5,6 +5,7 @@ import sys
 import typing as t
 
 import arc
+from arc.define.param import groups
 import arc.typing as at
 from arc import errors
 from arc.logging import WARNING, logger, mode_map, DEBUG
@@ -67,7 +68,8 @@ class App(MiddlewareManager):
         return res
 
     def execute(self, command: Command, **kwargs: t.Any) -> t.Any:
-        ctx = self._create_ctx({"arc.command": command, "arc.parse.result": kwargs})
+        args = self._unroll_param_groups(kwargs)
+        ctx = self._create_ctx({"arc.command": command, "arc.parse.result": args})
         return command.run(ctx)
 
     def _create_ctx(self, data: dict[str, t.Any] = None) -> arc.Context:
@@ -95,3 +97,14 @@ class App(MiddlewareManager):
             logger.setLevel(DEBUG)
         else:
             logger.setLevel(mode_map.get(self.config.environment, WARNING))
+
+    def _unroll_param_groups(self, args: dict[str, t.Any]) -> dict[str, t.Any]:
+        flattened_args: dict[str, t.Any] = {}
+
+        for key, value in args.items():
+            if groups.isgroup(value):
+                flattened_args |= self._unroll_param_groups(vars(value))
+            else:
+                flattened_args[key] = value
+
+        return flattened_args

@@ -32,6 +32,11 @@ class ParamMixin:
 
     @cached_property
     def param_def(self) -> ParamDefinition:
+        # NOTE: This gets loaded lazily so we only actually
+        # construct the param tree for the command
+        # that is being executed. In development,
+        # all definitions are constructed to check for
+        # errors
         root = ParamDefinitionFactory(
             lambda: Join.with_space(t.cast("Command", self).doc.fullname),
             self.config.transform_snake_case,

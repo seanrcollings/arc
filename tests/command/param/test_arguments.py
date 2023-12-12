@@ -61,7 +61,7 @@ def test_param_name():
     assert command("val") == "val"
 
 
-def test_colletions():
+def test_collections():
     @arc.command
     def command(val: tuple[int, int], val2: list[int]):
         return val, val2

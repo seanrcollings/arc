@@ -21,6 +21,7 @@ from arc.define import (
 )
 from arc.errors import ConversionError, ExecutionError, ValidationError, exit
 from arc.present import err, info, pager, print, usage, log, markdown, parse_markdown
+from arc.prompt import Prompt
 from arc.runtime import App, ExecMiddleware, InitMiddleware, Context
 from arc.types import State, convert
 from arc.autocompletions import Completion, CompletionInfo

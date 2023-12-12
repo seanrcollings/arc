@@ -5,7 +5,6 @@ import collections
 import types
 import typing as t
 
-import arc
 from arc import errors
 
 if t.TYPE_CHECKING:
