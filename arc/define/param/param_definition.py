@@ -38,7 +38,7 @@ class ParamDefinition(collections.deque[Param[t.Any]]):
         self.cls: type | None = cls
         self.children: list[ParamDefinition] = []
 
-    __repr__ = api.display("name", "data", "children")
+    __repr__ = api.display("name", "cls", "children")
 
     def all_params(self) -> t.Generator[Param[t.Any], None, None]:
         """Generator that yields all params in the tree"""
