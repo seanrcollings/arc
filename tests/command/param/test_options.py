@@ -74,7 +74,7 @@ def test_collections(cls):
 @pytest.mark.parametrize("cls", [list[int], set[int], tuple[int, ...]])
 def test_collections_with_default(cls):
     @arc.command
-    def command(*, val: cls = [1, 2, 3]):
+    def command(*, val: cls = cls([1, 2, 3])):
         return val
 
     assert command("--val 4 --val 5 --val 6") == cls([4, 5, 6])

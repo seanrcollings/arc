@@ -371,6 +371,5 @@ class CustomAutocompleteAction(CustomAction, argparse._StoreAction):
         value: t.Any,
         option_string: str | None = None,
     ) -> None:
-        # arc.exit(1, "Not currently working")
         print(ShellCompletion.run(value, self.command), end="")
         arc.exit()

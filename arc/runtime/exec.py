@@ -131,11 +131,15 @@ class ApplyParseResultMiddleware(ParamProcessor):
         value: t.Any = self.res.pop(param.argument_name, constants.MISSING)
         self.set_origin(param, ValueOrigin.COMMAND_LINE)
 
-        # This is dependent on the fact that the current parser
-        # adds a None to the result when you input a keyword, but
-        # with no value
-        if param.is_required and value is None:
-            raise errors.MissingOptionValueError(param)
+
+        # NOTE: This is dependent on the fact that the current parser
+        # will return None for append action type parameters that
+        # haven't been given any values.
+        if value is None:
+            if param.is_required:
+                raise errors.MissingOptionValueError(param)
+            else:
+                return constants.MISSING
 
         return value
 

@@ -242,10 +242,7 @@ class OptionParam(KeywordParam[T]):
 
     @property
     def parser_default(self) -> t.Any:
-        if self.action is Action.APPEND:
-            # Argparse requires that Append action's default is either
-            # None or an empty list. When it's None, it will be
-            # required, when it's an empty list, it will be optional
+        if self.action == Action.APPEND:
             return None
         return MISSING
 
