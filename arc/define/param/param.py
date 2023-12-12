@@ -242,7 +242,7 @@ class OptionParam(KeywordParam[T]):
 
     @property
     def parser_default(self) -> t.Any:
-        if self.action is Action.APPEND:
+        if self.action == Action.APPEND:
             return None
         return MISSING
 

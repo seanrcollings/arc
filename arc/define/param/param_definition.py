@@ -26,10 +26,6 @@ class ParamDefinition(collections.deque[Param[t.Any]]):
     This represents the definition of a command's paramaters, and not a particular
     execution of that comamnd with particular values"""
 
-    BASE = "__arc_param_group_base"
-    """A group with name `BASE` is the base group and
-    gets spread into the function arguments"""
-
     def __init__(
         self,
         name: str,
@@ -42,11 +38,7 @@ class ParamDefinition(collections.deque[Param[t.Any]]):
         self.cls: type | None = cls
         self.children: list[ParamDefinition] = []
 
-    __repr__ = api.display("name", "data", "children")
-
-    @property
-    def is_base(self) -> bool:
-        return self.name == self.BASE
+    __repr__ = api.display("name", "cls", "children")
 
     def all_params(self) -> t.Generator[Param[t.Any], None, None]:
         """Generator that yields all params in the tree"""
@@ -110,7 +102,7 @@ class ParamDefinitionFactory:
         self, sig: inspect.Signature, exclude: t.Sequence[str] | None = None
     ) -> ParamDefinition:
         exclude = exclude or []
-        root = ParamDefinition(ParamDefinition.BASE)
+        root = ParamDefinition("root")
 
         iterable = (
             param for param in sig.parameters.values() if param.name not in exclude

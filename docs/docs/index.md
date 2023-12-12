@@ -49,4 +49,4 @@ Check out the [Usage](./usage/intro.md) section for more information on how to u
 
 ## Playground
 
-You can check out the [playground](https://playground.arc.seancollings.dev) to try out *arc* in your browser.
+You can check out the [playground](https://arc-playground.seancollings.dev) to try out *arc* in your browser.
