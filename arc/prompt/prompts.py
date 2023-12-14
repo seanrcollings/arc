@@ -25,9 +25,10 @@ def input_prompt(param: Param[t.Any], ctx: Context, **kwargs: t.Any) -> t.Any:
 
 
 def select_prompt(
-    prompt: Prompt, string: str, values: list[str], **kwargs: t.Any
+    prompt: Prompt, string: str, values: t.Sequence[str], **kwargs: t.Any
 ) -> t.Any:
-    res = prompt.select(string, values, **kwargs)
+    select_values = [(v, v) for v in values]
+    res = prompt.select(string, select_values, **kwargs)
 
     if res is None:
         return constants.MISSING

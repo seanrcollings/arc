@@ -74,9 +74,23 @@ class Prompt:
         return self.ask(question)
 
     def select(
-        self, prompt: str, options: t.Sequence[str], **kwargs: t.Any
-    ) -> tuple[int, str]:
-        """Prompt the user to select from a list of options"""
+        self,
+        prompt: str,
+        options: t.Sequence[tuple[T, str]],
+        **kwargs: t.Any,
+    ) -> T:
+        """Prompt the user to select from a list of options
+
+        Args:
+            prompt (str): The prompt to display to the user
+            options (t.Sequence[tuple[T, str]]): A list of tuples containing the options.
+            The first entry of the tuple is the value that will be returned, and the second
+            is the text that will be displayed to the user
+
+        Returns:
+            T: The value of the selected option
+
+        """
         question = SelectQuestion(prompt, options, **kwargs)
         return self.ask(question)
 

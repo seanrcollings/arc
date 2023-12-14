@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 import arc
 from arc import constants, errors
-from arc.color import colorize, fg, fx
+from arc.color import colorize, fg
 from arc.present import Join
 from arc.prompt.helpers import ARROW_DOWN, ARROW_UP, State
 
@@ -210,7 +210,7 @@ class RawQuestion(BaseQuestion[T]):
         self.result = value
 
 
-class SelectQuestion(RawQuestion[tuple[int, T]]):
+class SelectQuestion(RawQuestion[T]):
     """Presents the user with a menu that they can select an option from
 
     `Prompt.select()` is an alias for asking this question
@@ -219,12 +219,15 @@ class SelectQuestion(RawQuestion[tuple[int, T]]):
     selected = State(0)
 
     def __init__(
-        self, prompt: str, options: t.Sequence[T], highlight_color: str = fg.ARC_BLUE
+        self,
+        prompt: str,
+        options: t.Sequence[tuple[T, str]],
+        highlight_color: str = fg.ARC_BLUE,
     ) -> None:
         super().__init__()
         self.prompt = prompt
         self.char = "❯"
-        self.options = options
+        self.options = self.__normalize_options(options)
         self.highlight_color = highlight_color
 
     def on_key(self, key: str) -> None:
@@ -238,15 +241,25 @@ class SelectQuestion(RawQuestion[tuple[int, T]]):
                 self.selected = index
 
     def on_line(self, _line: str) -> None:
-        self.done((self.selected, self.options[self.selected]))
+        self.done(self.options[self.selected][0])
 
     def render(self) -> t.Iterable[str]:
         yield self.prompt
         yield "\n\r"
         for idx, item in enumerate(self.options):
+            label = item[1]
             if idx == self.selected:
-                yield colorize(f"  {self.char} {item}", self.highlight_color)
+                yield colorize(f"  {self.char} {label}", self.highlight_color)
             else:
-                yield colorize(f"    {item}", fg.GREY)
+                yield colorize(f"    {label}", fg.GREY)
 
             yield "\r\n"
+
+    def __normalize_options(
+        self, options: t.Sequence[T] | t.Sequence[tuple[T, str]]
+    ) -> t.Sequence[tuple[T, str]]:
+        if isinstance(options[0], tuple):
+            return t.cast(t.Sequence[tuple[T, str]], options)
+
+        options = t.cast(t.Sequence[T], options)
+        return [(item, str(item)) for item in options]
