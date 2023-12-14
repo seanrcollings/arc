@@ -349,13 +349,13 @@ class CustomAction(argparse.Action):
 
 class CustomHelpAction(CustomAction, argparse._HelpAction):
     def __call__(self, *args: t.Any, **kwargs: t.Any) -> None:
-        arc.log(self.command.doc.help())
+        arc.print(self.command.doc.help())
         arc.exit()
 
 
 class CustomVersionAction(CustomAction, argparse._VersionAction):
     def __call__(self, *args: t.Any, **kwargs: t.Any) -> None:
-        arc.log(self.command.config.version)
+        arc.print(self.command.config.version)
         arc.exit()
 
 
