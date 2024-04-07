@@ -10,10 +10,11 @@ from arc import errors
 if t.TYPE_CHECKING:
     from arc.runtime import Context
 
+E = t.TypeVar("E", bound=BaseException)
 
 MiddlewareGenerator = t.Generator["Context", t.Any, t.Any]
 Middleware = t.Callable[["Context"], t.Union["Context", MiddlewareGenerator, None]]
-ErrorHandler = t.Callable[["Context", BaseException], t.Any]
+ErrorHandler = t.Callable[["Context", E], t.Any]
 
 
 class MiddlewareBase(abc.ABC):
@@ -21,8 +22,7 @@ class MiddlewareBase(abc.ABC):
         return f"{type(self).__name__}()"
 
     @abc.abstractmethod
-    def __call__(self, ctx: Context) -> t.Any:
-        ...
+    def __call__(self, ctx: Context) -> t.Any: ...
 
 
 class MiddlewareStack(collections.UserList[Middleware]):
@@ -113,8 +113,7 @@ class MiddlewareManager:
         replace: Middleware | None = None,
         before: Middleware | None = None,
         after: Middleware | None = None,
-    ) -> t.Callable[[Middleware], Middleware]:
-        ...
+    ) -> t.Callable[[Middleware], Middleware]: ...
 
     @t.overload
     def use(
@@ -125,8 +124,7 @@ class MiddlewareManager:
         replace: Middleware | None = None,
         before: Middleware | None = None,
         after: Middleware | None = None,
-    ) -> Middleware:
-        ...
+    ) -> Middleware: ...
 
     @t.overload
     def use(
@@ -137,8 +135,7 @@ class MiddlewareManager:
         replace: Middleware | None = None,
         before: Middleware | None = None,
         after: Middleware | None = None,
-    ) -> t.Sequence[Middleware]:
-        ...
+    ) -> t.Sequence[Middleware]: ...
 
     def use(
         self,
@@ -195,21 +192,18 @@ class MiddlewareManager:
 
     @t.overload
     def handle(  # type: ignore
-        self, *exceptions: type[BaseException]
-    ) -> t.Callable[[ErrorHandler], ErrorHandler]:
-        ...
+        self, *exceptions: type[E]
+    ) -> t.Callable[[ErrorHandler[E]], ErrorHandler[E]]: ...
 
     @t.overload
     def handle(
-        self, handler: ErrorHandler, *exceptions: type[BaseException]
-    ) -> ErrorHandler:
-        ...
+        self, handler: ErrorHandler[E], *exceptions: type[BaseException]
+    ) -> ErrorHandler[E]: ...
 
     @t.overload
     def handle(
-        self, handler: t.Sequence[ErrorHandler], *exceptions: type[BaseException]
-    ) -> list[ErrorHandler]:
-        ...
+        self, handler: t.Sequence[ErrorHandler[E]], *exceptions: type[E]
+    ) -> list[ErrorHandler[E]]: ...
 
     def handle(self, handler: t.Any | type = None, *exceptions: t.Any) -> t.Any:
         """Register an exception handler to this object
@@ -219,7 +213,7 @@ class MiddlewareManager:
                 and the exception object.
         """
 
-        def inner(func: ErrorHandler) -> ErrorHandler:
+        def inner(func: ErrorHandler[E]) -> ErrorHandler[E]:
             @self.use
             def error_handler(ctx: Context) -> t.Any:
                 try:
