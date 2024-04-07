@@ -1,0 +1,3830 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-8.5.10">
+    
+    
+      
+        <title>runtime.init - arc</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.975780f9.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.2505c338.min.css">
+        
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#runtimeinit" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="arc" class="md-header__button md-logo" aria-label="arc" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            arc
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              runtime.init
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <form class="md-header__option" data-md-component="palette">
+        
+          
+          
+          
+          <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent=""  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+          
+            <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22Z"/></svg>
+            </label>
+          
+        
+          
+          
+          
+          <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent=""  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+          
+            <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31Z"/></svg>
+            </label>
+          
+        
+      </form>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/seanrcollings/arc" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    seanrcollings/arc
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="../../.." class="md-tabs__link">
+      Home
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../usage/intro/" class="md-tabs__link">
+        Usage
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../examples/grep-clone/" class="md-tabs__link">
+        Examples
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../autocompletions/" class="md-tabs__link md-tabs__link--active">
+        Reference
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="arc" class="md-nav__button md-logo" aria-label="arc" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    arc
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/seanrcollings/arc" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    seanrcollings/arc
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2">
+          Usage
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Usage" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Usage
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/intro/" class="md-nav__link">
+        Intro
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2">
+          Command Parameters
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Command Parameters" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          Command Parameters
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/parameters/intro/" class="md-nav__link">
+        Parameters Intro
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/parameters/arguments/" class="md-nav__link">
+        Arguments
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/parameters/options/" class="md-nav__link">
+        Options
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/parameters/flags/" class="md-nav__link">
+        Flags
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/parameters/counter/" class="md-nav__link">
+        Counter
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_2_6" type="checkbox" id="__nav_2_2_6" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2_6">
+          Parameter Types
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Parameter Types" data-md-level="3">
+        <label class="md-nav__title" for="__nav_2_2_6">
+          <span class="md-nav__icon md-icon"></span>
+          Parameter Types
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/parameters/types/types-intro/" class="md-nav__link">
+        Types Intro
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/parameters/types/supported-types/" class="md-nav__link">
+        Supported Types
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/parameters/types/type-middleware/" class="md-nav__link">
+        Type Middleware
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/parameters/types/type-arguments/" class="md-nav__link">
+        Type Arguments
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/parameters/types/custom-types/" class="md-nav__link">
+        Custom Types
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/parameters/sources/" class="md-nav__link">
+        Parameter Sources
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/parameters/groups/" class="md-nav__link">
+        Parameter Groups
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/parameters/dependancy-injection/" class="md-nav__link">
+        Dependency Injection
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_3" type="checkbox" id="__nav_2_3" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_3">
+          Printing Output
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Printing Output" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_3">
+          <span class="md-nav__icon md-icon"></span>
+          Printing Output
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/presentation/presentation-intro/" class="md-nav__link">
+        Intro
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/presentation/printing/" class="md-nav__link">
+        Printing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/presentation/coloring/" class="md-nav__link">
+        Coloring
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/presentation/rich-output/" class="md-nav__link">
+        Rich Output
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/user-input/" class="md-nav__link">
+        User Input
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/subcommands/" class="md-nav__link">
+        Subcommands
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/documentation-generation/" class="md-nav__link">
+        Documentation Generation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/classful-commands/" class="md-nav__link">
+        Classful Commands
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/error-handlers/" class="md-nav__link">
+        Error Handling
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/middleware/" class="md-nav__link">
+        Middleware
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/command-state/" class="md-nav__link">
+        Command State
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/plugins/" class="md-nav__link">
+        Plugins
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/shell-completions/" class="md-nav__link">
+        Shell Completions
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3">
+          Examples
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Examples" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Examples
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/grep-clone/" class="md-nav__link">
+        Grep clone
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4">
+          Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../autocompletions/" class="md-nav__link">
+        autocompletions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../color/" class="md-nav__link">
+        color
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../config/" class="md-nav__link">
+        config
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../errors/" class="md-nav__link">
+        errors
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../logging/" class="md-nav__link">
+        logging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../parser/" class="md-nav__link">
+        parser
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../safe/" class="md-nav__link">
+        safe
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../typing/" class="md-nav__link">
+        typing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../version/" class="md-nav__link">
+        version
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4_10" type="checkbox" id="__nav_4_10" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4_10">
+          Define
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Define" data-md-level="2">
+        <label class="md-nav__title" for="__nav_4_10">
+          <span class="md-nav__icon md-icon"></span>
+          Define
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../define/alias/" class="md-nav__link">
+        define.alias
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../define/classful/" class="md-nav__link">
+        define.classful
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../define/command/" class="md-nav__link">
+        define.command
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../define/documentation/" class="md-nav__link">
+        define.documentation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4_10_5" type="checkbox" id="__nav_4_10_5" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4_10_5">
+          Param
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Param" data-md-level="3">
+        <label class="md-nav__title" for="__nav_4_10_5">
+          <span class="md-nav__icon md-icon"></span>
+          Param
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../define/param/constructors/" class="md-nav__link">
+        define.param.constructors
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../define/param/groups/" class="md-nav__link">
+        define.param.groups
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../define/param/param/" class="md-nav__link">
+        define.param.param
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../define/param/param_definition/" class="md-nav__link">
+        define.param.param_definition
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../define/param/param_instance/" class="md-nav__link">
+        define.param.param_instance
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../define/param/param_mixin/" class="md-nav__link">
+        define.param.param_mixin
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4_11" type="checkbox" id="__nav_4_11" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4_11">
+          Present
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Present" data-md-level="2">
+        <label class="md-nav__title" for="__nav_4_11">
+          <span class="md-nav__icon md-icon"></span>
+          Present
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../present/ansi/" class="md-nav__link">
+        present.ansi
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../present/box/" class="md-nav__link">
+        present.box
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../present/console/" class="md-nav__link">
+        present.console
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../present/data/" class="md-nav__link">
+        present.data
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../present/drawing/" class="md-nav__link">
+        present.drawing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../present/formatters/" class="md-nav__link">
+        present.formatters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../present/help_formatter/" class="md-nav__link">
+        present.help_formatter
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../present/joiner/" class="md-nav__link">
+        present.joiner
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../present/out/" class="md-nav__link">
+        present.out
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../present/pager/" class="md-nav__link">
+        present.pager
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../present/table/" class="md-nav__link">
+        present.table
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../present/wrap/" class="md-nav__link">
+        present.wrap
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4_11_13" type="checkbox" id="__nav_4_11_13" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4_11_13">
+           markdown
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label=" markdown" data-md-level="3">
+        <label class="md-nav__title" for="__nav_4_11_13">
+          <span class="md-nav__icon md-icon"></span>
+           markdown
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../present/_markdown/markdown_parser/" class="md-nav__link">
+        present._markdown.markdown_parser
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../present/_markdown/nodes/" class="md-nav__link">
+        present._markdown.nodes
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4_12" type="checkbox" id="__nav_4_12" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4_12">
+          Prompt
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Prompt" data-md-level="2">
+        <label class="md-nav__title" for="__nav_4_12">
+          <span class="md-nav__icon md-icon"></span>
+          Prompt
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../prompt/helpers/" class="md-nav__link">
+        prompt.helpers
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../prompt/prompt/" class="md-nav__link">
+        prompt.prompt
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../prompt/prompts/" class="md-nav__link">
+        prompt.prompts
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../prompt/questions/" class="md-nav__link">
+        prompt.questions
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4_13" type="checkbox" id="__nav_4_13" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4_13">
+          Runtime
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Runtime" data-md-level="2">
+        <label class="md-nav__title" for="__nav_4_13">
+          <span class="md-nav__icon md-icon"></span>
+          Runtime
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../app/" class="md-nav__link">
+        runtime.app
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../context/" class="md-nav__link">
+        runtime.context
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../exec/" class="md-nav__link">
+        runtime.exec
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          runtime.init
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        runtime.init
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init" class="md-nav__link">
+    arc.runtime.init
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.AddRuntimeParmsMiddleware" class="md-nav__link">
+    AddRuntimeParmsMiddleware
+  </a>
+  
+    <nav class="md-nav" aria-label="AddRuntimeParmsMiddleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.AddRuntimeParmsMiddleware--context-dependencies" class="md-nav__link">
+    Context Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.AddRuntimeParmsMiddleware--context-additions" class="md-nav__link">
+    Context Additions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.AddRuntimeParmsMiddleware--added-parameters" class="md-nav__link">
+    Added Parameters
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.AddUsageErrorInfoMiddleware" class="md-nav__link">
+    AddUsageErrorInfoMiddleware
+  </a>
+  
+    <nav class="md-nav" aria-label="AddUsageErrorInfoMiddleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.AddUsageErrorInfoMiddleware--context-dependencies" class="md-nav__link">
+    Context Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.AddUsageErrorInfoMiddleware--context-additions" class="md-nav__link">
+    Context Additions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.ArgParseMiddleware" class="md-nav__link">
+    ArgParseMiddleware
+  </a>
+  
+    <nav class="md-nav" aria-label="ArgParseMiddleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.ArgParseMiddleware--context-dependencies" class="md-nav__link">
+    Context Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.ArgParseMiddleware--context-additions" class="md-nav__link">
+    Context Additions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.CheckParseResultsMiddleware" class="md-nav__link">
+    CheckParseResultsMiddleware
+  </a>
+  
+    <nav class="md-nav" aria-label="CheckParseResultsMiddleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.CheckParseResultsMiddleware--context-dependencies" class="md-nav__link">
+    Context Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.CheckParseResultsMiddleware--context-additions" class="md-nav__link">
+    Context Additions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.CommandFinderMiddleware" class="md-nav__link">
+    CommandFinderMiddleware
+  </a>
+  
+    <nav class="md-nav" aria-label="CommandFinderMiddleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.CommandFinderMiddleware--context-dependencies" class="md-nav__link">
+    Context Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.CommandFinderMiddleware--context-additions" class="md-nav__link">
+    Context Additions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.InitMiddleware" class="md-nav__link">
+    InitMiddleware
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.LoadPluginsMiddleware" class="md-nav__link">
+    LoadPluginsMiddleware
+  </a>
+  
+    <nav class="md-nav" aria-label="LoadPluginsMiddleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.LoadPluginsMiddleware--context-dependencies" class="md-nav__link">
+    Context Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.LoadPluginsMiddleware--context-additions" class="md-nav__link">
+    Context Additions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.NormalizeInputMiddleware" class="md-nav__link">
+    NormalizeInputMiddleware
+  </a>
+  
+    <nav class="md-nav" aria-label="NormalizeInputMiddleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.NormalizeInputMiddleware--context-dependencies" class="md-nav__link">
+    Context Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.NormalizeInputMiddleware--context-additions" class="md-nav__link">
+    Context Additions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.PerformDevChecksMiddleware" class="md-nav__link">
+    PerformDevChecksMiddleware
+  </a>
+  
+    <nav class="md-nav" aria-label="PerformDevChecksMiddleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.PerformDevChecksMiddleware--context-dependencies" class="md-nav__link">
+    Context Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.PerformDevChecksMiddleware--context-additions" class="md-nav__link">
+    Context Additions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.StartTimeMiddleware" class="md-nav__link">
+    StartTimeMiddleware
+  </a>
+  
+    <nav class="md-nav" aria-label="StartTimeMiddleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.StartTimeMiddleware--context-dependencies" class="md-nav__link">
+    Context Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.StartTimeMiddleware--context-additions" class="md-nav__link">
+    Context Additions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../middleware/" class="md-nav__link">
+        runtime.middleware
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugin/" class="md-nav__link">
+        runtime.plugin
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4_14" type="checkbox" id="__nav_4_14" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4_14">
+          Types
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Types" data-md-level="2">
+        <label class="md-nav__title" for="__nav_4_14">
+          <span class="md-nav__icon md-icon"></span>
+          Types
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../types/aliases/" class="md-nav__link">
+        types.aliases
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../types/convert/" class="md-nav__link">
+        types.convert
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../types/dates/" class="md-nav__link">
+        types.dates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../types/default/" class="md-nav__link">
+        types.default
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../types/file/" class="md-nav__link">
+        types.file
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../types/network/" class="md-nav__link">
+        types.network
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../types/numbers/" class="md-nav__link">
+        types.numbers
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../types/path/" class="md-nav__link">
+        types.path
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../types/semver/" class="md-nav__link">
+        types.semver
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../types/state/" class="md-nav__link">
+        types.state
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../types/strings/" class="md-nav__link">
+        types.strings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../types/type_arg/" class="md-nav__link">
+        types.type_arg
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../types/type_info/" class="md-nav__link">
+        types.type_info
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../types/users/" class="md-nav__link">
+        types.users
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4_14_15" type="checkbox" id="__nav_4_14_15" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4_14_15">
+          Middleware
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Middleware" data-md-level="3">
+        <label class="md-nav__title" for="__nav_4_14_15">
+          <span class="md-nav__icon md-icon"></span>
+          Middleware
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../types/middleware/observers/" class="md-nav__link">
+        types.middleware.observers
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../types/middleware/transformers/" class="md-nav__link">
+        types.middleware.transformers
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../types/middleware/validators/" class="md-nav__link">
+        types.middleware.validators
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init" class="md-nav__link">
+    arc.runtime.init
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.AddRuntimeParmsMiddleware" class="md-nav__link">
+    AddRuntimeParmsMiddleware
+  </a>
+  
+    <nav class="md-nav" aria-label="AddRuntimeParmsMiddleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.AddRuntimeParmsMiddleware--context-dependencies" class="md-nav__link">
+    Context Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.AddRuntimeParmsMiddleware--context-additions" class="md-nav__link">
+    Context Additions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.AddRuntimeParmsMiddleware--added-parameters" class="md-nav__link">
+    Added Parameters
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.AddUsageErrorInfoMiddleware" class="md-nav__link">
+    AddUsageErrorInfoMiddleware
+  </a>
+  
+    <nav class="md-nav" aria-label="AddUsageErrorInfoMiddleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.AddUsageErrorInfoMiddleware--context-dependencies" class="md-nav__link">
+    Context Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.AddUsageErrorInfoMiddleware--context-additions" class="md-nav__link">
+    Context Additions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.ArgParseMiddleware" class="md-nav__link">
+    ArgParseMiddleware
+  </a>
+  
+    <nav class="md-nav" aria-label="ArgParseMiddleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.ArgParseMiddleware--context-dependencies" class="md-nav__link">
+    Context Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.ArgParseMiddleware--context-additions" class="md-nav__link">
+    Context Additions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.CheckParseResultsMiddleware" class="md-nav__link">
+    CheckParseResultsMiddleware
+  </a>
+  
+    <nav class="md-nav" aria-label="CheckParseResultsMiddleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.CheckParseResultsMiddleware--context-dependencies" class="md-nav__link">
+    Context Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.CheckParseResultsMiddleware--context-additions" class="md-nav__link">
+    Context Additions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.CommandFinderMiddleware" class="md-nav__link">
+    CommandFinderMiddleware
+  </a>
+  
+    <nav class="md-nav" aria-label="CommandFinderMiddleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.CommandFinderMiddleware--context-dependencies" class="md-nav__link">
+    Context Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.CommandFinderMiddleware--context-additions" class="md-nav__link">
+    Context Additions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.InitMiddleware" class="md-nav__link">
+    InitMiddleware
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.LoadPluginsMiddleware" class="md-nav__link">
+    LoadPluginsMiddleware
+  </a>
+  
+    <nav class="md-nav" aria-label="LoadPluginsMiddleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.LoadPluginsMiddleware--context-dependencies" class="md-nav__link">
+    Context Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.LoadPluginsMiddleware--context-additions" class="md-nav__link">
+    Context Additions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.NormalizeInputMiddleware" class="md-nav__link">
+    NormalizeInputMiddleware
+  </a>
+  
+    <nav class="md-nav" aria-label="NormalizeInputMiddleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.NormalizeInputMiddleware--context-dependencies" class="md-nav__link">
+    Context Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.NormalizeInputMiddleware--context-additions" class="md-nav__link">
+    Context Additions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.PerformDevChecksMiddleware" class="md-nav__link">
+    PerformDevChecksMiddleware
+  </a>
+  
+    <nav class="md-nav" aria-label="PerformDevChecksMiddleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.PerformDevChecksMiddleware--context-dependencies" class="md-nav__link">
+    Context Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.PerformDevChecksMiddleware--context-additions" class="md-nav__link">
+    Context Additions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arc.runtime.init.StartTimeMiddleware" class="md-nav__link">
+    StartTimeMiddleware
+  </a>
+  
+    <nav class="md-nav" aria-label="StartTimeMiddleware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.StartTimeMiddleware--context-dependencies" class="md-nav__link">
+    Context Dependencies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arc.runtime.init.StartTimeMiddleware--context-additions" class="md-nav__link">
+    Context Additions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  <a href="https://github.com/seanrcollings/arc/edit/master/docs/reference/runtime/init.md" title="Edit this page" class="md-content__button md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
+
+
+<h1 id="runtimeinit">runtime.init<a class="headerlink" href="#runtimeinit" title="Permanent link">&para;</a></h1>
+
+
+<div class="doc doc-object doc-module">
+
+
+<a id="arc.runtime.init"></a>
+  <div class="doc doc-contents first">
+  
+      <p>Contains all of the middlewares used during initialization of a command</p>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="arc.runtime.init.AddRuntimeParmsMiddleware" class="doc doc-heading">
+        <code>AddRuntimeParmsMiddleware</code>
+
+
+<a href="#arc.runtime.init.AddRuntimeParmsMiddleware" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code><span title="arc.runtime.middleware.MiddlewareBase">MiddlewareBase</span></code></p>
+
+  
+      <p>Adds runtime-params to the root Command object</p>
+<h3 id="arc.runtime.init.AddRuntimeParmsMiddleware--context-dependencies">Context Dependencies<a class="headerlink" href="#arc.runtime.init.AddRuntimeParmsMiddleware--context-dependencies" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>arc.root</code></li>
+</ul>
+<h3 id="arc.runtime.init.AddRuntimeParmsMiddleware--context-additions">Context Additions<a class="headerlink" href="#arc.runtime.init.AddRuntimeParmsMiddleware--context-additions" title="Permanent link">&para;</a></h3>
+<p>None</p>
+<h3 id="arc.runtime.init.AddRuntimeParmsMiddleware--added-parameters">Added Parameters<a class="headerlink" href="#arc.runtime.init.AddRuntimeParmsMiddleware--added-parameters" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>--version / -v</code>: If there is a version set in the configuration</li>
+<li><code>--autocomplete</code>: If shell completions are enabled</li>
+</ul>
+
+
+        <details class="quote">
+          <summary>Source code in <code>/home/runner/work/arc/arc/arc/runtime/init.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-100">100</a></span>
+<span class="normal"><a href="#__codelineno-0-101">101</a></span>
+<span class="normal"><a href="#__codelineno-0-102">102</a></span>
+<span class="normal"><a href="#__codelineno-0-103">103</a></span>
+<span class="normal"><a href="#__codelineno-0-104">104</a></span>
+<span class="normal"><a href="#__codelineno-0-105">105</a></span>
+<span class="normal"><a href="#__codelineno-0-106">106</a></span>
+<span class="normal"><a href="#__codelineno-0-107">107</a></span>
+<span class="normal"><a href="#__codelineno-0-108">108</a></span>
+<span class="normal"><a href="#__codelineno-0-109">109</a></span>
+<span class="normal"><a href="#__codelineno-0-110">110</a></span>
+<span class="normal"><a href="#__codelineno-0-111">111</a></span>
+<span class="normal"><a href="#__codelineno-0-112">112</a></span>
+<span class="normal"><a href="#__codelineno-0-113">113</a></span>
+<span class="normal"><a href="#__codelineno-0-114">114</a></span>
+<span class="normal"><a href="#__codelineno-0-115">115</a></span>
+<span class="normal"><a href="#__codelineno-0-116">116</a></span>
+<span class="normal"><a href="#__codelineno-0-117">117</a></span>
+<span class="normal"><a href="#__codelineno-0-118">118</a></span>
+<span class="normal"><a href="#__codelineno-0-119">119</a></span>
+<span class="normal"><a href="#__codelineno-0-120">120</a></span>
+<span class="normal"><a href="#__codelineno-0-121">121</a></span>
+<span class="normal"><a href="#__codelineno-0-122">122</a></span>
+<span class="normal"><a href="#__codelineno-0-123">123</a></span>
+<span class="normal"><a href="#__codelineno-0-124">124</a></span>
+<span class="normal"><a href="#__codelineno-0-125">125</a></span>
+<span class="normal"><a href="#__codelineno-0-126">126</a></span>
+<span class="normal"><a href="#__codelineno-0-127">127</a></span>
+<span class="normal"><a href="#__codelineno-0-128">128</a></span>
+<span class="normal"><a href="#__codelineno-0-129">129</a></span>
+<span class="normal"><a href="#__codelineno-0-130">130</a></span>
+<span class="normal"><a href="#__codelineno-0-131">131</a></span>
+<span class="normal"><a href="#__codelineno-0-132">132</a></span>
+<span class="normal"><a href="#__codelineno-0-133">133</a></span>
+<span class="normal"><a href="#__codelineno-0-134">134</a></span>
+<span class="normal"><a href="#__codelineno-0-135">135</a></span>
+<span class="normal"><a href="#__codelineno-0-136">136</a></span>
+<span class="normal"><a href="#__codelineno-0-137">137</a></span>
+<span class="normal"><a href="#__codelineno-0-138">138</a></span>
+<span class="normal"><a href="#__codelineno-0-139">139</a></span>
+<span class="normal"><a href="#__codelineno-0-140">140</a></span>
+<span class="normal"><a href="#__codelineno-0-141">141</a></span>
+<span class="normal"><a href="#__codelineno-0-142">142</a></span>
+<span class="normal"><a href="#__codelineno-0-143">143</a></span>
+<span class="normal"><a href="#__codelineno-0-144">144</a></span>
+<span class="normal"><a href="#__codelineno-0-145">145</a></span>
+<span class="normal"><a href="#__codelineno-0-146">146</a></span>
+<span class="normal"><a href="#__codelineno-0-147">147</a></span>
+<span class="normal"><a href="#__codelineno-0-148">148</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="k">class</span> <span class="nc">AddRuntimeParmsMiddleware</span><span class="p">(</span><span class="n">MiddlewareBase</span><span class="p">):</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds runtime-params to the root Command object</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102"></a>
+<a id="__codelineno-0-103" name="__codelineno-0-103"></a><span class="sd">    # Context Dependencies</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104"></a><span class="sd">    - `arc.root`</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105"></a>
+<a id="__codelineno-0-106" name="__codelineno-0-106"></a><span class="sd">    # Context Additions</span>
+<a id="__codelineno-0-107" name="__codelineno-0-107"></a><span class="sd">    None</span>
+<a id="__codelineno-0-108" name="__codelineno-0-108"></a>
+<a id="__codelineno-0-109" name="__codelineno-0-109"></a><span class="sd">    # Added Parameters</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110"></a><span class="sd">    - `--version / -v`: If there is a version set in the configuration</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111"></a><span class="sd">    - `--autocomplete`: If shell completions are enabled</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-113" name="__codelineno-0-113"></a>
+<a id="__codelineno-0-114" name="__codelineno-0-114"></a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">Context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>
+<a id="__codelineno-0-115" name="__codelineno-0-115"></a>        <span class="k">if</span> <span class="n">ctx</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">version</span><span class="p">:</span>
+<a id="__codelineno-0-116" name="__codelineno-0-116"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">__add_version_param</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">param_def</span><span class="p">)</span>
+<a id="__codelineno-0-117" name="__codelineno-0-117"></a>
+<a id="__codelineno-0-118" name="__codelineno-0-118"></a>        <span class="k">if</span> <span class="n">ctx</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">autocomplete</span><span class="p">:</span>
+<a id="__codelineno-0-119" name="__codelineno-0-119"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">__add_autocomplete_param</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">param_def</span><span class="p">)</span>
+<a id="__codelineno-0-120" name="__codelineno-0-120"></a>
+<a id="__codelineno-0-121" name="__codelineno-0-121"></a>    <span class="k">def</span> <span class="nf">__add_version_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">ParamDefinition</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-122" name="__codelineno-0-122"></a>        <span class="n">group</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span>
+<a id="__codelineno-0-123" name="__codelineno-0-123"></a>            <span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-0-124" name="__codelineno-0-124"></a>            <span class="n">FlagParam</span><span class="p">(</span>
+<a id="__codelineno-0-125" name="__codelineno-0-125"></a>                <span class="s2">&quot;version&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-126" name="__codelineno-0-126"></a>                <span class="n">short_name</span><span class="o">=</span><span class="s2">&quot;v&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-127" name="__codelineno-0-127"></a>                <span class="nb">type</span><span class="o">=</span><span class="n">TypeInfo</span><span class="o">.</span><span class="n">analyze</span><span class="p">(</span><span class="nb">bool</span><span class="p">),</span>
+<a id="__codelineno-0-128" name="__codelineno-0-128"></a>                <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Displays the app&#39;s version number&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-129" name="__codelineno-0-129"></a>                <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-0-130" name="__codelineno-0-130"></a>                <span class="n">action</span><span class="o">=</span><span class="n">CustomVersionAction</span><span class="p">,</span>
+<a id="__codelineno-0-131" name="__codelineno-0-131"></a>                <span class="n">expose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-0-132" name="__codelineno-0-132"></a>            <span class="p">),</span>
+<a id="__codelineno-0-133" name="__codelineno-0-133"></a>        <span class="p">)</span>
+<a id="__codelineno-0-134" name="__codelineno-0-134"></a>
+<a id="__codelineno-0-135" name="__codelineno-0-135"></a>    <span class="k">def</span> <span class="nf">__add_autocomplete_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">ParamDefinition</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-136" name="__codelineno-0-136"></a>        <span class="n">annotation</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Literal</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<a id="__codelineno-0-137" name="__codelineno-0-137"></a>        <span class="n">annotation</span><span class="o">.</span><span class="n">__args__</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">autocompletions</span><span class="o">.</span><span class="n">ShellCompletion</span><span class="o">.</span><span class="n">shells</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>  <span class="c1"># type: ignore</span>
+<a id="__codelineno-0-138" name="__codelineno-0-138"></a>        <span class="n">group</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span>
+<a id="__codelineno-0-139" name="__codelineno-0-139"></a>            <span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-0-140" name="__codelineno-0-140"></a>            <span class="n">OptionParam</span><span class="p">(</span>
+<a id="__codelineno-0-141" name="__codelineno-0-141"></a>                <span class="s2">&quot;autocomplete&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-142" name="__codelineno-0-142"></a>                <span class="nb">type</span><span class="o">=</span><span class="n">TypeInfo</span><span class="o">.</span><span class="n">analyze</span><span class="p">(</span><span class="n">annotation</span><span class="p">),</span>
+<a id="__codelineno-0-143" name="__codelineno-0-143"></a>                <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Shell completion support&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-144" name="__codelineno-0-144"></a>                <span class="n">action</span><span class="o">=</span><span class="n">CustomAutocompleteAction</span><span class="p">,</span>
+<a id="__codelineno-0-145" name="__codelineno-0-145"></a>                <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-146" name="__codelineno-0-146"></a>                <span class="n">expose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-0-147" name="__codelineno-0-147"></a>            <span class="p">),</span>
+<a id="__codelineno-0-148" name="__codelineno-0-148"></a>        <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="arc.runtime.init.AddUsageErrorInfoMiddleware" class="doc doc-heading">
+        <code>AddUsageErrorInfoMiddleware</code>
+
+
+<a href="#arc.runtime.init.AddUsageErrorInfoMiddleware" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code><span title="arc.runtime.middleware.MiddlewareBase">MiddlewareBase</span></code></p>
+
+  
+      <p>A utility middleware that catches <code>UsageError</code>s and adds information so they can generate a usage error</p>
+<h3 id="arc.runtime.init.AddUsageErrorInfoMiddleware--context-dependencies">Context Dependencies<a class="headerlink" href="#arc.runtime.init.AddUsageErrorInfoMiddleware--context-dependencies" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>arc.command</code> (optional): Usage information comes from the current
+executing <a class="autorefs autorefs-internal" href="../../define/command/#arc.define.command.Command"><code>Command</code></a> object</li>
+</ul>
+<h3 id="arc.runtime.init.AddUsageErrorInfoMiddleware--context-additions">Context Additions<a class="headerlink" href="#arc.runtime.init.AddUsageErrorInfoMiddleware--context-additions" title="Permanent link">&para;</a></h3>
+<p>None</p>
+
+
+        <details class="quote">
+          <summary>Source code in <code>/home/runner/work/arc/arc/arc/runtime/init.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-151">151</a></span>
+<span class="normal"><a href="#__codelineno-0-152">152</a></span>
+<span class="normal"><a href="#__codelineno-0-153">153</a></span>
+<span class="normal"><a href="#__codelineno-0-154">154</a></span>
+<span class="normal"><a href="#__codelineno-0-155">155</a></span>
+<span class="normal"><a href="#__codelineno-0-156">156</a></span>
+<span class="normal"><a href="#__codelineno-0-157">157</a></span>
+<span class="normal"><a href="#__codelineno-0-158">158</a></span>
+<span class="normal"><a href="#__codelineno-0-159">159</a></span>
+<span class="normal"><a href="#__codelineno-0-160">160</a></span>
+<span class="normal"><a href="#__codelineno-0-161">161</a></span>
+<span class="normal"><a href="#__codelineno-0-162">162</a></span>
+<span class="normal"><a href="#__codelineno-0-163">163</a></span>
+<span class="normal"><a href="#__codelineno-0-164">164</a></span>
+<span class="normal"><a href="#__codelineno-0-165">165</a></span>
+<span class="normal"><a href="#__codelineno-0-166">166</a></span>
+<span class="normal"><a href="#__codelineno-0-167">167</a></span>
+<span class="normal"><a href="#__codelineno-0-168">168</a></span>
+<span class="normal"><a href="#__codelineno-0-169">169</a></span>
+<span class="normal"><a href="#__codelineno-0-170">170</a></span>
+<span class="normal"><a href="#__codelineno-0-171">171</a></span>
+<span class="normal"><a href="#__codelineno-0-172">172</a></span>
+<span class="normal"><a href="#__codelineno-0-173">173</a></span>
+<span class="normal"><a href="#__codelineno-0-174">174</a></span>
+<span class="normal"><a href="#__codelineno-0-175">175</a></span>
+<span class="normal"><a href="#__codelineno-0-176">176</a></span>
+<span class="normal"><a href="#__codelineno-0-177">177</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-151" name="__codelineno-0-151"></a><span class="k">class</span> <span class="nc">AddUsageErrorInfoMiddleware</span><span class="p">(</span><span class="n">MiddlewareBase</span><span class="p">):</span>
+<a id="__codelineno-0-152" name="__codelineno-0-152"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;A utility middleware that catches `UsageError`s and adds information so they can generate a usage error</span>
+<a id="__codelineno-0-153" name="__codelineno-0-153"></a>
+<a id="__codelineno-0-154" name="__codelineno-0-154"></a><span class="sd">    # Context Dependencies</span>
+<a id="__codelineno-0-155" name="__codelineno-0-155"></a><span class="sd">    - `arc.command` (optional): Usage information comes from the current</span>
+<a id="__codelineno-0-156" name="__codelineno-0-156"></a><span class="sd">    executing [`Command`][arc.define.command.Command] object</span>
+<a id="__codelineno-0-157" name="__codelineno-0-157"></a>
+<a id="__codelineno-0-158" name="__codelineno-0-158"></a><span class="sd">    # Context Additions</span>
+<a id="__codelineno-0-159" name="__codelineno-0-159"></a><span class="sd">    None</span>
+<a id="__codelineno-0-160" name="__codelineno-0-160"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-161" name="__codelineno-0-161"></a>
+<a id="__codelineno-0-162" name="__codelineno-0-162"></a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">Context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>
+<a id="__codelineno-0-163" name="__codelineno-0-163"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-164" name="__codelineno-0-164"></a>            <span class="k">yield</span>
+<a id="__codelineno-0-165" name="__codelineno-0-165"></a>        <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">UsageError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166"></a>            <span class="n">command</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;arc.command&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-167" name="__codelineno-0-167"></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">command</span><span class="p">:</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168"></a>                <span class="n">ctx</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;UsageError raised, but no command is set in context&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-169" name="__codelineno-0-169"></a>
+<a id="__codelineno-0-170" name="__codelineno-0-170"></a>            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">command</span><span class="p">:</span>
+<a id="__codelineno-0-171" name="__codelineno-0-171"></a>                <span class="n">ctx</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172"></a>                    <span class="s2">&quot;UsageError was raised, but a command is already attached&quot;</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173"></a>                <span class="p">)</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174"></a>            <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175"></a>                <span class="n">e</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="n">command</span>
+<a id="__codelineno-0-176" name="__codelineno-0-176"></a>
+<a id="__codelineno-0-177" name="__codelineno-0-177"></a>            <span class="k">raise</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="arc.runtime.init.ArgParseMiddleware" class="doc doc-heading">
+        <code>ArgParseMiddleware</code>
+
+
+<a href="#arc.runtime.init.ArgParseMiddleware" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code><span title="arc.runtime.middleware.MiddlewareBase">MiddlewareBase</span></code></p>
+
+  
+      <p>Middleware that parses the input using the <code>argparse</code> library</p>
+<h3 id="arc.runtime.init.ArgParseMiddleware--context-dependencies">Context Dependencies<a class="headerlink" href="#arc.runtime.init.ArgParseMiddleware--context-dependencies" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>arc.command</code>: The command to parse the input for</li>
+<li><code>arc.input</code>: The input to parse</li>
+</ul>
+<h3 id="arc.runtime.init.ArgParseMiddleware--context-additions">Context Additions<a class="headerlink" href="#arc.runtime.init.ArgParseMiddleware--context-additions" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>arc.parse.result</code>: The result of the parsing</li>
+<li><code>arc.parse.extra</code>: Any extra arguments that were not parsed</li>
+</ul>
+
+
+        <details class="quote">
+          <summary>Source code in <code>/home/runner/work/arc/arc/arc/runtime/init.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-228">228</a></span>
+<span class="normal"><a href="#__codelineno-0-229">229</a></span>
+<span class="normal"><a href="#__codelineno-0-230">230</a></span>
+<span class="normal"><a href="#__codelineno-0-231">231</a></span>
+<span class="normal"><a href="#__codelineno-0-232">232</a></span>
+<span class="normal"><a href="#__codelineno-0-233">233</a></span>
+<span class="normal"><a href="#__codelineno-0-234">234</a></span>
+<span class="normal"><a href="#__codelineno-0-235">235</a></span>
+<span class="normal"><a href="#__codelineno-0-236">236</a></span>
+<span class="normal"><a href="#__codelineno-0-237">237</a></span>
+<span class="normal"><a href="#__codelineno-0-238">238</a></span>
+<span class="normal"><a href="#__codelineno-0-239">239</a></span>
+<span class="normal"><a href="#__codelineno-0-240">240</a></span>
+<span class="normal"><a href="#__codelineno-0-241">241</a></span>
+<span class="normal"><a href="#__codelineno-0-242">242</a></span>
+<span class="normal"><a href="#__codelineno-0-243">243</a></span>
+<span class="normal"><a href="#__codelineno-0-244">244</a></span>
+<span class="normal"><a href="#__codelineno-0-245">245</a></span>
+<span class="normal"><a href="#__codelineno-0-246">246</a></span>
+<span class="normal"><a href="#__codelineno-0-247">247</a></span>
+<span class="normal"><a href="#__codelineno-0-248">248</a></span>
+<span class="normal"><a href="#__codelineno-0-249">249</a></span>
+<span class="normal"><a href="#__codelineno-0-250">250</a></span>
+<span class="normal"><a href="#__codelineno-0-251">251</a></span>
+<span class="normal"><a href="#__codelineno-0-252">252</a></span>
+<span class="normal"><a href="#__codelineno-0-253">253</a></span>
+<span class="normal"><a href="#__codelineno-0-254">254</a></span>
+<span class="normal"><a href="#__codelineno-0-255">255</a></span>
+<span class="normal"><a href="#__codelineno-0-256">256</a></span>
+<span class="normal"><a href="#__codelineno-0-257">257</a></span>
+<span class="normal"><a href="#__codelineno-0-258">258</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-228" name="__codelineno-0-228"></a><span class="k">class</span> <span class="nc">ArgParseMiddleware</span><span class="p">(</span><span class="n">MiddlewareBase</span><span class="p">):</span>
+<a id="__codelineno-0-229" name="__codelineno-0-229"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Middleware that parses the input using the `argparse` library</span>
+<a id="__codelineno-0-230" name="__codelineno-0-230"></a>
+<a id="__codelineno-0-231" name="__codelineno-0-231"></a><span class="sd">    # Context Dependencies</span>
+<a id="__codelineno-0-232" name="__codelineno-0-232"></a><span class="sd">    - `arc.command`: The command to parse the input for</span>
+<a id="__codelineno-0-233" name="__codelineno-0-233"></a><span class="sd">    - `arc.input`: The input to parse</span>
+<a id="__codelineno-0-234" name="__codelineno-0-234"></a>
+<a id="__codelineno-0-235" name="__codelineno-0-235"></a><span class="sd">    # Context Additions</span>
+<a id="__codelineno-0-236" name="__codelineno-0-236"></a><span class="sd">    - `arc.parse.result`: The result of the parsing</span>
+<a id="__codelineno-0-237" name="__codelineno-0-237"></a><span class="sd">    - `arc.parse.extra`: Any extra arguments that were not parsed</span>
+<a id="__codelineno-0-238" name="__codelineno-0-238"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-239" name="__codelineno-0-239"></a>
+<a id="__codelineno-0-240" name="__codelineno-0-240"></a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">Context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>
+<a id="__codelineno-0-241" name="__codelineno-0-241"></a>        <span class="n">args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">[</span><span class="s2">&quot;arc.input&quot;</span><span class="p">]</span>
+<a id="__codelineno-0-242" name="__codelineno-0-242"></a>
+<a id="__codelineno-0-243" name="__codelineno-0-243"></a>        <span class="n">result</span><span class="p">,</span> <span class="n">extra</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">command</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+<a id="__codelineno-0-244" name="__codelineno-0-244"></a>        <span class="n">ctx</span><span class="p">[</span><span class="s2">&quot;arc.parse.result&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+<a id="__codelineno-0-245" name="__codelineno-0-245"></a>        <span class="n">ctx</span><span class="p">[</span><span class="s2">&quot;arc.parse.extra&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">extra</span>
+<a id="__codelineno-0-246" name="__codelineno-0-246"></a>
+<a id="__codelineno-0-247" name="__codelineno-0-247"></a>    <span class="k">def</span> <span class="nf">parse_args</span><span class="p">(</span>
+<a id="__codelineno-0-248" name="__codelineno-0-248"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<a id="__codelineno-0-249" name="__codelineno-0-249"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">at</span><span class="o">.</span><span class="n">ParseResult</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<a id="__codelineno-0-250" name="__codelineno-0-250"></a>        <span class="n">parser</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_parser</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+<a id="__codelineno-0-251" name="__codelineno-0-251"></a>        <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_known_intermixed_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+<a id="__codelineno-0-252" name="__codelineno-0-252"></a>
+<a id="__codelineno-0-253" name="__codelineno-0-253"></a>    <span class="k">def</span> <span class="nf">create_parser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="n">Command</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parser</span><span class="p">:</span>
+<a id="__codelineno-0-254" name="__codelineno-0-254"></a>        <span class="n">parser</span> <span class="o">=</span> <span class="n">Parser</span><span class="p">(</span><span class="n">add_help</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<a id="__codelineno-0-255" name="__codelineno-0-255"></a>        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">command</span><span class="o">.</span><span class="n">cli_params</span><span class="p">:</span>
+<a id="__codelineno-0-256" name="__codelineno-0-256"></a>            <span class="n">parser</span><span class="o">.</span><span class="n">add_param</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">command</span><span class="p">)</span>
+<a id="__codelineno-0-257" name="__codelineno-0-257"></a>
+<a id="__codelineno-0-258" name="__codelineno-0-258"></a>        <span class="k">return</span> <span class="n">parser</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="arc.runtime.init.CheckParseResultsMiddleware" class="doc doc-heading">
+        <code>CheckParseResultsMiddleware</code>
+
+
+<a href="#arc.runtime.init.CheckParseResultsMiddleware" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code><span title="arc.runtime.middleware.MiddlewareBase">MiddlewareBase</span></code></p>
+
+  
+      <p>Checks the results of the input parsing against configutation options.
+Generates error messages for unrecognized arguments</p>
+<h3 id="arc.runtime.init.CheckParseResultsMiddleware--context-dependencies">Context Dependencies<a class="headerlink" href="#arc.runtime.init.CheckParseResultsMiddleware--context-dependencies" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>arc.config</code></li>
+<li><code>arc.parse.extra</code> (optional)</li>
+</ul>
+<h3 id="arc.runtime.init.CheckParseResultsMiddleware--context-additions">Context Additions<a class="headerlink" href="#arc.runtime.init.CheckParseResultsMiddleware--context-additions" title="Permanent link">&para;</a></h3>
+
+
+        <details class="quote">
+          <summary>Source code in <code>/home/runner/work/arc/arc/arc/runtime/init.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-261">261</a></span>
+<span class="normal"><a href="#__codelineno-0-262">262</a></span>
+<span class="normal"><a href="#__codelineno-0-263">263</a></span>
+<span class="normal"><a href="#__codelineno-0-264">264</a></span>
+<span class="normal"><a href="#__codelineno-0-265">265</a></span>
+<span class="normal"><a href="#__codelineno-0-266">266</a></span>
+<span class="normal"><a href="#__codelineno-0-267">267</a></span>
+<span class="normal"><a href="#__codelineno-0-268">268</a></span>
+<span class="normal"><a href="#__codelineno-0-269">269</a></span>
+<span class="normal"><a href="#__codelineno-0-270">270</a></span>
+<span class="normal"><a href="#__codelineno-0-271">271</a></span>
+<span class="normal"><a href="#__codelineno-0-272">272</a></span>
+<span class="normal"><a href="#__codelineno-0-273">273</a></span>
+<span class="normal"><a href="#__codelineno-0-274">274</a></span>
+<span class="normal"><a href="#__codelineno-0-275">275</a></span>
+<span class="normal"><a href="#__codelineno-0-276">276</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-261" name="__codelineno-0-261"></a><span class="k">class</span> <span class="nc">CheckParseResultsMiddleware</span><span class="p">(</span><span class="n">MiddlewareBase</span><span class="p">):</span>
+<a id="__codelineno-0-262" name="__codelineno-0-262"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks the results of the input parsing against configutation options.</span>
+<a id="__codelineno-0-263" name="__codelineno-0-263"></a><span class="sd">    Generates error messages for unrecognized arguments</span>
+<a id="__codelineno-0-264" name="__codelineno-0-264"></a>
+<a id="__codelineno-0-265" name="__codelineno-0-265"></a><span class="sd">    # Context Dependencies</span>
+<a id="__codelineno-0-266" name="__codelineno-0-266"></a><span class="sd">    - `arc.config`</span>
+<a id="__codelineno-0-267" name="__codelineno-0-267"></a><span class="sd">    - `arc.parse.extra` (optional)</span>
+<a id="__codelineno-0-268" name="__codelineno-0-268"></a>
+<a id="__codelineno-0-269" name="__codelineno-0-269"></a><span class="sd">    # Context Additions</span>
+<a id="__codelineno-0-270" name="__codelineno-0-270"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-271" name="__codelineno-0-271"></a>
+<a id="__codelineno-0-272" name="__codelineno-0-272"></a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">Context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>
+<a id="__codelineno-0-273" name="__codelineno-0-273"></a>        <span class="n">extra</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;arc.parse.extra&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-274" name="__codelineno-0-274"></a>
+<a id="__codelineno-0-275" name="__codelineno-0-275"></a>        <span class="k">if</span> <span class="n">extra</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ctx</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">allow_unrecognized_args</span><span class="p">:</span>
+<a id="__codelineno-0-276" name="__codelineno-0-276"></a>            <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnrecognizedArgError</span><span class="p">(</span><span class="n">extra</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="arc.runtime.init.CommandFinderMiddleware" class="doc doc-heading">
+        <code>CommandFinderMiddleware</code>
+
+
+<a href="#arc.runtime.init.CommandFinderMiddleware" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code><span title="arc.runtime.middleware.MiddlewareBase">MiddlewareBase</span></code></p>
+
+  
+      <p>Middleware that finds the command to execute based on the input.
+Finds the command by walking the tree of commands from the root and
+comparing them with each next word in the input</p>
+<h3 id="arc.runtime.init.CommandFinderMiddleware--context-dependencies">Context Dependencies<a class="headerlink" href="#arc.runtime.init.CommandFinderMiddleware--context-dependencies" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>arc.input</code>: The input to find the command from</li>
+</ul>
+<h3 id="arc.runtime.init.CommandFinderMiddleware--context-additions">Context Additions<a class="headerlink" href="#arc.runtime.init.CommandFinderMiddleware--context-additions" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>arc.command</code>: The command to execute</li>
+<li><code>arc.input</code>: The input to pass to the command.
+Will be what's left of the input after removing the command path</li>
+</ul>
+
+
+        <details class="quote">
+          <summary>Source code in <code>/home/runner/work/arc/arc/arc/runtime/init.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-207">207</a></span>
+<span class="normal"><a href="#__codelineno-0-208">208</a></span>
+<span class="normal"><a href="#__codelineno-0-209">209</a></span>
+<span class="normal"><a href="#__codelineno-0-210">210</a></span>
+<span class="normal"><a href="#__codelineno-0-211">211</a></span>
+<span class="normal"><a href="#__codelineno-0-212">212</a></span>
+<span class="normal"><a href="#__codelineno-0-213">213</a></span>
+<span class="normal"><a href="#__codelineno-0-214">214</a></span>
+<span class="normal"><a href="#__codelineno-0-215">215</a></span>
+<span class="normal"><a href="#__codelineno-0-216">216</a></span>
+<span class="normal"><a href="#__codelineno-0-217">217</a></span>
+<span class="normal"><a href="#__codelineno-0-218">218</a></span>
+<span class="normal"><a href="#__codelineno-0-219">219</a></span>
+<span class="normal"><a href="#__codelineno-0-220">220</a></span>
+<span class="normal"><a href="#__codelineno-0-221">221</a></span>
+<span class="normal"><a href="#__codelineno-0-222">222</a></span>
+<span class="normal"><a href="#__codelineno-0-223">223</a></span>
+<span class="normal"><a href="#__codelineno-0-224">224</a></span>
+<span class="normal"><a href="#__codelineno-0-225">225</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-207" name="__codelineno-0-207"></a><span class="k">class</span> <span class="nc">CommandFinderMiddleware</span><span class="p">(</span><span class="n">MiddlewareBase</span><span class="p">):</span>
+<a id="__codelineno-0-208" name="__codelineno-0-208"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Middleware that finds the command to execute based on the input.</span>
+<a id="__codelineno-0-209" name="__codelineno-0-209"></a><span class="sd">    Finds the command by walking the tree of commands from the root and</span>
+<a id="__codelineno-0-210" name="__codelineno-0-210"></a><span class="sd">    comparing them with each next word in the input</span>
+<a id="__codelineno-0-211" name="__codelineno-0-211"></a>
+<a id="__codelineno-0-212" name="__codelineno-0-212"></a><span class="sd">    # Context Dependencies</span>
+<a id="__codelineno-0-213" name="__codelineno-0-213"></a><span class="sd">    - `arc.input`: The input to find the command from</span>
+<a id="__codelineno-0-214" name="__codelineno-0-214"></a>
+<a id="__codelineno-0-215" name="__codelineno-0-215"></a><span class="sd">    # Context Additions</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216"></a><span class="sd">    - `arc.command`: The command to execute</span>
+<a id="__codelineno-0-217" name="__codelineno-0-217"></a><span class="sd">    - `arc.input`: The input to pass to the command.</span>
+<a id="__codelineno-0-218" name="__codelineno-0-218"></a><span class="sd">    Will be what&#39;s left of the input after removing the command path</span>
+<a id="__codelineno-0-219" name="__codelineno-0-219"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-220" name="__codelineno-0-220"></a>
+<a id="__codelineno-0-221" name="__codelineno-0-221"></a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">Context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>
+<a id="__codelineno-0-222" name="__codelineno-0-222"></a>        <span class="n">args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">[</span><span class="s2">&quot;arc.input&quot;</span><span class="p">]</span>
+<a id="__codelineno-0-223" name="__codelineno-0-223"></a>        <span class="n">command</span><span class="p">,</span> <span class="n">command_args</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">find_command</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+<a id="__codelineno-0-224" name="__codelineno-0-224"></a>        <span class="n">ctx</span><span class="p">[</span><span class="s2">&quot;arc.command&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">command</span>
+<a id="__codelineno-0-225" name="__codelineno-0-225"></a>        <span class="n">ctx</span><span class="p">[</span><span class="s2">&quot;arc.input&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">command_args</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="arc.runtime.init.InitMiddleware" class="doc doc-heading">
+        <code>InitMiddleware</code>
+
+
+<a href="#arc.runtime.init.InitMiddleware" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code><a class="autorefs autorefs-internal" title="arc.runtime.middleware.DefaultMiddlewareNamespace" href="../middleware/#arc.runtime.middleware.DefaultMiddlewareNamespace">DefaultMiddlewareNamespace</a></code></p>
+
+  
+      <p>Namespace for all the default init middlewares</p>
+<p>Use it to reference a default init middleware when adding your own custom middlewares</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span> <span class="nn">arc</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nd">@arc</span><span class="o">.</span><span class="n">command</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">def</span> <span class="nf">command</span><span class="p">():</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">arc</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;hello there&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># To add your own init middlewares, you need to</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># create the App object explicitly</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">app</span> <span class="o">=</span> <span class="n">arc</span><span class="o">.</span><span class="n">App</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="nd">@app</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="n">before</span><span class="o">=</span><span class="n">arc</span><span class="o">.</span><span class="n">InitMiddleware</span><span class="o">.</span><span class="n">Parser</span><span class="p">)</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">def</span> <span class="nf">before_parse</span><span class="p">(</span><span class="n">ctx</span><span class="p">:</span> <span class="n">arc</span><span class="o">.</span><span class="n">Context</span><span class="p">):</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="c1"># Will run before the middleware that performs the parsing operation</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="o">...</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="n">app</span><span class="p">()</span>
+</code></pre></div>
+
+
+        <details class="quote">
+          <summary>Source code in <code>/home/runner/work/arc/arc/arc/runtime/init.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-279">279</a></span>
+<span class="normal"><a href="#__codelineno-0-280">280</a></span>
+<span class="normal"><a href="#__codelineno-0-281">281</a></span>
+<span class="normal"><a href="#__codelineno-0-282">282</a></span>
+<span class="normal"><a href="#__codelineno-0-283">283</a></span>
+<span class="normal"><a href="#__codelineno-0-284">284</a></span>
+<span class="normal"><a href="#__codelineno-0-285">285</a></span>
+<span class="normal"><a href="#__codelineno-0-286">286</a></span>
+<span class="normal"><a href="#__codelineno-0-287">287</a></span>
+<span class="normal"><a href="#__codelineno-0-288">288</a></span>
+<span class="normal"><a href="#__codelineno-0-289">289</a></span>
+<span class="normal"><a href="#__codelineno-0-290">290</a></span>
+<span class="normal"><a href="#__codelineno-0-291">291</a></span>
+<span class="normal"><a href="#__codelineno-0-292">292</a></span>
+<span class="normal"><a href="#__codelineno-0-293">293</a></span>
+<span class="normal"><a href="#__codelineno-0-294">294</a></span>
+<span class="normal"><a href="#__codelineno-0-295">295</a></span>
+<span class="normal"><a href="#__codelineno-0-296">296</a></span>
+<span class="normal"><a href="#__codelineno-0-297">297</a></span>
+<span class="normal"><a href="#__codelineno-0-298">298</a></span>
+<span class="normal"><a href="#__codelineno-0-299">299</a></span>
+<span class="normal"><a href="#__codelineno-0-300">300</a></span>
+<span class="normal"><a href="#__codelineno-0-301">301</a></span>
+<span class="normal"><a href="#__codelineno-0-302">302</a></span>
+<span class="normal"><a href="#__codelineno-0-303">303</a></span>
+<span class="normal"><a href="#__codelineno-0-304">304</a></span>
+<span class="normal"><a href="#__codelineno-0-305">305</a></span>
+<span class="normal"><a href="#__codelineno-0-306">306</a></span>
+<span class="normal"><a href="#__codelineno-0-307">307</a></span>
+<span class="normal"><a href="#__codelineno-0-308">308</a></span>
+<span class="normal"><a href="#__codelineno-0-309">309</a></span>
+<span class="normal"><a href="#__codelineno-0-310">310</a></span>
+<span class="normal"><a href="#__codelineno-0-311">311</a></span>
+<span class="normal"><a href="#__codelineno-0-312">312</a></span>
+<span class="normal"><a href="#__codelineno-0-313">313</a></span>
+<span class="normal"><a href="#__codelineno-0-314">314</a></span>
+<span class="normal"><a href="#__codelineno-0-315">315</a></span>
+<span class="normal"><a href="#__codelineno-0-316">316</a></span>
+<span class="normal"><a href="#__codelineno-0-317">317</a></span>
+<span class="normal"><a href="#__codelineno-0-318">318</a></span>
+<span class="normal"><a href="#__codelineno-0-319">319</a></span>
+<span class="normal"><a href="#__codelineno-0-320">320</a></span>
+<span class="normal"><a href="#__codelineno-0-321">321</a></span>
+<span class="normal"><a href="#__codelineno-0-322">322</a></span>
+<span class="normal"><a href="#__codelineno-0-323">323</a></span>
+<span class="normal"><a href="#__codelineno-0-324">324</a></span>
+<span class="normal"><a href="#__codelineno-0-325">325</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-279" name="__codelineno-0-279"></a><span class="k">class</span> <span class="nc">InitMiddleware</span><span class="p">(</span><span class="n">DefaultMiddlewareNamespace</span><span class="p">):</span>
+<a id="__codelineno-0-280" name="__codelineno-0-280"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Namespace for all the default init middlewares</span>
+<a id="__codelineno-0-281" name="__codelineno-0-281"></a>
+<a id="__codelineno-0-282" name="__codelineno-0-282"></a><span class="sd">    Use it to reference a default init middleware when adding your own custom middlewares</span>
+<a id="__codelineno-0-283" name="__codelineno-0-283"></a>
+<a id="__codelineno-0-284" name="__codelineno-0-284"></a><span class="sd">    ```py</span>
+<a id="__codelineno-0-285" name="__codelineno-0-285"></a><span class="sd">    import arc</span>
+<a id="__codelineno-0-286" name="__codelineno-0-286"></a>
+<a id="__codelineno-0-287" name="__codelineno-0-287"></a><span class="sd">    @arc.command</span>
+<a id="__codelineno-0-288" name="__codelineno-0-288"></a><span class="sd">    def command():</span>
+<a id="__codelineno-0-289" name="__codelineno-0-289"></a><span class="sd">        arc.print(&quot;hello there&quot;)</span>
+<a id="__codelineno-0-290" name="__codelineno-0-290"></a>
+<a id="__codelineno-0-291" name="__codelineno-0-291"></a><span class="sd">    # To add your own init middlewares, you need to</span>
+<a id="__codelineno-0-292" name="__codelineno-0-292"></a><span class="sd">    # create the App object explicitly</span>
+<a id="__codelineno-0-293" name="__codelineno-0-293"></a><span class="sd">    app = arc.App(command)</span>
+<a id="__codelineno-0-294" name="__codelineno-0-294"></a>
+<a id="__codelineno-0-295" name="__codelineno-0-295"></a><span class="sd">    @app.use(before=arc.InitMiddleware.Parser)</span>
+<a id="__codelineno-0-296" name="__codelineno-0-296"></a><span class="sd">    def before_parse(ctx: arc.Context):</span>
+<a id="__codelineno-0-297" name="__codelineno-0-297"></a><span class="sd">        # Will run before the middleware that performs the parsing operation</span>
+<a id="__codelineno-0-298" name="__codelineno-0-298"></a><span class="sd">        ...</span>
+<a id="__codelineno-0-299" name="__codelineno-0-299"></a>
+<a id="__codelineno-0-300" name="__codelineno-0-300"></a><span class="sd">    app()</span>
+<a id="__codelineno-0-301" name="__codelineno-0-301"></a><span class="sd">    ```</span>
+<a id="__codelineno-0-302" name="__codelineno-0-302"></a>
+<a id="__codelineno-0-303" name="__codelineno-0-303"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-304" name="__codelineno-0-304"></a>
+<a id="__codelineno-0-305" name="__codelineno-0-305"></a>    <span class="n">StartTime</span> <span class="o">=</span> <span class="n">StartTimeMiddleware</span><span class="p">()</span>
+<a id="__codelineno-0-306" name="__codelineno-0-306"></a>    <span class="n">LoadPlugins</span> <span class="o">=</span> <span class="n">LoadPluginsMiddleware</span><span class="p">()</span>
+<a id="__codelineno-0-307" name="__codelineno-0-307"></a>    <span class="n">PerformDevChecks</span> <span class="o">=</span> <span class="n">PerformDevChecksMiddleware</span><span class="p">()</span>
+<a id="__codelineno-0-308" name="__codelineno-0-308"></a>    <span class="n">AddRuntimeParms</span> <span class="o">=</span> <span class="n">AddRuntimeParmsMiddleware</span><span class="p">()</span>
+<a id="__codelineno-0-309" name="__codelineno-0-309"></a>    <span class="n">AddUsageErrorInfo</span> <span class="o">=</span> <span class="n">AddUsageErrorInfoMiddleware</span><span class="p">()</span>
+<a id="__codelineno-0-310" name="__codelineno-0-310"></a>    <span class="n">NormalizeInput</span> <span class="o">=</span> <span class="n">NormalizeInputMiddleware</span><span class="p">()</span>
+<a id="__codelineno-0-311" name="__codelineno-0-311"></a>    <span class="n">CommandFinder</span> <span class="o">=</span> <span class="n">CommandFinderMiddleware</span><span class="p">()</span>
+<a id="__codelineno-0-312" name="__codelineno-0-312"></a>    <span class="n">Parser</span> <span class="o">=</span> <span class="n">ArgParseMiddleware</span><span class="p">()</span>
+<a id="__codelineno-0-313" name="__codelineno-0-313"></a>    <span class="n">CheckParseResult</span> <span class="o">=</span> <span class="n">CheckParseResultsMiddleware</span><span class="p">()</span>
+<a id="__codelineno-0-314" name="__codelineno-0-314"></a>
+<a id="__codelineno-0-315" name="__codelineno-0-315"></a>    <span class="n">_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Middleware</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-0-316" name="__codelineno-0-316"></a>        <span class="n">StartTime</span><span class="p">,</span>
+<a id="__codelineno-0-317" name="__codelineno-0-317"></a>        <span class="n">LoadPlugins</span><span class="p">,</span>
+<a id="__codelineno-0-318" name="__codelineno-0-318"></a>        <span class="n">PerformDevChecks</span><span class="p">,</span>
+<a id="__codelineno-0-319" name="__codelineno-0-319"></a>        <span class="n">AddRuntimeParms</span><span class="p">,</span>
+<a id="__codelineno-0-320" name="__codelineno-0-320"></a>        <span class="n">AddUsageErrorInfo</span><span class="p">,</span>
+<a id="__codelineno-0-321" name="__codelineno-0-321"></a>        <span class="n">NormalizeInput</span><span class="p">,</span>
+<a id="__codelineno-0-322" name="__codelineno-0-322"></a>        <span class="n">CommandFinder</span><span class="p">,</span>
+<a id="__codelineno-0-323" name="__codelineno-0-323"></a>        <span class="n">Parser</span><span class="p">,</span>
+<a id="__codelineno-0-324" name="__codelineno-0-324"></a>        <span class="n">CheckParseResult</span><span class="p">,</span>
+<a id="__codelineno-0-325" name="__codelineno-0-325"></a>    <span class="p">]</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="arc.runtime.init.LoadPluginsMiddleware" class="doc doc-heading">
+        <code>LoadPluginsMiddleware</code>
+
+
+<a href="#arc.runtime.init.LoadPluginsMiddleware" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code><span title="arc.runtime.middleware.MiddlewareBase">MiddlewareBase</span></code></p>
+
+  
+      <p>Utility Middleware that loads plugins defined in the
+configuration into the application and calls their hooks</p>
+<h3 id="arc.runtime.init.LoadPluginsMiddleware--context-dependencies">Context Dependencies<a class="headerlink" href="#arc.runtime.init.LoadPluginsMiddleware--context-dependencies" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>arc.config</code> - Configuration object</li>
+<li><code>arc.app</code> - Application object</li>
+</ul>
+<h3 id="arc.runtime.init.LoadPluginsMiddleware--context-additions">Context Additions<a class="headerlink" href="#arc.runtime.init.LoadPluginsMiddleware--context-additions" title="Permanent link">&para;</a></h3>
+<p>None</p>
+
+
+        <details class="quote">
+          <summary>Source code in <code>/home/runner/work/arc/arc/arc/runtime/init.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#__codelineno-0-68">68</a></span>
+<span class="normal"><a href="#__codelineno-0-69">69</a></span>
+<span class="normal"><a href="#__codelineno-0-70">70</a></span>
+<span class="normal"><a href="#__codelineno-0-71">71</a></span>
+<span class="normal"><a href="#__codelineno-0-72">72</a></span>
+<span class="normal"><a href="#__codelineno-0-73">73</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="k">class</span> <span class="nc">LoadPluginsMiddleware</span><span class="p">(</span><span class="n">MiddlewareBase</span><span class="p">):</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Utility Middleware that loads plugins defined in the</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">    configuration into the application and calls their hooks</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">    # Context Dependencies</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">    - `arc.config` - Configuration object</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">    - `arc.app` - Application object</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">    # Context Additions</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">    None</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">Context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>        <span class="n">ctx</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loading plugins...&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>        <span class="n">app</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">app</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a>        <span class="n">app</span><span class="o">.</span><span class="n">plugins</span><span class="o">.</span><span class="n">paths</span><span class="p">(</span><span class="o">*</span><span class="n">ctx</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">plugins</span><span class="o">.</span><span class="n">paths</span><span class="p">)</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="n">app</span><span class="o">.</span><span class="n">plugins</span><span class="o">.</span><span class="n">groups</span><span class="p">(</span><span class="o">*</span><span class="n">ctx</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">plugins</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="n">app</span><span class="o">.</span><span class="n">plugins</span><span class="o">.</span><span class="n">entrypoints</span><span class="p">(</span><span class="o">*</span><span class="n">ctx</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">plugins</span><span class="o">.</span><span class="n">entrypoints</span><span class="p">)</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="k">if</span> <span class="n">app</span><span class="o">.</span><span class="n">plugins</span><span class="p">:</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a>            <span class="n">ctx</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Plugins loaded: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">plugins</span><span class="p">))</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a>            <span class="n">ctx</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calling plugin hooks...&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">app</span><span class="o">.</span><span class="n">plugins</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>                <span class="n">ctx</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;  Calling plugin hook: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>                <span class="n">p</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="arc.runtime.init.NormalizeInputMiddleware" class="doc doc-heading">
+        <code>NormalizeInputMiddleware</code>
+
+
+<a href="#arc.runtime.init.NormalizeInputMiddleware" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code><span title="arc.runtime.middleware.MiddlewareBase">MiddlewareBase</span></code></p>
+
+  
+      <p>Middleware that normalizes different input sources. If input is provided when
+command is called, it will be normalized to an list. If input is not provided,
+<code>sys.argv</code> is used.</p>
+<h3 id="arc.runtime.init.NormalizeInputMiddleware--context-dependencies">Context Dependencies<a class="headerlink" href="#arc.runtime.init.NormalizeInputMiddleware--context-dependencies" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>arc.input</code> (optional): Only exists if input was provided in the call to the command</li>
+</ul>
+<h3 id="arc.runtime.init.NormalizeInputMiddleware--context-additions">Context Additions<a class="headerlink" href="#arc.runtime.init.NormalizeInputMiddleware--context-additions" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>arc.input</code>: Adds it if it's not already there, normalizes it if it is there</li>
+</ul>
+
+
+        <details class="quote">
+          <summary>Source code in <code>/home/runner/work/arc/arc/arc/runtime/init.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-180">180</a></span>
+<span class="normal"><a href="#__codelineno-0-181">181</a></span>
+<span class="normal"><a href="#__codelineno-0-182">182</a></span>
+<span class="normal"><a href="#__codelineno-0-183">183</a></span>
+<span class="normal"><a href="#__codelineno-0-184">184</a></span>
+<span class="normal"><a href="#__codelineno-0-185">185</a></span>
+<span class="normal"><a href="#__codelineno-0-186">186</a></span>
+<span class="normal"><a href="#__codelineno-0-187">187</a></span>
+<span class="normal"><a href="#__codelineno-0-188">188</a></span>
+<span class="normal"><a href="#__codelineno-0-189">189</a></span>
+<span class="normal"><a href="#__codelineno-0-190">190</a></span>
+<span class="normal"><a href="#__codelineno-0-191">191</a></span>
+<span class="normal"><a href="#__codelineno-0-192">192</a></span>
+<span class="normal"><a href="#__codelineno-0-193">193</a></span>
+<span class="normal"><a href="#__codelineno-0-194">194</a></span>
+<span class="normal"><a href="#__codelineno-0-195">195</a></span>
+<span class="normal"><a href="#__codelineno-0-196">196</a></span>
+<span class="normal"><a href="#__codelineno-0-197">197</a></span>
+<span class="normal"><a href="#__codelineno-0-198">198</a></span>
+<span class="normal"><a href="#__codelineno-0-199">199</a></span>
+<span class="normal"><a href="#__codelineno-0-200">200</a></span>
+<span class="normal"><a href="#__codelineno-0-201">201</a></span>
+<span class="normal"><a href="#__codelineno-0-202">202</a></span>
+<span class="normal"><a href="#__codelineno-0-203">203</a></span>
+<span class="normal"><a href="#__codelineno-0-204">204</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-180" name="__codelineno-0-180"></a><span class="k">class</span> <span class="nc">NormalizeInputMiddleware</span><span class="p">(</span><span class="n">MiddlewareBase</span><span class="p">):</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Middleware that normalizes different input sources. If input is provided when</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182"></a><span class="sd">    command is called, it will be normalized to an list. If input is not provided,</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183"></a><span class="sd">    `sys.argv` is used.</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184"></a>
+<a id="__codelineno-0-185" name="__codelineno-0-185"></a><span class="sd">    # Context Dependencies</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186"></a><span class="sd">    - `arc.input` (optional): Only exists if input was provided in the call to the command</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187"></a>
+<a id="__codelineno-0-188" name="__codelineno-0-188"></a><span class="sd">    # Context Additions</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189"></a><span class="sd">    - `arc.input`: Adds it if it&#39;s not already there, normalizes it if it is there</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191"></a>
+<a id="__codelineno-0-192" name="__codelineno-0-192"></a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">Context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193"></a>        <span class="n">args</span><span class="p">:</span> <span class="n">at</span><span class="o">.</span><span class="n">InputArgs</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;arc.input&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194"></a>        <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195"></a>            <span class="n">ctx</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Using sys.argv as input: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+<a id="__codelineno-0-196" name="__codelineno-0-196"></a>            <span class="n">args</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197"></a>        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-0-198" name="__codelineno-0-198"></a>            <span class="n">args</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199"></a>            <span class="n">ctx</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Using provided string as input. Shlex output: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+<a id="__codelineno-0-200" name="__codelineno-0-200"></a>        <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201"></a>            <span class="n">ctx</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Using provided iterable as input: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+<a id="__codelineno-0-202" name="__codelineno-0-202"></a>
+<a id="__codelineno-0-203" name="__codelineno-0-203"></a>        <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+<a id="__codelineno-0-204" name="__codelineno-0-204"></a>        <span class="n">ctx</span><span class="p">[</span><span class="s2">&quot;arc.input&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">args</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="arc.runtime.init.PerformDevChecksMiddleware" class="doc doc-heading">
+        <code>PerformDevChecksMiddleware</code>
+
+
+<a href="#arc.runtime.init.PerformDevChecksMiddleware" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code><span title="arc.runtime.middleware.MiddlewareBase">MiddlewareBase</span></code></p>
+
+  
+      <p>A utility middleware that performs some development checks.
+Will be disabled in production mode.</p>
+<h3 id="arc.runtime.init.PerformDevChecksMiddleware--context-dependencies">Context Dependencies<a class="headerlink" href="#arc.runtime.init.PerformDevChecksMiddleware--context-dependencies" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>arc.root</code> - Root Command object to start checks from</li>
+<li><code>arc.concig</code> - Checks Configuration for enviroment</li>
+</ul>
+<h3 id="arc.runtime.init.PerformDevChecksMiddleware--context-additions">Context Additions<a class="headerlink" href="#arc.runtime.init.PerformDevChecksMiddleware--context-additions" title="Permanent link">&para;</a></h3>
+<p>None</p>
+
+
+        <details class="quote">
+          <summary>Source code in <code>/home/runner/work/arc/arc/arc/runtime/init.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#__codelineno-0-77">77</a></span>
+<span class="normal"><a href="#__codelineno-0-78">78</a></span>
+<span class="normal"><a href="#__codelineno-0-79">79</a></span>
+<span class="normal"><a href="#__codelineno-0-80">80</a></span>
+<span class="normal"><a href="#__codelineno-0-81">81</a></span>
+<span class="normal"><a href="#__codelineno-0-82">82</a></span>
+<span class="normal"><a href="#__codelineno-0-83">83</a></span>
+<span class="normal"><a href="#__codelineno-0-84">84</a></span>
+<span class="normal"><a href="#__codelineno-0-85">85</a></span>
+<span class="normal"><a href="#__codelineno-0-86">86</a></span>
+<span class="normal"><a href="#__codelineno-0-87">87</a></span>
+<span class="normal"><a href="#__codelineno-0-88">88</a></span>
+<span class="normal"><a href="#__codelineno-0-89">89</a></span>
+<span class="normal"><a href="#__codelineno-0-90">90</a></span>
+<span class="normal"><a href="#__codelineno-0-91">91</a></span>
+<span class="normal"><a href="#__codelineno-0-92">92</a></span>
+<span class="normal"><a href="#__codelineno-0-93">93</a></span>
+<span class="normal"><a href="#__codelineno-0-94">94</a></span>
+<span class="normal"><a href="#__codelineno-0-95">95</a></span>
+<span class="normal"><a href="#__codelineno-0-96">96</a></span>
+<span class="normal"><a href="#__codelineno-0-97">97</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="k">class</span> <span class="nc">PerformDevChecksMiddleware</span><span class="p">(</span><span class="n">MiddlewareBase</span><span class="p">):</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;A utility middleware that performs some development checks.</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">    Will be disabled in production mode.</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="sd">    # Context Dependencies</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">    - `arc.root` - Root Command object to start checks from</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">    - `arc.concig` - Checks Configuration for enviroment</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="sd">    # Context Additions</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="sd">    None</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">Context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a>        <span class="k">if</span> <span class="n">ctx</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">environment</span> <span class="o">==</span> <span class="s2">&quot;development&quot;</span><span class="p">:</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>            <span class="n">ctx</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Performing dev checks...&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a>            <span class="n">ctx</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;  Checking all command parameters&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a>            <span class="k">for</span> <span class="n">command</span> <span class="ow">in</span> <span class="n">ctx</span><span class="o">.</span><span class="n">root</span><span class="p">:</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95"></a>                <span class="k">if</span> <span class="s2">&quot;param_def&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">command</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96"></a>                    <span class="n">command</span><span class="o">.</span><span class="n">param_def</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97"></a>                    <span class="k">del</span> <span class="n">command</span><span class="o">.</span><span class="n">param_def</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="arc.runtime.init.StartTimeMiddleware" class="doc doc-heading">
+        <code>StartTimeMiddleware</code>
+
+
+<a href="#arc.runtime.init.StartTimeMiddleware" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code><span title="arc.runtime.middleware.MiddlewareBase">MiddlewareBase</span></code></p>
+
+  
+      <p>Utility Middleware that tracks how long execution takes</p>
+<h3 id="arc.runtime.init.StartTimeMiddleware--context-dependencies">Context Dependencies<a class="headerlink" href="#arc.runtime.init.StartTimeMiddleware--context-dependencies" title="Permanent link">&para;</a></h3>
+<p>None</p>
+<h3 id="arc.runtime.init.StartTimeMiddleware--context-additions">Context Additions<a class="headerlink" href="#arc.runtime.init.StartTimeMiddleware--context-additions" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>arc.debug.start</code> - datetime representing the start of execution</li>
+<li><code>arc.debug.end</code>  - datetime representing the end of execution.</li>
+</ul>
+
+
+        <details class="quote">
+          <summary>Source code in <code>/home/runner/work/arc/arc/arc/runtime/init.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-26">26</a></span>
+<span class="normal"><a href="#__codelineno-0-27">27</a></span>
+<span class="normal"><a href="#__codelineno-0-28">28</a></span>
+<span class="normal"><a href="#__codelineno-0-29">29</a></span>
+<span class="normal"><a href="#__codelineno-0-30">30</a></span>
+<span class="normal"><a href="#__codelineno-0-31">31</a></span>
+<span class="normal"><a href="#__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#__codelineno-0-33">33</a></span>
+<span class="normal"><a href="#__codelineno-0-34">34</a></span>
+<span class="normal"><a href="#__codelineno-0-35">35</a></span>
+<span class="normal"><a href="#__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#__codelineno-0-46">46</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="k">class</span> <span class="nc">StartTimeMiddleware</span><span class="p">(</span><span class="n">MiddlewareBase</span><span class="p">):</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Utility Middleware that tracks how long execution takes</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a>
+<a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="sd">    # Context Dependencies</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="sd">    None</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="sd">    #  Context Additions</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">    - `arc.debug.start` - datetime representing the start of execution</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="sd">    - `arc.debug.end`  - datetime representing the end of execution.</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">Context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a>        <span class="n">start</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a>        <span class="n">ctx</span><span class="p">[</span><span class="s2">&quot;arc.debug.start&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a>            <span class="k">yield</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a>        <span class="k">finally</span><span class="p">:</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a>            <span class="n">end</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a>            <span class="n">ctx</span><span class="p">[</span><span class="s2">&quot;arc.debug.end&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">end</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a>            <span class="n">diff</span> <span class="o">=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a>            <span class="n">ctx</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Execution took: </span><span class="si">{</span><span class="n">diff</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      
+        
+        <a href="../exec/" class="md-footer__link md-footer__link--prev" aria-label="Previous: runtime.exec" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              runtime.exec
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../middleware/" class="md-footer__link md-footer__link--next" aria-label="Next: runtime.middleware" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              runtime.middleware
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.tabs"], "search": "../../../assets/javascripts/workers/search.16e2a7d4.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.5a2dcb6a.min.js"></script>
+      
+    
+    
+  </body>
+</html>
