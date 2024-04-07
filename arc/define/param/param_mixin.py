@@ -103,7 +103,7 @@ class ParamMixin:
         return self.param_map.get(name)
 
     def __add_help_param(self, group: ParamDefinition) -> None:
-        group.appendleft(
+        group.params.appendleft(
             FlagParam(
                 "help",
                 short_name="h",

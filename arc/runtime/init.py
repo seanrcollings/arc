@@ -1,4 +1,5 @@
 """Contains all of the middlewares used during initialization of a command"""
+
 from __future__ import annotations
 import typing as t
 from datetime import datetime
@@ -118,7 +119,7 @@ class AddRuntimeParmsMiddleware(MiddlewareBase):
             self.__add_autocomplete_param(ctx.root.param_def)
 
     def __add_version_param(self, group: ParamDefinition) -> None:
-        group.insert(
+        group.params.insert(
             1,
             FlagParam(
                 "version",
@@ -134,7 +135,7 @@ class AddRuntimeParmsMiddleware(MiddlewareBase):
     def __add_autocomplete_param(self, group: ParamDefinition) -> None:
         annotation = t.Literal[1]
         annotation.__args__ = tuple(autocompletions.ShellCompletion.shells.keys())  # type: ignore
-        group.insert(
+        group.params.insert(
             1,
             OptionParam(
                 "autocomplete",

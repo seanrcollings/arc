@@ -59,13 +59,11 @@ def modify_group_cls(cls: T, options: dict[str, t.Any]) -> T:
 @t.overload
 def group(
     cls: None = None, *, exclude: t.Sequence[str] | None = None
-) -> t.Callable[[T], T]:
-    ...
+) -> t.Callable[[T], T]: ...
 
 
 @t.overload
-def group(cls: T) -> T:
-    ...
+def group(cls: T) -> T: ...
 
 
 def group(
@@ -115,7 +113,7 @@ def isgroup(cls: type) -> bool:
     return hasattr(cls, "__arc_group__")
 
 
-def groupoptions(cls: type) -> dict[str, t.Any]:
+def groupoptions(cls: type) -> at.ParamGroupOptions:
     """Returns a dictionary representing the options passed
     in when a parameter group was created. Should be used
     in conjuction with [`isgroup()`][arc.define.param.groups.isgroup].
@@ -127,7 +125,7 @@ def groupoptions(cls: type) -> dict[str, t.Any]:
         TypeError: If the passed in type is not a parameter group
 
     Returns:
-        dict[str, t.Any]: The options dictionary
+        ParamGroupOptions: The options dictionary
     """
     if not isgroup(cls):
         raise TypeError(f"{cls} is not a parameter group")

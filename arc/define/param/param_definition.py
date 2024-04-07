@@ -5,7 +5,6 @@ import inspect
 import typing as t
 
 from arc import api, errors, safe
-from arc import typing as at
 from arc.constants import MISSING
 from arc.define import classful
 from arc.define.param import groups
@@ -17,11 +16,15 @@ from arc.define.param.param import (
     OptionParam,
     Param,
 )
-from arc.define.param.param_tree import ParamTree, ParamValue
+from arc.define.param.param_instance import (
+    ParamInstanceTree,
+    ParamInstanceInteriorNode,
+    ParamInstanceLeafNode,
+)
 from arc.types.type_info import TypeInfo
 
 
-class ParamDefinition(collections.deque[Param[t.Any]]):
+class ParamDefinition:
     """A tree structure that represents how the parameters to a command look.
     This represents the definition of a command's paramaters, and not a particular
     execution of that comamnd with particular values"""
@@ -36,32 +39,41 @@ class ParamDefinition(collections.deque[Param[t.Any]]):
         super().__init__(*args, **kwargs)
         self.name: str = name
         self.cls: type | None = cls
+        self.params = collections.deque[Param[t.Any]]()
         self.children: list[ParamDefinition] = []
 
-    __repr__ = api.display("name", "cls", "children")
+    __repr__ = api.display("name", "cls", "params", "children")
 
     def all_params(self) -> t.Generator[Param[t.Any], None, None]:
         """Generator that yields all params in the tree"""
-        yield from self
+        yield from self.params
 
         if self.children:
             for child in self.children:
                 yield from child.all_params()
 
-    def create_instance(self) -> ParamTree[type[dict[str, t.Any]]]:
-        return self.__create_param_instance(self)
+    def create_instance(self) -> ParamInstanceTree[type[dict[str, t.Any]]]:
+        root = self.__create_tree(self)
+        return ParamInstanceTree(root)
 
-    def __create_param_instance(self, definition: ParamDefinition) -> ParamTree[t.Any]:
-        values: dict[str, ParamTree[t.Any] | ParamValue] = {
-            param.argument_name: ParamValue(MISSING, param) for param in definition
-        }
+    def __create_tree(
+        self, definition: ParamDefinition
+    ) -> ParamInstanceInteriorNode[t.Any]:
 
-        for child in definition.children:
-            values[child.name] = self.__create_param_instance(child)
+        # Create Param instances for all the params of the current group
+        values: list[ParamInstanceInteriorNode[t.Any] | ParamInstanceLeafNode] = [
+            ParamInstanceLeafNode(param.argument_name, MISSING, param)
+            for param in definition.params
+        ]
 
-        return ParamTree(
-            values,
+        # Recursively create Param instances for all the children of the current group
+        # (so this would be any sub-groups of the current group)
+        values.extend(self.__create_tree(child) for child in definition.children)
+
+        return ParamInstanceInteriorNode(
+            definition.name,
             definition.cls or dict,
+            values,
         )
 
 
@@ -89,7 +101,7 @@ class ParamDefinitionFactory:
         definition = groups.get_cached_definition(cls)
 
         if not definition:
-            options = t.cast(at.ParamGroupOptions, groups.groupoptions(cls))
+            options = groups.groupoptions(cls)
             sig = classful.class_signature(cls)
             definition = self.build(sig, exclude=options["exclude"])
             definition.name = name
@@ -144,7 +156,7 @@ class ParamDefinitionFactory:
                                 self.get_command_name(),
                             )
 
-                root.append(command_param)
+                root.params.append(command_param)
 
         return root
 

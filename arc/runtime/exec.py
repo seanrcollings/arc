@@ -1,4 +1,5 @@
 """Contains all of the middlewares used during execution of a command"""
+
 from __future__ import annotations
 
 import contextlib
@@ -20,7 +21,7 @@ from arc.runtime.middleware import (
 
 if t.TYPE_CHECKING:
     from arc.define import Command
-    from arc.define.param.param_tree import ParamTree
+    from arc.define.param.param_instance import ParamInstanceTree
 
 
 class ExitStackMiddleware(MiddlewareBase):
@@ -63,7 +64,7 @@ class SetupParamMiddleware(MiddlewareBase):
 
 class ParamProcessor(MiddlewareBase):
     ctx: Context
-    param_tree: ParamTree[type[dict[str, t.Any]]]
+    param_tree: ParamInstanceTree[type[dict[str, t.Any]]]
     config: Config
     origins: dict[str, str]
 
@@ -71,11 +72,13 @@ class ParamProcessor(MiddlewareBase):
 
     def __call__(self, ctx: Context) -> t.Any:
         self.ctx = ctx
-        self.param_tree: ParamTree[type[dict[str, t.Any]]] = ctx["arc.args.tree"]
+        self.param_tree: ParamInstanceTree[type[dict[str, t.Any]]] = ctx[
+            "arc.args.tree"
+        ]
         self.config = ctx["arc.config"]
         self.origins = ctx["arc.args.origins"]
 
-        for param_value in self.param_tree.values():
+        for param_value in self.param_tree.leaves():
             if not self.skip(param_value.param, param_value.value):
                 updated = self.process(param_value.param, param_value.value)
 
@@ -130,7 +133,6 @@ class ApplyParseResultMiddleware(ParamProcessor):
     def process_missing(self, param: Param[t.Any]) -> t.Any:
         value: t.Any = self.res.pop(param.argument_name, constants.MISSING)
         self.set_origin(param, ValueOrigin.COMMAND_LINE)
-
 
         # NOTE: This is dependent on the fact that the current parser
         # will return None for append action type parameters that
@@ -330,10 +332,10 @@ class MissingParamsCheckerMiddleware(MiddlewareBase):
     """
 
     def __call__(self, ctx: Context) -> t.Any:
-        tree: ParamTree[t.Any] = ctx["arc.args.tree"]
+        tree: ParamInstanceTree[t.Any] = ctx["arc.args.tree"]
         missing = [
             value.param
-            for value in tree.values()
+            for value in tree.leaves()
             if value.value is constants.MISSING and value.param.expose
         ]
 
@@ -354,7 +356,7 @@ class CompileParamsMiddleware(MiddlewareBase):
     """
 
     def __call__(self, ctx: Context) -> t.Any:
-        instance: ParamTree[t.Any] = ctx["arc.args.tree"]
+        instance: ParamInstanceTree[t.Any] = ctx["arc.args.tree"]
         ctx["arc.args"] = instance.compile()
 
 

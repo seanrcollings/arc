@@ -22,9 +22,6 @@ from arc.present._markdown.nodes import (
     HorizontalRule,
 )
 
-if t.TYPE_CHECKING:
-    from arc.config import PresentConfig
-
 
 class InputDeque(deque[str]):
     def peek(self) -> str | None:
