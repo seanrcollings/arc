@@ -132,7 +132,10 @@ class Parser(argparse.ArgumentParser):
         def consume_optional(start_index):  # type: ignore
             # get the optional identified at this index
             option_tuple = option_string_indices[start_index]
-            action, option_string, explicit_arg = option_tuple
+            if len(option_tuple) == 3:
+                action, option_string, explicit_arg = option_tuple
+            elif len(option_tuple) == 4:
+                action, option_string, _sep, explicit_arg = option_tuple
 
             # identify additional optionals in the same arg string
             # (e.g. -xyz is the same as -x -y -z if no args are required)
