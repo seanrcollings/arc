@@ -21,11 +21,6 @@
     "exec": ["--help"]
   },
   {
-    "file": "docstring_example.py",
-    "out": "docstring_example",
-    "exec": "--help"
-  },
-  {
     "file": "parameter_argument.py",
     "out": "parameter_argument",
     "exec": "Joseph"

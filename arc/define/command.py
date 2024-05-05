@@ -3,7 +3,6 @@ from datetime import datetime
 
 import functools
 import inspect
-import sys
 import typing as t
 
 import arc
@@ -250,16 +249,14 @@ class Command(ParamMixin, MiddlewareManager):
         /,
         first: Command,
         *aliases: str,
-    ) -> Command:
-        ...
+    ) -> Command: ...
 
     @t.overload
     def subcommand(
         self,
         /,
         first: at.CommandCallback,
-    ) -> Command:
-        ...
+    ) -> Command: ...
 
     @t.overload
     def subcommand(
@@ -269,8 +266,7 @@ class Command(ParamMixin, MiddlewareManager):
         *aliases: str,
         desc: str | None = None,
         **kwargs: t.Any,
-    ) -> t.Callable[[at.CommandCallback], Command]:
-        ...
+    ) -> t.Callable[[at.CommandCallback], Command]: ...
 
     def subcommand(
         self,
@@ -450,8 +446,7 @@ class Command(ParamMixin, MiddlewareManager):
 
 
 @t.overload
-def command(callback: at.CommandCallback, /) -> Command:
-    ...
+def command(callback: at.CommandCallback, /) -> Command: ...
 
 
 @t.overload
@@ -462,8 +457,7 @@ def command(
     desc: str | None = None,
     config: Config | None = None,
     **kwargs: t.Any,
-) -> t.Callable[[at.CommandCallback], Command]:
-    ...
+) -> t.Callable[[at.CommandCallback], Command]: ...
 
 
 def command(
