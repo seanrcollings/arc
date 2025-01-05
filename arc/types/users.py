@@ -6,7 +6,7 @@ import pathlib
 import pwd
 
 from arc import autocompletions as ac
-from arc import errors, typing as at, api
+from arc import errors, api
 
 
 class User:
@@ -42,7 +42,7 @@ class User:
     @classmethod
     def __completions__(
         cls, info: ac.CompletionInfo, *_args: t.Any, **_kwargs: t.Any
-    ) -> at.CompletionReturn:
+    ) -> t.Iterable[ac.Completion]:
         yield ac.Completion(info.current, type=ac.CompletionType.USERS)
 
     def __eq__(self, other: object) -> bool:
@@ -88,7 +88,7 @@ class Group:
     @classmethod
     def __completions__(
         cls, info: ac.CompletionInfo, *_args: t.Any, **_kwargs: t.Any
-    ) -> at.CompletionReturn:
+    ) -> t.Iterable[ac.Completion]:
         yield ac.Completion(info.current, type=ac.CompletionType.GROUPS)
 
     def __eq__(self, other: object) -> bool:

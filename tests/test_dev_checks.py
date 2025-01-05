@@ -1,13 +1,11 @@
 import pytest
 import arc
 from arc import errors
-from arc.config import Config
 
 
 def test_no_pos_only():
     @arc.command
-    def command(val1, /, val2):
-        ...
+    def command(val1, /, val2): ...
 
     with pytest.raises(errors.ParamError):
         command()
@@ -24,8 +22,7 @@ def test_depends_default():
 
 def test_group_default():
     @arc.group
-    class Group:
-        ...
+    class Group: ...
 
     @arc.command
     def command(ctx: Group = object()):  # type: ignore

@@ -1,20 +1,20 @@
 """Utility module for things that make the arc apis cleaner"""
+
 from __future__ import annotations
 
 import inspect
 import typing as t
 from types import MethodType
 
-if t.TYPE_CHECKING:
-    from arc.define import Command
+from arc.present.joiner import Join
 
 
 def display(*members: str) -> t.Callable[[object], str]:
     """Construct a repr that displays the values of the provided members"""
 
     def __repr__(self: object) -> str:
-        values = ", ".join(
-            [f"{member}={repr(getattr(self, member))}" for member in members]
+        values = Join.with_comma(
+            f"{member}={repr(getattr(self, member))}" for member in members
         )
         return f"{type(self).__name__}({values})"
 

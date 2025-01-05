@@ -1,6 +1,7 @@
 """Module for all Alias types. Alias types are types that handle to conversion for other types.
 All builtin types (int, str, float, etc...) have a corresponding Alias type.
 """
+
 from __future__ import annotations
 
 import collections
@@ -176,12 +177,10 @@ class _CollectionAlias(Alias):
             raise e
 
 
-class ListAlias(list[t.Any], _CollectionAlias, of=list):
-    ...
+class ListAlias(list[t.Any], _CollectionAlias, of=list): ...
 
 
-class SetAlias(set[t.Any], _CollectionAlias, of=set):
-    ...
+class SetAlias(set[t.Any], _CollectionAlias, of=set): ...
 
 
 class TupleAlias(tuple[t.Any], _CollectionAlias, of=tuple):
@@ -322,7 +321,7 @@ class LiteralAlias(Alias, of=t.Literal):
     @classmethod
     def __completions__(
         cls, info: CompletionInfo, param: Param[t.Any]
-    ) -> t.Iterator[autocompletions.Completion]:
+    ) -> t.Iterable[autocompletions.Completion]:
         for tp in param.type.sub_types:
             yield autocompletions.Completion(str(tp.origin))
 

@@ -1,4 +1,5 @@
 """Module contains custom type defintions that arc uses"""
+
 from __future__ import annotations
 
 import typing as t
@@ -25,22 +26,22 @@ Env = t.Literal["production", "development", "test"]
 InputArgs = t.Union[str, t.Sequence[str], None]
 
 CompletionFunc = t.Callable[
-    [CompletionInfo, "Param"], t.Union[t.Iterable[Completion], None]
+    [CompletionInfo, "Param[t.Any]"], t.Union[t.Iterable[Completion], None]
 ]
 
 CompletionReturn = t.Iterable[Completion] | None
 
-TypeMiddleware = t.Callable[[t.Any, "Context", "Param"], t.Any]
+TypeMiddleware = t.Callable[[t.Any, "Context", "Param[t.Any]"], t.Any]
 
 ParamGetter = t.Union[
-    t.Callable[["Param", "Context"], t.Any],
-    t.Callable[["Param"], t.Any],
+    t.Callable[["Param[t.Any]", "Context"], t.Any],
+    t.Callable[["Param[t.Any]"], t.Any],
     t.Callable[[], t.Any],
 ]
 
 ParamCallback = t.Union[
-    t.Callable[[t.Any, "Param", "Context"], t.Any],
-    t.Callable[[t.Any, "Param"], t.Any],
+    t.Callable[[t.Any, "Param[t.Any]", "Context"], t.Any],
+    t.Callable[[t.Any, "Param[t.Any]"], t.Any],
     t.Callable[[t.Any], t.Any],
     t.Callable[[], t.Any],
 ]
@@ -52,8 +53,7 @@ class ParamGroupOptions(t.TypedDict):
 
 @t.runtime_checkable
 class ClassCallback(t.Protocol):
-    def handle(self) -> t.Any:
-        ...
+    def handle(self) -> t.Any: ...
 
 
 FunctionCallback = t.Callable[..., t.Any]
@@ -87,8 +87,7 @@ class CompletionProtocol(t.Protocol):
     def __completions__(
         self,
         info: CompletionInfo,
-    ) -> t.Iterable[Completion] | None:
-        ...
+    ) -> CompletionReturn: ...
 
 
 @t.runtime_checkable
@@ -96,8 +95,7 @@ class TypeProtocol(t.Protocol):
     """Protocol that custom types need to conform to"""
 
     @classmethod
-    def __convert__(cls, value: t.Any, *args: t.Any) -> t.Any:
-        ...
+    def __convert__(cls, value: t.Any, *args: t.Any) -> t.Any: ...
 
 
 class Suggestions(t.TypedDict):
