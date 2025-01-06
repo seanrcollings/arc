@@ -22,5 +22,6 @@ The value for a parameter can come from multiple different sources, if no value 
 *arc* uses type hints types for type validation / conversion. [See more here](./types/types-intro.md)
 
 ## Additional Features
-- [Parameter Groups](./groups.md)
+- [Reusing Paramters](./reusing/reusing-param.md)
+- [Parameter Groups](./reusing/groups.md)
 - [Parameter Sources](./sources.md)
