@@ -10,6 +10,6 @@ git commit -m "$new_version"
 git tag "v$new_version"
 git push
 git push --tags
-poetry publish -u $PYPI_USERNAME -p $PYPI_PASSWORD --build
+poetry publish --build
 
 
