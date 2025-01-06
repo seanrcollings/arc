@@ -4,6 +4,7 @@ import typing as t
 from pathlib import Path
 import pytest
 import arc
+import arc.errors
 from arc.types import File, Stream
 
 from arc.types.file import Stdin, StdinFile

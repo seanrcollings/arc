@@ -318,5 +318,9 @@
       "name": "Enumeration Types",
       "description": "An example of using enumeration types to specify the specific values that a parameter can take."
     }
+  },
+  {
+    "file": "type_annotation_param.py",
+    "exec": ["--config config.json"]
   }
 ]

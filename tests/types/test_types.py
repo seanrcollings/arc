@@ -117,7 +117,6 @@ class TestList:
             return val
 
         assert cli("li 1") == ["1"]
-        # assert cli("li 1,2,3,4") == ["1", "2", "3", "4"]
         assert cli("li 1 2 3 4") == ["1", "2", "3", "4"]
 
     def test_generic(self, cli: arc.Command):
@@ -143,7 +142,6 @@ class TestList:
             return val
 
         assert cli("li --val 1") == ["1"]
-        # assert cli("li 1,2,3,4") == ["1", "2", "3", "4"]
         assert cli("li --val 1 --val 2 --val 3 --val 4") == ["1", "2", "3", "4"]
 
 
@@ -199,8 +197,7 @@ class TestTuple:
 
 
 class TestSet:
-    def test_standard(self, cli: arc.Command):
-        ...
+    def test_standard(self, cli: arc.Command): ...
 
     def test_generic(self, cli: arc.Command):
         @cli.subcommand
@@ -355,5 +352,3 @@ def test_uuid(cli: arc.Command):
 
     with pytest.raises(errors.ArgumentError):
         cli("ui bad")
-
-

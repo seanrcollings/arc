@@ -44,11 +44,6 @@ def class_signature(cls: type) -> inspect.Signature:
     return sig
 
 
-def lazy_class_signature(cls: type) -> type:
-    setattr(cls, "__signature__", classmethod(property(class_signature)))  # type: ignore
-    return cls
-
-
 def isdunder(string: str, double_dunder: bool = False) -> bool:
     if double_dunder:
         return string.startswith("__") and string.endswith("__")

@@ -5,6 +5,7 @@ import typing as t
 from functools import cached_property
 from arc.constants import COLLECTION_TYPES
 
+from arc.define.param import constructors
 import arc.typing as at
 from arc.types.aliases import Alias
 from arc.types.type_arg import TypeArg
@@ -35,6 +36,7 @@ class TypeInfo(t.Generic[T]):
     @cached_property
     def type_arg(self) -> TypeArg | None:
         args = (a for a in self.annotations if isinstance(a, TypeArg))
+
         try:
             curr = next(args)
         except StopIteration:
@@ -42,11 +44,20 @@ class TypeInfo(t.Generic[T]):
 
         for arg in args:
             curr |= arg
+
         return curr
 
     @cached_property
     def middleware(self) -> list[at.TypeMiddleware]:
         return [a for a in self.annotations if callable(a)]
+
+    @cached_property
+    def param_info(self) -> constructors.ParamInfo | None:
+        for a in reversed(self.annotations):
+            if isinstance(a, constructors.ParamInfo):
+                return a
+
+        return None
 
     @cached_property
     def resolved_type(self) -> type[at.TypeProtocol]:
