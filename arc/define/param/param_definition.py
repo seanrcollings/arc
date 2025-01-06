@@ -53,10 +53,10 @@ class ParamDefinition:
                 yield from child.all_params()
 
     def create_instance(self) -> ParamInstanceTree[type[dict[str, t.Any]]]:
-        root = self.__create_tree(self)
+        root = self.__create_instance_tree(self)
         return ParamInstanceTree(root)
 
-    def __create_tree(
+    def __create_instance_tree(
         self, definition: ParamDefinition
     ) -> ParamInstanceInteriorNode[t.Any]:
 
@@ -66,9 +66,11 @@ class ParamDefinition:
             for param in definition.params
         ]
 
-        # Recursively create Param instances for all the children of the current group
+        # Recursively create instances for all the children of the current group
         # (so this would be any sub-groups of the current group)
-        values.extend(self.__create_tree(child) for child in definition.children)
+        values.extend(
+            self.__create_instance_tree(child) for child in definition.children
+        )
 
         return ParamInstanceInteriorNode(
             definition.name,
@@ -191,6 +193,8 @@ class ParamDefinitionFactory:
     ) -> ParamInfo:
         if isinstance(param.default, ParamInfo):
             info = param.default
+        elif type_info.param_info:
+            return type_info.param_info
         else:
             info = ParamInfo(
                 param_cls=self.get_param_cls(param, type_info),
