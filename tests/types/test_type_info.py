@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, TypeVar
 import pytest
 from unittest.mock import Mock
 
@@ -7,7 +7,6 @@ from arc.types.default import Default
 import arc.typing as at
 from arc.types.type_info import TypeInfo
 from arc.types.type_arg import TypeArg
-from arc.types.aliases import Alias
 
 
 @pytest.fixture
@@ -131,3 +130,50 @@ class TestParamInfo:
         assert param.short_name == "n"
 
         assert command("--nested test") == "test"
+
+
+class TestAnalyze:
+    def test_basic_type(self):
+        typ = str
+        info = TypeInfo.analyze(typ)
+        assert info.original_type == typ
+        assert info.origin == typ
+        assert info.sub_types == ()
+        assert info.annotations == ()
+        assert info.name == "str"
+
+    def test_generic_type(self):
+        typ = list[str]
+        info = TypeInfo.analyze(typ)
+        assert info.original_type == typ
+        assert info.origin == list
+        assert info.sub_types == (TypeInfo.analyze(str),)
+        assert info.annotations == ()
+        assert info.name == "list"
+
+    def test_annotated_type(self):
+        option = arc.Option(name="test")
+        func = lambda x: x
+        typ = Annotated[str, option, func]
+        info = TypeInfo.analyze(typ)
+        assert info.original_type == typ
+        assert info.origin == str
+        assert info.sub_types == ()
+        assert info.annotations == (option, func)
+        assert info.name == "str"
+        assert info.middleware == [func]
+        assert info.param_info == option
+
+    def test_generic_annotated_type(self):
+        option = arc.Option(name="test")
+        func = lambda x: x
+        T = TypeVar("T")
+        typ = Annotated[T, option, func]
+        info = TypeInfo.analyze(typ[str])
+        assert info.original_type == typ[str]
+        assert info.origin == str
+        assert info.sub_types == ()
+        assert info.annotations == (option, func)
+        assert info.name == "str"
+        assert info.middleware == [func]
+        assert info.param_info == option

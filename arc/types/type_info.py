@@ -33,6 +33,18 @@ class TypeInfo(t.Generic[T]):
             or str(self.origin)
         )
 
+    def __eq__(self, value: t.Any) -> bool:
+        if not isinstance(value, TypeInfo):
+            return False
+
+        return (
+            self.original_type == value.original_type
+            and self.origin == value.origin
+            and self.sub_types == value.sub_types
+            and self.annotations == value.annotations
+            and self.name == value.name
+        )
+
     @cached_property
     def type_arg(self) -> TypeArg | None:
         args = (a for a in self.annotations if isinstance(a, TypeArg))
