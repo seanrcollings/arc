@@ -561,9 +561,35 @@
   
   
   
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_2_7" type="checkbox" id="__nav_2_2_7" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2_7">
+          Reusing Paramters
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Reusing Paramters" data-md-level="3">
+        <label class="md-nav__title" for="__nav_2_2_7">
+          <span class="md-nav__icon md-icon"></span>
+          Reusing Paramters
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
     <li class="md-nav__item">
-      <a href="../../usage/parameters/sources/" class="md-nav__link">
-        Parameter Sources
+      <a href="../../usage/parameters/reusing/reusing-param/" class="md-nav__link">
+        Reusing Params
       </a>
     </li>
   
@@ -576,8 +602,29 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usage/parameters/groups/" class="md-nav__link">
+      <a href="../../usage/parameters/reusing/groups/" class="md-nav__link">
         Parameter Groups
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/parameters/sources/" class="md-nav__link">
+        Parameter Sources
       </a>
     </li>
   
@@ -2232,7 +2279,7 @@
 
 
         <details class="quote">
-          <summary>Source code in <code>/home/runner/work/arc/arc/arc/errors.py</code></summary>
+          <summary>Source code in <code>/home/sean/sourcecode/arc/arc/errors.py</code></summary>
           <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-44">44</a></span>
 <span class="normal"><a href="#__codelineno-0-45">45</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="k">class</span> <span class="nc">ArgumentError</span><span class="p">(</span><span class="n">ExternalError</span><span class="p">):</span>
 <a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Error with the value of a provided argument&quot;&quot;&quot;</span>
@@ -2263,7 +2310,7 @@
 
 
         <details class="quote">
-          <summary>Source code in <code>/home/runner/work/arc/arc/arc/errors.py</code></summary>
+          <summary>Source code in <code>/home/sean/sourcecode/arc/arc/errors.py</code></summary>
           <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-48">48</a></span>
 <span class="normal"><a href="#__codelineno-0-49">49</a></span>
 <span class="normal"><a href="#__codelineno-0-50">50</a></span>
@@ -2320,7 +2367,7 @@
 
 
         <details class="quote">
-          <summary>Source code in <code>/home/runner/work/arc/arc/arc/errors.py</code></summary>
+          <summary>Source code in <code>/home/sean/sourcecode/arc/arc/errors.py</code></summary>
           <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-36">36</a></span>
 <span class="normal"><a href="#__codelineno-0-37">37</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="k">class</span> <span class="nc">ExternalError</span><span class="p">(</span><span class="n">ArcError</span><span class="p">):</span>
 <a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Errors that fire due to user / input errors&quot;&quot;&quot;</span>
@@ -2352,7 +2399,7 @@ These will be noted to probably be bugs in production mode</p>
 
 
         <details class="quote">
-          <summary>Source code in <code>/home/runner/work/arc/arc/arc/errors.py</code></summary>
+          <summary>Source code in <code>/home/sean/sourcecode/arc/arc/errors.py</code></summary>
           <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-183">183</a></span>
 <span class="normal"><a href="#__codelineno-0-184">184</a></span>
 <span class="normal"><a href="#__codelineno-0-185">185</a></span>
@@ -2425,7 +2472,7 @@ along with the provided error message</p>
 
 
         <details class="quote">
-          <summary>Source code in <code>/home/runner/work/arc/arc/arc/errors.py</code></summary>
+          <summary>Source code in <code>/home/sean/sourcecode/arc/arc/errors.py</code></summary>
           <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-57">57</a></span>
 <span class="normal"><a href="#__codelineno-0-58">58</a></span>
 <span class="normal"><a href="#__codelineno-0-59">59</a></span>
@@ -2500,7 +2547,7 @@ Optionally recieves a <code>message</code> that will be written
 to stderr before exiting</p>
 
       <details class="quote">
-        <summary>Source code in <code>/home/runner/work/arc/arc/arc/errors.py</code></summary>
+        <summary>Source code in <code>/home/sean/sourcecode/arc/arc/errors.py</code></summary>
         <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-24">24</a></span>
 <span class="normal"><a href="#__codelineno-0-25">25</a></span>
 <span class="normal"><a href="#__codelineno-0-26">26</a></span>

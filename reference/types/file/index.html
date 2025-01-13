@@ -561,9 +561,35 @@
   
   
   
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_2_7" type="checkbox" id="__nav_2_2_7" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2_7">
+          Reusing Paramters
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Reusing Paramters" data-md-level="3">
+        <label class="md-nav__title" for="__nav_2_2_7">
+          <span class="md-nav__icon md-icon"></span>
+          Reusing Paramters
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
     <li class="md-nav__item">
-      <a href="../../../usage/parameters/sources/" class="md-nav__link">
-        Parameter Sources
+      <a href="../../../usage/parameters/reusing/reusing-param/" class="md-nav__link">
+        Reusing Params
       </a>
     </li>
   
@@ -576,8 +602,29 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../usage/parameters/groups/" class="md-nav__link">
+      <a href="../../../usage/parameters/reusing/groups/" class="md-nav__link">
         Parameter Groups
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/parameters/sources/" class="md-nav__link">
+        Parameter Sources
       </a>
     </li>
   
@@ -2426,7 +2473,7 @@ all of the same properties apply</p>
 
 
         <details class="quote">
-          <summary>Source code in <code>/home/runner/work/arc/arc/arc/types/file.py</code></summary>
+          <summary>Source code in <code>/home/sean/sourcecode/arc/arc/types/file.py</code></summary>
           <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-33"> 33</a></span>
 <span class="normal"><a href="#__codelineno-0-34"> 34</a></span>
 <span class="normal"><a href="#__codelineno-0-35"> 35</a></span>
@@ -2619,8 +2666,8 @@ all of the same properties apply</p>
 <code class="highlight language-python"><span class="n">Append</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">TextIO</span><span class="p">,</span> <span class="n">Args</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)]</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.types.file.File.Append" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2641,8 +2688,8 @@ all of the same properties apply</p>
 <code class="highlight language-python"><span class="n">AppendRead</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">TextIO</span><span class="p">,</span> <span class="n">Args</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a+&#39;</span><span class="p">)]</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.types.file.File.AppendRead" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2663,8 +2710,8 @@ all of the same properties apply</p>
 <code class="highlight language-python"><span class="n">BinaryAppend</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">BinaryIO</span><span class="p">,</span> <span class="n">Args</span><span class="p">(</span><span class="s1">&#39;ab&#39;</span><span class="p">)]</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.types.file.File.BinaryAppend" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2685,8 +2732,8 @@ all of the same properties apply</p>
 <code class="highlight language-python"><span class="n">BinaryAppendRead</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">BinaryIO</span><span class="p">,</span> <span class="n">Args</span><span class="p">(</span><span class="s1">&#39;ab+&#39;</span><span class="p">)]</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.types.file.File.BinaryAppendRead" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2707,8 +2754,8 @@ all of the same properties apply</p>
 <code class="highlight language-python"><span class="n">BinaryCreateWrite</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">BinaryIO</span><span class="p">,</span> <span class="n">Args</span><span class="p">(</span><span class="s1">&#39;xb&#39;</span><span class="p">)]</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.types.file.File.BinaryCreateWrite" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2729,8 +2776,8 @@ all of the same properties apply</p>
 <code class="highlight language-python"><span class="n">BinaryRead</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">BinaryIO</span><span class="p">,</span> <span class="n">Args</span><span class="p">(</span><span class="s1">&#39;rb&#39;</span><span class="p">)]</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.types.file.File.BinaryRead" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2751,8 +2798,8 @@ all of the same properties apply</p>
 <code class="highlight language-python"><span class="n">BinaryReadWrite</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">BinaryIO</span><span class="p">,</span> <span class="n">Args</span><span class="p">(</span><span class="s1">&#39;rb+&#39;</span><span class="p">)]</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.types.file.File.BinaryReadWrite" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2773,8 +2820,8 @@ all of the same properties apply</p>
 <code class="highlight language-python"><span class="n">BinaryWrite</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">BinaryIO</span><span class="p">,</span> <span class="n">Args</span><span class="p">(</span><span class="s1">&#39;wb&#39;</span><span class="p">)]</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.types.file.File.BinaryWrite" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2795,8 +2842,8 @@ all of the same properties apply</p>
 <code class="highlight language-python"><span class="n">CreateWrite</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">TextIO</span><span class="p">,</span> <span class="n">Args</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">)]</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.types.file.File.CreateWrite" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2817,8 +2864,8 @@ all of the same properties apply</p>
 <code class="highlight language-python"><span class="n">Read</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">TextIO</span><span class="p">,</span> <span class="n">Args</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)]</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.types.file.File.Read" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2839,8 +2886,8 @@ all of the same properties apply</p>
 <code class="highlight language-python"><span class="n">ReadWrite</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">TextIO</span><span class="p">,</span> <span class="n">Args</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r+&#39;</span><span class="p">)]</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.types.file.File.ReadWrite" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2861,8 +2908,8 @@ all of the same properties apply</p>
 <code class="highlight language-python"><span class="n">Write</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Annotated</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">TextIO</span><span class="p">,</span> <span class="n">Args</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)]</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.types.file.File.Write" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2905,7 +2952,7 @@ all of the same properties apply</p>
 
 
         <details class="quote">
-          <summary>Source code in <code>/home/runner/work/arc/arc/arc/types/file.py</code></summary>
+          <summary>Source code in <code>/home/sean/sourcecode/arc/arc/types/file.py</code></summary>
           <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-153">153</a></span>
 <span class="normal"><a href="#__codelineno-0-154">154</a></span>
 <span class="normal"><a href="#__codelineno-0-155">155</a></span>

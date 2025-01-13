@@ -561,9 +561,35 @@
   
   
   
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_2_7" type="checkbox" id="__nav_2_2_7" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2_7">
+          Reusing Paramters
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Reusing Paramters" data-md-level="3">
+        <label class="md-nav__title" for="__nav_2_2_7">
+          <span class="md-nav__icon md-icon"></span>
+          Reusing Paramters
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
     <li class="md-nav__item">
-      <a href="../../usage/parameters/sources/" class="md-nav__link">
-        Parameter Sources
+      <a href="../../usage/parameters/reusing/reusing-param/" class="md-nav__link">
+        Reusing Params
       </a>
     </li>
   
@@ -576,8 +602,29 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usage/parameters/groups/" class="md-nav__link">
+      <a href="../../usage/parameters/reusing/groups/" class="md-nav__link">
         Parameter Groups
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/parameters/sources/" class="md-nav__link">
+        Parameter Sources
       </a>
     </li>
   
@@ -2396,7 +2443,7 @@
 
 
         <details class="quote">
-          <summary>Source code in <code>/home/runner/work/arc/arc/arc/config.py</code></summary>
+          <summary>Source code in <code>/home/sean/sourcecode/arc/arc/config.py</code></summary>
           <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-20">20</a></span>
 <span class="normal"><a href="#__codelineno-0-21">21</a></span>
 <span class="normal"><a href="#__codelineno-0-22">22</a></span>
@@ -2458,7 +2505,7 @@ of this class is created, then used where it is needed</p>
 
 
         <details class="quote">
-          <summary>Source code in <code>/home/runner/work/arc/arc/arc/config.py</code></summary>
+          <summary>Source code in <code>/home/sean/sourcecode/arc/arc/config.py</code></summary>
           <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-87"> 87</a></span>
 <span class="normal"><a href="#__codelineno-0-88"> 88</a></span>
 <span class="normal"><a href="#__codelineno-0-89"> 89</a></span>
@@ -2596,7 +2643,7 @@ of this class is created, then used where it is needed</p>
       <p>Access the Global <code>Config</code> instance</p>
 
       <details class="quote">
-        <summary>Source code in <code>/home/runner/work/arc/arc/arc/config.py</code></summary>
+        <summary>Source code in <code>/home/sean/sourcecode/arc/arc/config.py</code></summary>
         <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-112">112</a></span>
 <span class="normal"><a href="#__codelineno-0-113">113</a></span>
 <span class="normal"><a href="#__codelineno-0-114">114</a></span>
@@ -2650,7 +2697,7 @@ of this class is created, then used where it is needed</p>
 
 
         <details class="quote">
-          <summary>Source code in <code>/home/runner/work/arc/arc/arc/config.py</code></summary>
+          <summary>Source code in <code>/home/sean/sourcecode/arc/arc/config.py</code></summary>
           <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-45">45</a></span>
 <span class="normal"><a href="#__codelineno-0-46">46</a></span>
 <span class="normal"><a href="#__codelineno-0-47">47</a></span>
@@ -2705,7 +2752,7 @@ of this class is created, then used where it is needed</p>
 
 
         <details class="quote">
-          <summary>Source code in <code>/home/runner/work/arc/arc/arc/config.py</code></summary>
+          <summary>Source code in <code>/home/sean/sourcecode/arc/arc/config.py</code></summary>
           <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-61">61</a></span>
 <span class="normal"><a href="#__codelineno-0-62">62</a></span>
 <span class="normal"><a href="#__codelineno-0-63">63</a></span>
@@ -2774,8 +2821,8 @@ of this class is created, then used where it is needed</p>
 <code class="highlight language-python"><span class="n">entrypoints</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.config.PluginConfig.entrypoints" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2797,8 +2844,8 @@ a callable that accepts a single argument, the <code>Context</code> object.</p>
 <code class="highlight language-python"><span class="n">groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span> <span class="p">:</span> <span class="p">[</span><span class="s1">&#39;arc.plugins&#39;</span><span class="p">])</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.config.PluginConfig.groups" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2821,8 +2868,8 @@ a callable that accepts a single argument, the <code>Context</code> object.</p>
 <code class="highlight language-python"><span class="n">paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.config.PluginConfig.paths" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2871,7 +2918,7 @@ is provided, all files in that directory will be searched for plugins.</p>
 
 
         <details class="quote">
-          <summary>Source code in <code>/home/runner/work/arc/arc/arc/config.py</code></summary>
+          <summary>Source code in <code>/home/sean/sourcecode/arc/arc/config.py</code></summary>
           <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-30">30</a></span>
 <span class="normal"><a href="#__codelineno-0-31">31</a></span>
 <span class="normal"><a href="#__codelineno-0-32">32</a></span>
@@ -2918,8 +2965,8 @@ is provided, all files in that directory will be searched for plugins.</p>
 <code class="highlight language-python"><span class="n">color</span><span class="p">:</span> <span class="n">ColorConfig</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">ColorConfig</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.config.PresentConfig.color" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2940,8 +2987,8 @@ is provided, all files in that directory will be searched for plugins.</p>
 <code class="highlight language-python"><span class="n">formatter</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">HelpFormatter</span><span class="p">]</span> <span class="o">=</span> <span class="n">DefaultHelpFormatter</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.config.PresentConfig.formatter" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2962,8 +3009,8 @@ is provided, all files in that directory will be searched for plugins.</p>
 <code class="highlight language-python"><span class="n">indent</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span> <span class="o">*</span> <span class="mi">4</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.config.PresentConfig.indent" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -2984,8 +3031,8 @@ is provided, all files in that directory will be searched for plugins.</p>
 <code class="highlight language-python"><span class="n">width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">80</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
       <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
   </span>
 
 <a href="#arc.config.PresentConfig.width" class="headerlink" title="Permanent link">&para;</a></h3>
@@ -3031,7 +3078,7 @@ for wrapping text. Will be ignored if the terminal width is smaller</p>
 
 
         <details class="quote">
-          <summary>Source code in <code>/home/runner/work/arc/arc/arc/config.py</code></summary>
+          <summary>Source code in <code>/home/sean/sourcecode/arc/arc/config.py</code></summary>
           <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-52">52</a></span>
 <span class="normal"><a href="#__codelineno-0-53">53</a></span>
 <span class="normal"><a href="#__codelineno-0-54">54</a></span>
@@ -3239,7 +3286,7 @@ arc does not recognize a command / parameter</p></td>
   </table>
 
       <details class="quote">
-        <summary>Source code in <code>/home/runner/work/arc/arc/arc/config.py</code></summary>
+        <summary>Source code in <code>/home/sean/sourcecode/arc/arc/config.py</code></summary>
         <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-141">141</a></span>
 <span class="normal"><a href="#__codelineno-0-142">142</a></span>
 <span class="normal"><a href="#__codelineno-0-143">143</a></span>
