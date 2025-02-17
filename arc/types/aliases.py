@@ -17,7 +17,7 @@ import uuid
 
 import _io  # type: ignore
 
-from arc import api, autocompletions, errors, safe
+from arc import autocompletions, errors, safe, utils
 from arc.autocompletions import Completion, CompletionInfo, CompletionType
 from arc.color import colorize, fg
 from arc.present.joiner import Join
@@ -59,9 +59,9 @@ class Alias:
             typ.name = cls.name
 
         if not typ.sub_types:
-            obj = api.dispatch_args(cls.convert, value, typ)
+            obj = utils.dispatch_args(cls.convert, value, typ)
         else:
-            obj = api.dispatch_args(cls.g_convert, value, typ)
+            obj = utils.dispatch_args(cls.g_convert, value, typ)
 
         return obj
 

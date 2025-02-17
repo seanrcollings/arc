@@ -6,7 +6,7 @@ import typing as t
 from functools import cached_property
 
 import arc.typing as at
-from arc import api, safe
+from arc import safe, utils
 from arc.autocompletions import CompletionInfo, get_completions
 from arc.color import colorize, fg
 from arc.constants import MISSING, Constant
@@ -104,7 +104,7 @@ class Param(t.Generic[T]):
         if self.type.is_optional_type and self.default is MISSING:
             self.default = None
 
-    __repr__ = api.display("argument_name", "type")
+    __repr__ = utils.display("argument_name", "type")
 
     def __completions__(
         self, info: CompletionInfo, *args: t.Any, **kwargs: t.Any
@@ -189,7 +189,7 @@ class Param(t.Generic[T]):
 
     def run_middleware(self, value: t.Any, ctx: t.Any) -> t.Any:
         for middleware in self.type.middleware:
-            value = api.dispatch_args(middleware, value, ctx, self)
+            value = utils.dispatch_args(middleware, value, ctx, self)
 
         return value
 
@@ -284,7 +284,7 @@ class InjectedParam(Param[T]):
     callback: at.ParamGetter  # type: ignore[assignment]
 
     def get_injected_value(self, ctx: t.Any) -> t.Any:
-        value = api.dispatch_args(self.callback, ctx, self)
+        value = utils.dispatch_args(self.callback, ctx, self)
         return value
 
     @property

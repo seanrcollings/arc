@@ -8,7 +8,7 @@ import typing as t
 import arc
 from arc.config import Config
 import arc.typing as at
-from arc import api, color, errors
+from arc import color, errors, utils
 from arc.autocompletions import Completion, CompletionInfo, get_completions
 from arc.define import classful
 from arc.define.alias import AliasDict
@@ -60,7 +60,7 @@ class Command(ParamMixin, MiddlewareManager):
         self.explicit_name = explicit_name
         self.data = kwargs
 
-    __repr__ = api.display("name")
+    __repr__ = utils.display("name")
 
     def __call__(
         self, input_args: at.InputArgs = None, state: dict[str, t.Any] = None

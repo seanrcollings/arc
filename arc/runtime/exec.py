@@ -7,7 +7,7 @@ import os
 import typing as t
 
 import arc
-from arc import api, constants, errors
+from arc import constants, errors, utils
 from arc import typing as at
 from arc.config import Config
 from arc.define.param.param import InjectedParam, Param, ValueOrigin
@@ -192,7 +192,7 @@ class GetPromptValueMiddleware(ParamProcessor):
             return constants.MISSING
 
         prompter = getattr(param.type.resolved_type, "__prompt__", input_prompt)
-        return api.dispatch_args(prompter, param, self.ctx)
+        return utils.dispatch_args(prompter, param, self.ctx)
 
 
 class GetterValueMiddleware(ParamProcessor):
@@ -217,7 +217,7 @@ class GetterValueMiddleware(ParamProcessor):
         if not getter:
             return constants.MISSING
 
-        return api.dispatch_args(getter, param, self.ctx)
+        return utils.dispatch_args(getter, param, self.ctx)
 
 
 class ConvertValuesMiddleware(ParamProcessor):
@@ -318,7 +318,7 @@ class RunCallbacksMiddleware(ParamProcessor):
         if not param.callback:
             return value
 
-        return api.dispatch_args(param.callback, value, param, self.ctx)
+        return utils.dispatch_args(param.callback, value, param, self.ctx)
 
 
 class MissingParamsCheckerMiddleware(MiddlewareBase):

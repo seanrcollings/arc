@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as t
 
-from arc import api, types
+from arc import types, utils
 
 if t.TYPE_CHECKING:
     from arc.typing import TypeProtocol
@@ -17,7 +17,7 @@ def convert_type(
     info: types.TypeInfo[T],
 ) -> T:
     """Uses `protocol` to convert `value`"""
-    return api.dispatch_args(protocol.__convert__, value, info)
+    return utils.dispatch_args(protocol.__convert__, value, info)
 
 
 def convert(value: str, type: type[T]) -> T:
@@ -25,6 +25,6 @@ def convert(value: str, type: type[T]) -> T:
     converted = convert_type(info.resolved_type, value, info)
 
     for middleware in info.middleware:
-        converted = api.dispatch_args(middleware, converted, None, None)
+        converted = utils.dispatch_args(middleware, converted, None, None)
 
     return converted

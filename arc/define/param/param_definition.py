@@ -4,7 +4,7 @@ import collections
 import inspect
 import typing as t
 
-from arc import api, errors, safe
+from arc import errors, safe, utils
 from arc.constants import MISSING
 from arc.define import classful
 from arc.define.param import groups
@@ -42,7 +42,7 @@ class ParamDefinition:
         self.params = collections.deque[Param[t.Any]]()
         self.children: list[ParamDefinition] = []
 
-    __repr__ = api.display("name", "cls", "params", "children")
+    __repr__ = utils.display("name", "cls", "params", "children")
 
     def all_params(self) -> t.Generator[Param[t.Any], None, None]:
         """Generator that yields all params in the tree"""

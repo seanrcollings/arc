@@ -5,8 +5,8 @@ import grp
 import pathlib
 import pwd
 
-from arc import autocompletions as ac
-from arc import errors, api
+from arc import autocompletions as ac, utils
+from arc import errors
 
 
 class User:
@@ -28,7 +28,7 @@ class User:
         self.directory = pathlib.Path(directory)
         self.shell = pathlib.Path(shell)
 
-    __repr__ = api.display("name", "id", "group_id", "gecos", "directory", "shell")
+    __repr__ = utils.display("name", "id", "group_id", "gecos", "directory", "shell")
 
     @classmethod
     def __convert__(cls, value: str) -> User:
@@ -75,7 +75,7 @@ class Group:
         self.id = gid
         self._mem = mem or []
 
-    __repr__ = api.display("name", "id", "members")
+    __repr__ = utils.display("name", "id", "members")
 
     @classmethod
     def __convert__(cls, value: str) -> Group:
