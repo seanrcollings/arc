@@ -1,7 +1,10 @@
+from typing import Annotated
 import pytest
 import arc
 from arc import errors
 
+
+Type = Annotated[int, arc.Argument(default=2)]
 
 class TestArgumentDeclartion:
     def test_postional(self):
@@ -23,6 +26,18 @@ class TestArgumentDeclartion:
 
         with pytest.raises(errors.MissingArgValueError):
             command("")
+
+    def test_in_type(self):
+
+        @arc.command
+        def command(val: Type):
+            return val
+
+        assert command("1") == 1
+        assert command("") == 2
+
+        with pytest.raises(errors.InvalidParamValueError):
+            command("val")
 
 
 def test_missing():

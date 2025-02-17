@@ -14,6 +14,7 @@ class TestUsage:
             return user
 
         assert command("root").name == "root"
+        assert command("0").name == "root"
 
         with pytest.raises(errors.InvalidParamValueError):
             command("invalid")
@@ -24,6 +25,7 @@ class TestUsage:
             return user
 
         assert command("root").name == "root"
+        assert command("0").name == "root"
 
         with pytest.raises(errors.InvalidParamValueError):
             command("invalid")

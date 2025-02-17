@@ -32,10 +32,11 @@ class User:
 
     @classmethod
     def __convert__(cls, value: str) -> User:
-        users = {p[0]: p for p in pwd.getpwall()}
+        users = pwd.getpwall()
 
-        if value in users:
-            return cls(*users[value])
+        for user in users:
+            if user.pw_name == value or str(user.pw_uid) == value:
+                return cls(*user)
 
         raise errors.ConversionError(value, f"{value} is not a valid user")
 
@@ -78,10 +79,11 @@ class Group:
 
     @classmethod
     def __convert__(cls, value: str) -> Group:
-        groups = {p[0]: p for p in grp.getgrall()}
+        groups = grp.getgrall()
 
-        if value in groups:
-            return cls(*groups[value])
+        for group in groups:
+            if group.gr_name == value or str(group.gr_gid) == value:
+                return cls(*group)
 
         raise errors.ConversionError(value, f"{value} is not a valid group")
 

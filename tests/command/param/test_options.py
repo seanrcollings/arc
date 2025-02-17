@@ -1,6 +1,9 @@
+from typing import Annotated
 import pytest
 import arc
 from arc import errors
+
+Type = Annotated[str, arc.Option(name="name")]
 
 
 class TestOptionDeclaration:
@@ -14,6 +17,13 @@ class TestOptionDeclaration:
     def test_param_info(self):
         @arc.command
         def command(name: str = arc.Option()):
+            return name
+
+        self.assertions(command)
+
+    def test_in_type(self):
+        @arc.command
+        def command(name: Type):
             return name
 
         self.assertions(command)
