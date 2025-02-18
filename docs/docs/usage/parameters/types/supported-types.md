@@ -352,6 +352,16 @@ When prompted for input, the user's input will not be echoed to the screen.
 
 Enforces that the string is a valid email address
 
+### CSV Types
 
+!!! tip
+    The CSV types are `typing.Protocol` types, your command will actually be called with the results of calling `csv.reader` or `csv.writer` on the file.
 
+#### `CSVReader`
+
+Access to a CSV file as a reader object
+
+#### `CSVWriter`
+
+Access to a CSV file as a writer object
 
