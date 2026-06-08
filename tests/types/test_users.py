@@ -1,10 +1,19 @@
-import os
-import pytest
-import pwd
 import grp
+import os
+import pwd
+
+import pytest
 
 import arc
-from arc import types, errors
+from arc import errors, types
+
+
+def _first_user() -> pwd.struct_passwd:
+    return pwd.getpwall()[0]
+
+
+def _first_group() -> grp.struct_group:
+    return grp.getgrall()[0]
 
 
 class TestUsage:
@@ -13,19 +22,21 @@ class TestUsage:
         def command(user: types.User):
             return user
 
-        assert command("root").name == "root"
-        assert command("0").name == "root"
+        u = _first_user()
+        assert command(u.pw_name).name == u.pw_name
+        assert command(str(u.pw_uid)).name == u.pw_name
 
         with pytest.raises(errors.InvalidParamValueError):
             command("invalid")
 
     def test_group(self):
         @arc.command
-        def command(user: types.Group):
-            return user
+        def command(group: types.Group):
+            return group
 
-        assert command("root").name == "root"
-        assert command("0").name == "root"
+        g = _first_group()
+        assert command(g.gr_name).name == g.gr_name
+        assert command(str(g.gr_gid)).name == g.gr_name
 
         with pytest.raises(errors.InvalidParamValueError):
             command("invalid")
