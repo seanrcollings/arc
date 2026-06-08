@@ -3,13 +3,14 @@
 
 new_version=$1
 
-poetry version $new_version
+uv version $new_version
 
 git add .
 git commit -m "$new_version"
 git tag "v$new_version"
 git push
 git push --tags
-poetry publish --build
+uv build
+uv publish
 
 
