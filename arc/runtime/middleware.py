@@ -26,7 +26,7 @@ class MiddlewareBase(abc.ABC):
 
 
 class MiddlewareStack(collections.UserList[Middleware]):
-    __gens: list[t.Generator[None, t.Any, None]]
+    __gens: list[MiddlewareGenerator]
 
     def __repr__(self) -> str:
         return f"MiddlewareStack({self.data!r})"
@@ -179,7 +179,7 @@ class MiddlewareManager:
 
         if handler:
             if callable(handler):
-                return inner(handler)
+                return inner(t.cast(Middleware, handler))
             else:
                 return [inner(f) for f in handler]
 

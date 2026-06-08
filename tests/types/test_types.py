@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Literal, Optional, TypedDict, Union
 
 import pytest
-from hypothesis import example, given, infer
+from hypothesis import example, given, infer  # type: ignore
 from hypothesis import strategies as st
 
 import arc

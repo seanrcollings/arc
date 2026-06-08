@@ -1,7 +1,7 @@
 import datetime
 
 import pytest
-from hypothesis import assume, given
+from hypothesis import assume, given  # type: ignore
 from hypothesis import strategies as st
 
 import arc
