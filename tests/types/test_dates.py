@@ -1,8 +1,9 @@
 import datetime
-from hypothesis import given, assume, note
-from hypothesis import strategies as st
 
 import pytest
+from hypothesis import assume, given
+from hypothesis import strategies as st
+
 import arc
 from arc import errors
 

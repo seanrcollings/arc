@@ -1,5 +1,5 @@
-from arc.types.type_arg import TypeArg
 from arc.types.default import Default
+from arc.types.type_arg import TypeArg
 
 
 class DateTimeArgs(TypeArg):

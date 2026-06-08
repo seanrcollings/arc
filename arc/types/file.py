@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import abc
 import io
 import sys
@@ -9,10 +10,6 @@ from arc.types.convert import convert_type
 from arc.types.default import Default, unwrap
 from arc.types.type_arg import TypeArg
 from arc.types.type_info import TypeInfo
-from arc.types.aliases import Alias
-
-if t.TYPE_CHECKING:
-    from arc import Context
 
 __all__ = ["File", "Stdin", "StdinFile", "Stream"]
 
@@ -159,5 +156,5 @@ class StdinFile(Stream):
             return convert_type(_info.resolved_type, value, _info)
         except errors.ConversionError as e:
             raise errors.ConversionError(
-                value, f"expected file or '-' to read from stdin"
+                value, "expected file or '-' to read from stdin"
             ) from e

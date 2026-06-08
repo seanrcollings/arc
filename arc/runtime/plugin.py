@@ -1,11 +1,11 @@
 from __future__ import annotations
-import collections
-import typing as t
+
 import abc
+import collections
 import sys
+import typing as t
 from importlib import import_module, metadata
 from pathlib import Path
-
 
 if t.TYPE_CHECKING:
     from arc.runtime import Context
@@ -67,8 +67,8 @@ class EntryPointsPluginLoader(PluginLoader):
         self, locations: t.Iterable[str]
     ) -> t.Iterator[metadata.EntryPoint]:
         for location in locations:
-            for entry_point in metadata.entry_points(**{self.filter: location}):
-                yield entry_point  # type: ignore
+            for entry_point in metadata.entry_points(**{self.filter: location}): # type: ignore
+                yield entry_point
 
 
 class PathPluginLoader(PluginLoader):
