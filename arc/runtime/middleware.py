@@ -69,9 +69,6 @@ class MiddlewareStack(collections.UserList[Middleware]):
             exception: if none of the callbacks handle the exception, re-raises
         """
 
-        exc_type = type(exception)
-        trace = exception.__traceback__
-
         exception_handled = False
 
         for gen in reversed(self.__gens):
@@ -82,13 +79,11 @@ class MiddlewareStack(collections.UserList[Middleware]):
                     except StopIteration:
                         ...
                 else:
-                    gen.throw(exc_type, exception, trace)
+                    gen.throw(exception)
             except StopIteration:
                 exception_handled = True
             except Exception as e:
                 exception = e
-                exc_type = type(e)
-                trace = e.__traceback__
 
         if not exception_handled:
             raise exception
