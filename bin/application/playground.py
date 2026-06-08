@@ -2,7 +2,7 @@ import json
 import os
 from pathlib import Path
 
-import github
+import httpx
 
 ROOT_DIR = Path(".")
 DOCS_DIR = ROOT_DIR / "docs"
@@ -39,14 +39,15 @@ def get_examples(file) -> list[dict]:
 
 
 def update_gist(examples: list[dict]):
-    api = github.Github(os.getenv("GITHUB_API_TOKEN"))
-    gist = api.get_gist("c314336f9ddf2c95144412121203a17c")
-    gist.edit(
-        description="Playground examples for Arc",
-        files={
-            "arc-examples.json": github.InputFileContent(json.dumps(examples, indent=2))
+    token = os.getenv("GITHUB_API_TOKEN")
+    httpx.patch(
+        "https://api.github.com/gists/c314336f9ddf2c95144412121203a17c",
+        headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"},
+        json={
+            "description": "Playground examples for Arc",
+            "files": {"arc-examples.json": {"content": json.dumps(examples, indent=2)}},
         },
-    )
+    ).raise_for_status()
 
 
 def update_playground():
