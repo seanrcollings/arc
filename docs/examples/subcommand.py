@@ -2,8 +2,7 @@ import arc
 
 
 @arc.command
-def command():
-    ...
+def command(): ...
 
 
 @command.subcommand

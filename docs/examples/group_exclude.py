@@ -8,8 +8,7 @@ class Group:
 
 
 @arc.command
-def command(group: Group):
-    ...
+def command(group: Group): ...
 
 
 command()

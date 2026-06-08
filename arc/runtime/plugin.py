@@ -39,8 +39,7 @@ class PluginLoader(abc.ABC):
         self.locations = locations
 
     @abc.abstractmethod
-    def load(self) -> None:
-        ...
+    def load(self) -> None: ...
 
 
 class EntryPointsPluginLoader(PluginLoader):
@@ -67,7 +66,7 @@ class EntryPointsPluginLoader(PluginLoader):
         self, locations: t.Iterable[str]
     ) -> t.Iterator[metadata.EntryPoint]:
         for location in locations:
-            for entry_point in metadata.entry_points(**{self.filter: location}): # type: ignore
+            for entry_point in metadata.entry_points(**{self.filter: location}):  # type: ignore
                 yield entry_point
 
 

@@ -7,7 +7,6 @@ import arc.typing as at
 from arc.define.param import param
 
 if t.TYPE_CHECKING:
-    from arc.present.help_formatter import HelpFormatter
     from arc.define.command import Command
     from arc.config import PresentConfig
 

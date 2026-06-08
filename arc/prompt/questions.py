@@ -11,8 +11,7 @@ T = t.TypeVar("T")
 C = t.TypeVar("C")
 
 
-class QuestionError(errors.ArcError):
-    ...
+class QuestionError(errors.ArcError): ...
 
 
 class BaseQuestion(ABC, t.Generic[T]):
@@ -34,8 +33,7 @@ class Question(BaseQuestion[T], ABC):
         self.echo = echo
 
     @abstractmethod
-    def handle_answer(self, value: str) -> T:
-        ...
+    def handle_answer(self, value: str) -> T: ...
 
 
 class InputQuestion(Question[T]):
@@ -196,14 +194,11 @@ class RawQuestion(BaseQuestion[T]):
         self.result: T | None = None
         self.update_occured = False
 
-    def on_key(self, key: str) -> None:
-        ...
+    def on_key(self, key: str) -> None: ...
 
-    def on_line(self, line: str) -> None:
-        ...
+    def on_line(self, line: str) -> None: ...
 
-    def on_done(self, content: str) -> None:
-        ...
+    def on_done(self, content: str) -> None: ...
 
     def done(self, value: T | None = None) -> None:
         self.is_done = True

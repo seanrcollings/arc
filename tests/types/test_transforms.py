@@ -1,4 +1,3 @@
-import pytest
 from arc.types.middleware import transformers
 
 

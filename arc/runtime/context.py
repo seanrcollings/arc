@@ -3,7 +3,6 @@ from __future__ import annotations
 import collections
 import typing as t
 
-import arc.typing as at
 
 if t.TYPE_CHECKING:
     from logging import Logger
@@ -80,12 +79,10 @@ class Context(collections.UserDict[str, t.Any]):
         origins[param_name] = origin
 
     @t.overload
-    def get_origin(self, param_name: str) -> str | None:
-        ...
+    def get_origin(self, param_name: str) -> str | None: ...
 
     @t.overload
-    def get_origin(self, param_name: str, default: T) -> str | T:
-        ...
+    def get_origin(self, param_name: str, default: T) -> str | T: ...
 
     def get_origin(self, param_name: str, default: T | None = None) -> str | T | None:
         """Gets the origin of a paramter"""

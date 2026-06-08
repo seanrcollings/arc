@@ -37,8 +37,7 @@ class ExternalError(ArcError):
     """Errors that fire due to user / input errors"""
 
 
-class ExecutionError(ExternalError):
-    ...
+class ExecutionError(ExternalError): ...
 
 
 class ArgumentError(ExternalError):
@@ -171,12 +170,10 @@ class UnrecognizedArgError(UsageError, ArgumentError):
         return message
 
 
-class ParserError(UsageError, ArgumentError):
-    ...
+class ParserError(UsageError, ArgumentError): ...
 
 
-class ValidationError(ArgumentError):
-    ...
+class ValidationError(ArgumentError): ...
 
 
 # TODO: enable printing of stack trace for internal errors
@@ -196,8 +193,7 @@ class InternalError(ArcError):
         return message
 
 
-class CommandError(InternalError):
-    ...
+class CommandError(InternalError): ...
 
 
 class ParamError(InternalError):
@@ -214,5 +210,4 @@ class ParamError(InternalError):
         )
 
 
-class TypeArgError(InternalError):
-    ...
+class TypeArgError(InternalError): ...

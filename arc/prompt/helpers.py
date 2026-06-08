@@ -75,7 +75,7 @@ class Cursor:
     @staticmethod
     def getpos() -> tuple[int, int]:
         with RawTerminal() as term:
-            sys.stdout.write(f"\x1b[6n")
+            sys.stdout.write("\x1b[6n")
             sys.stdout.flush()
 
             seq = term.getch()
@@ -93,12 +93,12 @@ class Cursor:
 
     @staticmethod
     def save() -> None:
-        sys.stdout.write(f"\033[s")
+        sys.stdout.write("\033[s")
         sys.stdout.flush()
 
     @staticmethod
     def restore() -> None:
-        sys.stdout.write(f"\033[u")
+        sys.stdout.write("\033[u")
         sys.stdout.flush()
 
     @staticmethod

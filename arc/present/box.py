@@ -1,8 +1,8 @@
 import re
 import shutil
-from typing import Literal, Optional, Union
+from typing import Optional, Union
 
-from arc.present.ansi import bg, fg, fx
+from arc.present.ansi import fg, fx
 from arc.present.joiner import Join
 
 from .ansi import Ansi

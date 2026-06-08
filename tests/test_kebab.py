@@ -49,7 +49,7 @@ def test_explicit_names():
     def two_words(
         *,
         first_name: str = arc.Option(name="first_name"),
-        other_arg: str = arc.Option(name="other_arg")
+        other_arg: str = arc.Option(name="other_arg"),
     ):
         return first_name
 

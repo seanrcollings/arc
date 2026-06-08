@@ -1,6 +1,7 @@
 from typing import Annotated
 import arc
 
+
 # Could use arc.types.middleware.Round() instead
 # of implementing a custom middleware.
 def round2(val: float):

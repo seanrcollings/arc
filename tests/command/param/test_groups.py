@@ -87,8 +87,7 @@ def test_exclude() -> None:
         val2: int
 
     @arc.command
-    def command(group: Group):
-        ...
+    def command(group: Group): ...
 
     assert "val1" in [p.argument_name for p in command.params]
     assert "val2" not in [p.argument_name for p in command.params]

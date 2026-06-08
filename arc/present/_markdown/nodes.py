@@ -14,16 +14,13 @@ if t.TYPE_CHECKING:
 
 class Node(abc.ABC):
     @abc.abstractmethod
-    def fmt(self, config: PresentConfig) -> str:
-        ...
+    def fmt(self, config: PresentConfig) -> str: ...
 
 
-class InlineNode(Node):
-    ...
+class InlineNode(Node): ...
 
 
-class BlockNode(Node):
-    ...
+class BlockNode(Node): ...
 
 
 @dataclass

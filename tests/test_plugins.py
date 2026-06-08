@@ -26,8 +26,7 @@ def plugin(ctx):
 
     def test_load(self, plugin_path: Path):
         @arc.command
-        def command():
-            ...
+        def command(): ...
 
         app = arc.App(command)
         app.plugins.paths(str(plugin_path))
@@ -35,8 +34,7 @@ def plugin(ctx):
 
     def test_load_dir(self, plugin_path: Path):
         @arc.command
-        def command():
-            ...
+        def command(): ...
 
         app = arc.App(command)
         app.plugins.paths(str(plugin_path.parent))

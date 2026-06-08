@@ -86,7 +86,6 @@ def exec_examples(config: list[ExecConfig]) -> None:
                     exec(contents, {})
                 except SystemExit as e:
                     if e.code != entry.exit_code:
-
                         arc.err(f"{entry.file} exited with {e} exit code\n")
                         raise
                 except Exception as e:

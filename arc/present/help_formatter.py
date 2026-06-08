@@ -24,14 +24,11 @@ class HelpFormatter(t.Protocol):
         config: PresentConfig,
         *args: t.Any,
         **kwargs: t.Any,
-    ):
-        ...
+    ): ...
 
-    def format_help(self) -> str:
-        ...
+    def format_help(self) -> str: ...
 
-    def format_usage(self) -> str:
-        ...
+    def format_usage(self) -> str: ...
 
 
 class DefaultHelpFormatter(TextFormatter):
@@ -74,7 +71,7 @@ class DefaultHelpFormatter(TextFormatter):
         self.write_usage()
 
         if doc.description:
-            with self.section(f"# DESCRIPTION"):
+            with self.section("# DESCRIPTION"):
                 self.write(doc.description)
 
         args = self.get_params(self.argument_params)

@@ -1,6 +1,5 @@
 import pytest
 import arc
-from arc import errors
 
 
 def test_convert():
@@ -33,8 +32,7 @@ def test_convert():
 
 
 def test_cleanup():
-    class CleanupError(Exception):
-        ...
+    class CleanupError(Exception): ...
 
     class TestType:
         def __init__(self, value: str):

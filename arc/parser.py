@@ -2,15 +2,12 @@ from __future__ import annotations
 
 import argparse
 import typing as t
-from gettext import gettext as _
 
 import arc
 import arc.typing as at
 from arc import errors, safe
 from arc.autocompletions import ShellCompletion
-from arc.color import fg
 from arc.define.param import Action, Param
-from arc.present.joiner import Join
 
 
 if t.TYPE_CHECKING:

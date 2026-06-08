@@ -55,12 +55,10 @@ class Prompt:
         raise RuntimeError("Called Prompt.ask() with an invalid question object")
 
     @t.overload
-    def input(self, prompt: str, **kwargs: t.Any) -> str:
-        ...
+    def input(self, prompt: str, **kwargs: t.Any) -> str: ...
 
     @t.overload
-    def input(self, prompt: str, convert: type[T], **kwargs: t.Any) -> T:
-        ...
+    def input(self, prompt: str, convert: type[T], **kwargs: t.Any) -> T: ...
 
     def input(self, prompt: str, convert: type = str, **kwargs: t.Any) -> t.Any:
         """Get input from the user"""

@@ -37,8 +37,7 @@ class Round:
 
 
 class SupportsSlice(t.Protocol):
-    def __getitem__(self, slice: slice) -> SupportsSlice:
-        ...
+    def __getitem__(self, slice: slice) -> SupportsSlice: ...
 
 
 class Truncate:
@@ -73,11 +72,9 @@ class Truncate:
 
 
 class PadProtocol(t.Protocol):
-    def __add__(self, other: t.Any) -> PadProtocol:
-        ...
+    def __add__(self, other: t.Any) -> PadProtocol: ...
 
-    def __len__(self) -> int:
-        ...
+    def __len__(self) -> int: ...
 
 
 class Pad:

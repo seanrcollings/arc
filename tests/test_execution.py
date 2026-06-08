@@ -4,8 +4,7 @@ import arc
 class TestNestedExecution:
     def test_sub_execution(self):
         @arc.command
-        def command():
-            ...
+        def command(): ...
 
         @command.subcommand
         def sub1(ctx: arc.Context):

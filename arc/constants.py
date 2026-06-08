@@ -1,5 +1,4 @@
 from collections import UserList
-import typing as t
 
 
 class Constant:

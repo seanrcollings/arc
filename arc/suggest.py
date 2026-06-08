@@ -6,6 +6,7 @@ import typing as t
 if t.TYPE_CHECKING:
     from arc.define import Command, Param
 
+
 # https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
 def levenshtein(s1: str, s2: str) -> int:
     if len(s1) < len(s2):

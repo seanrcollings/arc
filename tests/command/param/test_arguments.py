@@ -6,6 +6,7 @@ from arc import errors
 
 Type = Annotated[int, arc.Argument(default=2)]
 
+
 class TestArgumentDeclartion:
     def test_postional(self):
         @arc.command

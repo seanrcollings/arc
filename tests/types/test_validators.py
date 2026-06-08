@@ -1,5 +1,4 @@
 import pytest
-import typing as t
 from arc import errors
 from arc.types.middleware import validators
 

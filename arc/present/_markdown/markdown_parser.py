@@ -1,5 +1,4 @@
 from __future__ import annotations
-import typing as t
 from collections import deque
 from arc.present._markdown.nodes import (
     BlockNode,

@@ -5,8 +5,7 @@ from arc import errors
 from arc.types.middleware import validators
 
 
-class TestType:
-    ...
+class TestType: ...
 
 
 class TestMiddleware:

@@ -4,8 +4,7 @@ from arc.present import Ansi
 
 def test_basic():
     @arc.command
-    def command():
-        ...
+    def command(): ...
 
     assert (
         Ansi.clean(command.doc.help())
@@ -41,16 +40,13 @@ OPTIONS
 
 def test_subcommands():
     @arc.command
-    def command():
-        ...
+    def command(): ...
 
     @command.subcommand
-    def sub():
-        ...
+    def sub(): ...
 
     @sub.subcommand
-    def sub2():
-        ...
+    def sub2(): ...
 
     # How the root command should behave
     assert (
@@ -152,8 +148,7 @@ def test_argument_desc_in_definition():
         key_req: int = arc.Option(desc="key required"),
         key_opt: int = arc.Option(desc="key optional", default=1),
         flag: bool = arc.Flag(desc="flag"),
-    ):
-        ...
+    ): ...
 
     assert Ansi.clean(command.doc.help()) == ARGS_STR
 
@@ -185,8 +180,7 @@ OPTIONS
 
 def test_default():
     @arc.command
-    def command(val: int = 1):
-        ...
+    def command(val: int = 1): ...
 
     assert (
         Ansi.clean(command.doc.help())

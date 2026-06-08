@@ -34,7 +34,7 @@ def class_signature(cls: type) -> inspect.Signature:
     ]
 
     sig = inspect.Signature(
-        sorted(parameters, key=lambda p: not p.default is inspect.Parameter.empty)
+        sorted(parameters, key=lambda p: p.default is not inspect.Parameter.empty)
     )
     # inspect.signature() checks for a cached signature object
     # at __signature__. So we can cache it there

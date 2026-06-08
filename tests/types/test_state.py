@@ -1,7 +1,7 @@
 import pytest
 
 import arc
-from arc import App, errors, namespace
+from arc import errors
 from arc.runtime import Context
 from arc.types import State
 
@@ -33,8 +33,7 @@ def test_parent_state(cli: arc.Command):
 
 
 def test_custom_state(cli: arc.Command):
-    class CustomState(State):
-        ...
+    class CustomState(State): ...
 
     @cli.subcommand
     def custom(state: CustomState):
@@ -47,8 +46,7 @@ def test_custom_state(cli: arc.Command):
 
 def test_override(cli: arc.Command):
     @cli.subcommand
-    def override(*, state: State):
-        ...
+    def override(*, state: State): ...
 
     with pytest.raises(errors.UnrecognizedArgError):
         cli("override --state 2")

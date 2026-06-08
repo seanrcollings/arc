@@ -15,12 +15,10 @@ class AliasDict(dict[K, V]):
         """Maps aliases to the cannonical key"""
 
     @t.overload
-    def get(self, key: K) -> V | None:
-        ...
+    def get(self, key: K) -> V | None: ...
 
     @t.overload
-    def get(self, key: K, default: V | t.Any) -> V | t.Any:
-        ...
+    def get(self, key: K, default: V | t.Any) -> V | t.Any: ...
 
     def get(self, key: K, default: t.Any = None) -> V | t.Any:
         """Wraps `dict.get()` but also checks for aliases"""

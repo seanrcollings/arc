@@ -1,7 +1,5 @@
 from typing import Annotated
-import pytest
 import arc
-from arc import errors
 
 
 class TestFlagDeclaration:

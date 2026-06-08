@@ -14,8 +14,7 @@ from arc import autocompletions
 )
 def test_subcommand_completions(info: autocompletions.CompletionInfo):
     @arc.command
-    def command():
-        ...
+    def command(): ...
 
     @command.subcommand
     def sub1():
@@ -34,8 +33,7 @@ def test_subcommand_completions(info: autocompletions.CompletionInfo):
 
 def test_argument_completions():
     @arc.command
-    def command(name: Literal["Johnathen", "Joseph"]):
-        ...
+    def command(name: Literal["Johnathen", "Joseph"]): ...
 
     info = autocompletions.CompletionInfo([], "")
     assert autocompletions.get_completions(command, info) == [
@@ -46,8 +44,7 @@ def test_argument_completions():
 
 def test_option_name_completions():
     @arc.command
-    def command(*, option: str, flag: bool):
-        ...
+    def command(*, option: str, flag: bool): ...
 
     info = autocompletions.CompletionInfo(["-"], "-")
     assert autocompletions.get_completions(command, info) == [
@@ -59,8 +56,7 @@ def test_option_name_completions():
 
 def test_option_value_completions():
     @arc.command
-    def command(*, name: Literal["Johnathen", "Joseph"]):
-        ...
+    def command(*, name: Literal["Johnathen", "Joseph"]): ...
 
     info = autocompletions.CompletionInfo(["--name"], "")
     assert autocompletions.get_completions(command, info) == [
@@ -71,8 +67,7 @@ def test_option_value_completions():
 
 def test_custom_completions():
     @arc.command
-    def command(name: str):
-        ...
+    def command(name: str): ...
 
     @command.complete("name")
     def names(info, param):

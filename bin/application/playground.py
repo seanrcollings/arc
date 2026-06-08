@@ -42,7 +42,10 @@ def update_gist(examples: list[dict]):
     token = os.getenv("GITHUB_API_TOKEN")
     httpx.patch(
         "https://api.github.com/gists/c314336f9ddf2c95144412121203a17c",
-        headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"},
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+        },
         json={
             "description": "Playground examples for Arc",
             "files": {"arc-examples.json": {"content": json.dumps(examples, indent=2)}},

@@ -1,4 +1,5 @@
 """Module contains code relavent to ANSI escape codes"""
+
 import functools
 import re
 import typing as t

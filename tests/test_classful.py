@@ -15,8 +15,7 @@ def test_no_handle():
     with pytest.raises(arc.errors.CommandError):
 
         @arc.command
-        class command:
-            ...
+        class command: ...
 
 
 def test_arguments():

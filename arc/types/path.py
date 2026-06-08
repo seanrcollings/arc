@@ -2,7 +2,6 @@ import pathlib
 import typing as t
 
 from arc import errors
-from arc.autocompletions import Completion, CompletionInfo, CompletionType
 
 __all__ = ["ValidPath", "FilePath", "DirectoryPath"]
 
