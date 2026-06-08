@@ -22,7 +22,7 @@ wheels = [
 
 [[package]]
 name = "arc-cli"
-version = "8.7.1"
+version = "8.7.2"
 source = { editable = "." }
 
 [package.dev-dependencies]
