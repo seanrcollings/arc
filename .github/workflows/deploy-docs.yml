@@ -9,17 +9,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.10"
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
+          enable-cache: true
       - name: Install dependencies
-        run: poetry install
+        run: uv sync --locked --all-extras --dev
       - name: Setup
-        run: poetry run python bin/ctl build docs
+        run: uv run python bin/ctl build docs
       - name: Deploy
         working-directory: ./docs
-        run: poetry run mkdocs gh-deploy --force
+        run: uv run mkdocs gh-deploy --force

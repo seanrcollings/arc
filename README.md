@@ -55,7 +55,7 @@ $ pip install arc-cli
 Clone for development
 ```
 $ git clone https://github.com/seanrcollings/arc
-$ poetry install
+$ uv sync
 ```
 
 # Tests
