@@ -66,8 +66,8 @@ class EntryPointsPluginLoader(PluginLoader):
         self, locations: t.Iterable[str]
     ) -> t.Iterator[metadata.EntryPoint]:
         for location in locations:
-            for entry_point in metadata.entry_points(**{self.filter: location}):  # type: ignore
-                yield entry_point
+            for entry_point in metadata.entry_points(**{self.filter: location}):
+                yield entry_point # type: ignore
 
 
 class PathPluginLoader(PluginLoader):
