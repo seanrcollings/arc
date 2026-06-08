@@ -1,12 +1,13 @@
 from typing import Annotated, TypeVar
-import pytest
 from unittest.mock import Mock
 
+import pytest
+
 import arc
-from arc.types.default import Default
 import arc.typing as at
-from arc.types.type_info import TypeInfo
+from arc.types.default import Default
 from arc.types.type_arg import TypeArg
+from arc.types.type_info import TypeInfo
 
 
 @pytest.fixture
@@ -19,7 +20,7 @@ def type_info():
 
     return TypeInfo(
         original_type=mock_annotation,
-        origin=mock_origin,
+        origin=mock_origin, # type: ignore
         sub_types=mock_sub_types,
         annotations=mock_annotations,
         name=mock_name,
@@ -146,18 +147,18 @@ class TestAnalyze:
         typ = list[str]
         info = TypeInfo.analyze(typ)
         assert info.original_type == typ
-        assert info.origin == list
+        assert info.origin is list
         assert info.sub_types == (TypeInfo.analyze(str),)
         assert info.annotations == ()
         assert info.name == "list"
 
     def test_annotated_type(self):
         option = arc.Option(name="test")
-        func = lambda x: x
+        def func(x): return x
         typ = Annotated[str, option, func]
-        info = TypeInfo.analyze(typ)
+        info = TypeInfo.analyze(typ) # type: ignore
         assert info.original_type == typ
-        assert info.origin == str
+        assert info.origin is str
         assert info.sub_types == ()
         assert info.annotations == (option, func)
         assert info.name == "str"
@@ -166,12 +167,12 @@ class TestAnalyze:
 
     def test_generic_annotated_type(self):
         option = arc.Option(name="test")
-        func = lambda x: x
+        def func(x): return x
         T = TypeVar("T")
-        typ = Annotated[T, option, func]
-        info = TypeInfo.analyze(typ[str])
-        assert info.original_type == typ[str]
-        assert info.origin == str
+        typ = Annotated[T, option, func] # type: ignore
+        info = TypeInfo.analyze(typ[str]) # type: ignore
+        assert info.original_type == typ[str] # type: ignore
+        assert info.origin is str
         assert info.sub_types == ()
         assert info.annotations == (option, func)
         assert info.name == "str"

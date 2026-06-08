@@ -54,12 +54,12 @@ class TextWrapper(textwrap.TextWrapper):
                 del chunks[-1]
 
             while chunks:
-                l = Ansi.len(chunks[-1])
+                chunk_len = Ansi.len(chunks[-1])
 
                 # Can at least squeeze this chunk onto the current line.
-                if cur_len + l <= width:
+                if cur_len + chunk_len <= width:
                     cur_line.append(chunks.pop())
-                    cur_len += l
+                    cur_len += chunk_len
 
                 # Nope, this line is full.
                 else:

@@ -67,5 +67,5 @@ def test_annotation():
     def command(val: Annotated[bool, 1]):
         return val
 
-    assert command("") == False
+    assert not command("")
     assert command("--val")

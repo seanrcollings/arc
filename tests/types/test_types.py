@@ -32,7 +32,7 @@ class TestNone:
         def non(val: Optional[int]):
             return val
 
-        assert cli("non") == None
+        assert cli("non") is None
         assert cli("non 1") == 1
 
     def test_none(self, cli: arc.Command):
@@ -40,7 +40,7 @@ class TestNone:
         def non(val: int | None):
             return val
 
-        assert cli("non") == None
+        assert cli("non") is None
         assert cli("non 1") == 1
 
 

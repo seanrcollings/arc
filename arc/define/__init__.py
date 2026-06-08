@@ -1,2 +1,10 @@
-from .command import Command, command, namespace
-from .param import Argument, Count, Depends, Flag, Option, Param, group
+from .command import Command as Command
+from .command import command as command
+from .command import namespace as namespace
+from .param import Argument as Argument
+from .param import Count as Count
+from .param import Depends as Depends
+from .param import Flag as Flag
+from .param import Option as Option
+from .param import Param as Param
+from .param import group as group
